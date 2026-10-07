@@ -1,0 +1,117 @@
+@import "tailwindcss";
+
+/* ======================================================== */
+/* A4 PRINT STYLES - تخصيص طباعة السندات والفواتير على مقاس A4 */
+/* ======================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 6mm 8mm 6mm;
+  }
+
+  html,
+  body {
+    width: 210mm !important;
+    max-width: 210mm !important;
+    min-height: 297mm !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 12px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    overflow: visible !important;
+  }
+
+  /* Hide regular UI elements when printing */
+  header,
+  nav,
+  aside,
+  footer,
+  .print\:hidden,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Remove fixed modal dark backdrop in print */
+  .fixed.inset-0 {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Document A4 Sheet container */
+  .a4-print-document {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Thermal 80mm POS Receipt Container */
+  .thermal-print-document {
+    width: 80mm !important;
+    max-width: 80mm !important;
+    margin: 0 auto !important;
+    padding: 4mm !important;
+    box-shadow: none !important;
+    border: none !important;
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+    color: #000000 !important;
+    background: #ffffff !important;
+  }
+
+  body.is-thermal-printing {
+    width: 80mm !important;
+    max-width: 80mm !important;
+    min-height: auto !important;
+  }
+
+  body.is-thermal-printing @page {
+    size: 80mm auto !important;
+    margin: 2mm !important;
+  }
+
+  /* Force background colors and borders in Chrome/Safari/Firefox */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Prevent page breaks inside cards and tables */
+  .print-avoid-break {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+}
+
+/* ======================================================== */
+/* MOBILE TOUCH & SCROLL ENHANCEMENTS                      */
+/* ======================================================== */
+@layer utilities {
+  /* Safe touch scrolling */
+  .touch-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* Clean hide scrollbars for horizontal chip bars */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

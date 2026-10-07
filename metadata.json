@@ -1,0 +1,8 @@
+{
+  "name": "Top Store System - توب ستور",
+  "description": "نظام حسابات وإدارة طلبات متجر توب ستور لوساطة الشراء والتسوق الإلكتروني في اليمن",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

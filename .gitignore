@@ -1,0 +1,16 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+manus_all_files/
+manus_extracted/
+chunks/
+*.txt
+attachment_*
+session_data.json
+rendered_content.html
+manus_raw.html
