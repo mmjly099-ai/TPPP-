@@ -250,6 +250,62 @@ export interface ChartAccount {
   createdAt: string;
 }
 
+export type JournalEntryStatus = 'draft' | 'posted' | 'reversed' | 'void';
+
+export interface FiscalPeriod {
+  id: number;
+  periodName: string;
+  startDate: string;
+  endDate: string;
+  status: 'open' | 'closed' | 'locked';
+  fiscalYear: number;
+  closedAt?: string | null;
+  closedBy?: number | null;
+  createdAt?: string;
+}
+
+export interface FiscalYear {
+  id: number;
+  year: number;
+  startDate: string;
+  endDate: string;
+  status: 'open' | 'closed' | 'locked';
+  createdAt?: string;
+}
+
+export interface IdempotencyRecord {
+  key: string;
+  operationType: string;
+  entityId?: string | number;
+  createdAt: string;
+  userId?: number;
+}
+
+export type AppRole = 'owner' | 'manager' | 'accountant' | 'sales' | 'shipping' | 'customer_service' | 'viewer';
+
+export type Permission =
+  | 'customers.view'
+  | 'customers.create'
+  | 'customers.edit'
+  | 'customers.delete'
+  | 'orders.view'
+  | 'orders.create'
+  | 'orders.edit'
+  | 'orders.cancel'
+  | 'payments.view'
+  | 'payments.create'
+  | 'payments.edit'
+  | 'payments.reverse'
+  | 'journal.view'
+  | 'journal.create'
+  | 'journal.post'
+  | 'journal.reverse'
+  | 'reports.view'
+  | 'backup.create'
+  | 'backup.restore'
+  | 'users.manage'
+  | 'settings.manage';
+
 export interface JournalLine {
   id: number;
   journalEntryId: number;
@@ -259,19 +315,30 @@ export interface JournalLine {
   chartAccountCode?: string;
   side: 'debit' | 'credit';
   amount: string | number;
+  currency?: string;
+  exchangeRate?: number;
+  baseAmount?: number;
   notes?: string;
 }
 
 export interface JournalEntry {
   id: number;
   entryNumber: string;
+  journalNumber?: string;
   transactionId?: number | null;
-  sourceType?: 'order' | 'payment' | 'expense' | 'purchase_batch' | 'receivable' | 'manual' | 'reversal';
+  sourceType?: 'order' | 'payment' | 'expense' | 'purchase_batch' | 'receivable' | 'manual' | 'reversal' | 'opening_balance';
   sourceId?: number | string | null;
   sourceNumber?: string | null;
+  status?: JournalEntryStatus;
+  date?: string;
+  currency?: string;
+  exchangeRate?: number;
   description: string;
-  createdBy?: number;
+  createdBy?: number | string;
   createdByName?: string;
+  postedBy?: number | string;
+  postedByName?: string;
+  postedAt?: string;
   createdAt: string;
   isReversed?: boolean;
   reversedByEntryId?: number | null;
@@ -576,5 +643,8 @@ export interface TopStoreBackup {
     couriers?: Courier[];
     deliveryTrips?: DeliveryTrip[];
     chartAccounts?: ChartAccount[];
+    fiscalPeriods?: FiscalPeriod[];
+    fiscalYears?: FiscalYear[];
+    idempotencyRecords?: IdempotencyRecord[];
   };
 }

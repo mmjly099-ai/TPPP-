@@ -1,4 +1,4 @@
-import { TopStoreBackup } from '../types';
+import { TopStoreBackup } from "../types";
 
 export const INITIAL_DATA: TopStoreBackup = {
   "format": "top-store-backup",
@@ -568,7 +568,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "createdAt": "2026-09-30T15:16:09.898Z"
       },
       {
-        "code": "TOP 039",
+        "code": "TOP 040",
         "name": "خالد علي ناصر علي الغيثي",
         "phone": "776451363",
         "governorate": "عدن",
@@ -4750,7 +4750,7 @@ export const INITIAL_DATA: TopStoreBackup = {
       {
         "id": 1791062934601,
         "paymentNumber": "PAY-934600",
-        "receiptNumber": "RCT-2026-046",
+        "receiptNumber": "RCT-2026-045",
         "orderId": 1791062934600,
         "customerId": 1791062868707,
         "accountId": 2,
@@ -9555,7 +9555,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 3000
+            "amount": 3000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 3000
           },
           {
             "id": 1791148181355,
@@ -9563,12 +9568,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "واردات - استرجاع نقدي / مردودات",
             "side": "credit",
-            "amount": 3000
+            "amount": 3000,
+            "chartAccountId": 409,
+            "chartAccountCode": "409",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 3000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-04T21:09:41.352Z"
       },
       {
         "id": 1791148068542,
@@ -9582,7 +9598,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "مصروفات - إنترنت",
             "side": "debit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           },
           {
             "id": 1791148068544,
@@ -9590,12 +9611,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           }
         ],
         "sourceType": "order",
         "sourceId": 1791065515779,
-        "sourceNumber": "8"
+        "sourceNumber": "8",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-04T21:07:48.540Z"
       },
       {
         "id": 1791148014316,
@@ -9609,7 +9641,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "صادرات - توصيل طلب مطر رقم 9 تم تحويها جيب",
             "side": "debit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           },
           {
             "id": 1791148014318,
@@ -9617,12 +9654,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-04T21:06:54.315Z"
       },
       {
         "id": 1791147634266,
@@ -9636,7 +9684,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           },
           {
             "id": 1791147634268,
@@ -9644,12 +9697,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "واردات - توصيل طلب مطر رقم 9",
             "side": "credit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 402,
+            "chartAccountCode": "402",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-04T21:00:34.265Z"
       },
       {
         "id": 1791147409055,
@@ -9663,7 +9727,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 7100
+            "amount": 7100,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7100
           },
           {
             "id": 1791147409057,
@@ -9671,12 +9740,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: محمد جميل محمد مطر",
             "side": "credit",
-            "amount": 7100
+            "amount": 7100,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7100
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-04T20:56:49.053Z"
       },
       {
         "id": 1791147339252,
@@ -9690,7 +9770,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "مصروفات - تشغيل",
             "side": "debit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           },
           {
             "id": 1791147339254,
@@ -9698,12 +9783,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-04T20:55:39.251Z"
       },
       {
         "id": 1791147301656,
@@ -9717,7 +9813,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "مصروفات - تشغيل",
             "side": "debit",
-            "amount": 1300
+            "amount": 1300,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1300
           },
           {
             "id": 1791147301658,
@@ -9725,12 +9826,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 1300
+            "amount": 1300,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1300
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-04T20:55:01.654Z"
       },
       {
         "id": 1791073427529,
@@ -9744,7 +9856,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "تكاليف الشحنات واللوجستيات",
             "side": "debit",
-            "amount": 21000
+            "amount": 21000,
+            "chartAccountId": 120,
+            "chartAccountCode": "120",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 21000
           },
           {
             "id": 1791073427531,
@@ -9752,12 +9869,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 21000
+            "amount": 21000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 21000
           }
         ],
         "sourceType": "order",
         "sourceId": 1790787857086,
-        "sourceNumber": "2"
+        "sourceNumber": "2",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-04T00:23:47.527Z"
       },
       {
         "id": 1791066974167,
@@ -9771,7 +9899,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 20000
+            "amount": 20000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 20000
           },
           {
             "id": 1791066974169,
@@ -9779,12 +9912,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: احلام موسى عبد الله محمد احمد الهندي",
             "side": "credit",
-            "amount": 20000
+            "amount": 20000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 20000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791062934600,
-        "sourceNumber": "1"
+        "sourceNumber": "1",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03T22:36:14.166Z"
       },
       {
         "id": 1791066895574,
@@ -9798,7 +9942,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 12000
+            "amount": 12000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 12000
           },
           {
             "id": 1791066895576,
@@ -9806,12 +9955,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: حنان علي محسن النجار",
             "side": "credit",
-            "amount": 12000
+            "amount": 12000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 12000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791065515779,
-        "sourceNumber": "8"
+        "sourceNumber": "8",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03T22:34:55.572Z"
       },
       {
         "id": 1791066769611,
@@ -9825,7 +9985,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           },
           {
             "id": 1791066769613,
@@ -9833,12 +9998,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "واردات - حق توصيل طلب ام عبد الوهاب قدمنهاا لعلي",
             "side": "credit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 402,
+            "chartAccountCode": "402",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791062934600,
-        "sourceNumber": "1"
+        "sourceNumber": "1",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03T22:32:49.610Z"
       },
       {
         "id": 1791066692406,
@@ -9852,7 +10028,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 5800
+            "amount": 5800,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5800
           },
           {
             "id": 1791066692408,
@@ -9860,12 +10041,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: ام عبد الوهاب",
             "side": "credit",
-            "amount": 5800
+            "amount": 5800,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5800
           }
         ],
         "sourceType": "order",
         "sourceId": 1790787857086,
-        "sourceNumber": "2"
+        "sourceNumber": "2",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03T22:31:32.405Z"
       },
       {
         "id": 1791066437949,
@@ -9879,7 +10071,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "صادرات - احولت اناغلطت",
             "side": "debit",
-            "amount": 600
+            "amount": 600,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 600
           },
           {
             "id": 1791066437951,
@@ -9887,12 +10084,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 600
+            "amount": 600,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 600
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03T22:27:17.948Z"
       },
       {
         "id": 1791066345933,
@@ -9906,7 +10114,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 600
+            "amount": 600,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 600
           },
           {
             "id": 1791066345935,
@@ -9914,12 +10127,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: ام عبد الوهاب",
             "side": "credit",
-            "amount": 600
+            "amount": 600,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 600
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03T22:25:45.931Z"
       },
       {
         "id": 1791065739359,
@@ -9933,7 +10157,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 7400
+            "amount": 7400,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7400
           },
           {
             "id": 1791065739361,
@@ -9941,12 +10170,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: ام عبد الوهاب",
             "side": "credit",
-            "amount": 7400
+            "amount": 7400,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7400
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03T22:15:39.357Z"
       },
       {
         "id": 1791065515809,
@@ -9960,7 +10200,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: انس غانم حسين غانم",
             "side": "debit",
-            "amount": 1700
+            "amount": 1700,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1700
           },
           {
             "id": 1791065515811,
@@ -9968,12 +10213,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 1700
+            "amount": 1700,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1700
           }
         ],
         "sourceType": "order",
         "sourceId": 1791065515779,
-        "sourceNumber": "8"
+        "sourceNumber": "8",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03T22:11:55.779Z"
       },
       {
         "id": 1791065443560,
@@ -9987,7 +10243,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: بيت الحلحلي",
             "side": "debit",
-            "amount": 16200
+            "amount": 16200,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 16200
           },
           {
             "id": 1791065443562,
@@ -9995,12 +10256,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 16200
+            "amount": 16200,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 16200
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03T22:10:43.531Z"
       },
       {
         "id": 1791065443551,
@@ -10015,7 +10287,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 5000
+            "amount": 5000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5000
           },
           {
             "id": 1791065443553,
@@ -10023,12 +10300,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "العميل: بيت الحلحلي",
             "side": "credit",
-            "amount": 5000
+            "amount": 5000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03T22:10:43.531Z"
       },
       {
         "id": 1791065216061,
@@ -10042,7 +10330,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: خالد علي ناصر علي الغيثي",
             "side": "debit",
-            "amount": 77100
+            "amount": 77100,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 77100
           },
           {
             "id": 1791065216063,
@@ -10050,12 +10343,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 77100
+            "amount": 77100,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 77100
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03T22:06:56.031Z"
       },
       {
         "id": 1791065216052,
@@ -10070,7 +10374,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 30003,
             "accountName": "كريمي — حساب سعودي",
             "side": "debit",
-            "amount": 63700
+            "amount": 63700,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 63700
           },
           {
             "id": 1791065216054,
@@ -10078,12 +10387,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "العميل: خالد علي ناصر علي الغيثي",
             "side": "credit",
-            "amount": 63700
+            "amount": 63700,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 63700
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03T22:06:56.031Z"
       },
       {
         "id": 1791064117816,
@@ -10097,7 +10417,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 1,
             "accountName": "فيزا كارد بنك التضامن",
             "side": "debit",
-            "amount": 50000
+            "amount": 50000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 50000
           },
           {
             "id": 1791064117818,
@@ -10105,12 +10430,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 50000
+            "amount": 50000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 50000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791065515779,
-        "sourceNumber": "8"
+        "sourceNumber": "8",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03T21:48:37.814Z"
       },
       {
         "id": 1791064020074,
@@ -10124,7 +10460,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "صادرات - غلط ب الادخال",
             "side": "debit",
-            "amount": 2000
+            "amount": 2000,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2000
           },
           {
             "id": 1791064020076,
@@ -10132,12 +10473,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 1,
             "accountName": "فيزا كارد بنك التضامن",
             "side": "credit",
-            "amount": 2000
+            "amount": 2000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03T21:47:00.073Z"
       },
       {
         "id": 1790995867320,
@@ -10151,7 +10503,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "صادرات - قيمه توصيل شحنه اب للمهيب",
             "side": "debit",
-            "amount": 2800
+            "amount": 2800,
+            "chartAccountId": 507,
+            "chartAccountCode": "507",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2800
           },
           {
             "id": 1790995867322,
@@ -10159,12 +10516,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 2800
+            "amount": 2800,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2800
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03T02:51:07.319Z"
       },
       {
         "id": 1790995802430,
@@ -10178,7 +10546,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 120003,
             "accountName": "بنك الكريمي – حساب يمني",
             "side": "debit",
-            "amount": 5000
+            "amount": 5000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5000
           },
           {
             "id": 1790995802432,
@@ -10186,12 +10559,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "واردات - قيمه توصيل شحنه اب",
             "side": "credit",
-            "amount": 5000
+            "amount": 5000,
+            "chartAccountId": 402,
+            "chartAccountCode": "402",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791065515779,
-        "sourceNumber": "8"
+        "sourceNumber": "8",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03T02:50:02.429Z"
       },
       {
         "id": 1790995692359,
@@ -10205,7 +10589,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 700
+            "amount": 700,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 700
           },
           {
             "id": 1790995692361,
@@ -10213,12 +10602,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 700
+            "amount": 700,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 700
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03T02:48:12.357Z"
       },
       {
         "id": 1790995532230,
@@ -10232,7 +10632,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "مصروفات - تشغيل",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 1790995532232,
@@ -10240,12 +10645,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03T02:45:32.228Z"
       },
       {
         "id": 1790995478869,
@@ -10259,7 +10675,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "مصروفات - تشغيل",
             "side": "debit",
-            "amount": 1200
+            "amount": 1200,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1200
           },
           {
             "id": 1790995478871,
@@ -10267,12 +10688,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 1200
+            "amount": 1200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1200
           }
         ],
         "sourceType": "order",
         "sourceId": 1791065515779,
-        "sourceNumber": "8"
+        "sourceNumber": "8",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03T02:44:38.867Z"
       },
       {
         "id": 1790979266786,
@@ -10286,7 +10718,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 7000
+            "amount": 7000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7000
           },
           {
             "id": 1790979266788,
@@ -10294,12 +10731,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "ذمة مدينة: ايمن الجند",
             "side": "credit",
-            "amount": 7000
+            "amount": 7000,
+            "chartAccountId": 130,
+            "chartAccountCode": "130",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791065515779,
-        "sourceNumber": "8"
+        "sourceNumber": "8",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-02T22:14:26.786Z"
       },
       {
         "id": 1790901361642,
@@ -10313,7 +10761,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "صادرات - خلص منتج من طلب الصلاحي",
             "side": "debit",
-            "amount": 1300
+            "amount": 1300,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1300
           },
           {
             "id": 1790901361644,
@@ -10321,12 +10774,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 1300
+            "amount": 1300,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1300
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-02T00:36:01.641Z"
       },
       {
         "id": 1790901002381,
@@ -10340,7 +10804,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "مصروفات - تشغيل",
             "side": "debit",
-            "amount": 1500
+            "amount": 1500,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1500
           },
           {
             "id": 1790901002383,
@@ -10348,12 +10817,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 1500
+            "amount": 1500,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1500
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-02T00:30:02.379Z"
       },
       {
         "id": 1790900974884,
@@ -10367,7 +10847,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "مصروفات - إنترنت",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 1790900974886,
@@ -10375,12 +10860,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
         ],
         "sourceType": "order",
         "sourceId": 1791065515779,
-        "sourceNumber": "8"
+        "sourceNumber": "8",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-02T00:29:34.882Z"
       },
       {
         "id": 1790900945054,
@@ -10394,7 +10890,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "مصروفات - تشغيل",
             "side": "debit",
-            "amount": 7000
+            "amount": 7000,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7000
           },
           {
             "id": 1790900945056,
@@ -10402,12 +10903,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 7000
+            "amount": 7000,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-02T00:29:05.053Z"
       },
       {
         "id": 1790809072355,
@@ -10421,7 +10933,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "مصروفات - تسويق",
             "side": "debit",
-            "amount": 2200
+            "amount": 2200,
+            "chartAccountId": 503,
+            "chartAccountCode": "503",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2200
           },
           {
             "id": 1790809072357,
@@ -10429,12 +10946,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 1,
             "accountName": "فيزا كارد بنك التضامن",
             "side": "credit",
-            "amount": 2200
+            "amount": 2200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2200
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T22:57:52.353Z"
       },
       {
         "id": 1790809027181,
@@ -10448,7 +10976,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "مصروفات - تشغيل",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 1790809027183,
@@ -10456,12 +10989,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
         ],
         "sourceType": "order",
         "sourceId": 1791062934600,
-        "sourceNumber": "1"
+        "sourceNumber": "1",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T22:57:07.179Z"
       },
       {
         "id": 1790808994831,
@@ -10475,7 +11019,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "مصروفات - تشغيل",
             "side": "debit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           },
           {
             "id": 1790808994833,
@@ -10483,12 +11032,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791065515779,
-        "sourceNumber": "8"
+        "sourceNumber": "8",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T22:56:34.829Z"
       },
       {
         "id": 1790808951781,
@@ -10502,7 +11062,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "مصروفات - إنترنت",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 1790808951783,
@@ -10510,12 +11075,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
         ],
         "sourceType": "order",
         "sourceId": 1791062934600,
-        "sourceNumber": "1"
+        "sourceNumber": "1",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T22:55:51.779Z"
       },
       {
         "id": 1790808923766,
@@ -10529,7 +11105,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "مصروفات - تشغيل",
             "side": "debit",
-            "amount": 1100
+            "amount": 1100,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1100
           },
           {
             "id": 1790808923768,
@@ -10537,12 +11118,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 1100
+            "amount": 1100,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1100
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T22:55:23.764Z"
       },
       {
         "id": 1790808645057,
@@ -10556,7 +11148,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "صادرات - غلط طلب دلواح",
             "side": "debit",
-            "amount": 6000
+            "amount": 6000,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 6000
           },
           {
             "id": 1790808645059,
@@ -10564,12 +11161,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 6000
+            "amount": 6000,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 6000
           }
         ],
         "sourceType": "order",
         "sourceId": 1790787420527,
-        "sourceNumber": "6"
+        "sourceNumber": "6",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T22:50:45.056Z"
       },
       {
         "id": 1790808598677,
@@ -10583,7 +11191,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 1,
             "accountName": "فيزا كارد بنك التضامن",
             "side": "debit",
-            "amount": 6000
+            "amount": 6000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 6000
           },
           {
             "id": 1790808598679,
@@ -10591,12 +11204,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "واردات - غلط",
             "side": "credit",
-            "amount": 6000
+            "amount": 6000,
+            "chartAccountId": 409,
+            "chartAccountCode": "409",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 6000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791065515779,
-        "sourceNumber": "8"
+        "sourceNumber": "8",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T22:49:58.676Z"
       },
       {
         "id": 1790808443984,
@@ -10610,7 +11234,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "صادرات - غلط",
             "side": "debit",
-            "amount": 6000
+            "amount": 6000,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 6000
           },
           {
             "id": 1790808443986,
@@ -10618,12 +11247,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 1,
             "accountName": "فيزا كارد بنك التضامن",
             "side": "credit",
-            "amount": 6000
+            "amount": 6000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 6000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T22:47:23.983Z"
       },
       {
         "id": 1790807131216,
@@ -10637,7 +11277,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 1,
             "accountName": "فيزا كارد بنك التضامن",
             "side": "debit",
-            "amount": 70000
+            "amount": 70000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 70000
           },
           {
             "id": 1790807131218,
@@ -10645,12 +11290,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 9,
             "accountName": "أم فلوس",
             "side": "credit",
-            "amount": 70000
+            "amount": 70000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 70000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T22:25:31.214Z"
       },
       {
         "id": 1790807055897,
@@ -10664,7 +11320,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 1,
             "accountName": "فيزا كارد بنك التضامن",
             "side": "debit",
-            "amount": 210000
+            "amount": 210000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 210000
           },
           {
             "id": 1790807055899,
@@ -10672,12 +11333,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 210000
+            "amount": 210000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 210000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791065515779,
-        "sourceNumber": "8"
+        "sourceNumber": "8",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T22:24:15.895Z"
       },
       {
         "id": 1790794202112,
@@ -10691,7 +11363,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 1,
             "accountName": "فيزا كارد بنك التضامن",
             "side": "debit",
-            "amount": 2000
+            "amount": 2000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2000
           },
           {
             "id": 1790794202114,
@@ -10699,12 +11376,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 2000
+            "amount": 2000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791062934600,
-        "sourceNumber": "1"
+        "sourceNumber": "1",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T18:50:02.110Z"
       },
       {
         "id": 1790794142492,
@@ -10718,7 +11406,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 20100
+            "amount": 20100,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 20100
           },
           {
             "id": 1790794142494,
@@ -10726,12 +11419,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 1,
             "accountName": "فيزا كارد بنك التضامن",
             "side": "credit",
-            "amount": 20100
+            "amount": 20100,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 20100
           }
         ],
         "sourceType": "order",
         "sourceId": 1791062934600,
-        "sourceNumber": "1"
+        "sourceNumber": "1",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T18:49:02.490Z"
       },
       {
         "id": 1790794062283,
@@ -10745,7 +11449,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           },
           {
             "id": 1790794062285,
@@ -10753,12 +11462,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "واردات - تحويل حق توصيل",
             "side": "credit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 402,
+            "chartAccountCode": "402",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791065515779,
-        "sourceNumber": "8"
+        "sourceNumber": "8",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T18:47:42.282Z"
       },
       {
         "id": 1790793991758,
@@ -10772,7 +11492,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "صادرات - توصيل مع علي",
             "side": "debit",
-            "amount": 2000
+            "amount": 2000,
+            "chartAccountId": 507,
+            "chartAccountCode": "507",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2000
           },
           {
             "id": 1790793991760,
@@ -10780,12 +11505,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 1,
             "accountName": "فيزا كارد بنك التضامن",
             "side": "credit",
-            "amount": 2000
+            "amount": 2000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791062934600,
-        "sourceNumber": "1"
+        "sourceNumber": "1",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T18:46:31.757Z"
       },
       {
         "id": 1790793407729,
@@ -10800,7 +11536,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "debit",
-            "amount": 21000
+            "amount": 21000,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 21000
           },
           {
             "id": 1790793407731,
@@ -10808,12 +11549,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "العميل: اسماء ابراهيم عبد القوي",
             "side": "credit",
-            "amount": 21000
+            "amount": 21000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 21000
           }
         ],
         "sourceType": "order",
         "sourceId": 1790787857086,
-        "sourceNumber": "2"
+        "sourceNumber": "2",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T18:36:47.727Z"
       },
       {
         "id": 1790792631906,
@@ -10827,7 +11579,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 1,
             "accountName": "فيزا كارد بنك التضامن",
             "side": "debit",
-            "amount": 20100
+            "amount": 20100,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 20100
           },
           {
             "id": 1790792631908,
@@ -10835,12 +11592,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "واردات - باقي قيمه طلب محمد هايم قدددديم",
             "side": "credit",
-            "amount": 20100
+            "amount": 20100,
+            "chartAccountId": 409,
+            "chartAccountCode": "409",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 20100
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T18:23:51.905Z"
       },
       {
         "id": 1790792407246,
@@ -10855,7 +11623,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 15500
+            "amount": 15500,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 15500
           },
           {
             "id": 1790792407248,
@@ -10863,12 +11636,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "العميل: محمد محسن محمد هايم",
             "side": "credit",
-            "amount": 15500
+            "amount": 15500,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 15500
           }
         ],
         "sourceType": "order",
         "sourceId": 1790787857086,
-        "sourceNumber": "2"
+        "sourceNumber": "2",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T18:20:07.244Z"
       },
       {
         "id": 1790791699679,
@@ -10882,7 +11666,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 9,
             "accountName": "أم فلوس",
             "side": "debit",
-            "amount": 7200
+            "amount": 7200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7200
           },
           {
             "id": 1790791699681,
@@ -10890,12 +11679,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 1,
             "accountName": "فيزا كارد بنك التضامن",
             "side": "credit",
-            "amount": 7200
+            "amount": 7200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7200
           }
         ],
         "sourceType": "order",
         "sourceId": 1791065515779,
-        "sourceNumber": "8"
+        "sourceNumber": "8",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T18:08:19.678Z"
       },
       {
         "id": 1790791585590,
@@ -10909,7 +11709,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 1,
             "accountName": "فيزا كارد بنك التضامن",
             "side": "debit",
-            "amount": 7200
+            "amount": 7200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7200
           },
           {
             "id": 1790791585592,
@@ -10917,12 +11722,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "واردات - طلب دلواح رقم",
             "side": "credit",
-            "amount": 7200
+            "amount": 7200,
+            "chartAccountId": 409,
+            "chartAccountCode": "409",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7200
           }
         ],
         "sourceType": "order",
         "sourceId": 1791065515779,
-        "sourceNumber": "8"
+        "sourceNumber": "8",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T18:06:25.589Z"
       },
       {
         "id": 1790790752572,
@@ -10936,7 +11752,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "debit",
-            "amount": 7000
+            "amount": 7000,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7000
           },
           {
             "id": 1790790752574,
@@ -10944,12 +11765,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 7000
+            "amount": 7000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7000
           }
         ],
         "sourceType": "order",
         "sourceId": 1790787857086,
-        "sourceNumber": "2"
+        "sourceNumber": "2",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T17:52:32.570Z"
       },
       {
         "id": 1790790676540,
@@ -10963,7 +11795,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 14000
+            "amount": 14000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 14000
           },
           {
             "id": 1790790676542,
@@ -10971,12 +11808,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 14000
+            "amount": 14000,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 14000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T17:51:16.538Z"
       },
       {
         "id": 1790787857116,
@@ -10990,7 +11838,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: رانيا محمود قادري المقطري",
             "side": "debit",
-            "amount": 18200
+            "amount": 18200,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 18200
           },
           {
             "id": 1790787857118,
@@ -10998,12 +11851,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 18200
+            "amount": 18200,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 18200
           }
         ],
         "sourceType": "order",
         "sourceId": 1791065515779,
-        "sourceNumber": "8"
+        "sourceNumber": "8",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T17:04:17.086Z"
       },
       {
         "id": 1790787857107,
@@ -11018,7 +11882,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 5000
+            "amount": 5000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5000
           },
           {
             "id": 1790787857109,
@@ -11026,12 +11895,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "العميل: رانيا محمود قادري المقطري",
             "side": "credit",
-            "amount": 5000
+            "amount": 5000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791065515779,
-        "sourceNumber": "8"
+        "sourceNumber": "8",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T17:04:17.086Z"
       },
       {
         "id": 1790787631098,
@@ -11045,7 +11925,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: انس غانم حسين غانم",
             "side": "debit",
-            "amount": 42600
+            "amount": 42600,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 42600
           },
           {
             "id": 1790787631100,
@@ -11053,12 +11938,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 42600
+            "amount": 42600,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 42600
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T17:00:31.068Z"
       },
       {
         "id": 1790787631089,
@@ -11073,7 +11969,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 20000
+            "amount": 20000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 20000
           },
           {
             "id": 1790787631091,
@@ -11081,12 +11982,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "العميل: انس غانم حسين غانم",
             "side": "credit",
-            "amount": 20000
+            "amount": 20000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 20000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T17:00:31.068Z"
       },
       {
         "id": 1790787420557,
@@ -11100,7 +12012,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: احلام موسى عبد الله محمد احمد الهندي",
             "side": "debit",
-            "amount": 53700
+            "amount": 53700,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 53700
           },
           {
             "id": 1790787420559,
@@ -11108,12 +12025,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 53700
+            "amount": 53700,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 53700
           }
         ],
         "sourceType": "order",
         "sourceId": 1790787857086,
-        "sourceNumber": "2"
+        "sourceNumber": "2",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T16:57:00.527Z"
       },
       {
         "id": 1790787420548,
@@ -11128,7 +12056,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 5000
+            "amount": 5000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5000
           },
           {
             "id": 1790787420550,
@@ -11136,12 +12069,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "العميل: احلام موسى عبد الله محمد احمد الهندي",
             "side": "credit",
-            "amount": 5000
+            "amount": 5000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5000
           }
         ],
         "sourceType": "order",
         "sourceId": 1790787857086,
-        "sourceNumber": "2"
+        "sourceNumber": "2",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T16:57:00.527Z"
       },
       {
         "id": 1790775727151,
@@ -11155,7 +12099,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "رصيد افتتاحي",
             "side": "debit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 301,
+            "chartAccountCode": "301",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           },
           {
             "id": 1790775727153,
@@ -11163,12 +12112,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "ذمة مدينة: احمد تمام",
             "side": "credit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 130,
+            "chartAccountCode": "130",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           }
         ],
         "sourceType": "order",
         "sourceId": 1791062934600,
-        "sourceNumber": "1"
+        "sourceNumber": "1",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T13:42:07.151Z"
       },
       {
         "id": 1790774626067,
@@ -11183,7 +12143,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 120003,
             "accountName": "بنك الكريمي – حساب يمني",
             "side": "debit",
-            "amount": 60000
+            "amount": 60000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 60000
           },
           {
             "id": 1790774626069,
@@ -11191,12 +12156,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "العميل: نورا سلطان الصلاحي",
             "side": "credit",
-            "amount": 60000
+            "amount": 60000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 60000
           }
         ],
         "sourceType": "order",
         "sourceId": 1790787857086,
-        "sourceNumber": "2"
+        "sourceNumber": "2",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T13:23:46.066Z"
       },
       {
         "id": 1790722586920,
@@ -11210,7 +12186,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "مصروفات - تسويق",
             "side": "debit",
-            "amount": 3000
+            "amount": 3000,
+            "chartAccountId": 503,
+            "chartAccountCode": "503",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 3000
           },
           {
             "id": 1790722586922,
@@ -11218,12 +12199,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 1,
             "accountName": "فيزا كارد بنك التضامن",
             "side": "credit",
-            "amount": 3000
+            "amount": 3000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 3000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791065515779,
-        "sourceNumber": "8"
+        "sourceNumber": "8",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29T22:56:26.918Z"
       },
       {
         "id": 1790721640079,
@@ -11237,7 +12229,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "صادرات - خطاء في الحسابات",
             "side": "debit",
-            "amount": 35600
+            "amount": 35600,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 35600
           },
           {
             "id": 1790721640081,
@@ -11245,12 +12242,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 30003,
             "accountName": "كريمي — حساب سعودي",
             "side": "credit",
-            "amount": 35600
+            "amount": 35600,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 35600
           }
         ],
         "sourceType": "order",
         "sourceId": 1791065515779,
-        "sourceNumber": "8"
+        "sourceNumber": "8",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29T22:40:40.078Z"
       },
       {
         "id": 1790721540478,
@@ -11264,7 +12272,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "مصروفات - مواصلات",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 507,
+            "chartAccountCode": "507",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 1790721540480,
@@ -11272,12 +12285,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
         ],
         "sourceType": "order",
         "sourceId": 1790787631068,
-        "sourceNumber": "7"
+        "sourceNumber": "7",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29T22:39:00.476Z"
       },
       {
         "id": 1790721437964,
@@ -11291,7 +12315,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "debit",
-            "amount": 100
+            "amount": 100,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 100
           },
           {
             "id": 1790721437966,
@@ -11299,12 +12328,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 100
+            "amount": 100,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 100
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29T22:37:17.962Z"
       },
       {
         "id": 1790721412583,
@@ -11318,7 +12358,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "مصروفات - تشغيل",
             "side": "debit",
-            "amount": 100
+            "amount": 100,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 100
           },
           {
             "id": 1790721412585,
@@ -11326,12 +12371,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 100
+            "amount": 100,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 100
           }
         ],
         "sourceType": "order",
         "sourceId": 1791065515779,
-        "sourceNumber": "8"
+        "sourceNumber": "8",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29T22:36:52.581Z"
       },
       {
         "id": 1790721348054,
@@ -11345,7 +12401,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "مصروفات - تشغيل",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 1790721348056,
@@ -11353,12 +12414,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29T22:35:48.052Z"
       },
       {
         "id": 1790721295478,
@@ -11372,7 +12444,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "مصروفات - تشغيل",
             "side": "debit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           },
           {
             "id": 1790721295480,
@@ -11380,12 +12457,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           }
         ],
         "sourceType": "order",
         "sourceId": 1790787857086,
-        "sourceNumber": "2"
+        "sourceNumber": "2",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29T22:34:55.476Z"
       },
       {
         "id": 1790721225230,
@@ -11399,7 +12487,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "مصروفات - إنترنت",
             "side": "debit",
-            "amount": 16000
+            "amount": 16000,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 16000
           },
           {
             "id": 1790721225232,
@@ -11407,12 +12500,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 16000
+            "amount": 16000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 16000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791065515779,
-        "sourceNumber": "8"
+        "sourceNumber": "8",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29T22:33:45.228Z"
       },
       {
         "id": 1790721195998,
@@ -11426,7 +12530,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "مصروفات - إنترنت",
             "side": "debit",
-            "amount": 550
+            "amount": 550,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 550
           },
           {
             "id": 1790721196000,
@@ -11434,12 +12543,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 550
+            "amount": 550,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 550
           }
         ],
         "sourceType": "order",
         "sourceId": 1791062934600,
-        "sourceNumber": "1"
+        "sourceNumber": "1",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29T22:33:15.996Z"
       },
       {
         "id": 1790721152539,
@@ -11453,7 +12573,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "مصروفات - تشغيل",
             "side": "debit",
-            "amount": 1100
+            "amount": 1100,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1100
           },
           {
             "id": 1790721152541,
@@ -11461,12 +12586,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 1100
+            "amount": 1100,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1100
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29T22:32:32.537Z"
       },
       {
         "id": 1790721042638,
@@ -11480,7 +12616,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "مصروفات - تشغيل",
             "side": "debit",
-            "amount": 500
+            "amount": 500,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 500
           },
           {
             "id": 1790721042640,
@@ -11488,12 +12629,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 500
+            "amount": 500,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 500
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29T22:30:42.636Z"
       },
       {
         "id": 1790720963036,
@@ -11507,7 +12659,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "مصروفات - إنترنت",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 1790720963038,
@@ -11515,12 +12672,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
         ],
         "sourceType": "order",
         "sourceId": 1791321487809,
-        "sourceNumber": "3"
+        "sourceNumber": "3",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29T22:29:23.034Z"
       },
       {
         "id": 1790720688904,
@@ -11534,7 +12702,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 15000
+            "amount": 15000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 15000
           },
           {
             "id": 1790720688906,
@@ -11542,12 +12715,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "تكاليف الشحنات واللوجستيات",
             "side": "credit",
-            "amount": 15000
+            "amount": 15000,
+            "chartAccountId": 120,
+            "chartAccountCode": "120",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 15000
           }
         ],
         "sourceType": "order",
         "sourceId": 1791065515779,
-        "sourceNumber": "8"
+        "sourceNumber": "8",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29T22:24:48.904Z"
       },
       {
         "id": 1790718911670,
@@ -11561,7 +12745,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 16900
+            "amount": 16900,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 16900
           },
           {
             "id": 1790718911672,
@@ -11569,12 +12758,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: احلام موسى عبد الله محمد احمد الهندي",
             "side": "credit",
-            "amount": 16900
+            "amount": 16900,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 16900
           }
         ],
         "sourceType": "order",
         "sourceId": 1791065515779,
-        "sourceNumber": "8"
+        "sourceNumber": "8",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29T21:55:11.668Z"
       },
       {
         "id": 1790611661204,
@@ -11588,7 +12788,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 2900
+            "amount": 2900,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2900
           },
           {
             "id": 1790611661206,
@@ -11596,12 +12801,23 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: اشجان إدريس احمد القدسي",
             "side": "credit",
-            "amount": 2900
+            "amount": 2900,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2900
           }
         ],
         "sourceType": "order",
         "sourceId": 1791062934600,
-        "sourceNumber": "1"
+        "sourceNumber": "1",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-28T16:07:41.202Z"
       },
       {
         "id": 3791065443530,
@@ -11618,7 +12834,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: بيت الحلحلي",
             "side": "debit",
-            "amount": 16200
+            "amount": 16200,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 16200
           },
           {
             "id": 3791065443532,
@@ -11626,9 +12847,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 16200
+            "amount": 16200,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 16200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-01"
       },
       {
         "id": 3791065216031,
@@ -11645,7 +12877,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: خالد علي ناصر علي الغيثي",
             "side": "debit",
-            "amount": 77100
+            "amount": 77100,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 77100
           },
           {
             "id": 3791065216033,
@@ -11653,9 +12890,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 77100
+            "amount": 77100,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 77100
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-01"
       },
       {
         "id": 3790788090764,
@@ -11672,7 +12920,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: مرام حميد احمد سنان",
             "side": "debit",
-            "amount": 15300
+            "amount": 15300,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 15300
           },
           {
             "id": 3790788090766,
@@ -11680,9 +12933,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 15300
+            "amount": 15300,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 15300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29"
       },
       {
         "id": 3790787704173,
@@ -11699,7 +12963,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: محمد جميل محمد مطر",
             "side": "debit",
-            "amount": 34000
+            "amount": 34000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 34000
           },
           {
             "id": 3790787704175,
@@ -11707,9 +12976,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 34000
+            "amount": 34000,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 34000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-28"
       },
       {
         "id": 3790787537842,
@@ -11726,7 +13006,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
             "side": "debit",
-            "amount": 16100
+            "amount": 16100,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 16100
           },
           {
             "id": 3790787537844,
@@ -11734,9 +13019,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 16100
+            "amount": 16100,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 16100
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-26"
       },
       {
         "id": 3790781604211,
@@ -11753,7 +13049,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: اسماء ابراهيم عبد القوي",
             "side": "debit",
-            "amount": 5100
+            "amount": 5100,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5100
           },
           {
             "id": 3790781604213,
@@ -11761,9 +13062,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 5100
+            "amount": 5100,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5100
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-26"
       },
       {
         "id": 3790781507794,
@@ -11780,7 +13092,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: ماريا محمد سيف البناء",
             "side": "debit",
-            "amount": 7400
+            "amount": 7400,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7400
           },
           {
             "id": 3790781507796,
@@ -11788,9 +13105,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 7400
+            "amount": 7400,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-26"
       },
       {
         "id": 2000000330001,
@@ -11807,7 +13135,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: محمد جميل محمد مطر",
             "side": "debit",
-            "amount": 46500
+            "amount": 46500,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 46500
           },
           {
             "id": 2000000330003,
@@ -11815,9 +13148,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 46500
+            "amount": 46500,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 46500
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-08-30T00:00:00.000Z"
       },
       {
         "id": 2000000390001,
@@ -11834,7 +13178,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: زينب علي محمد إبراهيم دلواح",
             "side": "debit",
-            "amount": 21200
+            "amount": 21200,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 21200
           },
           {
             "id": 2000000390003,
@@ -11842,9 +13191,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 21200
+            "amount": 21200,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 21200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-08-29T00:00:00.000Z"
       },
       {
         "id": 2000000420001,
@@ -11861,7 +13221,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
             "side": "debit",
-            "amount": 59700
+            "amount": 59700,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 59700
           },
           {
             "id": 2000000420003,
@@ -11869,9 +13234,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 59700
+            "amount": 59700,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 59700
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-08-30T00:00:00.000Z"
       },
       {
         "id": 2000000450001,
@@ -11888,7 +13264,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: مرام محمد كشيع سالم",
             "side": "debit",
-            "amount": 4000
+            "amount": 4000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 4000
           },
           {
             "id": 2000000450003,
@@ -11896,9 +13277,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 4000
+            "amount": 4000,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 4000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-01T00:00:00.000Z"
       },
       {
         "id": 2000000480001,
@@ -11915,7 +13307,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: مرام عبد الجبار السريحي",
             "side": "debit",
-            "amount": 15900
+            "amount": 15900,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 15900
           },
           {
             "id": 2000000480003,
@@ -11923,9 +13320,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 15900
+            "amount": 15900,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 15900
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-01T00:00:00.000Z"
       },
       {
         "id": 2000000510001,
@@ -11942,7 +13350,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: غانم علي محمد  الشاذلي",
             "side": "debit",
-            "amount": 13300
+            "amount": 13300,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 13300
           },
           {
             "id": 2000000510003,
@@ -11950,9 +13363,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 13300
+            "amount": 13300,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 13300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-01T00:00:00.000Z"
       },
       {
         "id": 2000000540001,
@@ -11969,7 +13393,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: محمد جميل محمد مطر",
             "side": "debit",
-            "amount": 22800
+            "amount": 22800,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 22800
           },
           {
             "id": 2000000540003,
@@ -11977,9 +13406,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 22800
+            "amount": 22800,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 22800
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-02T00:00:00.000Z"
       },
       {
         "id": 2000000540002,
@@ -11996,7 +13436,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
             "side": "debit",
-            "amount": 1700
+            "amount": 1700,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1700
           },
           {
             "id": 2000000540004,
@@ -12004,9 +13449,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 1700
+            "amount": 1700,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1700
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-02T00:00:00.000Z"
       },
       {
         "id": 2000000600002,
@@ -12023,7 +13479,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: ام عبد الوهاب",
             "side": "debit",
-            "amount": 18400
+            "amount": 18400,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 18400
           },
           {
             "id": 2000000600004,
@@ -12031,9 +13492,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 18400
+            "amount": 18400,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 18400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-05T00:00:00.000Z"
       },
       {
         "id": 2000000630001,
@@ -12050,7 +13522,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: حنان علي محمد القاسمي",
             "side": "debit",
-            "amount": 32600
+            "amount": 32600,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 32600
           },
           {
             "id": 2000000630003,
@@ -12058,9 +13535,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 32600
+            "amount": 32600,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 32600
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-04T00:00:00.000Z"
       },
       {
         "id": 2000000660001,
@@ -12077,7 +13565,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: علي علي محسن سعود",
             "side": "debit",
-            "amount": 15400
+            "amount": 15400,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 15400
           },
           {
             "id": 2000000660003,
@@ -12085,9 +13578,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 15400
+            "amount": 15400,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 15400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-04T00:00:00.000Z"
       },
       {
         "id": 2000000660002,
@@ -12104,7 +13608,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: بيت الحلحلي",
             "side": "debit",
-            "amount": 29200
+            "amount": 29200,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 29200
           },
           {
             "id": 2000000660004,
@@ -12112,9 +13621,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 29200
+            "amount": 29200,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 29200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-05T00:00:00.000Z"
       },
       {
         "id": 2000000660003,
@@ -12131,7 +13651,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: نورا سلطان الصلاحي",
             "side": "debit",
-            "amount": 70300
+            "amount": 70300,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 70300
           },
           {
             "id": 2000000660005,
@@ -12139,9 +13664,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 70300
+            "amount": 70300,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 70300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-06T00:00:00.000Z"
       },
       {
         "id": 2000000690001,
@@ -12158,7 +13694,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: اشجان إدريس احمد القدسي",
             "side": "debit",
-            "amount": 25400
+            "amount": 25400,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 25400
           },
           {
             "id": 2000000690003,
@@ -12166,9 +13707,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 25400
+            "amount": 25400,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 25400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-06T00:00:00.000Z"
       },
       {
         "id": 2000000720001,
@@ -12185,7 +13737,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: اشجان إدريس احمد القدسي",
             "side": "debit",
-            "amount": 2900
+            "amount": 2900,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2900
           },
           {
             "id": 2000000720003,
@@ -12193,9 +13750,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 2900
+            "amount": 2900,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2900
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-07T00:00:00.000Z"
       },
       {
         "id": 2000000750001,
@@ -12212,7 +13780,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: بيت الحلحلي",
             "side": "debit",
-            "amount": 72600
+            "amount": 72600,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 72600
           },
           {
             "id": 2000000750003,
@@ -12220,9 +13793,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 72600
+            "amount": 72600,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 72600
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-10T00:00:00.000Z"
       },
       {
         "id": 2000000750002,
@@ -12239,7 +13823,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
             "side": "debit",
-            "amount": 26500
+            "amount": 26500,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 26500
           },
           {
             "id": 2000000750004,
@@ -12247,9 +13836,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 26500
+            "amount": 26500,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 26500
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-12T00:00:00.000Z"
       },
       {
         "id": 2000000780001,
@@ -12266,7 +13866,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: حنان علي محسن النجار",
             "side": "debit",
-            "amount": 118400
+            "amount": 118400,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 118400
           },
           {
             "id": 2000000780003,
@@ -12274,9 +13879,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 118400
+            "amount": 118400,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 118400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-15T00:00:00.000Z"
       },
       {
         "id": 2000000780002,
@@ -12293,7 +13909,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: محمد جميل محمد مطر",
             "side": "debit",
-            "amount": 14100
+            "amount": 14100,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 14100
           },
           {
             "id": 2000000780004,
@@ -12301,9 +13922,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 14100
+            "amount": 14100,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 14100
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-15T00:00:00.000Z"
       },
       {
         "id": 2000000810001,
@@ -12320,7 +13952,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: مرام محمد كشيع سالم",
             "side": "debit",
-            "amount": 54700
+            "amount": 54700,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 54700
           },
           {
             "id": 2000000810003,
@@ -12328,9 +13965,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 54700
+            "amount": 54700,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 54700
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-17T00:00:00.000Z"
       },
       {
         "id": 2000000810002,
@@ -12347,7 +13995,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
             "side": "debit",
-            "amount": 2800
+            "amount": 2800,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2800
           },
           {
             "id": 2000000810004,
@@ -12355,9 +14008,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 2800
+            "amount": 2800,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2800
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-18T00:00:00.000Z"
       },
       {
         "id": 2000000810003,
@@ -12374,7 +14038,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: مرام محمد كشيع سالم",
             "side": "debit",
-            "amount": 22700
+            "amount": 22700,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 22700
           },
           {
             "id": 2000000810005,
@@ -12382,9 +14051,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 22700
+            "amount": 22700,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 22700
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-18T00:00:00.000Z"
       },
       {
         "id": 2000000810004,
@@ -12401,7 +14081,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: احمد تمام",
             "side": "debit",
-            "amount": 7200
+            "amount": 7200,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7200
           },
           {
             "id": 2000000810006,
@@ -12409,9 +14094,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 7200
+            "amount": 7200,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-18T00:00:00.000Z"
       },
       {
         "id": 2000000840001,
@@ -12428,7 +14124,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: مرام عبد الجبار السريحي",
             "side": "debit",
-            "amount": 3400
+            "amount": 3400,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 3400
           },
           {
             "id": 2000000840003,
@@ -12436,9 +14137,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 3400
+            "amount": 3400,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 3400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-18T00:00:00.000Z"
       },
       {
         "id": 2000000870001,
@@ -12455,7 +14167,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: امال عامر احمد العمري",
             "side": "debit",
-            "amount": 8300
+            "amount": 8300,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 8300
           },
           {
             "id": 2000000870003,
@@ -12463,9 +14180,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 8300
+            "amount": 8300,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 8300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-18T00:00:00.000Z"
       },
       {
         "id": 2000000930001,
@@ -12482,7 +14210,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: ريناس عبد الحكيم يحيى محمد",
             "side": "debit",
-            "amount": 10300
+            "amount": 10300,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 10300
           },
           {
             "id": 2000000930003,
@@ -12490,9 +14223,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 10300
+            "amount": 10300,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 10300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-22T00:00:00.000Z"
       },
       {
         "id": 2000000960001,
@@ -12509,7 +14253,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: حنان علي محسن النجار",
             "side": "debit",
-            "amount": 49700
+            "amount": 49700,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 49700
           },
           {
             "id": 2000000960003,
@@ -12517,9 +14266,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 49700
+            "amount": 49700,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 49700
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-20T00:00:00.000Z"
       },
       {
         "id": 2000000990001,
@@ -12536,7 +14296,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: حنان علي محسن النجار",
             "side": "debit",
-            "amount": 43900
+            "amount": 43900,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 43900
           },
           {
             "id": 2000000990003,
@@ -12544,9 +14309,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 43900
+            "amount": 43900,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 43900
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-22T00:00:00.000Z"
       },
       {
         "id": 2000000990002,
@@ -12563,7 +14339,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
             "side": "debit",
-            "amount": 12800
+            "amount": 12800,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 12800
           },
           {
             "id": 2000000990004,
@@ -12571,9 +14352,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 12800
+            "amount": 12800,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 12800
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-22T00:00:00.000Z"
       },
       {
         "id": 2000000990003,
@@ -12590,7 +14382,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: حنان علي محسن النجار",
             "side": "debit",
-            "amount": 11600
+            "amount": 11600,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 11600
           },
           {
             "id": 2000000990005,
@@ -12598,9 +14395,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 11600
+            "amount": 11600,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 11600
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-22T00:00:00.000Z"
       },
       {
         "id": 2000000990004,
@@ -12617,7 +14425,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: محمد محسن محمد هايم",
             "side": "debit",
-            "amount": 20700
+            "amount": 20700,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 20700
           },
           {
             "id": 2000000990006,
@@ -12625,9 +14438,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 20700
+            "amount": 20700,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 20700
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-24T00:00:00.000Z"
       },
       {
         "id": 2000000990005,
@@ -12644,7 +14468,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: اسماء ابراهيم عبد القوي",
             "side": "debit",
-            "amount": 46800
+            "amount": 46800,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 46800
           },
           {
             "id": 2000000990007,
@@ -12652,9 +14481,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 46800
+            "amount": 46800,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 46800
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-23T00:00:00.000Z"
       },
       {
         "id": 2000000990006,
@@ -12671,7 +14511,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: حنان علي محسن النجار",
             "side": "debit",
-            "amount": 7700
+            "amount": 7700,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7700
           },
           {
             "id": 2000000990008,
@@ -12679,9 +14524,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 7700
+            "amount": 7700,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7700
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-28T00:00:00.000Z"
       },
       {
         "id": 3790780597354,
@@ -12698,7 +14554,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: اسماء ابراهيم عبد القوي",
             "side": "debit",
-            "amount": 46800
+            "amount": 46800,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 46800
           },
           {
             "id": 3790780597356,
@@ -12706,9 +14567,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 46800
+            "amount": 46800,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 46800
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30"
       },
       {
         "id": 3791077398275,
@@ -12725,7 +14597,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: نورا سلطان الصلاحي",
             "side": "debit",
-            "amount": 183500
+            "amount": 183500,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 183500
           },
           {
             "id": 3791077398277,
@@ -12733,9 +14610,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 183500
+            "amount": 183500,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 183500
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-04"
       },
       {
         "id": 3791077524078,
@@ -12752,7 +14640,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
             "side": "debit",
-            "amount": 2600
+            "amount": 2600,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2600
           },
           {
             "id": 3791077524080,
@@ -12760,9 +14653,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 401,
             "accountName": "حـ/ إيرادات المبيعات والوساطة",
             "side": "credit",
-            "amount": 2600
+            "amount": 2600,
+            "chartAccountId": 401,
+            "chartAccountCode": "401",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2600
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-04"
       },
       {
         "id": 4791148068540,
@@ -12779,7 +14683,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           },
           {
             "id": 4791148068542,
@@ -12787,9 +14696,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-04T21:07:48.540Z"
       },
       {
         "id": 4791147339250,
@@ -12806,7 +14726,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           },
           {
             "id": 4791147339252,
@@ -12814,9 +14739,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-04T20:55:39.250Z"
       },
       {
         "id": 4791147301654,
@@ -12833,7 +14769,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 1300
+            "amount": 1300,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1300
           },
           {
             "id": 4791147301656,
@@ -12841,9 +14782,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 1300
+            "amount": 1300,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-04T20:55:01.654Z"
       },
       {
         "id": 4791073427532,
@@ -12860,7 +14812,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (شحن ونقل لوجستي)",
             "side": "debit",
-            "amount": 21000
+            "amount": 21000,
+            "chartAccountId": 120,
+            "chartAccountCode": "120",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 21000
           },
           {
             "id": 4791073427534,
@@ -12868,9 +14825,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 21000
+            "amount": 21000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 21000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-04T00:23:47.527Z"
       },
       {
         "id": 4790995532228,
@@ -12887,7 +14855,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 4790995532230,
@@ -12895,9 +14868,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03T02:45:32.228Z"
       },
       {
         "id": 4790995478867,
@@ -12914,7 +14898,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 1200
+            "amount": 1200,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1200
           },
           {
             "id": 4790995478869,
@@ -12922,9 +14911,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 1200
+            "amount": 1200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03T02:44:38.867Z"
       },
       {
         "id": 4790901002379,
@@ -12941,7 +14941,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 1500
+            "amount": 1500,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1500
           },
           {
             "id": 4790901002381,
@@ -12949,9 +14954,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 1500
+            "amount": 1500,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1500
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-02T00:30:02.379Z"
       },
       {
         "id": 4790900974882,
@@ -12968,7 +14984,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 4790900974884,
@@ -12976,9 +14997,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-02T00:29:34.882Z"
       },
       {
         "id": 4790900945052,
@@ -12995,7 +15027,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 7000
+            "amount": 7000,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7000
           },
           {
             "id": 4790900945054,
@@ -13003,9 +15040,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 7000
+            "amount": 7000,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-02T00:29:05.053Z"
       },
       {
         "id": 4790809072353,
@@ -13022,7 +15070,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تسويق)",
             "side": "debit",
-            "amount": 2200
+            "amount": 2200,
+            "chartAccountId": 503,
+            "chartAccountCode": "503",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2200
           },
           {
             "id": 4790809072355,
@@ -13030,9 +15083,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 1,
             "accountName": "فيزا كارد بنك التضامن",
             "side": "credit",
-            "amount": 2200
+            "amount": 2200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T22:57:52.353Z"
       },
       {
         "id": 4790809027179,
@@ -13049,7 +15113,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 4790809027181,
@@ -13057,9 +15126,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T22:57:07.179Z"
       },
       {
         "id": 4790808994829,
@@ -13076,7 +15156,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           },
           {
             "id": 4790808994831,
@@ -13084,9 +15169,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T22:56:34.829Z"
       },
       {
         "id": 4790808951779,
@@ -13103,7 +15199,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 4790808951781,
@@ -13111,9 +15212,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T22:55:51.779Z"
       },
       {
         "id": 4790808923764,
@@ -13130,7 +15242,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 1100
+            "amount": 1100,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1100
           },
           {
             "id": 4790808923766,
@@ -13138,9 +15255,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 1100
+            "amount": 1100,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1100
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T22:55:23.764Z"
       },
       {
         "id": 4790722586918,
@@ -13157,7 +15285,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تسويق)",
             "side": "debit",
-            "amount": 3000
+            "amount": 3000,
+            "chartAccountId": 503,
+            "chartAccountCode": "503",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 3000
           },
           {
             "id": 4790722586920,
@@ -13165,9 +15298,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 1,
             "accountName": "فيزا كارد بنك التضامن",
             "side": "credit",
-            "amount": 3000
+            "amount": 3000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 3000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29T22:56:26.918Z"
       },
       {
         "id": 4790721540476,
@@ -13184,7 +15328,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مواصلات)",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 507,
+            "chartAccountCode": "507",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 4790721540478,
@@ -13192,9 +15341,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29T22:39:00.476Z"
       },
       {
         "id": 4790721412581,
@@ -13211,7 +15371,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 100
+            "amount": 100,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 100
           },
           {
             "id": 4790721412583,
@@ -13219,9 +15384,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 100
+            "amount": 100,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 100
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29T22:36:52.581Z"
       },
       {
         "id": 4790721348052,
@@ -13238,7 +15414,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 4790721348054,
@@ -13246,9 +15427,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29T22:35:48.052Z"
       },
       {
         "id": 4790721295476,
@@ -13265,7 +15457,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           },
           {
             "id": 4790721295478,
@@ -13273,9 +15470,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29T22:34:55.476Z"
       },
       {
         "id": 4790721225228,
@@ -13292,7 +15500,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 16000
+            "amount": 16000,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 16000
           },
           {
             "id": 4790721225230,
@@ -13300,9 +15513,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 16000
+            "amount": 16000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 16000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29T22:33:45.228Z"
       },
       {
         "id": 4790721195996,
@@ -13319,7 +15543,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 550
+            "amount": 550,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 550
           },
           {
             "id": 4790721195998,
@@ -13327,9 +15556,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 550
+            "amount": 550,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 550
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29T22:33:15.996Z"
       },
       {
         "id": 4790721152537,
@@ -13346,7 +15586,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 1100
+            "amount": 1100,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1100
           },
           {
             "id": 4790721152539,
@@ -13354,9 +15599,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 1100
+            "amount": 1100,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1100
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29T22:32:32.537Z"
       },
       {
         "id": 4790721042636,
@@ -13373,7 +15629,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 500
+            "amount": 500,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 500
           },
           {
             "id": 4790721042638,
@@ -13381,9 +15642,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 500
+            "amount": 500,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 500
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29T22:30:42.636Z"
       },
       {
         "id": 4790720963034,
@@ -13400,7 +15672,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 4790720963036,
@@ -13408,9 +15685,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29T22:29:23.034Z"
       },
       {
         "id": 3000000150001,
@@ -13427,7 +15715,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مصاريف أخرى)",
             "side": "debit",
-            "amount": 1200
+            "amount": 1200,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1200
           },
           {
             "id": 3000000150003,
@@ -13435,9 +15728,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 1200
+            "amount": 1200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-08-29T17:34:02.000Z"
       },
       {
         "id": 3000000180001,
@@ -13454,7 +15758,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مواصلات)",
             "side": "debit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 507,
+            "chartAccountCode": "507",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           },
           {
             "id": 3000000180003,
@@ -13462,9 +15771,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-08-29T22:59:22.000Z"
       },
       {
         "id": 3000000210001,
@@ -13481,7 +15801,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 850
+            "amount": 850,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 850
           },
           {
             "id": 3000000210003,
@@ -13489,9 +15814,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 850
+            "amount": 850,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 850
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-08-29T23:00:12.000Z"
       },
       {
         "id": 3000000240001,
@@ -13508,7 +15844,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مواصلات)",
             "side": "debit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 507,
+            "chartAccountCode": "507",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           },
           {
             "id": 3000000240003,
@@ -13516,9 +15857,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-08-29T23:05:38.000Z"
       },
       {
         "id": 3000000270001,
@@ -13535,7 +15887,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 800
+            "amount": 800,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 800
           },
           {
             "id": 3000000270003,
@@ -13543,9 +15900,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 800
+            "amount": 800,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 800
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-08-30T20:07:41.000Z"
       },
       {
         "id": 3000000300001,
@@ -13562,7 +15930,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 3000000300003,
@@ -13570,9 +15943,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-08-30T20:11:00.000Z"
       },
       {
         "id": 3000000330001,
@@ -13589,7 +15973,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           },
           {
             "id": 3000000330003,
@@ -13597,9 +15986,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-08-30T20:14:05.000Z"
       },
       {
         "id": 3000000360001,
@@ -13616,7 +16016,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مصاريف أخرى)",
             "side": "debit",
-            "amount": 100
+            "amount": 100,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 100
           },
           {
             "id": 3000000360003,
@@ -13624,9 +16029,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 100
+            "amount": 100,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 100
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-08-30T20:58:45.000Z"
       },
       {
         "id": 3000000390001,
@@ -13643,7 +16059,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مصاريف أخرى)",
             "side": "debit",
-            "amount": 700
+            "amount": 700,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 700
           },
           {
             "id": 3000000390003,
@@ -13651,9 +16072,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 700
+            "amount": 700,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 700
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-08-31T21:42:08.000Z"
       },
       {
         "id": 3000000390002,
@@ -13670,7 +16102,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مصاريف أخرى)",
             "side": "debit",
-            "amount": 600
+            "amount": 600,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 600
           },
           {
             "id": 3000000390004,
@@ -13678,9 +16115,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 600
+            "amount": 600,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 600
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-08-31T21:42:46.000Z"
       },
       {
         "id": 3000000390003,
@@ -13697,7 +16145,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مصاريف أخرى)",
             "side": "debit",
-            "amount": 250
+            "amount": 250,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 250
           },
           {
             "id": 3000000390005,
@@ -13705,9 +16158,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 250
+            "amount": 250,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 250
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-08-31T21:43:26.000Z"
       },
       {
         "id": 3000000390004,
@@ -13724,7 +16188,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مصاريف أخرى)",
             "side": "debit",
-            "amount": 600
+            "amount": 600,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 600
           },
           {
             "id": 3000000390006,
@@ -13732,9 +16201,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 600
+            "amount": 600,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 600
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-08-31T21:43:48.000Z"
       },
       {
         "id": 3000000420001,
@@ -13751,7 +16231,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مواصلات)",
             "side": "debit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 507,
+            "chartAccountCode": "507",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           },
           {
             "id": 3000000420003,
@@ -13759,9 +16244,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-08-31T21:44:34.000Z"
       },
       {
         "id": 3000000420002,
@@ -13778,7 +16274,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مواصلات)",
             "side": "debit",
-            "amount": 100
+            "amount": 100,
+            "chartAccountId": 507,
+            "chartAccountCode": "507",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 100
           },
           {
             "id": 3000000420004,
@@ -13786,9 +16287,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 100
+            "amount": 100,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 100
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-08-31T21:45:13.000Z"
       },
       {
         "id": 3000000450001,
@@ -13805,7 +16317,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مصاريف أخرى)",
             "side": "debit",
-            "amount": 350
+            "amount": 350,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 350
           },
           {
             "id": 3000000450003,
@@ -13813,9 +16330,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 350
+            "amount": 350,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 350
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-08-31T22:51:20.000Z"
       },
       {
         "id": 3000000480001,
@@ -13832,7 +16360,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           },
           {
             "id": 3000000480003,
@@ -13840,9 +16373,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-01T21:26:01.000Z"
       },
       {
         "id": 3000000510001,
@@ -13859,7 +16403,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مواصلات)",
             "side": "debit",
-            "amount": 550
+            "amount": 550,
+            "chartAccountId": 507,
+            "chartAccountCode": "507",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 550
           },
           {
             "id": 3000000510003,
@@ -13867,9 +16416,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 550
+            "amount": 550,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 550
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-02T23:09:48.000Z"
       },
       {
         "id": 3000000540001,
@@ -13886,7 +16446,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مواصلات)",
             "side": "debit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 507,
+            "chartAccountCode": "507",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           },
           {
             "id": 3000000540003,
@@ -13894,9 +16459,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-02T23:21:59.000Z"
       },
       {
         "id": 3000000570001,
@@ -13913,7 +16489,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مصاريف أخرى)",
             "side": "debit",
-            "amount": 1100
+            "amount": 1100,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1100
           },
           {
             "id": 3000000570003,
@@ -13921,9 +16502,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 1100
+            "amount": 1100,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1100
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-02T23:24:51.000Z"
       },
       {
         "id": 3000000570002,
@@ -13940,7 +16532,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مصاريف أخرى)",
             "side": "debit",
-            "amount": 1100
+            "amount": 1100,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1100
           },
           {
             "id": 3000000570004,
@@ -13948,9 +16545,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 1100
+            "amount": 1100,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1100
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-02T23:25:12.000Z"
       },
       {
         "id": 3000000570003,
@@ -13967,7 +16575,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مواصلات)",
             "side": "debit",
-            "amount": 700
+            "amount": 700,
+            "chartAccountId": 507,
+            "chartAccountCode": "507",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 700
           },
           {
             "id": 3000000570005,
@@ -13975,9 +16588,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 700
+            "amount": 700,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 700
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-02T23:26:36.000Z"
       },
       {
         "id": 3000000600001,
@@ -13994,7 +16618,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مصاريف أخرى)",
             "side": "debit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           },
           {
             "id": 3000000600003,
@@ -14002,9 +16631,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-02T23:33:29.000Z"
       },
       {
         "id": 3000000630001,
@@ -14021,7 +16661,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           },
           {
             "id": 3000000630003,
@@ -14029,9 +16674,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-02T23:45:07.000Z"
       },
       {
         "id": 3000000660001,
@@ -14048,7 +16704,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مصاريف أخرى)",
             "side": "debit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           },
           {
             "id": 3000000660003,
@@ -14056,9 +16717,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-04T20:27:41.000Z"
       },
       {
         "id": 3000000660002,
@@ -14075,7 +16747,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مصاريف أخرى)",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 3000000660004,
@@ -14083,9 +16760,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-04T20:28:20.000Z"
       },
       {
         "id": 3000000690001,
@@ -14102,7 +16790,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مصاريف أخرى)",
             "side": "debit",
-            "amount": 500
+            "amount": 500,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 500
           },
           {
             "id": 3000000690003,
@@ -14110,9 +16803,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 500
+            "amount": 500,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 500
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-04T20:30:57.000Z"
       },
       {
         "id": 3000000690002,
@@ -14129,7 +16833,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مصاريف أخرى)",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 3000000690004,
@@ -14137,9 +16846,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-04T20:31:15.000Z"
       },
       {
         "id": 3000000720001,
@@ -14156,7 +16876,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مصاريف أخرى)",
             "side": "debit",
-            "amount": 800
+            "amount": 800,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 800
           },
           {
             "id": 3000000720003,
@@ -14164,9 +16889,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 800
+            "amount": 800,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 800
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-04T20:50:53.000Z"
       },
       {
         "id": 3000000750001,
@@ -14183,7 +16919,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           },
           {
             "id": 3000000750003,
@@ -14191,9 +16932,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-05T20:03:44.000Z"
       },
       {
         "id": 3000000780001,
@@ -14210,7 +16962,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مصاريف أخرى)",
             "side": "debit",
-            "amount": 5000
+            "amount": 5000,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5000
           },
           {
             "id": 3000000780003,
@@ -14218,9 +16975,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 5000
+            "amount": 5000,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-05T20:04:29.000Z"
       },
       {
         "id": 3000000810001,
@@ -14237,7 +17005,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مصاريف أخرى)",
             "side": "debit",
-            "amount": 1150
+            "amount": 1150,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1150
           },
           {
             "id": 3000000810003,
@@ -14245,9 +17018,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 1150
+            "amount": 1150,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1150
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-05T20:11:10.000Z"
       },
       {
         "id": 3000000840001,
@@ -14264,7 +17048,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 600
+            "amount": 600,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 600
           },
           {
             "id": 3000000840003,
@@ -14272,9 +17061,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 600
+            "amount": 600,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 600
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-06T22:22:41.000Z"
       },
       {
         "id": 3000000870001,
@@ -14291,7 +17091,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           },
           {
             "id": 3000000870003,
@@ -14299,9 +17104,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-06T22:31:55.000Z"
       },
       {
         "id": 3000000900001,
@@ -14318,7 +17134,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مصاريف أخرى)",
             "side": "debit",
-            "amount": 1200
+            "amount": 1200,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1200
           },
           {
             "id": 3000000900003,
@@ -14326,9 +17147,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 1200
+            "amount": 1200,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-06T22:39:31.000Z"
       },
       {
         "id": 3000000930001,
@@ -14345,7 +17177,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 650
+            "amount": 650,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 650
           },
           {
             "id": 3000000930003,
@@ -14353,9 +17190,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 650
+            "amount": 650,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 650
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-07T22:52:18.000Z"
       },
       {
         "id": 3000000960001,
@@ -14372,7 +17220,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مصاريف أخرى)",
             "side": "debit",
-            "amount": 2650
+            "amount": 2650,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2650
           },
           {
             "id": 3000000960003,
@@ -14380,9 +17233,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 2650
+            "amount": 2650,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2650
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-08T21:38:32.000Z"
       },
       {
         "id": 3000000990001,
@@ -14399,7 +17263,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 16100
+            "amount": 16100,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 16100
           },
           {
             "id": 3000000990003,
@@ -14407,9 +17276,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 16100
+            "amount": 16100,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 16100
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-08T21:39:47.000Z"
       },
       {
         "id": 3000001020001,
@@ -14426,7 +17306,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (توصيل عرض)",
             "side": "debit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 507,
+            "chartAccountCode": "507",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           },
           {
             "id": 3000001020003,
@@ -14434,9 +17319,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-09T21:18:14.000Z"
       },
       {
         "id": 3000001050001,
@@ -14453,7 +17349,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 2000
+            "amount": 2000,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2000
           },
           {
             "id": 3000001050003,
@@ -14461,9 +17362,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 2000
+            "amount": 2000,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-09T21:19:25.000Z"
       },
       {
         "id": 3000001080001,
@@ -14480,7 +17392,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           },
           {
             "id": 3000001080003,
@@ -14488,9 +17405,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-09T21:20:08.000Z"
       },
       {
         "id": 3000001080002,
@@ -14507,7 +17435,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 100
+            "amount": 100,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 100
           },
           {
             "id": 3000001080004,
@@ -14515,9 +17448,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 100
+            "amount": 100,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 100
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-09T21:20:48.000Z"
       },
       {
         "id": 3000001110001,
@@ -14534,7 +17478,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مواصلات)",
             "side": "debit",
-            "amount": 500
+            "amount": 500,
+            "chartAccountId": 507,
+            "chartAccountCode": "507",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 500
           },
           {
             "id": 3000001110003,
@@ -14542,9 +17491,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 500
+            "amount": 500,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 500
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-09T21:31:25.000Z"
       },
       {
         "id": 3000001140001,
@@ -14561,7 +17521,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تسويق)",
             "side": "debit",
-            "amount": 3600
+            "amount": 3600,
+            "chartAccountId": 503,
+            "chartAccountCode": "503",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 3600
           },
           {
             "id": 3000001140003,
@@ -14569,9 +17534,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 1,
             "accountName": "فيزا كارد بنك التضامن",
             "side": "credit",
-            "amount": 3600
+            "amount": 3600,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 3600
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-09T21:41:26.000Z"
       },
       {
         "id": 3000001170001,
@@ -14588,7 +17564,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تسويق)",
             "side": "debit",
-            "amount": 3200
+            "amount": 3200,
+            "chartAccountId": 503,
+            "chartAccountCode": "503",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 3200
           },
           {
             "id": 3000001170003,
@@ -14596,9 +17577,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 1,
             "accountName": "فيزا كارد بنك التضامن",
             "side": "credit",
-            "amount": 3200
+            "amount": 3200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 3200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-09T21:45:31.000Z"
       },
       {
         "id": 3000001200001,
@@ -14615,7 +17607,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (قات)",
             "side": "debit",
-            "amount": 1400
+            "amount": 1400,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1400
           },
           {
             "id": 3000001200003,
@@ -14623,9 +17620,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 1400
+            "amount": 1400,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-10T23:23:47.000Z"
       },
       {
         "id": 3000001200002,
@@ -14642,7 +17650,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 350
+            "amount": 350,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 350
           },
           {
             "id": 3000001200004,
@@ -14650,9 +17663,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 350
+            "amount": 350,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 350
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-10T23:24:10.000Z"
       },
       {
         "id": 3000001200003,
@@ -14669,7 +17693,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 1200
+            "amount": 1200,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1200
           },
           {
             "id": 3000001200005,
@@ -14677,9 +17706,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 1200
+            "amount": 1200,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-10T23:24:46.000Z"
       },
       {
         "id": 3000001230001,
@@ -14696,7 +17736,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مواصلات)",
             "side": "debit",
-            "amount": 500
+            "amount": 500,
+            "chartAccountId": 507,
+            "chartAccountCode": "507",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 500
           },
           {
             "id": 3000001230003,
@@ -14704,9 +17749,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 500
+            "amount": 500,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 500
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-10T23:25:36.000Z"
       },
       {
         "id": 3000001230002,
@@ -14723,7 +17779,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مواصلات)",
             "side": "debit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 507,
+            "chartAccountCode": "507",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           },
           {
             "id": 3000001230004,
@@ -14731,9 +17792,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-10T23:25:56.000Z"
       },
       {
         "id": 3000001260001,
@@ -14750,7 +17822,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           },
           {
             "id": 3000001260003,
@@ -14758,9 +17835,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-10T23:26:52.000Z"
       },
       {
         "id": 3000001290001,
@@ -14777,7 +17865,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 2500
+            "amount": 2500,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2500
           },
           {
             "id": 3000001290003,
@@ -14785,9 +17878,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 2500
+            "amount": 2500,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2500
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-12T18:43:14.000Z"
       },
       {
         "id": 3000001320001,
@@ -14804,7 +17908,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           },
           {
             "id": 3000001320003,
@@ -14812,9 +17921,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-12T18:43:58.000Z"
       },
       {
         "id": 3000001350001,
@@ -14831,7 +17951,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (رسوم بنكية)",
             "side": "debit",
-            "amount": 50
+            "amount": 50,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 50
           },
           {
             "id": 3000001350003,
@@ -14839,9 +17964,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 50
+            "amount": 50,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 50
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-12T18:45:22.000Z"
       },
       {
         "id": 3000001380001,
@@ -14858,7 +17994,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مواصلات)",
             "side": "debit",
-            "amount": 500
+            "amount": 500,
+            "chartAccountId": 507,
+            "chartAccountCode": "507",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 500
           },
           {
             "id": 3000001380003,
@@ -14866,9 +18007,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 500
+            "amount": 500,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 500
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-12T18:54:20.000Z"
       },
       {
         "id": 3000001410001,
@@ -14885,7 +18037,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 700
+            "amount": 700,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 700
           },
           {
             "id": 3000001410003,
@@ -14893,9 +18050,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 700
+            "amount": 700,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 700
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-12T18:59:33.000Z"
       },
       {
         "id": 3000001440001,
@@ -14912,7 +18080,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           },
           {
             "id": 3000001440003,
@@ -14920,9 +18093,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-13T22:55:32.000Z"
       },
       {
         "id": 3000001440002,
@@ -14939,7 +18123,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 3000001440004,
@@ -14947,9 +18136,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-13T22:56:14.000Z"
       },
       {
         "id": 3000001470001,
@@ -14966,7 +18166,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (قات)",
             "side": "debit",
-            "amount": 1600
+            "amount": 1600,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1600
           },
           {
             "id": 3000001470003,
@@ -14974,9 +18179,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 1600
+            "amount": 1600,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1600
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-13T22:57:28.000Z"
       },
       {
         "id": 3000001470002,
@@ -14993,7 +18209,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 3000001470004,
@@ -15001,9 +18222,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-13T22:58:02.000Z"
       },
       {
         "id": 3000001500001,
@@ -15020,7 +18252,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 3000001500003,
@@ -15028,9 +18265,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-14T21:00:18.000Z"
       },
       {
         "id": 3000001530001,
@@ -15047,7 +18295,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 8000
+            "amount": 8000,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 8000
           },
           {
             "id": 3000001530003,
@@ -15055,9 +18308,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 8000
+            "amount": 8000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 8000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-14T21:00:56.000Z"
       },
       {
         "id": 3000001560001,
@@ -15074,7 +18338,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 1800
+            "amount": 1800,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1800
           },
           {
             "id": 3000001560003,
@@ -15082,9 +18351,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 1800
+            "amount": 1800,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1800
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-14T21:01:58.000Z"
       },
       {
         "id": 3000001590001,
@@ -15101,7 +18381,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 3000001590003,
@@ -15109,9 +18394,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-14T21:04:01.000Z"
       },
       {
         "id": 3000001590002,
@@ -15128,7 +18424,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           },
           {
             "id": 3000001590004,
@@ -15136,9 +18437,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-14T21:04:40.000Z"
       },
       {
         "id": 3000001620001,
@@ -15155,7 +18467,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (قات)",
             "side": "debit",
-            "amount": 700
+            "amount": 700,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 700
           },
           {
             "id": 3000001620003,
@@ -15163,9 +18480,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 700
+            "amount": 700,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 700
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-14T21:11:42.000Z"
       },
       {
         "id": 3000001650001,
@@ -15182,7 +18510,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (قات)",
             "side": "debit",
-            "amount": 1500
+            "amount": 1500,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1500
           },
           {
             "id": 3000001650003,
@@ -15190,9 +18523,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 1500
+            "amount": 1500,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1500
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-15T21:13:50.000Z"
       },
       {
         "id": 3000001680001,
@@ -15209,7 +18553,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (قات)",
             "side": "debit",
-            "amount": 500
+            "amount": 500,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 500
           },
           {
             "id": 3000001680003,
@@ -15217,9 +18566,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 500
+            "amount": 500,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 500
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-15T21:15:08.000Z"
       },
       {
         "id": 3000001680002,
@@ -15236,7 +18596,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 3000001680004,
@@ -15244,9 +18609,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-15T21:15:49.000Z"
       },
       {
         "id": 3000001680003,
@@ -15263,7 +18639,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 3000001680005,
@@ -15271,9 +18652,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-15T21:16:23.000Z"
       },
       {
         "id": 3000001680004,
@@ -15290,7 +18682,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           },
           {
             "id": 3000001680006,
@@ -15298,9 +18695,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-15T21:17:09.000Z"
       },
       {
         "id": 3000001680006,
@@ -15317,7 +18725,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           },
           {
             "id": 3000001680008,
@@ -15325,9 +18738,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-15T21:18:46.000Z"
       },
       {
         "id": 3000001680007,
@@ -15344,7 +18768,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 3000001680009,
@@ -15352,9 +18781,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-15T21:19:04.000Z"
       },
       {
         "id": 3000001710001,
@@ -15371,7 +18811,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 2000
+            "amount": 2000,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2000
           },
           {
             "id": 3000001710003,
@@ -15379,9 +18824,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 2000
+            "amount": 2000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-19T14:42:45.000Z"
       },
       {
         "id": 3000001710002,
@@ -15398,7 +18854,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 350
+            "amount": 350,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 350
           },
           {
             "id": 3000001710004,
@@ -15406,9 +18867,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 350
+            "amount": 350,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 350
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-19T14:43:26.000Z"
       },
       {
         "id": 3000001740001,
@@ -15425,7 +18897,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (قات)",
             "side": "debit",
-            "amount": 1500
+            "amount": 1500,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1500
           },
           {
             "id": 3000001740003,
@@ -15433,9 +18910,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 1500
+            "amount": 1500,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1500
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-19T14:44:39.000Z"
       },
       {
         "id": 3000001770001,
@@ -15452,7 +18940,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (قات)",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 3000001770003,
@@ -15460,9 +18953,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-19T14:46:04.000Z"
       },
       {
         "id": 3000001770002,
@@ -15479,7 +18983,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 3000001770004,
@@ -15487,9 +18996,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-19T14:46:42.000Z"
       },
       {
         "id": 3000001770003,
@@ -15506,7 +19026,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (توصيل عرض)",
             "side": "debit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 507,
+            "chartAccountCode": "507",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           },
           {
             "id": 3000001770005,
@@ -15514,9 +19039,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-19T14:47:17.000Z"
       },
       {
         "id": 3000001800001,
@@ -15533,7 +19069,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (قات)",
             "side": "debit",
-            "amount": 1200
+            "amount": 1200,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1200
           },
           {
             "id": 3000001800003,
@@ -15541,9 +19082,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 1200
+            "amount": 1200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-19T14:48:31.000Z"
       },
       {
         "id": 3000001830001,
@@ -15560,7 +19112,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 5200
+            "amount": 5200,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5200
           },
           {
             "id": 3000001830003,
@@ -15568,9 +19125,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 5200
+            "amount": 5200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-19T14:49:26.000Z"
       },
       {
         "id": 3000001860001,
@@ -15587,7 +19155,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 600
+            "amount": 600,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 600
           },
           {
             "id": 3000001860003,
@@ -15595,9 +19168,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 600
+            "amount": 600,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 600
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-19T14:50:30.000Z"
       },
       {
         "id": 3000001860002,
@@ -15614,7 +19198,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 100
+            "amount": 100,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 100
           },
           {
             "id": 3000001860004,
@@ -15622,9 +19211,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 100
+            "amount": 100,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 100
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-19T14:50:58.000Z"
       },
       {
         "id": 3000001890001,
@@ -15641,7 +19241,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (قات)",
             "side": "debit",
-            "amount": 1200
+            "amount": 1200,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1200
           },
           {
             "id": 3000001890003,
@@ -15649,9 +19254,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 1200
+            "amount": 1200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-19T22:18:21.000Z"
       },
       {
         "id": 3000001890002,
@@ -15668,7 +19284,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           },
           {
             "id": 3000001890004,
@@ -15676,9 +19297,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-19T22:18:57.000Z"
       },
       {
         "id": 3000001920001,
@@ -15695,7 +19327,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مواصلات)",
             "side": "debit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 507,
+            "chartAccountCode": "507",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           },
           {
             "id": 3000001920003,
@@ -15703,9 +19340,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-19T22:20:16.000Z"
       },
       {
         "id": 3000001950001,
@@ -15722,7 +19370,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           },
           {
             "id": 3000001950003,
@@ -15730,9 +19383,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-20T22:35:23.000Z"
       },
       {
         "id": 3000001950002,
@@ -15749,7 +19413,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (قات)",
             "side": "debit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           },
           {
             "id": 3000001950004,
@@ -15757,9 +19426,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-20T22:35:56.000Z"
       },
       {
         "id": 3000002010001,
@@ -15776,7 +19456,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مواصلات)",
             "side": "debit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 507,
+            "chartAccountCode": "507",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           },
           {
             "id": 3000002010003,
@@ -15784,9 +19469,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-20T22:37:56.000Z"
       },
       {
         "id": 3000002010002,
@@ -15803,7 +19499,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مواصلات)",
             "side": "debit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 507,
+            "chartAccountCode": "507",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           },
           {
             "id": 3000002010004,
@@ -15811,9 +19512,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-20T22:38:00.000Z"
       },
       {
         "id": 3000002010003,
@@ -15830,7 +19542,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مواصلات)",
             "side": "debit",
-            "amount": 500
+            "amount": 500,
+            "chartAccountId": 507,
+            "chartAccountCode": "507",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 500
           },
           {
             "id": 3000002010005,
@@ -15838,9 +19555,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 500
+            "amount": 500,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 500
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-20T22:39:07.000Z"
       },
       {
         "id": 3000002010004,
@@ -15857,7 +19585,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (مواصلات)",
             "side": "debit",
-            "amount": 500
+            "amount": 500,
+            "chartAccountId": 507,
+            "chartAccountCode": "507",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 500
           },
           {
             "id": 3000002010006,
@@ -15865,9 +19598,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 500
+            "amount": 500,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 500
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-20T22:39:28.000Z"
       },
       {
         "id": 3000002040001,
@@ -15884,7 +19628,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           },
           {
             "id": 3000002040003,
@@ -15892,9 +19641,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-20T22:40:30.000Z"
       },
       {
         "id": 3000002070001,
@@ -15911,7 +19671,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 3000002070003,
@@ -15919,9 +19684,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-20T22:59:59.000Z"
       },
       {
         "id": 3000002100001,
@@ -15938,7 +19714,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (قات)",
             "side": "debit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           },
           {
             "id": 3000002100003,
@@ -15946,9 +19727,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-22T22:52:23.000Z"
       },
       {
         "id": 3000002100002,
@@ -15965,7 +19757,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 600
+            "amount": 600,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 600
           },
           {
             "id": 3000002100004,
@@ -15973,9 +19770,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 600
+            "amount": 600,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 600
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-22T22:52:59.000Z"
       },
       {
         "id": 3000002130001,
@@ -15992,7 +19800,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 3000002130003,
@@ -16000,9 +19813,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-22T23:03:49.000Z"
       },
       {
         "id": 3000002160001,
@@ -16019,7 +19843,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (قات)",
             "side": "debit",
-            "amount": 1200
+            "amount": 1200,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1200
           },
           {
             "id": 3000002160003,
@@ -16027,9 +19856,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 1200
+            "amount": 1200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-27T22:39:48.000Z"
       },
       {
         "id": 3000002160002,
@@ -16046,7 +19886,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           },
           {
             "id": 3000002160004,
@@ -16054,9 +19899,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-27T22:40:21.000Z"
       },
       {
         "id": 3000002160003,
@@ -16073,7 +19929,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           },
           {
             "id": 3000002160005,
@@ -16081,9 +19942,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-27T22:40:42.000Z"
       },
       {
         "id": 3000002160004,
@@ -16100,7 +19972,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 500
+            "amount": 500,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 500
           },
           {
             "id": 3000002160006,
@@ -16108,9 +19985,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 500
+            "amount": 500,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 500
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-27T22:41:24.000Z"
       },
       {
         "id": 3000002160005,
@@ -16127,7 +20015,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 3000002160007,
@@ -16135,9 +20028,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-27T22:41:50.000Z"
       },
       {
         "id": 3000002160006,
@@ -16154,7 +20058,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 100
+            "amount": 100,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 100
           },
           {
             "id": 3000002160008,
@@ -16162,9 +20071,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 100
+            "amount": 100,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 100
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-27T22:42:26.000Z"
       },
       {
         "id": 3000002190001,
@@ -16181,7 +20101,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           },
           {
             "id": 3000002190003,
@@ -16189,9 +20114,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 200
+            "amount": 200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-27T22:43:12.000Z"
       },
       {
         "id": 3000002220001,
@@ -16208,7 +20144,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 100
+            "amount": 100,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 100
           },
           {
             "id": 3000002220003,
@@ -16216,9 +20157,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 100
+            "amount": 100,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 100
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-27T22:44:07.000Z"
       },
       {
         "id": 3000002250001,
@@ -16235,7 +20187,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           },
           {
             "id": 3000002250003,
@@ -16243,9 +20200,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-27T22:46:01.000Z"
       },
       {
         "id": 3000002280001,
@@ -16262,7 +20230,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (قات)",
             "side": "debit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           },
           {
             "id": 3000002280003,
@@ -16270,9 +20243,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 400
+            "amount": 400,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-27T22:46:58.000Z"
       },
       {
         "id": 3000002310001,
@@ -16289,7 +20273,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 700
+            "amount": 700,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 700
           },
           {
             "id": 3000002310003,
@@ -16297,9 +20286,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 700
+            "amount": 700,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 700
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-27T22:50:35.000Z"
       },
       {
         "id": 3000002340001,
@@ -16316,7 +20316,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (قات)",
             "side": "debit",
-            "amount": 1600
+            "amount": 1600,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1600
           },
           {
             "id": 3000002340003,
@@ -16324,9 +20329,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 1600
+            "amount": 1600,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1600
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-27T22:51:23.000Z"
       },
       {
         "id": 4791073633560,
@@ -16343,7 +20359,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (إنترنت)",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 506,
+            "chartAccountCode": "506",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 4791073633562,
@@ -16351,9 +20372,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-04T00:27:13.560Z"
       },
       {
         "id": 4791073654853,
@@ -16370,7 +20402,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 1400
+            "amount": 1400,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1400
           },
           {
             "id": 4791073654855,
@@ -16378,9 +20415,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "credit",
-            "amount": 1400
+            "amount": 1400,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-04T00:27:34.853Z"
       },
       {
         "id": 4791073705326,
@@ -16397,7 +20445,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (رسوم تحويل)",
             "side": "debit",
-            "amount": 100
+            "amount": 100,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 100
           },
           {
             "id": 4791073705328,
@@ -16405,9 +20458,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 120003,
             "accountName": "بنك الكريمي – حساب يمني",
             "side": "credit",
-            "amount": 100
+            "amount": 100,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 100
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-04T00:28:25.326Z"
       },
       {
         "id": 4791073717825,
@@ -16424,7 +20488,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (رسوم تحويل)",
             "side": "debit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           },
           {
             "id": 4791073717827,
@@ -16432,9 +20501,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 9,
             "accountName": "أم فلوس",
             "side": "credit",
-            "amount": 300
+            "amount": 300,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-04T00:28:37.825Z"
       },
       {
         "id": 4791074719410,
@@ -16451,7 +20531,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (أخرى)",
             "side": "debit",
-            "amount": 1100
+            "amount": 1100,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1100
           },
           {
             "id": 4791074719412,
@@ -16459,9 +20544,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 4,
             "accountName": "فلوسك",
             "side": "credit",
-            "amount": 1100
+            "amount": 1100,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1100
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-04T00:45:19.410Z"
       },
       {
         "id": 4791078249219,
@@ -16478,7 +20574,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (أخرى)",
             "side": "debit",
-            "amount": 2400
+            "amount": 2400,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2400
           },
           {
             "id": 4791078249221,
@@ -16486,9 +20587,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 1,
             "accountName": "فيزا كارد بنك التضامن",
             "side": "credit",
-            "amount": 2400
+            "amount": 2400,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-04T01:44:09.219Z"
       },
       {
         "id": 4791078301188,
@@ -16505,7 +20617,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ مصروفات (تشغيل)",
             "side": "debit",
-            "amount": 500
+            "amount": 500,
+            "chartAccountId": 509,
+            "chartAccountCode": "509",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 500
           },
           {
             "id": 4791078301190,
@@ -16513,9 +20630,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "credit",
-            "amount": 500
+            "amount": 500,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 500
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-04T01:45:01.188Z"
       },
       {
         "id": 5791147409053,
@@ -16532,7 +20660,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 7100
+            "amount": 7100,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7100
           },
           {
             "id": 5791147409055,
@@ -16540,9 +20673,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: محمد جميل محمد مطر",
             "side": "credit",
-            "amount": 7100
+            "amount": 7100,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7100
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-04"
       },
       {
         "id": 5791066974165,
@@ -16559,7 +20703,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 20000
+            "amount": 20000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 20000
           },
           {
             "id": 5791066974167,
@@ -16567,9 +20716,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: احلام موسى عبد الله محمد احمد الهندي",
             "side": "credit",
-            "amount": 20000
+            "amount": 20000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 20000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03"
       },
       {
         "id": 5791066895572,
@@ -16586,7 +20746,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 12000
+            "amount": 12000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 12000
           },
           {
             "id": 5791066895574,
@@ -16594,9 +20759,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: حنان علي محسن النجار",
             "side": "credit",
-            "amount": 12000
+            "amount": 12000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 12000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03"
       },
       {
         "id": 5791066692404,
@@ -16613,7 +20789,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 5800
+            "amount": 5800,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5800
           },
           {
             "id": 5791066692406,
@@ -16621,9 +20802,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: ام عبد الوهاب",
             "side": "credit",
-            "amount": 5800
+            "amount": 5800,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5800
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03"
       },
       {
         "id": 5791066345931,
@@ -16640,7 +20832,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 600
+            "amount": 600,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 600
           },
           {
             "id": 5791066345933,
@@ -16648,9 +20845,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: ام عبد الوهاب",
             "side": "credit",
-            "amount": 600
+            "amount": 600,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 600
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03"
       },
       {
         "id": 5791065739357,
@@ -16667,7 +20875,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 7400
+            "amount": 7400,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7400
           },
           {
             "id": 5791065739359,
@@ -16675,9 +20888,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: ام عبد الوهاب",
             "side": "credit",
-            "amount": 7400
+            "amount": 7400,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-03"
       },
       {
         "id": 5791065443531,
@@ -16694,7 +20918,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 5000
+            "amount": 5000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5000
           },
           {
             "id": 5791065443533,
@@ -16702,9 +20931,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: بيت الحلحلي",
             "side": "credit",
-            "amount": 5000
+            "amount": 5000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-01"
       },
       {
         "id": 5791065216032,
@@ -16721,7 +20961,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 30003,
             "accountName": "كريمي — حساب سعودي",
             "side": "debit",
-            "amount": 63700
+            "amount": 63700,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 63700
           },
           {
             "id": 5791065216034,
@@ -16729,9 +20974,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: خالد علي ناصر علي الغيثي",
             "side": "credit",
-            "amount": 63700
+            "amount": 63700,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 63700
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-01"
       },
       {
         "id": 5791062934601,
@@ -16748,7 +21004,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 700
+            "amount": 700,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 700
           },
           {
             "id": 5791062934603,
@@ -16756,9 +21017,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: سحر عادل المقطري",
             "side": "credit",
-            "amount": 700
+            "amount": 700,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 700
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30"
       },
       {
         "id": 5790901296878,
@@ -16775,7 +21047,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "debit",
-            "amount": 10300
+            "amount": 10300,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 10300
           },
           {
             "id": 5790901296880,
@@ -16783,9 +21060,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: نورا سلطان الصلاحي",
             "side": "credit",
-            "amount": 10300
+            "amount": 10300,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 10300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-02"
       },
       {
         "id": 5790793658089,
@@ -16802,7 +21090,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           },
           {
             "id": 5790793658091,
@@ -16810,9 +21103,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: اسماء ابراهيم عبد القوي",
             "side": "credit",
-            "amount": 1000
+            "amount": 1000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30"
       },
       {
         "id": 5790793536790,
@@ -16829,7 +21133,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 3000
+            "amount": 3000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 3000
           },
           {
             "id": 5790793536792,
@@ -16837,9 +21146,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: اسماء ابراهيم عبد القوي",
             "side": "credit",
-            "amount": 3000
+            "amount": 3000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 3000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30"
       },
       {
         "id": 5790793407727,
@@ -16856,7 +21176,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "debit",
-            "amount": 21000
+            "amount": 21000,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 21000
           },
           {
             "id": 5790793407729,
@@ -16864,9 +21189,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: اسماء ابراهيم عبد القوي",
             "side": "credit",
-            "amount": 21000
+            "amount": 21000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 21000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-23T00:00:00.000Z"
       },
       {
         "id": 5790792407244,
@@ -16883,7 +21219,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 15500
+            "amount": 15500,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 15500
           },
           {
             "id": 5790792407246,
@@ -16891,9 +21232,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: محمد محسن محمد هايم",
             "side": "credit",
-            "amount": 15500
+            "amount": 15500,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 15500
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-24T00:00:00.000Z"
       },
       {
         "id": 5790792076836,
@@ -16910,7 +21262,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 9200
+            "amount": 9200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 9200
           },
           {
             "id": 5790792076838,
@@ -16918,9 +21275,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: محمد محسن محمد هايم",
             "side": "credit",
-            "amount": 9200
+            "amount": 9200,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 9200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30"
       },
       {
         "id": 5790791491934,
@@ -16937,7 +21305,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 9,
             "accountName": "أم فلوس",
             "side": "debit",
-            "amount": 1200
+            "amount": 1200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1200
           },
           {
             "id": 5790791491936,
@@ -16945,9 +21318,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: زينب علي محمد إبراهيم دلواح",
             "side": "credit",
-            "amount": 1200
+            "amount": 1200,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30"
       },
       {
         "id": 5790791366548,
@@ -16964,7 +21348,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 18000
+            "amount": 18000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 18000
           },
           {
             "id": 5790791366550,
@@ -16972,9 +21361,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: حنان علي محسن النجار",
             "side": "credit",
-            "amount": 18000
+            "amount": 18000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 18000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30"
       },
       {
         "id": 5790791109798,
@@ -16991,7 +21391,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 1600
+            "amount": 1600,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1600
           },
           {
             "id": 5790791109800,
@@ -16999,9 +21404,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: ام عبد الوهاب",
             "side": "credit",
-            "amount": 1600
+            "amount": 1600,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1600
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30"
       },
       {
         "id": 5790789044493,
@@ -17018,7 +21434,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "debit",
-            "amount": 1700
+            "amount": 1700,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1700
           },
           {
             "id": 5790789044495,
@@ -17026,9 +21447,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
             "side": "credit",
-            "amount": 1700
+            "amount": 1700,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 1700
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30"
       },
       {
         "id": 5790789018987,
@@ -17045,7 +21477,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "debit",
-            "amount": 7300
+            "amount": 7300,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7300
           },
           {
             "id": 5790789018989,
@@ -17053,9 +21490,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
             "side": "credit",
-            "amount": 7300
+            "amount": 7300,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30"
       },
       {
         "id": 5790788592036,
@@ -17072,7 +21520,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 12800
+            "amount": 12800,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 12800
           },
           {
             "id": 5790788592038,
@@ -17080,9 +21533,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
             "side": "credit",
-            "amount": 12800
+            "amount": 12800,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 12800
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30"
       },
       {
         "id": 5790788581480,
@@ -17099,7 +21563,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 2800
+            "amount": 2800,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2800
           },
           {
             "id": 5790788581482,
@@ -17107,9 +21576,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
             "side": "credit",
-            "amount": 2800
+            "amount": 2800,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2800
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30"
       },
       {
         "id": 5790788567143,
@@ -17126,7 +21606,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 26500
+            "amount": 26500,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 26500
           },
           {
             "id": 5790788567145,
@@ -17134,9 +21619,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
             "side": "credit",
-            "amount": 26500
+            "amount": 26500,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 26500
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30"
       },
       {
         "id": 5790788090765,
@@ -17153,7 +21649,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 7500
+            "amount": 7500,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7500
           },
           {
             "id": 5790788090767,
@@ -17161,9 +21662,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: مرام حميد احمد سنان",
             "side": "credit",
-            "amount": 7500
+            "amount": 7500,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7500
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29"
       },
       {
         "id": 5790787857087,
@@ -17180,7 +21692,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 5000
+            "amount": 5000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5000
           },
           {
             "id": 5790787857089,
@@ -17188,9 +21705,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: رانيا محمود قادري المقطري",
             "side": "credit",
-            "amount": 5000
+            "amount": 5000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29"
       },
       {
         "id": 5790787704174,
@@ -17207,7 +21735,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 17000
+            "amount": 17000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 17000
           },
           {
             "id": 5790787704176,
@@ -17215,9 +21748,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: محمد جميل محمد مطر",
             "side": "credit",
-            "amount": 17000
+            "amount": 17000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 17000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-28"
       },
       {
         "id": 5790787631069,
@@ -17234,7 +21778,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 20000
+            "amount": 20000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 20000
           },
           {
             "id": 5790787631071,
@@ -17242,9 +21791,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: انس غانم حسين غانم",
             "side": "credit",
-            "amount": 20000
+            "amount": 20000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 20000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-26"
       },
       {
         "id": 5790787537844,
@@ -17261,7 +21821,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 6000
+            "amount": 6000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 6000
           },
           {
             "id": 5790787537846,
@@ -17269,9 +21834,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
             "side": "credit",
-            "amount": 6000
+            "amount": 6000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 6000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-26"
       },
       {
         "id": 5790787420528,
@@ -17288,7 +21864,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 5000
+            "amount": 5000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5000
           },
           {
             "id": 5790787420530,
@@ -17296,9 +21877,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: احلام موسى عبد الله محمد احمد الهندي",
             "side": "credit",
-            "amount": 5000
+            "amount": 5000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-26"
       },
       {
         "id": 5790781507795,
@@ -17315,7 +21907,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 4000
+            "amount": 4000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 4000
           },
           {
             "id": 5790781507797,
@@ -17323,9 +21920,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: ماريا محمد سيف البناء",
             "side": "credit",
-            "amount": 4000
+            "amount": 4000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 4000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-26"
       },
       {
         "id": 5790774626065,
@@ -17342,7 +21950,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 120003,
             "accountName": "بنك الكريمي – حساب يمني",
             "side": "debit",
-            "amount": 60000
+            "amount": 60000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 60000
           },
           {
             "id": 5790774626067,
@@ -17350,9 +21963,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: نورا سلطان الصلاحي",
             "side": "credit",
-            "amount": 60000
+            "amount": 60000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 60000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-06T00:00:00.000Z"
       },
       {
         "id": 5790718911668,
@@ -17369,7 +21993,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 16900
+            "amount": 16900,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 16900
           },
           {
             "id": 5790718911670,
@@ -17377,9 +22006,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: احلام موسى عبد الله محمد احمد الهندي",
             "side": "credit",
-            "amount": 16900
+            "amount": 16900,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 16900
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-29"
       },
       {
         "id": 5790611678602,
@@ -17396,7 +22036,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 10400
+            "amount": 10400,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 10400
           },
           {
             "id": 5790611678604,
@@ -17404,9 +22049,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: اشجان إدريس احمد القدسي",
             "side": "credit",
-            "amount": 10400
+            "amount": 10400,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 10400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-28"
       },
       {
         "id": 5790611661202,
@@ -17423,7 +22079,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 2900
+            "amount": 2900,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2900
           },
           {
             "id": 5790611661204,
@@ -17431,9 +22092,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: اشجان إدريس احمد القدسي",
             "side": "credit",
-            "amount": 2900
+            "amount": 2900,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 2900
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-28"
       },
       {
         "id": 4000000360001,
@@ -17450,7 +22122,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 22700
+            "amount": 22700,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 22700
           },
           {
             "id": 4000000360003,
@@ -17458,9 +22135,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: محمد جميل محمد مطر",
             "side": "credit",
-            "amount": 22700
+            "amount": 22700,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 22700
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-08-30T00:00:00.000Z"
       },
       {
         "id": 4000000420001,
@@ -17477,7 +22165,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "debit",
-            "amount": 20000
+            "amount": 20000,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 20000
           },
           {
             "id": 4000000420003,
@@ -17485,9 +22178,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: زينب علي محمد إبراهيم دلواح",
             "side": "credit",
-            "amount": 20000
+            "amount": 20000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 20000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-08-30T00:00:00.000Z"
       },
       {
         "id": 4000000450001,
@@ -17504,7 +22208,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 52400
+            "amount": 52400,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 52400
           },
           {
             "id": 4000000450003,
@@ -17512,9 +22221,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
             "side": "credit",
-            "amount": 52400
+            "amount": 52400,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 52400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-08-30T00:00:00.000Z"
       },
       {
         "id": 4000000480001,
@@ -17531,7 +22251,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 5000
+            "amount": 5000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5000
           },
           {
             "id": 4000000480003,
@@ -17539,9 +22264,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: مرام عبد الجبار السريحي",
             "side": "credit",
-            "amount": 5000
+            "amount": 5000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-08-31T00:00:00.000Z"
       },
       {
         "id": 4000000510001,
@@ -17558,7 +22294,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 30003,
             "accountName": "كريمي — حساب سعودي",
             "side": "debit",
-            "amount": 7000
+            "amount": 7000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7000
           },
           {
             "id": 4000000510003,
@@ -17566,9 +22307,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: غانم علي محمد  الشاذلي",
             "side": "credit",
-            "amount": 7000
+            "amount": 7000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-08-31T00:00:00.000Z"
       },
       {
         "id": 4000000540001,
@@ -17585,7 +22337,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 11400
+            "amount": 11400,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 11400
           },
           {
             "id": 4000000540003,
@@ -17593,9 +22350,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: محمد جميل محمد مطر",
             "side": "credit",
-            "amount": 11400
+            "amount": 11400,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 11400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-02T00:00:00.000Z"
       },
       {
         "id": 4000000600001,
@@ -17612,7 +22380,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 3000
+            "amount": 3000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 3000
           },
           {
             "id": 4000000600003,
@@ -17620,9 +22393,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: ام عبد الوهاب",
             "side": "credit",
-            "amount": 3000
+            "amount": 3000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 3000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-05T00:00:00.000Z"
       },
       {
         "id": 4000000630001,
@@ -17639,7 +22423,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 10000
+            "amount": 10000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 10000
           },
           {
             "id": 4000000630003,
@@ -17647,9 +22436,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: حنان علي محمد القاسمي",
             "side": "credit",
-            "amount": 10000
+            "amount": 10000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 10000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-03T00:00:00.000Z"
       },
       {
         "id": 4000000660001,
@@ -17666,7 +22466,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 10000
+            "amount": 10000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 10000
           },
           {
             "id": 4000000660003,
@@ -17674,9 +22479,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: بيت الحلحلي",
             "side": "credit",
-            "amount": 10000
+            "amount": 10000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 10000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-01T00:00:00.000Z"
       },
       {
         "id": 4000000690001,
@@ -17693,7 +22509,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 15000
+            "amount": 15000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 15000
           },
           {
             "id": 4000000690003,
@@ -17701,9 +22522,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: اشجان إدريس احمد القدسي",
             "side": "credit",
-            "amount": 15000
+            "amount": 15000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 15000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-05T00:00:00.000Z"
       },
       {
         "id": 4000000720001,
@@ -17720,7 +22552,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 20000
+            "amount": 20000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 20000
           },
           {
             "id": 4000000720003,
@@ -17728,9 +22565,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: بيت الحلحلي",
             "side": "credit",
-            "amount": 20000
+            "amount": 20000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 20000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-09T00:00:00.000Z"
       },
       {
         "id": 4000000750001,
@@ -17747,7 +22595,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 35000
+            "amount": 35000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 35000
           },
           {
             "id": 4000000750003,
@@ -17755,9 +22608,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: حنان علي محسن النجار",
             "side": "credit",
-            "amount": 35000
+            "amount": 35000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 35000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-14T00:00:00.000Z"
       },
       {
         "id": 4000000750002,
@@ -17774,7 +22638,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 7000
+            "amount": 7000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7000
           },
           {
             "id": 4000000750004,
@@ -17782,9 +22651,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: محمد جميل محمد مطر",
             "side": "credit",
-            "amount": 7000
+            "amount": 7000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 7000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-14T00:00:00.000Z"
       },
       {
         "id": 4000000780001,
@@ -17801,7 +22681,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 10,
             "accountName": "نقدي",
             "side": "debit",
-            "amount": 6300
+            "amount": 6300,
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 6300
           },
           {
             "id": 4000000780003,
@@ -17809,9 +22694,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: غانم علي محمد  الشاذلي",
             "side": "credit",
-            "amount": 6300
+            "amount": 6300,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 6300
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-17T00:00:00.000Z"
       },
       {
         "id": 4000000810001,
@@ -17828,7 +22724,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 11400
+            "amount": 11400,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 11400
           },
           {
             "id": 4000000810003,
@@ -17836,9 +22737,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: محمد جميل محمد مطر",
             "side": "credit",
-            "amount": 11400
+            "amount": 11400,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 11400
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-16T00:00:00.000Z"
       },
       {
         "id": 4000000840001,
@@ -17855,7 +22767,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 10900
+            "amount": 10900,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 10900
           },
           {
             "id": 4000000840003,
@@ -17863,9 +22780,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: مرام عبد الجبار السريحي",
             "side": "credit",
-            "amount": 10900
+            "amount": 10900,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 10900
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-20T00:00:00.000Z"
       },
       {
         "id": 4000000870001,
@@ -17882,7 +22810,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 9,
             "accountName": "أم فلوس",
             "side": "debit",
-            "amount": 4200
+            "amount": 4200,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 4200
           },
           {
             "id": 4000000870003,
@@ -17890,9 +22823,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: امال عامر احمد العمري",
             "side": "credit",
-            "amount": 4200
+            "amount": 4200,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 4200
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-17T00:00:00.000Z"
       },
       {
         "id": 4000000930001,
@@ -17909,7 +22853,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 5000
+            "amount": 5000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5000
           },
           {
             "id": 4000000930003,
@@ -17917,9 +22866,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: ريناس عبد الحكيم يحيى محمد",
             "side": "credit",
-            "amount": 5000
+            "amount": 5000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 5000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-22T00:00:00.000Z"
       },
       {
         "id": 4000000960001,
@@ -17936,7 +22896,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 2,
             "accountName": "جيب",
             "side": "debit",
-            "amount": 43000
+            "amount": 43000,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 43000
           },
           {
             "id": 4000000960003,
@@ -17944,9 +22909,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: حنان علي محسن النجار",
             "side": "credit",
-            "amount": 43000
+            "amount": 43000,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 43000
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-19T00:00:00.000Z"
       },
       {
         "id": 5791077398276,
@@ -17963,7 +22939,12 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": 120003,
             "accountName": "بنك الكريمي – حساب يمني",
             "side": "debit",
-            "amount": 37600
+            "amount": 37600,
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 37600
           },
           {
             "id": 5791077398278,
@@ -17971,9 +22952,20 @@ export const INITIAL_DATA: TopStoreBackup = {
             "accountId": null,
             "accountName": "حـ/ العميل: نورا سلطان الصلاحي",
             "side": "credit",
-            "amount": 37600
+            "amount": 37600,
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 37600
           }
-        ]
+        ],
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-10-04"
       }
     ],
     "journalLines": [
@@ -17983,7 +22975,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 3000
+        "amount": 3000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 3000
       },
       {
         "id": 1791148181355,
@@ -17991,7 +22988,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "واردات - استرجاع نقدي / مردودات",
         "side": "credit",
-        "amount": 3000
+        "amount": 3000,
+        "chartAccountId": 409,
+        "chartAccountCode": "409",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 3000
       },
       {
         "id": 1791148068543,
@@ -17999,7 +23001,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "مصروفات - إنترنت",
         "side": "debit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 1791148068544,
@@ -18007,7 +23014,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 1791148014317,
@@ -18015,7 +23027,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "صادرات - توصيل طلب مطر رقم 9 تم تحويها جيب",
         "side": "debit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 1791148014318,
@@ -18023,7 +23040,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 1791147634267,
@@ -18031,7 +23053,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 1791147634268,
@@ -18039,7 +23066,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "واردات - توصيل طلب مطر رقم 9",
         "side": "credit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 402,
+        "chartAccountCode": "402",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 1791147409056,
@@ -18047,7 +23079,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 7100
+        "amount": 7100,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7100
       },
       {
         "id": 1791147409057,
@@ -18055,7 +23092,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: محمد جميل محمد مطر",
         "side": "credit",
-        "amount": 7100
+        "amount": 7100,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7100
       },
       {
         "id": 1791147339253,
@@ -18063,7 +23105,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "مصروفات - تشغيل",
         "side": "debit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 1791147339254,
@@ -18071,7 +23118,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 1791147301657,
@@ -18079,7 +23131,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "مصروفات - تشغيل",
         "side": "debit",
-        "amount": 1300
+        "amount": 1300,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1300
       },
       {
         "id": 1791147301658,
@@ -18087,7 +23144,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 1300
+        "amount": 1300,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1300
       },
       {
         "id": 1791073427530,
@@ -18095,7 +23157,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "تكاليف الشحنات واللوجستيات",
         "side": "debit",
-        "amount": 21000
+        "amount": 21000,
+        "chartAccountId": 120,
+        "chartAccountCode": "120",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 21000
       },
       {
         "id": 1791073427531,
@@ -18103,7 +23170,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 21000
+        "amount": 21000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 21000
       },
       {
         "id": 1791066974168,
@@ -18111,7 +23183,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 20000
+        "amount": 20000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 20000
       },
       {
         "id": 1791066974169,
@@ -18119,7 +23196,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: احلام موسى عبد الله محمد احمد الهندي",
         "side": "credit",
-        "amount": 20000
+        "amount": 20000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 20000
       },
       {
         "id": 1791066895575,
@@ -18127,7 +23209,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 12000
+        "amount": 12000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 12000
       },
       {
         "id": 1791066895576,
@@ -18135,7 +23222,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: حنان علي محسن النجار",
         "side": "credit",
-        "amount": 12000
+        "amount": 12000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 12000
       },
       {
         "id": 1791066769612,
@@ -18143,7 +23235,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 1791066769613,
@@ -18151,7 +23248,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "واردات - حق توصيل طلب ام عبد الوهاب قدمنهاا لعلي",
         "side": "credit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 402,
+        "chartAccountCode": "402",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 1791066692407,
@@ -18159,7 +23261,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 5800
+        "amount": 5800,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5800
       },
       {
         "id": 1791066692408,
@@ -18167,7 +23274,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: ام عبد الوهاب",
         "side": "credit",
-        "amount": 5800
+        "amount": 5800,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5800
       },
       {
         "id": 1791066437950,
@@ -18175,7 +23287,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "صادرات - احولت اناغلطت",
         "side": "debit",
-        "amount": 600
+        "amount": 600,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 600
       },
       {
         "id": 1791066437951,
@@ -18183,7 +23300,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 600
+        "amount": 600,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 600
       },
       {
         "id": 1791066345934,
@@ -18191,7 +23313,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 600
+        "amount": 600,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 600
       },
       {
         "id": 1791066345935,
@@ -18199,7 +23326,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: ام عبد الوهاب",
         "side": "credit",
-        "amount": 600
+        "amount": 600,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 600
       },
       {
         "id": 1791065739360,
@@ -18207,7 +23339,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 7400
+        "amount": 7400,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7400
       },
       {
         "id": 1791065739361,
@@ -18215,7 +23352,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: ام عبد الوهاب",
         "side": "credit",
-        "amount": 7400
+        "amount": 7400,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7400
       },
       {
         "id": 1791065515810,
@@ -18223,7 +23365,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: انس غانم حسين غانم",
         "side": "debit",
-        "amount": 1700
+        "amount": 1700,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1700
       },
       {
         "id": 1791065515811,
@@ -18231,7 +23378,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 1700
+        "amount": 1700,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1700
       },
       {
         "id": 1791065443561,
@@ -18239,7 +23391,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: بيت الحلحلي",
         "side": "debit",
-        "amount": 16200
+        "amount": 16200,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 16200
       },
       {
         "id": 1791065443562,
@@ -18247,7 +23404,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 16200
+        "amount": 16200,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 16200
       },
       {
         "id": 1791065443552,
@@ -18255,7 +23417,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 5000
+        "amount": 5000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5000
       },
       {
         "id": 1791065443553,
@@ -18263,7 +23430,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "العميل: بيت الحلحلي",
         "side": "credit",
-        "amount": 5000
+        "amount": 5000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5000
       },
       {
         "id": 1791065216062,
@@ -18271,7 +23443,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: خالد علي ناصر علي الغيثي",
         "side": "debit",
-        "amount": 77100
+        "amount": 77100,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 77100
       },
       {
         "id": 1791065216063,
@@ -18279,7 +23456,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 77100
+        "amount": 77100,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 77100
       },
       {
         "id": 1791065216053,
@@ -18287,7 +23469,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 30003,
         "accountName": "كريمي — حساب سعودي",
         "side": "debit",
-        "amount": 63700
+        "amount": 63700,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 63700
       },
       {
         "id": 1791065216054,
@@ -18295,7 +23482,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "العميل: خالد علي ناصر علي الغيثي",
         "side": "credit",
-        "amount": 63700
+        "amount": 63700,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 63700
       },
       {
         "id": 1791064117817,
@@ -18303,7 +23495,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 1,
         "accountName": "فيزا كارد بنك التضامن",
         "side": "debit",
-        "amount": 50000
+        "amount": 50000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 50000
       },
       {
         "id": 1791064117818,
@@ -18311,7 +23508,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 50000
+        "amount": 50000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 50000
       },
       {
         "id": 1791064020075,
@@ -18319,7 +23521,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "صادرات - غلط ب الادخال",
         "side": "debit",
-        "amount": 2000
+        "amount": 2000,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2000
       },
       {
         "id": 1791064020076,
@@ -18327,7 +23534,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 1,
         "accountName": "فيزا كارد بنك التضامن",
         "side": "credit",
-        "amount": 2000
+        "amount": 2000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2000
       },
       {
         "id": 1790995867321,
@@ -18335,7 +23547,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "صادرات - قيمه توصيل شحنه اب للمهيب",
         "side": "debit",
-        "amount": 2800
+        "amount": 2800,
+        "chartAccountId": 507,
+        "chartAccountCode": "507",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2800
       },
       {
         "id": 1790995867322,
@@ -18343,7 +23560,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 2800
+        "amount": 2800,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2800
       },
       {
         "id": 1790995802431,
@@ -18351,7 +23573,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 120003,
         "accountName": "بنك الكريمي – حساب يمني",
         "side": "debit",
-        "amount": 5000
+        "amount": 5000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5000
       },
       {
         "id": 1790995802432,
@@ -18359,7 +23586,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "واردات - قيمه توصيل شحنه اب",
         "side": "credit",
-        "amount": 5000
+        "amount": 5000,
+        "chartAccountId": 402,
+        "chartAccountCode": "402",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5000
       },
       {
         "id": 1790995692360,
@@ -18367,7 +23599,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 700
+        "amount": 700,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 700
       },
       {
         "id": 1790995692361,
@@ -18375,7 +23612,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 700
+        "amount": 700,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 700
       },
       {
         "id": 1790995532231,
@@ -18383,7 +23625,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "مصروفات - تشغيل",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 1790995532232,
@@ -18391,7 +23638,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 1790995478870,
@@ -18399,7 +23651,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "مصروفات - تشغيل",
         "side": "debit",
-        "amount": 1200
+        "amount": 1200,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1200
       },
       {
         "id": 1790995478871,
@@ -18407,7 +23664,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 1200
+        "amount": 1200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1200
       },
       {
         "id": 1790979266787,
@@ -18415,7 +23677,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 7000
+        "amount": 7000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7000
       },
       {
         "id": 1790979266788,
@@ -18423,7 +23690,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "ذمة مدينة: ايمن الجند",
         "side": "credit",
-        "amount": 7000
+        "amount": 7000,
+        "chartAccountId": 130,
+        "chartAccountCode": "130",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7000
       },
       {
         "id": 1790901361643,
@@ -18431,7 +23703,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "صادرات - خلص منتج من طلب الصلاحي",
         "side": "debit",
-        "amount": 1300
+        "amount": 1300,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1300
       },
       {
         "id": 1790901361644,
@@ -18439,7 +23716,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 1300
+        "amount": 1300,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1300
       },
       {
         "id": 1790901002382,
@@ -18447,7 +23729,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "مصروفات - تشغيل",
         "side": "debit",
-        "amount": 1500
+        "amount": 1500,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1500
       },
       {
         "id": 1790901002383,
@@ -18455,7 +23742,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 1500
+        "amount": 1500,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1500
       },
       {
         "id": 1790900974885,
@@ -18463,7 +23755,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "مصروفات - إنترنت",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 1790900974886,
@@ -18471,7 +23768,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 1790900945055,
@@ -18479,7 +23781,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "مصروفات - تشغيل",
         "side": "debit",
-        "amount": 7000
+        "amount": 7000,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7000
       },
       {
         "id": 1790900945056,
@@ -18487,7 +23794,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 7000
+        "amount": 7000,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7000
       },
       {
         "id": 1790809072356,
@@ -18495,7 +23807,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "مصروفات - تسويق",
         "side": "debit",
-        "amount": 2200
+        "amount": 2200,
+        "chartAccountId": 503,
+        "chartAccountCode": "503",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2200
       },
       {
         "id": 1790809072357,
@@ -18503,7 +23820,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 1,
         "accountName": "فيزا كارد بنك التضامن",
         "side": "credit",
-        "amount": 2200
+        "amount": 2200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2200
       },
       {
         "id": 1790809027182,
@@ -18511,7 +23833,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "مصروفات - تشغيل",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 1790809027183,
@@ -18519,7 +23846,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 1790808994832,
@@ -18527,7 +23859,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "مصروفات - تشغيل",
         "side": "debit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 1790808994833,
@@ -18535,7 +23872,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 1790808951782,
@@ -18543,7 +23885,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "مصروفات - إنترنت",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 1790808951783,
@@ -18551,7 +23898,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 1790808923767,
@@ -18559,7 +23911,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "مصروفات - تشغيل",
         "side": "debit",
-        "amount": 1100
+        "amount": 1100,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1100
       },
       {
         "id": 1790808923768,
@@ -18567,7 +23924,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 1100
+        "amount": 1100,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1100
       },
       {
         "id": 1790808645058,
@@ -18575,7 +23937,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "صادرات - غلط طلب دلواح",
         "side": "debit",
-        "amount": 6000
+        "amount": 6000,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 6000
       },
       {
         "id": 1790808645059,
@@ -18583,7 +23950,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 6000
+        "amount": 6000,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 6000
       },
       {
         "id": 1790808598678,
@@ -18591,7 +23963,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 1,
         "accountName": "فيزا كارد بنك التضامن",
         "side": "debit",
-        "amount": 6000
+        "amount": 6000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 6000
       },
       {
         "id": 1790808598679,
@@ -18599,7 +23976,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "واردات - غلط",
         "side": "credit",
-        "amount": 6000
+        "amount": 6000,
+        "chartAccountId": 409,
+        "chartAccountCode": "409",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 6000
       },
       {
         "id": 1790808443985,
@@ -18607,7 +23989,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "صادرات - غلط",
         "side": "debit",
-        "amount": 6000
+        "amount": 6000,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 6000
       },
       {
         "id": 1790808443986,
@@ -18615,7 +24002,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 1,
         "accountName": "فيزا كارد بنك التضامن",
         "side": "credit",
-        "amount": 6000
+        "amount": 6000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 6000
       },
       {
         "id": 1790807131217,
@@ -18623,7 +24015,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 1,
         "accountName": "فيزا كارد بنك التضامن",
         "side": "debit",
-        "amount": 70000
+        "amount": 70000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 70000
       },
       {
         "id": 1790807131218,
@@ -18631,7 +24028,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 9,
         "accountName": "أم فلوس",
         "side": "credit",
-        "amount": 70000
+        "amount": 70000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 70000
       },
       {
         "id": 1790807055898,
@@ -18639,7 +24041,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 1,
         "accountName": "فيزا كارد بنك التضامن",
         "side": "debit",
-        "amount": 210000
+        "amount": 210000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 210000
       },
       {
         "id": 1790807055899,
@@ -18647,7 +24054,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 210000
+        "amount": 210000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 210000
       },
       {
         "id": 1790794202113,
@@ -18655,7 +24067,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 1,
         "accountName": "فيزا كارد بنك التضامن",
         "side": "debit",
-        "amount": 2000
+        "amount": 2000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2000
       },
       {
         "id": 1790794202114,
@@ -18663,7 +24080,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 2000
+        "amount": 2000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2000
       },
       {
         "id": 1790794142493,
@@ -18671,7 +24093,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 20100
+        "amount": 20100,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 20100
       },
       {
         "id": 1790794142494,
@@ -18679,7 +24106,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 1,
         "accountName": "فيزا كارد بنك التضامن",
         "side": "credit",
-        "amount": 20100
+        "amount": 20100,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 20100
       },
       {
         "id": 1790794062284,
@@ -18687,7 +24119,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 1790794062285,
@@ -18695,7 +24132,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "واردات - تحويل حق توصيل",
         "side": "credit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 402,
+        "chartAccountCode": "402",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 1790793991759,
@@ -18703,7 +24145,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "صادرات - توصيل مع علي",
         "side": "debit",
-        "amount": 2000
+        "amount": 2000,
+        "chartAccountId": 507,
+        "chartAccountCode": "507",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2000
       },
       {
         "id": 1790793991760,
@@ -18711,7 +24158,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 1,
         "accountName": "فيزا كارد بنك التضامن",
         "side": "credit",
-        "amount": 2000
+        "amount": 2000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2000
       },
       {
         "id": 1790793407730,
@@ -18719,7 +24171,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "debit",
-        "amount": 21000
+        "amount": 21000,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 21000
       },
       {
         "id": 1790793407731,
@@ -18727,7 +24184,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "العميل: اسماء ابراهيم عبد القوي",
         "side": "credit",
-        "amount": 21000
+        "amount": 21000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 21000
       },
       {
         "id": 1790792631907,
@@ -18735,7 +24197,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 1,
         "accountName": "فيزا كارد بنك التضامن",
         "side": "debit",
-        "amount": 20100
+        "amount": 20100,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 20100
       },
       {
         "id": 1790792631908,
@@ -18743,7 +24210,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "واردات - باقي قيمه طلب محمد هايم قدددديم",
         "side": "credit",
-        "amount": 20100
+        "amount": 20100,
+        "chartAccountId": 409,
+        "chartAccountCode": "409",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 20100
       },
       {
         "id": 1790792407247,
@@ -18751,7 +24223,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 15500
+        "amount": 15500,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 15500
       },
       {
         "id": 1790792407248,
@@ -18759,7 +24236,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "العميل: محمد محسن محمد هايم",
         "side": "credit",
-        "amount": 15500
+        "amount": 15500,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 15500
       },
       {
         "id": 1790791699680,
@@ -18767,7 +24249,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 9,
         "accountName": "أم فلوس",
         "side": "debit",
-        "amount": 7200
+        "amount": 7200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7200
       },
       {
         "id": 1790791699681,
@@ -18775,7 +24262,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 1,
         "accountName": "فيزا كارد بنك التضامن",
         "side": "credit",
-        "amount": 7200
+        "amount": 7200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7200
       },
       {
         "id": 1790791585591,
@@ -18783,7 +24275,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 1,
         "accountName": "فيزا كارد بنك التضامن",
         "side": "debit",
-        "amount": 7200
+        "amount": 7200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7200
       },
       {
         "id": 1790791585592,
@@ -18791,7 +24288,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "واردات - طلب دلواح رقم",
         "side": "credit",
-        "amount": 7200
+        "amount": 7200,
+        "chartAccountId": 409,
+        "chartAccountCode": "409",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7200
       },
       {
         "id": 1790790752573,
@@ -18799,7 +24301,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "debit",
-        "amount": 7000
+        "amount": 7000,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7000
       },
       {
         "id": 1790790752574,
@@ -18807,7 +24314,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 7000
+        "amount": 7000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7000
       },
       {
         "id": 1790790676541,
@@ -18815,7 +24327,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 14000
+        "amount": 14000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 14000
       },
       {
         "id": 1790790676542,
@@ -18823,7 +24340,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 14000
+        "amount": 14000,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 14000
       },
       {
         "id": 1790787857117,
@@ -18831,7 +24353,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: رانيا محمود قادري المقطري",
         "side": "debit",
-        "amount": 18200
+        "amount": 18200,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 18200
       },
       {
         "id": 1790787857118,
@@ -18839,7 +24366,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 18200
+        "amount": 18200,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 18200
       },
       {
         "id": 1790787857108,
@@ -18847,7 +24379,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 5000
+        "amount": 5000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5000
       },
       {
         "id": 1790787857109,
@@ -18855,7 +24392,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "العميل: رانيا محمود قادري المقطري",
         "side": "credit",
-        "amount": 5000
+        "amount": 5000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5000
       },
       {
         "id": 1790787631099,
@@ -18863,7 +24405,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: انس غانم حسين غانم",
         "side": "debit",
-        "amount": 42600
+        "amount": 42600,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 42600
       },
       {
         "id": 1790787631100,
@@ -18871,7 +24418,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 42600
+        "amount": 42600,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 42600
       },
       {
         "id": 1790787631090,
@@ -18879,7 +24431,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 20000
+        "amount": 20000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 20000
       },
       {
         "id": 1790787631091,
@@ -18887,7 +24444,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "العميل: انس غانم حسين غانم",
         "side": "credit",
-        "amount": 20000
+        "amount": 20000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 20000
       },
       {
         "id": 1790787420558,
@@ -18895,7 +24457,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: احلام موسى عبد الله محمد احمد الهندي",
         "side": "debit",
-        "amount": 53700
+        "amount": 53700,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 53700
       },
       {
         "id": 1790787420559,
@@ -18903,7 +24470,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 53700
+        "amount": 53700,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 53700
       },
       {
         "id": 1790787420549,
@@ -18911,7 +24483,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 5000
+        "amount": 5000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5000
       },
       {
         "id": 1790787420550,
@@ -18919,7 +24496,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "العميل: احلام موسى عبد الله محمد احمد الهندي",
         "side": "credit",
-        "amount": 5000
+        "amount": 5000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5000
       },
       {
         "id": 1790775727152,
@@ -18927,7 +24509,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "رصيد افتتاحي",
         "side": "debit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 301,
+        "chartAccountCode": "301",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 1790775727153,
@@ -18935,7 +24522,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "ذمة مدينة: احمد تمام",
         "side": "credit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 130,
+        "chartAccountCode": "130",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 1790774626068,
@@ -18943,7 +24535,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 120003,
         "accountName": "بنك الكريمي – حساب يمني",
         "side": "debit",
-        "amount": 60000
+        "amount": 60000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 60000
       },
       {
         "id": 1790774626069,
@@ -18951,7 +24548,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "العميل: نورا سلطان الصلاحي",
         "side": "credit",
-        "amount": 60000
+        "amount": 60000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 60000
       },
       {
         "id": 1790722586921,
@@ -18959,7 +24561,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "مصروفات - تسويق",
         "side": "debit",
-        "amount": 3000
+        "amount": 3000,
+        "chartAccountId": 503,
+        "chartAccountCode": "503",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 3000
       },
       {
         "id": 1790722586922,
@@ -18967,7 +24574,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 1,
         "accountName": "فيزا كارد بنك التضامن",
         "side": "credit",
-        "amount": 3000
+        "amount": 3000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 3000
       },
       {
         "id": 1790721640080,
@@ -18975,7 +24587,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "صادرات - خطاء في الحسابات",
         "side": "debit",
-        "amount": 35600
+        "amount": 35600,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 35600
       },
       {
         "id": 1790721640081,
@@ -18983,7 +24600,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 30003,
         "accountName": "كريمي — حساب سعودي",
         "side": "credit",
-        "amount": 35600
+        "amount": 35600,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 35600
       },
       {
         "id": 1790721540479,
@@ -18991,7 +24613,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "مصروفات - مواصلات",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 507,
+        "chartAccountCode": "507",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 1790721540480,
@@ -18999,7 +24626,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 1790721437965,
@@ -19007,7 +24639,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "debit",
-        "amount": 100
+        "amount": 100,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 100
       },
       {
         "id": 1790721437966,
@@ -19015,7 +24652,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 100
+        "amount": 100,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 100
       },
       {
         "id": 1790721412584,
@@ -19023,7 +24665,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "مصروفات - تشغيل",
         "side": "debit",
-        "amount": 100
+        "amount": 100,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 100
       },
       {
         "id": 1790721412585,
@@ -19031,7 +24678,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 100
+        "amount": 100,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 100
       },
       {
         "id": 1790721348055,
@@ -19039,7 +24691,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "مصروفات - تشغيل",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 1790721348056,
@@ -19047,7 +24704,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 1790721295479,
@@ -19055,7 +24717,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "مصروفات - تشغيل",
         "side": "debit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 1790721295480,
@@ -19063,7 +24730,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 1790721225231,
@@ -19071,7 +24743,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "مصروفات - إنترنت",
         "side": "debit",
-        "amount": 16000
+        "amount": 16000,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 16000
       },
       {
         "id": 1790721225232,
@@ -19079,7 +24756,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 16000
+        "amount": 16000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 16000
       },
       {
         "id": 1790721195999,
@@ -19087,7 +24769,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "مصروفات - إنترنت",
         "side": "debit",
-        "amount": 550
+        "amount": 550,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 550
       },
       {
         "id": 1790721196000,
@@ -19095,7 +24782,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 550
+        "amount": 550,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 550
       },
       {
         "id": 1790721152540,
@@ -19103,7 +24795,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "مصروفات - تشغيل",
         "side": "debit",
-        "amount": 1100
+        "amount": 1100,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1100
       },
       {
         "id": 1790721152541,
@@ -19111,7 +24808,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 1100
+        "amount": 1100,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1100
       },
       {
         "id": 1790721042639,
@@ -19119,7 +24821,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "مصروفات - تشغيل",
         "side": "debit",
-        "amount": 500
+        "amount": 500,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 500
       },
       {
         "id": 1790721042640,
@@ -19127,7 +24834,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 500
+        "amount": 500,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 500
       },
       {
         "id": 1790720963037,
@@ -19135,7 +24847,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "مصروفات - إنترنت",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 1790720963038,
@@ -19143,7 +24860,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 1790720688905,
@@ -19151,7 +24873,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 15000
+        "amount": 15000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 15000
       },
       {
         "id": 1790720688906,
@@ -19159,7 +24886,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "تكاليف الشحنات واللوجستيات",
         "side": "credit",
-        "amount": 15000
+        "amount": 15000,
+        "chartAccountId": 120,
+        "chartAccountCode": "120",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 15000
       },
       {
         "id": 1790718911671,
@@ -19167,7 +24899,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 16900
+        "amount": 16900,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 16900
       },
       {
         "id": 1790718911672,
@@ -19175,7 +24912,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: احلام موسى عبد الله محمد احمد الهندي",
         "side": "credit",
-        "amount": 16900
+        "amount": 16900,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 16900
       },
       {
         "id": 1790611661205,
@@ -19183,7 +24925,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 2900
+        "amount": 2900,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2900
       },
       {
         "id": 1790611661206,
@@ -19191,7 +24938,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: اشجان إدريس احمد القدسي",
         "side": "credit",
-        "amount": 2900
+        "amount": 2900,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2900
       },
       {
         "id": 3791065443531,
@@ -19199,7 +24951,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: بيت الحلحلي",
         "side": "debit",
-        "amount": 16200
+        "amount": 16200,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 16200
       },
       {
         "id": 3791065443532,
@@ -19207,7 +24964,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 16200
+        "amount": 16200,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 16200
       },
       {
         "id": 3791065216032,
@@ -19215,7 +24977,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: خالد علي ناصر علي الغيثي",
         "side": "debit",
-        "amount": 77100
+        "amount": 77100,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 77100
       },
       {
         "id": 3791065216033,
@@ -19223,7 +24990,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 77100
+        "amount": 77100,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 77100
       },
       {
         "id": 3790788090765,
@@ -19231,7 +25003,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: مرام حميد احمد سنان",
         "side": "debit",
-        "amount": 15300
+        "amount": 15300,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 15300
       },
       {
         "id": 3790788090766,
@@ -19239,7 +25016,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 15300
+        "amount": 15300,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 15300
       },
       {
         "id": 3790787704174,
@@ -19247,7 +25029,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: محمد جميل محمد مطر",
         "side": "debit",
-        "amount": 34000
+        "amount": 34000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 34000
       },
       {
         "id": 3790787704175,
@@ -19255,7 +25042,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 34000
+        "amount": 34000,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 34000
       },
       {
         "id": 3790787537843,
@@ -19263,7 +25055,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
         "side": "debit",
-        "amount": 16100
+        "amount": 16100,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 16100
       },
       {
         "id": 3790787537844,
@@ -19271,7 +25068,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 16100
+        "amount": 16100,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 16100
       },
       {
         "id": 3790781604212,
@@ -19279,7 +25081,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: اسماء ابراهيم عبد القوي",
         "side": "debit",
-        "amount": 5100
+        "amount": 5100,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5100
       },
       {
         "id": 3790781604213,
@@ -19287,7 +25094,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 5100
+        "amount": 5100,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5100
       },
       {
         "id": 3790781507795,
@@ -19295,7 +25107,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: ماريا محمد سيف البناء",
         "side": "debit",
-        "amount": 7400
+        "amount": 7400,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7400
       },
       {
         "id": 3790781507796,
@@ -19303,7 +25120,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 7400
+        "amount": 7400,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7400
       },
       {
         "id": 2000000330002,
@@ -19311,7 +25133,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: محمد جميل محمد مطر",
         "side": "debit",
-        "amount": 46500
+        "amount": 46500,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 46500
       },
       {
         "id": 2000000330003,
@@ -19319,7 +25146,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 46500
+        "amount": 46500,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 46500
       },
       {
         "id": 2000000390002,
@@ -19327,7 +25159,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: زينب علي محمد إبراهيم دلواح",
         "side": "debit",
-        "amount": 21200
+        "amount": 21200,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 21200
       },
       {
         "id": 2000000390003,
@@ -19335,7 +25172,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 21200
+        "amount": 21200,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 21200
       },
       {
         "id": 2000000420002,
@@ -19343,7 +25185,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
         "side": "debit",
-        "amount": 59700
+        "amount": 59700,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 59700
       },
       {
         "id": 2000000420003,
@@ -19351,7 +25198,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 59700
+        "amount": 59700,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 59700
       },
       {
         "id": 2000000450002,
@@ -19359,7 +25211,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: مرام محمد كشيع سالم",
         "side": "debit",
-        "amount": 4000
+        "amount": 4000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 4000
       },
       {
         "id": 2000000450003,
@@ -19367,7 +25224,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 4000
+        "amount": 4000,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 4000
       },
       {
         "id": 2000000480002,
@@ -19375,7 +25237,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: مرام عبد الجبار السريحي",
         "side": "debit",
-        "amount": 15900
+        "amount": 15900,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 15900
       },
       {
         "id": 2000000480003,
@@ -19383,7 +25250,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 15900
+        "amount": 15900,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 15900
       },
       {
         "id": 2000000510002,
@@ -19391,7 +25263,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: غانم علي محمد  الشاذلي",
         "side": "debit",
-        "amount": 13300
+        "amount": 13300,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 13300
       },
       {
         "id": 2000000510003,
@@ -19399,7 +25276,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 13300
+        "amount": 13300,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 13300
       },
       {
         "id": 2000000540002,
@@ -19407,7 +25289,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: محمد جميل محمد مطر",
         "side": "debit",
-        "amount": 22800
+        "amount": 22800,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 22800
       },
       {
         "id": 2000000540003,
@@ -19415,7 +25302,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 22800
+        "amount": 22800,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 22800
       },
       {
         "id": 2000000540003,
@@ -19423,7 +25315,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
         "side": "debit",
-        "amount": 1700
+        "amount": 1700,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1700
       },
       {
         "id": 2000000540004,
@@ -19431,7 +25328,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 1700
+        "amount": 1700,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1700
       },
       {
         "id": 2000000600003,
@@ -19439,7 +25341,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: ام عبد الوهاب",
         "side": "debit",
-        "amount": 18400
+        "amount": 18400,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 18400
       },
       {
         "id": 2000000600004,
@@ -19447,7 +25354,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 18400
+        "amount": 18400,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 18400
       },
       {
         "id": 2000000630002,
@@ -19455,7 +25367,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: حنان علي محمد القاسمي",
         "side": "debit",
-        "amount": 32600
+        "amount": 32600,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 32600
       },
       {
         "id": 2000000630003,
@@ -19463,7 +25380,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 32600
+        "amount": 32600,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 32600
       },
       {
         "id": 2000000660002,
@@ -19471,7 +25393,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: علي علي محسن سعود",
         "side": "debit",
-        "amount": 15400
+        "amount": 15400,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 15400
       },
       {
         "id": 2000000660003,
@@ -19479,7 +25406,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 15400
+        "amount": 15400,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 15400
       },
       {
         "id": 2000000660003,
@@ -19487,7 +25419,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: بيت الحلحلي",
         "side": "debit",
-        "amount": 29200
+        "amount": 29200,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 29200
       },
       {
         "id": 2000000660004,
@@ -19495,7 +25432,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 29200
+        "amount": 29200,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 29200
       },
       {
         "id": 2000000660004,
@@ -19503,7 +25445,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: نورا سلطان الصلاحي",
         "side": "debit",
-        "amount": 70300
+        "amount": 70300,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 70300
       },
       {
         "id": 2000000660005,
@@ -19511,7 +25458,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 70300
+        "amount": 70300,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 70300
       },
       {
         "id": 2000000690002,
@@ -19519,7 +25471,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: اشجان إدريس احمد القدسي",
         "side": "debit",
-        "amount": 25400
+        "amount": 25400,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 25400
       },
       {
         "id": 2000000690003,
@@ -19527,7 +25484,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 25400
+        "amount": 25400,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 25400
       },
       {
         "id": 2000000720002,
@@ -19535,7 +25497,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: اشجان إدريس احمد القدسي",
         "side": "debit",
-        "amount": 2900
+        "amount": 2900,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2900
       },
       {
         "id": 2000000720003,
@@ -19543,7 +25510,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 2900
+        "amount": 2900,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2900
       },
       {
         "id": 2000000750002,
@@ -19551,7 +25523,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: بيت الحلحلي",
         "side": "debit",
-        "amount": 72600
+        "amount": 72600,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 72600
       },
       {
         "id": 2000000750003,
@@ -19559,7 +25536,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 72600
+        "amount": 72600,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 72600
       },
       {
         "id": 2000000750003,
@@ -19567,7 +25549,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
         "side": "debit",
-        "amount": 26500
+        "amount": 26500,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 26500
       },
       {
         "id": 2000000750004,
@@ -19575,7 +25562,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 26500
+        "amount": 26500,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 26500
       },
       {
         "id": 2000000780002,
@@ -19583,7 +25575,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: حنان علي محسن النجار",
         "side": "debit",
-        "amount": 118400
+        "amount": 118400,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 118400
       },
       {
         "id": 2000000780003,
@@ -19591,7 +25588,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 118400
+        "amount": 118400,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 118400
       },
       {
         "id": 2000000780003,
@@ -19599,7 +25601,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: محمد جميل محمد مطر",
         "side": "debit",
-        "amount": 14100
+        "amount": 14100,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 14100
       },
       {
         "id": 2000000780004,
@@ -19607,7 +25614,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 14100
+        "amount": 14100,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 14100
       },
       {
         "id": 2000000810002,
@@ -19615,7 +25627,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: مرام محمد كشيع سالم",
         "side": "debit",
-        "amount": 54700
+        "amount": 54700,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 54700
       },
       {
         "id": 2000000810003,
@@ -19623,7 +25640,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 54700
+        "amount": 54700,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 54700
       },
       {
         "id": 2000000810003,
@@ -19631,7 +25653,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
         "side": "debit",
-        "amount": 2800
+        "amount": 2800,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2800
       },
       {
         "id": 2000000810004,
@@ -19639,7 +25666,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 2800
+        "amount": 2800,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2800
       },
       {
         "id": 2000000810004,
@@ -19647,7 +25679,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: مرام محمد كشيع سالم",
         "side": "debit",
-        "amount": 22700
+        "amount": 22700,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 22700
       },
       {
         "id": 2000000810005,
@@ -19655,7 +25692,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 22700
+        "amount": 22700,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 22700
       },
       {
         "id": 2000000810005,
@@ -19663,7 +25705,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: احمد تمام",
         "side": "debit",
-        "amount": 7200
+        "amount": 7200,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7200
       },
       {
         "id": 2000000810006,
@@ -19671,7 +25718,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 7200
+        "amount": 7200,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7200
       },
       {
         "id": 2000000840002,
@@ -19679,7 +25731,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: مرام عبد الجبار السريحي",
         "side": "debit",
-        "amount": 3400
+        "amount": 3400,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 3400
       },
       {
         "id": 2000000840003,
@@ -19687,7 +25744,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 3400
+        "amount": 3400,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 3400
       },
       {
         "id": 2000000870002,
@@ -19695,7 +25757,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: امال عامر احمد العمري",
         "side": "debit",
-        "amount": 8300
+        "amount": 8300,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 8300
       },
       {
         "id": 2000000870003,
@@ -19703,7 +25770,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 8300
+        "amount": 8300,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 8300
       },
       {
         "id": 2000000930002,
@@ -19711,7 +25783,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: ريناس عبد الحكيم يحيى محمد",
         "side": "debit",
-        "amount": 10300
+        "amount": 10300,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 10300
       },
       {
         "id": 2000000930003,
@@ -19719,7 +25796,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 10300
+        "amount": 10300,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 10300
       },
       {
         "id": 2000000960002,
@@ -19727,7 +25809,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: حنان علي محسن النجار",
         "side": "debit",
-        "amount": 49700
+        "amount": 49700,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 49700
       },
       {
         "id": 2000000960003,
@@ -19735,7 +25822,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 49700
+        "amount": 49700,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 49700
       },
       {
         "id": 2000000990002,
@@ -19743,7 +25835,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: حنان علي محسن النجار",
         "side": "debit",
-        "amount": 43900
+        "amount": 43900,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 43900
       },
       {
         "id": 2000000990003,
@@ -19751,7 +25848,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 43900
+        "amount": 43900,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 43900
       },
       {
         "id": 2000000990003,
@@ -19759,7 +25861,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
         "side": "debit",
-        "amount": 12800
+        "amount": 12800,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 12800
       },
       {
         "id": 2000000990004,
@@ -19767,7 +25874,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 12800
+        "amount": 12800,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 12800
       },
       {
         "id": 2000000990004,
@@ -19775,7 +25887,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: حنان علي محسن النجار",
         "side": "debit",
-        "amount": 11600
+        "amount": 11600,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 11600
       },
       {
         "id": 2000000990005,
@@ -19783,7 +25900,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 11600
+        "amount": 11600,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 11600
       },
       {
         "id": 2000000990005,
@@ -19791,7 +25913,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: محمد محسن محمد هايم",
         "side": "debit",
-        "amount": 20700
+        "amount": 20700,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 20700
       },
       {
         "id": 2000000990006,
@@ -19799,7 +25926,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 20700
+        "amount": 20700,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 20700
       },
       {
         "id": 2000000990006,
@@ -19807,7 +25939,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: اسماء ابراهيم عبد القوي",
         "side": "debit",
-        "amount": 46800
+        "amount": 46800,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 46800
       },
       {
         "id": 2000000990007,
@@ -19815,7 +25952,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 46800
+        "amount": 46800,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 46800
       },
       {
         "id": 2000000990007,
@@ -19823,7 +25965,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: حنان علي محسن النجار",
         "side": "debit",
-        "amount": 7700
+        "amount": 7700,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7700
       },
       {
         "id": 2000000990008,
@@ -19831,7 +25978,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 7700
+        "amount": 7700,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7700
       },
       {
         "id": 3790780597355,
@@ -19839,7 +25991,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: اسماء ابراهيم عبد القوي",
         "side": "debit",
-        "amount": 46800
+        "amount": 46800,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 46800
       },
       {
         "id": 3790780597356,
@@ -19847,7 +26004,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 46800
+        "amount": 46800,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 46800
       },
       {
         "id": 3791077398276,
@@ -19855,7 +26017,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: نورا سلطان الصلاحي",
         "side": "debit",
-        "amount": 183500
+        "amount": 183500,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 183500
       },
       {
         "id": 3791077398277,
@@ -19863,7 +26030,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 183500
+        "amount": 183500,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 183500
       },
       {
         "id": 3791077524079,
@@ -19871,7 +26043,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
         "side": "debit",
-        "amount": 2600
+        "amount": 2600,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2600
       },
       {
         "id": 3791077524080,
@@ -19879,7 +26056,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 401,
         "accountName": "حـ/ إيرادات المبيعات والوساطة",
         "side": "credit",
-        "amount": 2600
+        "amount": 2600,
+        "chartAccountId": 401,
+        "chartAccountCode": "401",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2600
       },
       {
         "id": 4791148068541,
@@ -19887,7 +26069,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 4791148068542,
@@ -19895,7 +26082,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 4791147339251,
@@ -19903,7 +26095,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 4791147339252,
@@ -19911,7 +26108,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 4791147301655,
@@ -19919,7 +26121,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 1300
+        "amount": 1300,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1300
       },
       {
         "id": 4791147301656,
@@ -19927,7 +26134,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 1300
+        "amount": 1300,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1300
       },
       {
         "id": 4791073427533,
@@ -19935,7 +26147,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (شحن ونقل لوجستي)",
         "side": "debit",
-        "amount": 21000
+        "amount": 21000,
+        "chartAccountId": 120,
+        "chartAccountCode": "120",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 21000
       },
       {
         "id": 4791073427534,
@@ -19943,7 +26160,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 21000
+        "amount": 21000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 21000
       },
       {
         "id": 4790995532229,
@@ -19951,7 +26173,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 4790995532230,
@@ -19959,7 +26186,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 4790995478868,
@@ -19967,7 +26199,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 1200
+        "amount": 1200,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1200
       },
       {
         "id": 4790995478869,
@@ -19975,7 +26212,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 1200
+        "amount": 1200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1200
       },
       {
         "id": 4790901002380,
@@ -19983,7 +26225,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 1500
+        "amount": 1500,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1500
       },
       {
         "id": 4790901002381,
@@ -19991,7 +26238,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 1500
+        "amount": 1500,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1500
       },
       {
         "id": 4790900974883,
@@ -19999,7 +26251,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 4790900974884,
@@ -20007,7 +26264,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 4790900945053,
@@ -20015,7 +26277,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 7000
+        "amount": 7000,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7000
       },
       {
         "id": 4790900945054,
@@ -20023,7 +26290,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 7000
+        "amount": 7000,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7000
       },
       {
         "id": 4790809072354,
@@ -20031,7 +26303,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تسويق)",
         "side": "debit",
-        "amount": 2200
+        "amount": 2200,
+        "chartAccountId": 503,
+        "chartAccountCode": "503",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2200
       },
       {
         "id": 4790809072355,
@@ -20039,7 +26316,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 1,
         "accountName": "فيزا كارد بنك التضامن",
         "side": "credit",
-        "amount": 2200
+        "amount": 2200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2200
       },
       {
         "id": 4790809027180,
@@ -20047,7 +26329,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 4790809027181,
@@ -20055,7 +26342,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 4790808994830,
@@ -20063,7 +26355,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 4790808994831,
@@ -20071,7 +26368,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 4790808951780,
@@ -20079,7 +26381,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 4790808951781,
@@ -20087,7 +26394,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 4790808923765,
@@ -20095,7 +26407,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 1100
+        "amount": 1100,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1100
       },
       {
         "id": 4790808923766,
@@ -20103,7 +26420,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 1100
+        "amount": 1100,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1100
       },
       {
         "id": 4790722586919,
@@ -20111,7 +26433,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تسويق)",
         "side": "debit",
-        "amount": 3000
+        "amount": 3000,
+        "chartAccountId": 503,
+        "chartAccountCode": "503",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 3000
       },
       {
         "id": 4790722586920,
@@ -20119,7 +26446,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 1,
         "accountName": "فيزا كارد بنك التضامن",
         "side": "credit",
-        "amount": 3000
+        "amount": 3000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 3000
       },
       {
         "id": 4790721540477,
@@ -20127,7 +26459,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مواصلات)",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 507,
+        "chartAccountCode": "507",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 4790721540478,
@@ -20135,7 +26472,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 4790721412582,
@@ -20143,7 +26485,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 100
+        "amount": 100,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 100
       },
       {
         "id": 4790721412583,
@@ -20151,7 +26498,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 100
+        "amount": 100,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 100
       },
       {
         "id": 4790721348053,
@@ -20159,7 +26511,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 4790721348054,
@@ -20167,7 +26524,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 4790721295477,
@@ -20175,7 +26537,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 4790721295478,
@@ -20183,7 +26550,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 4790721225229,
@@ -20191,7 +26563,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 16000
+        "amount": 16000,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 16000
       },
       {
         "id": 4790721225230,
@@ -20199,7 +26576,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 16000
+        "amount": 16000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 16000
       },
       {
         "id": 4790721195997,
@@ -20207,7 +26589,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 550
+        "amount": 550,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 550
       },
       {
         "id": 4790721195998,
@@ -20215,7 +26602,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 550
+        "amount": 550,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 550
       },
       {
         "id": 4790721152538,
@@ -20223,7 +26615,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 1100
+        "amount": 1100,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1100
       },
       {
         "id": 4790721152539,
@@ -20231,7 +26628,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 1100
+        "amount": 1100,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1100
       },
       {
         "id": 4790721042637,
@@ -20239,7 +26641,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 500
+        "amount": 500,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 500
       },
       {
         "id": 4790721042638,
@@ -20247,7 +26654,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 500
+        "amount": 500,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 500
       },
       {
         "id": 4790720963035,
@@ -20255,7 +26667,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 4790720963036,
@@ -20263,7 +26680,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000000150002,
@@ -20271,7 +26693,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مصاريف أخرى)",
         "side": "debit",
-        "amount": 1200
+        "amount": 1200,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1200
       },
       {
         "id": 3000000150003,
@@ -20279,7 +26706,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 1200
+        "amount": 1200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1200
       },
       {
         "id": 3000000180002,
@@ -20287,7 +26719,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مواصلات)",
         "side": "debit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 507,
+        "chartAccountCode": "507",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 3000000180003,
@@ -20295,7 +26732,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 3000000210002,
@@ -20303,7 +26745,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 850
+        "amount": 850,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 850
       },
       {
         "id": 3000000210003,
@@ -20311,7 +26758,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 850
+        "amount": 850,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 850
       },
       {
         "id": 3000000240002,
@@ -20319,7 +26771,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مواصلات)",
         "side": "debit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 507,
+        "chartAccountCode": "507",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000000240003,
@@ -20327,7 +26784,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000000270002,
@@ -20335,7 +26797,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 800
+        "amount": 800,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 800
       },
       {
         "id": 3000000270003,
@@ -20343,7 +26810,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 800
+        "amount": 800,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 800
       },
       {
         "id": 3000000300002,
@@ -20351,7 +26823,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000000300003,
@@ -20359,7 +26836,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000000330002,
@@ -20367,7 +26849,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000000330003,
@@ -20375,7 +26862,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000000360002,
@@ -20383,7 +26875,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مصاريف أخرى)",
         "side": "debit",
-        "amount": 100
+        "amount": 100,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 100
       },
       {
         "id": 3000000360003,
@@ -20391,7 +26888,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 100
+        "amount": 100,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 100
       },
       {
         "id": 3000000390002,
@@ -20399,7 +26901,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مصاريف أخرى)",
         "side": "debit",
-        "amount": 700
+        "amount": 700,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 700
       },
       {
         "id": 3000000390003,
@@ -20407,7 +26914,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 700
+        "amount": 700,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 700
       },
       {
         "id": 3000000390003,
@@ -20415,7 +26927,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مصاريف أخرى)",
         "side": "debit",
-        "amount": 600
+        "amount": 600,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 600
       },
       {
         "id": 3000000390004,
@@ -20423,7 +26940,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 600
+        "amount": 600,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 600
       },
       {
         "id": 3000000390004,
@@ -20431,7 +26953,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مصاريف أخرى)",
         "side": "debit",
-        "amount": 250
+        "amount": 250,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 250
       },
       {
         "id": 3000000390005,
@@ -20439,7 +26966,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 250
+        "amount": 250,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 250
       },
       {
         "id": 3000000390005,
@@ -20447,7 +26979,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مصاريف أخرى)",
         "side": "debit",
-        "amount": 600
+        "amount": 600,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 600
       },
       {
         "id": 3000000390006,
@@ -20455,7 +26992,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 600
+        "amount": 600,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 600
       },
       {
         "id": 3000000420002,
@@ -20463,7 +27005,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مواصلات)",
         "side": "debit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 507,
+        "chartAccountCode": "507",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 3000000420003,
@@ -20471,7 +27018,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 3000000420003,
@@ -20479,7 +27031,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مواصلات)",
         "side": "debit",
-        "amount": 100
+        "amount": 100,
+        "chartAccountId": 507,
+        "chartAccountCode": "507",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 100
       },
       {
         "id": 3000000420004,
@@ -20487,7 +27044,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 100
+        "amount": 100,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 100
       },
       {
         "id": 3000000450002,
@@ -20495,7 +27057,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مصاريف أخرى)",
         "side": "debit",
-        "amount": 350
+        "amount": 350,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 350
       },
       {
         "id": 3000000450003,
@@ -20503,7 +27070,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 350
+        "amount": 350,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 350
       },
       {
         "id": 3000000480002,
@@ -20511,7 +27083,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000000480003,
@@ -20519,7 +27096,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000000510002,
@@ -20527,7 +27109,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مواصلات)",
         "side": "debit",
-        "amount": 550
+        "amount": 550,
+        "chartAccountId": 507,
+        "chartAccountCode": "507",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 550
       },
       {
         "id": 3000000510003,
@@ -20535,7 +27122,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 550
+        "amount": 550,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 550
       },
       {
         "id": 3000000540002,
@@ -20543,7 +27135,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مواصلات)",
         "side": "debit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 507,
+        "chartAccountCode": "507",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 3000000540003,
@@ -20551,7 +27148,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 3000000570002,
@@ -20559,7 +27161,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مصاريف أخرى)",
         "side": "debit",
-        "amount": 1100
+        "amount": 1100,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1100
       },
       {
         "id": 3000000570003,
@@ -20567,7 +27174,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 1100
+        "amount": 1100,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1100
       },
       {
         "id": 3000000570003,
@@ -20575,7 +27187,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مصاريف أخرى)",
         "side": "debit",
-        "amount": 1100
+        "amount": 1100,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1100
       },
       {
         "id": 3000000570004,
@@ -20583,7 +27200,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 1100
+        "amount": 1100,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1100
       },
       {
         "id": 3000000570004,
@@ -20591,7 +27213,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مواصلات)",
         "side": "debit",
-        "amount": 700
+        "amount": 700,
+        "chartAccountId": 507,
+        "chartAccountCode": "507",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 700
       },
       {
         "id": 3000000570005,
@@ -20599,7 +27226,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 700
+        "amount": 700,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 700
       },
       {
         "id": 3000000600002,
@@ -20607,7 +27239,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مصاريف أخرى)",
         "side": "debit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 3000000600003,
@@ -20615,7 +27252,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 3000000630002,
@@ -20623,7 +27265,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000000630003,
@@ -20631,7 +27278,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000000660002,
@@ -20639,7 +27291,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مصاريف أخرى)",
         "side": "debit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000000660003,
@@ -20647,7 +27304,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000000660003,
@@ -20655,7 +27317,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مصاريف أخرى)",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000000660004,
@@ -20663,7 +27330,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000000690002,
@@ -20671,7 +27343,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مصاريف أخرى)",
         "side": "debit",
-        "amount": 500
+        "amount": 500,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 500
       },
       {
         "id": 3000000690003,
@@ -20679,7 +27356,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 500
+        "amount": 500,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 500
       },
       {
         "id": 3000000690003,
@@ -20687,7 +27369,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مصاريف أخرى)",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000000690004,
@@ -20695,7 +27382,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000000720002,
@@ -20703,7 +27395,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مصاريف أخرى)",
         "side": "debit",
-        "amount": 800
+        "amount": 800,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 800
       },
       {
         "id": 3000000720003,
@@ -20711,7 +27408,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 800
+        "amount": 800,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 800
       },
       {
         "id": 3000000750002,
@@ -20719,7 +27421,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 3000000750003,
@@ -20727,7 +27434,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 3000000780002,
@@ -20735,7 +27447,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مصاريف أخرى)",
         "side": "debit",
-        "amount": 5000
+        "amount": 5000,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5000
       },
       {
         "id": 3000000780003,
@@ -20743,7 +27460,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 5000
+        "amount": 5000,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5000
       },
       {
         "id": 3000000810002,
@@ -20751,7 +27473,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مصاريف أخرى)",
         "side": "debit",
-        "amount": 1150
+        "amount": 1150,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1150
       },
       {
         "id": 3000000810003,
@@ -20759,7 +27486,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 1150
+        "amount": 1150,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1150
       },
       {
         "id": 3000000840002,
@@ -20767,7 +27499,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 600
+        "amount": 600,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 600
       },
       {
         "id": 3000000840003,
@@ -20775,7 +27512,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 600
+        "amount": 600,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 600
       },
       {
         "id": 3000000870002,
@@ -20783,7 +27525,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 3000000870003,
@@ -20791,7 +27538,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 3000000900002,
@@ -20799,7 +27551,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مصاريف أخرى)",
         "side": "debit",
-        "amount": 1200
+        "amount": 1200,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1200
       },
       {
         "id": 3000000900003,
@@ -20807,7 +27564,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 1200
+        "amount": 1200,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1200
       },
       {
         "id": 3000000930002,
@@ -20815,7 +27577,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 650
+        "amount": 650,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 650
       },
       {
         "id": 3000000930003,
@@ -20823,7 +27590,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 650
+        "amount": 650,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 650
       },
       {
         "id": 3000000960002,
@@ -20831,7 +27603,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مصاريف أخرى)",
         "side": "debit",
-        "amount": 2650
+        "amount": 2650,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2650
       },
       {
         "id": 3000000960003,
@@ -20839,7 +27616,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 2650
+        "amount": 2650,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2650
       },
       {
         "id": 3000000990002,
@@ -20847,7 +27629,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 16100
+        "amount": 16100,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 16100
       },
       {
         "id": 3000000990003,
@@ -20855,7 +27642,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 16100
+        "amount": 16100,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 16100
       },
       {
         "id": 3000001020002,
@@ -20863,7 +27655,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (توصيل عرض)",
         "side": "debit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 507,
+        "chartAccountCode": "507",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 3000001020003,
@@ -20871,7 +27668,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 3000001050002,
@@ -20879,7 +27681,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 2000
+        "amount": 2000,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2000
       },
       {
         "id": 3000001050003,
@@ -20887,7 +27694,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 2000
+        "amount": 2000,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2000
       },
       {
         "id": 3000001080002,
@@ -20895,7 +27707,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 3000001080003,
@@ -20903,7 +27720,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 3000001080003,
@@ -20911,7 +27733,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 100
+        "amount": 100,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 100
       },
       {
         "id": 3000001080004,
@@ -20919,7 +27746,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 100
+        "amount": 100,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 100
       },
       {
         "id": 3000001110002,
@@ -20927,7 +27759,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مواصلات)",
         "side": "debit",
-        "amount": 500
+        "amount": 500,
+        "chartAccountId": 507,
+        "chartAccountCode": "507",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 500
       },
       {
         "id": 3000001110003,
@@ -20935,7 +27772,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 500
+        "amount": 500,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 500
       },
       {
         "id": 3000001140002,
@@ -20943,7 +27785,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تسويق)",
         "side": "debit",
-        "amount": 3600
+        "amount": 3600,
+        "chartAccountId": 503,
+        "chartAccountCode": "503",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 3600
       },
       {
         "id": 3000001140003,
@@ -20951,7 +27798,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 1,
         "accountName": "فيزا كارد بنك التضامن",
         "side": "credit",
-        "amount": 3600
+        "amount": 3600,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 3600
       },
       {
         "id": 3000001170002,
@@ -20959,7 +27811,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تسويق)",
         "side": "debit",
-        "amount": 3200
+        "amount": 3200,
+        "chartAccountId": 503,
+        "chartAccountCode": "503",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 3200
       },
       {
         "id": 3000001170003,
@@ -20967,7 +27824,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 1,
         "accountName": "فيزا كارد بنك التضامن",
         "side": "credit",
-        "amount": 3200
+        "amount": 3200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 3200
       },
       {
         "id": 3000001200002,
@@ -20975,7 +27837,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (قات)",
         "side": "debit",
-        "amount": 1400
+        "amount": 1400,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1400
       },
       {
         "id": 3000001200003,
@@ -20983,7 +27850,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 1400
+        "amount": 1400,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1400
       },
       {
         "id": 3000001200003,
@@ -20991,7 +27863,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 350
+        "amount": 350,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 350
       },
       {
         "id": 3000001200004,
@@ -20999,7 +27876,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 350
+        "amount": 350,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 350
       },
       {
         "id": 3000001200004,
@@ -21007,7 +27889,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 1200
+        "amount": 1200,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1200
       },
       {
         "id": 3000001200005,
@@ -21015,7 +27902,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 1200
+        "amount": 1200,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1200
       },
       {
         "id": 3000001230002,
@@ -21023,7 +27915,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مواصلات)",
         "side": "debit",
-        "amount": 500
+        "amount": 500,
+        "chartAccountId": 507,
+        "chartAccountCode": "507",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 500
       },
       {
         "id": 3000001230003,
@@ -21031,7 +27928,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 500
+        "amount": 500,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 500
       },
       {
         "id": 3000001230003,
@@ -21039,7 +27941,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مواصلات)",
         "side": "debit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 507,
+        "chartAccountCode": "507",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000001230004,
@@ -21047,7 +27954,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000001260002,
@@ -21055,7 +27967,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000001260003,
@@ -21063,7 +27980,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000001290002,
@@ -21071,7 +27993,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 2500
+        "amount": 2500,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2500
       },
       {
         "id": 3000001290003,
@@ -21079,7 +28006,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 2500
+        "amount": 2500,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2500
       },
       {
         "id": 3000001320002,
@@ -21087,7 +28019,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 3000001320003,
@@ -21095,7 +28032,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 3000001350002,
@@ -21103,7 +28045,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (رسوم بنكية)",
         "side": "debit",
-        "amount": 50
+        "amount": 50,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 50
       },
       {
         "id": 3000001350003,
@@ -21111,7 +28058,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 50
+        "amount": 50,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 50
       },
       {
         "id": 3000001380002,
@@ -21119,7 +28071,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مواصلات)",
         "side": "debit",
-        "amount": 500
+        "amount": 500,
+        "chartAccountId": 507,
+        "chartAccountCode": "507",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 500
       },
       {
         "id": 3000001380003,
@@ -21127,7 +28084,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 500
+        "amount": 500,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 500
       },
       {
         "id": 3000001410002,
@@ -21135,7 +28097,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 700
+        "amount": 700,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 700
       },
       {
         "id": 3000001410003,
@@ -21143,7 +28110,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 700
+        "amount": 700,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 700
       },
       {
         "id": 3000001440002,
@@ -21151,7 +28123,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 3000001440003,
@@ -21159,7 +28136,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 3000001440003,
@@ -21167,7 +28149,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000001440004,
@@ -21175,7 +28162,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000001470002,
@@ -21183,7 +28175,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (قات)",
         "side": "debit",
-        "amount": 1600
+        "amount": 1600,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1600
       },
       {
         "id": 3000001470003,
@@ -21191,7 +28188,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 1600
+        "amount": 1600,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1600
       },
       {
         "id": 3000001470003,
@@ -21199,7 +28201,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000001470004,
@@ -21207,7 +28214,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000001500002,
@@ -21215,7 +28227,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000001500003,
@@ -21223,7 +28240,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000001530002,
@@ -21231,7 +28253,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 8000
+        "amount": 8000,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 8000
       },
       {
         "id": 3000001530003,
@@ -21239,7 +28266,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 8000
+        "amount": 8000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 8000
       },
       {
         "id": 3000001560002,
@@ -21247,7 +28279,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 1800
+        "amount": 1800,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1800
       },
       {
         "id": 3000001560003,
@@ -21255,7 +28292,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 1800
+        "amount": 1800,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1800
       },
       {
         "id": 3000001590002,
@@ -21263,7 +28305,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000001590003,
@@ -21271,7 +28318,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000001590003,
@@ -21279,7 +28331,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 3000001590004,
@@ -21287,7 +28344,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 3000001620002,
@@ -21295,7 +28357,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (قات)",
         "side": "debit",
-        "amount": 700
+        "amount": 700,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 700
       },
       {
         "id": 3000001620003,
@@ -21303,7 +28370,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 700
+        "amount": 700,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 700
       },
       {
         "id": 3000001650002,
@@ -21311,7 +28383,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (قات)",
         "side": "debit",
-        "amount": 1500
+        "amount": 1500,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1500
       },
       {
         "id": 3000001650003,
@@ -21319,7 +28396,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 1500
+        "amount": 1500,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1500
       },
       {
         "id": 3000001680002,
@@ -21327,7 +28409,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (قات)",
         "side": "debit",
-        "amount": 500
+        "amount": 500,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 500
       },
       {
         "id": 3000001680003,
@@ -21335,7 +28422,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 500
+        "amount": 500,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 500
       },
       {
         "id": 3000001680003,
@@ -21343,7 +28435,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000001680004,
@@ -21351,7 +28448,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000001680004,
@@ -21359,7 +28461,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000001680005,
@@ -21367,7 +28474,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000001680005,
@@ -21375,7 +28487,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 3000001680006,
@@ -21383,7 +28500,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 3000001680007,
@@ -21391,7 +28513,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 3000001680008,
@@ -21399,7 +28526,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 3000001680008,
@@ -21407,7 +28539,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000001680009,
@@ -21415,7 +28552,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000001710002,
@@ -21423,7 +28565,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 2000
+        "amount": 2000,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2000
       },
       {
         "id": 3000001710003,
@@ -21431,7 +28578,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 2000
+        "amount": 2000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2000
       },
       {
         "id": 3000001710003,
@@ -21439,7 +28591,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 350
+        "amount": 350,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 350
       },
       {
         "id": 3000001710004,
@@ -21447,7 +28604,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 350
+        "amount": 350,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 350
       },
       {
         "id": 3000001740002,
@@ -21455,7 +28617,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (قات)",
         "side": "debit",
-        "amount": 1500
+        "amount": 1500,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1500
       },
       {
         "id": 3000001740003,
@@ -21463,7 +28630,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 1500
+        "amount": 1500,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1500
       },
       {
         "id": 3000001770002,
@@ -21471,7 +28643,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (قات)",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000001770003,
@@ -21479,7 +28656,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000001770003,
@@ -21487,7 +28669,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000001770004,
@@ -21495,7 +28682,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000001770004,
@@ -21503,7 +28695,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (توصيل عرض)",
         "side": "debit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 507,
+        "chartAccountCode": "507",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 3000001770005,
@@ -21511,7 +28708,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 3000001800002,
@@ -21519,7 +28721,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (قات)",
         "side": "debit",
-        "amount": 1200
+        "amount": 1200,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1200
       },
       {
         "id": 3000001800003,
@@ -21527,7 +28734,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 1200
+        "amount": 1200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1200
       },
       {
         "id": 3000001830002,
@@ -21535,7 +28747,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 5200
+        "amount": 5200,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5200
       },
       {
         "id": 3000001830003,
@@ -21543,7 +28760,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 5200
+        "amount": 5200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5200
       },
       {
         "id": 3000001860002,
@@ -21551,7 +28773,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 600
+        "amount": 600,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 600
       },
       {
         "id": 3000001860003,
@@ -21559,7 +28786,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 600
+        "amount": 600,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 600
       },
       {
         "id": 3000001860003,
@@ -21567,7 +28799,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 100
+        "amount": 100,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 100
       },
       {
         "id": 3000001860004,
@@ -21575,7 +28812,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 100
+        "amount": 100,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 100
       },
       {
         "id": 3000001890002,
@@ -21583,7 +28825,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (قات)",
         "side": "debit",
-        "amount": 1200
+        "amount": 1200,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1200
       },
       {
         "id": 3000001890003,
@@ -21591,7 +28838,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 1200
+        "amount": 1200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1200
       },
       {
         "id": 3000001890003,
@@ -21599,7 +28851,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 3000001890004,
@@ -21607,7 +28864,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 3000001920002,
@@ -21615,7 +28877,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مواصلات)",
         "side": "debit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 507,
+        "chartAccountCode": "507",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000001920003,
@@ -21623,7 +28890,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000001950002,
@@ -21631,7 +28903,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 3000001950003,
@@ -21639,7 +28916,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 3000001950003,
@@ -21647,7 +28929,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (قات)",
         "side": "debit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 3000001950004,
@@ -21655,7 +28942,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 3000002010002,
@@ -21663,7 +28955,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مواصلات)",
         "side": "debit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 507,
+        "chartAccountCode": "507",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000002010003,
@@ -21671,7 +28968,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000002010003,
@@ -21679,7 +28981,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مواصلات)",
         "side": "debit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 507,
+        "chartAccountCode": "507",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000002010004,
@@ -21687,7 +28994,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000002010004,
@@ -21695,7 +29007,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مواصلات)",
         "side": "debit",
-        "amount": 500
+        "amount": 500,
+        "chartAccountId": 507,
+        "chartAccountCode": "507",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 500
       },
       {
         "id": 3000002010005,
@@ -21703,7 +29020,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 500
+        "amount": 500,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 500
       },
       {
         "id": 3000002010005,
@@ -21711,7 +29033,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (مواصلات)",
         "side": "debit",
-        "amount": 500
+        "amount": 500,
+        "chartAccountId": 507,
+        "chartAccountCode": "507",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 500
       },
       {
         "id": 3000002010006,
@@ -21719,7 +29046,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 500
+        "amount": 500,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 500
       },
       {
         "id": 3000002040002,
@@ -21727,7 +29059,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 3000002040003,
@@ -21735,7 +29072,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 3000002070002,
@@ -21743,7 +29085,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000002070003,
@@ -21751,7 +29098,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000002100002,
@@ -21759,7 +29111,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (قات)",
         "side": "debit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 3000002100003,
@@ -21767,7 +29124,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 3000002100003,
@@ -21775,7 +29137,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 600
+        "amount": 600,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 600
       },
       {
         "id": 3000002100004,
@@ -21783,7 +29150,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 600
+        "amount": 600,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 600
       },
       {
         "id": 3000002130002,
@@ -21791,7 +29163,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000002130003,
@@ -21799,7 +29176,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000002160002,
@@ -21807,7 +29189,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (قات)",
         "side": "debit",
-        "amount": 1200
+        "amount": 1200,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1200
       },
       {
         "id": 3000002160003,
@@ -21815,7 +29202,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 1200
+        "amount": 1200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1200
       },
       {
         "id": 3000002160003,
@@ -21823,7 +29215,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000002160004,
@@ -21831,7 +29228,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000002160004,
@@ -21839,7 +29241,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000002160005,
@@ -21847,7 +29254,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000002160005,
@@ -21855,7 +29267,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 500
+        "amount": 500,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 500
       },
       {
         "id": 3000002160006,
@@ -21863,7 +29280,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 500
+        "amount": 500,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 500
       },
       {
         "id": 3000002160006,
@@ -21871,7 +29293,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000002160007,
@@ -21879,7 +29306,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 3000002160007,
@@ -21887,7 +29319,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 100
+        "amount": 100,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 100
       },
       {
         "id": 3000002160008,
@@ -21895,7 +29332,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 100
+        "amount": 100,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 100
       },
       {
         "id": 3000002190002,
@@ -21903,7 +29345,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000002190003,
@@ -21911,7 +29358,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 200
+        "amount": 200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 200
       },
       {
         "id": 3000002220002,
@@ -21919,7 +29371,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 100
+        "amount": 100,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 100
       },
       {
         "id": 3000002220003,
@@ -21927,7 +29384,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 100
+        "amount": 100,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 100
       },
       {
         "id": 3000002250002,
@@ -21935,7 +29397,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 3000002250003,
@@ -21943,7 +29410,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 3000002280002,
@@ -21951,7 +29423,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (قات)",
         "side": "debit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 3000002280003,
@@ -21959,7 +29436,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 400
+        "amount": 400,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 400
       },
       {
         "id": 3000002310002,
@@ -21967,7 +29449,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 700
+        "amount": 700,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 700
       },
       {
         "id": 3000002310003,
@@ -21975,7 +29462,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 700
+        "amount": 700,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 700
       },
       {
         "id": 3000002340002,
@@ -21983,7 +29475,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (قات)",
         "side": "debit",
-        "amount": 1600
+        "amount": 1600,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1600
       },
       {
         "id": 3000002340003,
@@ -21991,7 +29488,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 1600
+        "amount": 1600,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1600
       },
       {
         "id": 4791073633561,
@@ -21999,7 +29501,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (إنترنت)",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 506,
+        "chartAccountCode": "506",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 4791073633562,
@@ -22007,7 +29514,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 4791073654854,
@@ -22015,7 +29527,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 1400
+        "amount": 1400,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1400
       },
       {
         "id": 4791073654855,
@@ -22023,7 +29540,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "credit",
-        "amount": 1400
+        "amount": 1400,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1400
       },
       {
         "id": 4791073705327,
@@ -22031,7 +29553,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (رسوم تحويل)",
         "side": "debit",
-        "amount": 100
+        "amount": 100,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 100
       },
       {
         "id": 4791073705328,
@@ -22039,7 +29566,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 120003,
         "accountName": "بنك الكريمي – حساب يمني",
         "side": "credit",
-        "amount": 100
+        "amount": 100,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 100
       },
       {
         "id": 4791073717826,
@@ -22047,7 +29579,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (رسوم تحويل)",
         "side": "debit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 4791073717827,
@@ -22055,7 +29592,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 9,
         "accountName": "أم فلوس",
         "side": "credit",
-        "amount": 300
+        "amount": 300,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 300
       },
       {
         "id": 4791074719411,
@@ -22063,7 +29605,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (أخرى)",
         "side": "debit",
-        "amount": 1100
+        "amount": 1100,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1100
       },
       {
         "id": 4791074719412,
@@ -22071,7 +29618,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 4,
         "accountName": "فلوسك",
         "side": "credit",
-        "amount": 1100
+        "amount": 1100,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1100
       },
       {
         "id": 4791078249220,
@@ -22079,7 +29631,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (أخرى)",
         "side": "debit",
-        "amount": 2400
+        "amount": 2400,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2400
       },
       {
         "id": 4791078249221,
@@ -22087,7 +29644,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 1,
         "accountName": "فيزا كارد بنك التضامن",
         "side": "credit",
-        "amount": 2400
+        "amount": 2400,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2400
       },
       {
         "id": 4791078301189,
@@ -22095,7 +29657,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ مصروفات (تشغيل)",
         "side": "debit",
-        "amount": 500
+        "amount": 500,
+        "chartAccountId": 509,
+        "chartAccountCode": "509",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 500
       },
       {
         "id": 4791078301190,
@@ -22103,7 +29670,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "credit",
-        "amount": 500
+        "amount": 500,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 500
       },
       {
         "id": 5791147409054,
@@ -22111,7 +29683,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 7100
+        "amount": 7100,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7100
       },
       {
         "id": 5791147409055,
@@ -22119,7 +29696,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: محمد جميل محمد مطر",
         "side": "credit",
-        "amount": 7100
+        "amount": 7100,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7100
       },
       {
         "id": 5791066974166,
@@ -22127,7 +29709,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 20000
+        "amount": 20000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 20000
       },
       {
         "id": 5791066974167,
@@ -22135,7 +29722,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: احلام موسى عبد الله محمد احمد الهندي",
         "side": "credit",
-        "amount": 20000
+        "amount": 20000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 20000
       },
       {
         "id": 5791066895573,
@@ -22143,7 +29735,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 12000
+        "amount": 12000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 12000
       },
       {
         "id": 5791066895574,
@@ -22151,7 +29748,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: حنان علي محسن النجار",
         "side": "credit",
-        "amount": 12000
+        "amount": 12000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 12000
       },
       {
         "id": 5791066692405,
@@ -22159,7 +29761,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 5800
+        "amount": 5800,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5800
       },
       {
         "id": 5791066692406,
@@ -22167,7 +29774,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: ام عبد الوهاب",
         "side": "credit",
-        "amount": 5800
+        "amount": 5800,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5800
       },
       {
         "id": 5791066345932,
@@ -22175,7 +29787,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 600
+        "amount": 600,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 600
       },
       {
         "id": 5791066345933,
@@ -22183,7 +29800,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: ام عبد الوهاب",
         "side": "credit",
-        "amount": 600
+        "amount": 600,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 600
       },
       {
         "id": 5791065739358,
@@ -22191,7 +29813,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 7400
+        "amount": 7400,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7400
       },
       {
         "id": 5791065739359,
@@ -22199,7 +29826,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: ام عبد الوهاب",
         "side": "credit",
-        "amount": 7400
+        "amount": 7400,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7400
       },
       {
         "id": 5791065443532,
@@ -22207,7 +29839,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 5000
+        "amount": 5000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5000
       },
       {
         "id": 5791065443533,
@@ -22215,7 +29852,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: بيت الحلحلي",
         "side": "credit",
-        "amount": 5000
+        "amount": 5000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5000
       },
       {
         "id": 5791065216033,
@@ -22223,7 +29865,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 30003,
         "accountName": "كريمي — حساب سعودي",
         "side": "debit",
-        "amount": 63700
+        "amount": 63700,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 63700
       },
       {
         "id": 5791065216034,
@@ -22231,7 +29878,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: خالد علي ناصر علي الغيثي",
         "side": "credit",
-        "amount": 63700
+        "amount": 63700,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 63700
       },
       {
         "id": 5791062934602,
@@ -22239,7 +29891,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 700
+        "amount": 700,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 700
       },
       {
         "id": 5791062934603,
@@ -22247,7 +29904,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: سحر عادل المقطري",
         "side": "credit",
-        "amount": 700
+        "amount": 700,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 700
       },
       {
         "id": 5790901296879,
@@ -22255,7 +29917,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "debit",
-        "amount": 10300
+        "amount": 10300,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 10300
       },
       {
         "id": 5790901296880,
@@ -22263,7 +29930,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: نورا سلطان الصلاحي",
         "side": "credit",
-        "amount": 10300
+        "amount": 10300,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 10300
       },
       {
         "id": 5790793658090,
@@ -22271,7 +29943,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 5790793658091,
@@ -22279,7 +29956,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: اسماء ابراهيم عبد القوي",
         "side": "credit",
-        "amount": 1000
+        "amount": 1000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1000
       },
       {
         "id": 5790793536791,
@@ -22287,7 +29969,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 3000
+        "amount": 3000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 3000
       },
       {
         "id": 5790793536792,
@@ -22295,7 +29982,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: اسماء ابراهيم عبد القوي",
         "side": "credit",
-        "amount": 3000
+        "amount": 3000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 3000
       },
       {
         "id": 5790793407728,
@@ -22303,7 +29995,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "debit",
-        "amount": 21000
+        "amount": 21000,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 21000
       },
       {
         "id": 5790793407729,
@@ -22311,7 +30008,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: اسماء ابراهيم عبد القوي",
         "side": "credit",
-        "amount": 21000
+        "amount": 21000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 21000
       },
       {
         "id": 5790792407245,
@@ -22319,7 +30021,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 15500
+        "amount": 15500,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 15500
       },
       {
         "id": 5790792407246,
@@ -22327,7 +30034,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: محمد محسن محمد هايم",
         "side": "credit",
-        "amount": 15500
+        "amount": 15500,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 15500
       },
       {
         "id": 5790792076837,
@@ -22335,7 +30047,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 9200
+        "amount": 9200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 9200
       },
       {
         "id": 5790792076838,
@@ -22343,7 +30060,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: محمد محسن محمد هايم",
         "side": "credit",
-        "amount": 9200
+        "amount": 9200,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 9200
       },
       {
         "id": 5790791491935,
@@ -22351,7 +30073,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 9,
         "accountName": "أم فلوس",
         "side": "debit",
-        "amount": 1200
+        "amount": 1200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1200
       },
       {
         "id": 5790791491936,
@@ -22359,7 +30086,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: زينب علي محمد إبراهيم دلواح",
         "side": "credit",
-        "amount": 1200
+        "amount": 1200,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1200
       },
       {
         "id": 5790791366549,
@@ -22367,7 +30099,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 18000
+        "amount": 18000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 18000
       },
       {
         "id": 5790791366550,
@@ -22375,7 +30112,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: حنان علي محسن النجار",
         "side": "credit",
-        "amount": 18000
+        "amount": 18000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 18000
       },
       {
         "id": 5790791109799,
@@ -22383,7 +30125,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 1600
+        "amount": 1600,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1600
       },
       {
         "id": 5790791109800,
@@ -22391,7 +30138,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: ام عبد الوهاب",
         "side": "credit",
-        "amount": 1600
+        "amount": 1600,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1600
       },
       {
         "id": 5790789044494,
@@ -22399,7 +30151,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "debit",
-        "amount": 1700
+        "amount": 1700,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1700
       },
       {
         "id": 5790789044495,
@@ -22407,7 +30164,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
         "side": "credit",
-        "amount": 1700
+        "amount": 1700,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 1700
       },
       {
         "id": 5790789018988,
@@ -22415,7 +30177,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "debit",
-        "amount": 7300
+        "amount": 7300,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7300
       },
       {
         "id": 5790789018989,
@@ -22423,7 +30190,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
         "side": "credit",
-        "amount": 7300
+        "amount": 7300,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7300
       },
       {
         "id": 5790788592037,
@@ -22431,7 +30203,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 12800
+        "amount": 12800,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 12800
       },
       {
         "id": 5790788592038,
@@ -22439,7 +30216,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
         "side": "credit",
-        "amount": 12800
+        "amount": 12800,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 12800
       },
       {
         "id": 5790788581481,
@@ -22447,7 +30229,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 2800
+        "amount": 2800,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2800
       },
       {
         "id": 5790788581482,
@@ -22455,7 +30242,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
         "side": "credit",
-        "amount": 2800
+        "amount": 2800,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2800
       },
       {
         "id": 5790788567144,
@@ -22463,7 +30255,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 26500
+        "amount": 26500,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 26500
       },
       {
         "id": 5790788567145,
@@ -22471,7 +30268,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
         "side": "credit",
-        "amount": 26500
+        "amount": 26500,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 26500
       },
       {
         "id": 5790788090766,
@@ -22479,7 +30281,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 7500
+        "amount": 7500,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7500
       },
       {
         "id": 5790788090767,
@@ -22487,7 +30294,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: مرام حميد احمد سنان",
         "side": "credit",
-        "amount": 7500
+        "amount": 7500,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7500
       },
       {
         "id": 5790787857088,
@@ -22495,7 +30307,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 5000
+        "amount": 5000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5000
       },
       {
         "id": 5790787857089,
@@ -22503,7 +30320,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: رانيا محمود قادري المقطري",
         "side": "credit",
-        "amount": 5000
+        "amount": 5000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5000
       },
       {
         "id": 5790787704175,
@@ -22511,7 +30333,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 17000
+        "amount": 17000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 17000
       },
       {
         "id": 5790787704176,
@@ -22519,7 +30346,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: محمد جميل محمد مطر",
         "side": "credit",
-        "amount": 17000
+        "amount": 17000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 17000
       },
       {
         "id": 5790787631070,
@@ -22527,7 +30359,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 20000
+        "amount": 20000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 20000
       },
       {
         "id": 5790787631071,
@@ -22535,7 +30372,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: انس غانم حسين غانم",
         "side": "credit",
-        "amount": 20000
+        "amount": 20000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 20000
       },
       {
         "id": 5790787537845,
@@ -22543,7 +30385,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 6000
+        "amount": 6000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 6000
       },
       {
         "id": 5790787537846,
@@ -22551,7 +30398,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
         "side": "credit",
-        "amount": 6000
+        "amount": 6000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 6000
       },
       {
         "id": 5790787420529,
@@ -22559,7 +30411,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 5000
+        "amount": 5000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5000
       },
       {
         "id": 5790787420530,
@@ -22567,7 +30424,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: احلام موسى عبد الله محمد احمد الهندي",
         "side": "credit",
-        "amount": 5000
+        "amount": 5000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5000
       },
       {
         "id": 5790781507796,
@@ -22575,7 +30437,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 4000
+        "amount": 4000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 4000
       },
       {
         "id": 5790781507797,
@@ -22583,7 +30450,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: ماريا محمد سيف البناء",
         "side": "credit",
-        "amount": 4000
+        "amount": 4000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 4000
       },
       {
         "id": 5790774626066,
@@ -22591,7 +30463,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 120003,
         "accountName": "بنك الكريمي – حساب يمني",
         "side": "debit",
-        "amount": 60000
+        "amount": 60000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 60000
       },
       {
         "id": 5790774626067,
@@ -22599,7 +30476,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: نورا سلطان الصلاحي",
         "side": "credit",
-        "amount": 60000
+        "amount": 60000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 60000
       },
       {
         "id": 5790718911669,
@@ -22607,7 +30489,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 16900
+        "amount": 16900,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 16900
       },
       {
         "id": 5790718911670,
@@ -22615,7 +30502,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: احلام موسى عبد الله محمد احمد الهندي",
         "side": "credit",
-        "amount": 16900
+        "amount": 16900,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 16900
       },
       {
         "id": 5790611678603,
@@ -22623,7 +30515,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 10400
+        "amount": 10400,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 10400
       },
       {
         "id": 5790611678604,
@@ -22631,7 +30528,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: اشجان إدريس احمد القدسي",
         "side": "credit",
-        "amount": 10400
+        "amount": 10400,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 10400
       },
       {
         "id": 5790611661203,
@@ -22639,7 +30541,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 2900
+        "amount": 2900,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2900
       },
       {
         "id": 5790611661204,
@@ -22647,7 +30554,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: اشجان إدريس احمد القدسي",
         "side": "credit",
-        "amount": 2900
+        "amount": 2900,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 2900
       },
       {
         "id": 4000000360002,
@@ -22655,7 +30567,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 22700
+        "amount": 22700,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 22700
       },
       {
         "id": 4000000360003,
@@ -22663,7 +30580,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: محمد جميل محمد مطر",
         "side": "credit",
-        "amount": 22700
+        "amount": 22700,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 22700
       },
       {
         "id": 4000000420002,
@@ -22671,7 +30593,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "debit",
-        "amount": 20000
+        "amount": 20000,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 20000
       },
       {
         "id": 4000000420003,
@@ -22679,7 +30606,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: زينب علي محمد إبراهيم دلواح",
         "side": "credit",
-        "amount": 20000
+        "amount": 20000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 20000
       },
       {
         "id": 4000000450002,
@@ -22687,7 +30619,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 52400
+        "amount": 52400,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 52400
       },
       {
         "id": 4000000450003,
@@ -22695,7 +30632,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: امةالله محسن عبداللة عبدالجليل",
         "side": "credit",
-        "amount": 52400
+        "amount": 52400,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 52400
       },
       {
         "id": 4000000480002,
@@ -22703,7 +30645,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 5000
+        "amount": 5000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5000
       },
       {
         "id": 4000000480003,
@@ -22711,7 +30658,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: مرام عبد الجبار السريحي",
         "side": "credit",
-        "amount": 5000
+        "amount": 5000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5000
       },
       {
         "id": 4000000510002,
@@ -22719,7 +30671,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 30003,
         "accountName": "كريمي — حساب سعودي",
         "side": "debit",
-        "amount": 7000
+        "amount": 7000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7000
       },
       {
         "id": 4000000510003,
@@ -22727,7 +30684,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: غانم علي محمد  الشاذلي",
         "side": "credit",
-        "amount": 7000
+        "amount": 7000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7000
       },
       {
         "id": 4000000540002,
@@ -22735,7 +30697,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 11400
+        "amount": 11400,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 11400
       },
       {
         "id": 4000000540003,
@@ -22743,7 +30710,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: محمد جميل محمد مطر",
         "side": "credit",
-        "amount": 11400
+        "amount": 11400,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 11400
       },
       {
         "id": 4000000600002,
@@ -22751,7 +30723,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 3000
+        "amount": 3000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 3000
       },
       {
         "id": 4000000600003,
@@ -22759,7 +30736,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: ام عبد الوهاب",
         "side": "credit",
-        "amount": 3000
+        "amount": 3000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 3000
       },
       {
         "id": 4000000630002,
@@ -22767,7 +30749,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 10000
+        "amount": 10000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 10000
       },
       {
         "id": 4000000630003,
@@ -22775,7 +30762,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: حنان علي محمد القاسمي",
         "side": "credit",
-        "amount": 10000
+        "amount": 10000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 10000
       },
       {
         "id": 4000000660002,
@@ -22783,7 +30775,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 10000
+        "amount": 10000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 10000
       },
       {
         "id": 4000000660003,
@@ -22791,7 +30788,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: بيت الحلحلي",
         "side": "credit",
-        "amount": 10000
+        "amount": 10000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 10000
       },
       {
         "id": 4000000690002,
@@ -22799,7 +30801,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 15000
+        "amount": 15000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 15000
       },
       {
         "id": 4000000690003,
@@ -22807,7 +30814,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: اشجان إدريس احمد القدسي",
         "side": "credit",
-        "amount": 15000
+        "amount": 15000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 15000
       },
       {
         "id": 4000000720002,
@@ -22815,7 +30827,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 20000
+        "amount": 20000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 20000
       },
       {
         "id": 4000000720003,
@@ -22823,7 +30840,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: بيت الحلحلي",
         "side": "credit",
-        "amount": 20000
+        "amount": 20000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 20000
       },
       {
         "id": 4000000750002,
@@ -22831,7 +30853,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 35000
+        "amount": 35000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 35000
       },
       {
         "id": 4000000750003,
@@ -22839,7 +30866,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: حنان علي محسن النجار",
         "side": "credit",
-        "amount": 35000
+        "amount": 35000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 35000
       },
       {
         "id": 4000000750003,
@@ -22847,7 +30879,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 7000
+        "amount": 7000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7000
       },
       {
         "id": 4000000750004,
@@ -22855,7 +30892,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: محمد جميل محمد مطر",
         "side": "credit",
-        "amount": 7000
+        "amount": 7000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 7000
       },
       {
         "id": 4000000780002,
@@ -22863,7 +30905,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 10,
         "accountName": "نقدي",
         "side": "debit",
-        "amount": 6300
+        "amount": 6300,
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 6300
       },
       {
         "id": 4000000780003,
@@ -22871,7 +30918,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: غانم علي محمد  الشاذلي",
         "side": "credit",
-        "amount": 6300
+        "amount": 6300,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 6300
       },
       {
         "id": 4000000810002,
@@ -22879,7 +30931,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 11400
+        "amount": 11400,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 11400
       },
       {
         "id": 4000000810003,
@@ -22887,7 +30944,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: محمد جميل محمد مطر",
         "side": "credit",
-        "amount": 11400
+        "amount": 11400,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 11400
       },
       {
         "id": 4000000840002,
@@ -22895,7 +30957,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 10900
+        "amount": 10900,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 10900
       },
       {
         "id": 4000000840003,
@@ -22903,7 +30970,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: مرام عبد الجبار السريحي",
         "side": "credit",
-        "amount": 10900
+        "amount": 10900,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 10900
       },
       {
         "id": 4000000870002,
@@ -22911,7 +30983,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 9,
         "accountName": "أم فلوس",
         "side": "debit",
-        "amount": 4200
+        "amount": 4200,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 4200
       },
       {
         "id": 4000000870003,
@@ -22919,7 +30996,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: امال عامر احمد العمري",
         "side": "credit",
-        "amount": 4200
+        "amount": 4200,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 4200
       },
       {
         "id": 4000000930002,
@@ -22927,7 +31009,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 5000
+        "amount": 5000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5000
       },
       {
         "id": 4000000930003,
@@ -22935,7 +31022,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: ريناس عبد الحكيم يحيى محمد",
         "side": "credit",
-        "amount": 5000
+        "amount": 5000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 5000
       },
       {
         "id": 4000000960002,
@@ -22943,7 +31035,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 2,
         "accountName": "جيب",
         "side": "debit",
-        "amount": 43000
+        "amount": 43000,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 43000
       },
       {
         "id": 4000000960003,
@@ -22951,7 +31048,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: حنان علي محسن النجار",
         "side": "credit",
-        "amount": 43000
+        "amount": 43000,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 43000
       },
       {
         "id": 5791077398277,
@@ -22959,7 +31061,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": 120003,
         "accountName": "بنك الكريمي – حساب يمني",
         "side": "debit",
-        "amount": 37600
+        "amount": 37600,
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 37600
       },
       {
         "id": 5791077398278,
@@ -22967,9 +31074,335 @@ export const INITIAL_DATA: TopStoreBackup = {
         "accountId": null,
         "accountName": "حـ/ العميل: نورا سلطان الصلاحي",
         "side": "credit",
-        "amount": 37600
+        "amount": 37600,
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 37600
       }
     ],
-    "auditLogs": []
+    "auditLogs": [],
+    "chartAccounts": [
+      {
+        "id": 101,
+        "code": "101",
+        "name": "الصناديق النقدية (الخزينة الرئيسية)",
+        "category": "asset",
+        "subCategory": "أصول متداولة - نقدية بالصندوق",
+        "balanceType": "debit",
+        "description": "النقدية المتوفرة في صندوق المتجر للعمليات اليومية",
+        "isSystem": true,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 102,
+        "code": "102",
+        "name": "الحسابات البنكية والمحافظ الإلكترونية",
+        "category": "asset",
+        "subCategory": "أصول متداولة - بنوك ومحافظ",
+        "balanceType": "debit",
+        "description": "أرصدة حسابات بنك الكريمي، جيب، ون كاش، فلوسك، وبنك التضامن",
+        "isSystem": true,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 110,
+        "code": "110",
+        "name": "ذمم العملاء المدينة (حسابات العملاء)",
+        "category": "asset",
+        "subCategory": "أصول متداولة - مدينون",
+        "balanceType": "debit",
+        "description": "إجمالي المبالغ والديون المستحقة على العملاء مقابل فواتير الطلبات",
+        "isSystem": true,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 120,
+        "code": "120",
+        "name": "بضاعة في الطريق ومشتريات الشحنات",
+        "category": "asset",
+        "subCategory": "أصول متداولة - مخزون وبضاعة",
+        "balanceType": "debit",
+        "description": "قيمة الطلبيات المشتراة من المواقع (شي إن، علي إكسبرس) قيد الشحن",
+        "isSystem": true,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 130,
+        "code": "130",
+        "name": "سلف وعهد ومستحقات أخرى",
+        "category": "asset",
+        "subCategory": "أصول متداولة - أرصدة مدينة أخرى",
+        "balanceType": "debit",
+        "description": "سلف الموظفين والشركاء وعهد مناديب التوصيل النقدية",
+        "isSystem": true,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 150,
+        "code": "150",
+        "name": "الأصول الثابتة وتجهيزات ومعدات المتجر",
+        "category": "asset",
+        "subCategory": "أصول غير متداولة - أصول ثابتة",
+        "balanceType": "debit",
+        "description": "أجهزة الكمبيوتر، طابعات الفواتير، الديكورات وتجهيزات المقر",
+        "isSystem": true,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 201,
+        "code": "201",
+        "name": "ذمم الموردين وشركات الشحن (دائنون)",
+        "category": "liability",
+        "subCategory": "خصوم متداولة - موردون",
+        "balanceType": "credit",
+        "description": "مستحقات شركات الشحن والتخليص والموردين الخارجيين",
+        "isSystem": true,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 202,
+        "code": "202",
+        "name": "أمانات ودفعات مقدمة من العملاء",
+        "category": "liability",
+        "subCategory": "خصوم متداولة - أمانات",
+        "balanceType": "credit",
+        "description": "عربونات ودفعات زائدة مسددة من العملاء قبل اكتمال الفواتير",
+        "isSystem": true,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 301,
+        "code": "301",
+        "name": "رأس المال المدفوع",
+        "category": "equity",
+        "subCategory": "حقوق الملكية - رأس المال",
+        "balanceType": "credit",
+        "description": "رأس مال المشروع والمساهمات الرأسمالية للمؤسسين",
+        "isSystem": true,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 302,
+        "code": "302",
+        "name": "الأرباح المبقاة والمرحلة",
+        "category": "equity",
+        "subCategory": "حقوق الملكية - احتياطيات وأرباح",
+        "balanceType": "credit",
+        "description": "صافي الأرباح المتراكمة من الفترات المالية السابقة",
+        "isSystem": true,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 303,
+        "code": "303",
+        "name": "جاري صاحب المنشأة والمسحوبات الشخصية",
+        "category": "equity",
+        "subCategory": "حقوق الملكية - جاري الملاك",
+        "balanceType": "credit",
+        "description": "حساب التسويات والمسحوبات الشخصية للمالك والشركاء",
+        "isSystem": true,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 401,
+        "code": "401",
+        "name": "إيرادات المبيعات والوساطة التجارية",
+        "category": "revenue",
+        "subCategory": "إيرادات النشاط الرئيسي",
+        "balanceType": "credit",
+        "description": "إجمالي قيمة فواتير الطلبات وعمولات الشراء من المتاجر العالمية",
+        "isSystem": true,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 402,
+        "code": "402",
+        "name": "إيرادات رسوم وأجور التوصيل",
+        "category": "revenue",
+        "subCategory": "إيرادات خدمات مكملة",
+        "balanceType": "credit",
+        "description": "رسوم التوصيل المحصلة من العملاء داخل المدن والمحافظات",
+        "isSystem": true,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 409,
+        "code": "409",
+        "name": "إيرادات وأرباح متنوعة أخرى",
+        "category": "revenue",
+        "subCategory": "إيرادات وأرباح أخرى",
+        "balanceType": "credit",
+        "description": "أرباح فروق أسعار الصرف وإيرادات تشغيلية عرضية",
+        "isSystem": true,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 501,
+        "code": "501",
+        "name": "تكلفة البضاعة المباعة وتكلفة الشراء الفعلية",
+        "category": "expense",
+        "subCategory": "تكلفة المبيعات المباشرة",
+        "balanceType": "debit",
+        "description": "المبالغ المدفوعة لمواقع الشراء شي إن وعلي إكسبرس لشراء المنتجات",
+        "isSystem": true,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 502,
+        "code": "502",
+        "name": "مصاريف الشحن الدولي والتخليص الجمركي",
+        "category": "expense",
+        "subCategory": "تكاليف شحن مباشرة",
+        "balanceType": "debit",
+        "description": "تكاليف أوزان الشحنات الدولية وتخليص الطرود الجوية والبرية",
+        "isSystem": true,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 503,
+        "code": "503",
+        "name": "مصاريف التسويق والإعلانات الممولة",
+        "category": "expense",
+        "subCategory": "مصروفات تسويقية وبيع",
+        "balanceType": "debit",
+        "description": "حملات إعلانات فيسبوك وانستغرام وعمولات المؤثرين",
+        "isSystem": true,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 504,
+        "code": "504",
+        "name": "مصاريف أجور ورواتب ومكافآت العاملين",
+        "category": "expense",
+        "subCategory": "مصروفات إدارية وتشغيلية",
+        "balanceType": "debit",
+        "description": "رواتب موظفي المتجر، خدمة العملاء، ومكافآت الإنجاز",
+        "isSystem": true,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 505,
+        "code": "505",
+        "name": "مصاريف الإيجار ومرافق المقر",
+        "category": "expense",
+        "subCategory": "مصروفات إدارية وتشغيلية",
+        "balanceType": "debit",
+        "description": "إيجار مقر المتجر والكهرباء والمياه",
+        "isSystem": true,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 506,
+        "code": "506",
+        "name": "مصاريف الإنترنت والاتصالات والبرمجيات",
+        "category": "expense",
+        "subCategory": "مصروفات تشغيلية وتقنية",
+        "balanceType": "debit",
+        "description": "اشتراكات الإنترنت، بطاقات الشحن، وسيرفرات البرامج",
+        "isSystem": true,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 507,
+        "code": "507",
+        "name": "أجور وعمولات مناديب التوصيل المحلي",
+        "category": "expense",
+        "subCategory": "مصروفات توزيع وتوصيل",
+        "balanceType": "debit",
+        "description": "أجور رحلات التوصيل المسددة لمناديب ومكاتب التوصيل",
+        "isSystem": true,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 508,
+        "code": "508",
+        "name": "مصاريف التغليف والطباعة والقرطاسية",
+        "category": "expense",
+        "subCategory": "مصروفات تشغيلية",
+        "balanceType": "debit",
+        "description": "أكياس التغليف، اللواصق، بوالص الشحن والأوراق",
+        "isSystem": true,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 509,
+        "code": "509",
+        "name": "مصاريف ونثريات تشغيلية متنوعة",
+        "category": "expense",
+        "subCategory": "مصروفات عمومية وإدارية",
+        "balanceType": "debit",
+        "description": "ضيافة، نظافة، نثريات، وصيانة عامة",
+        "isSystem": true,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      }
+    ],
+    "fiscalYears": [
+      {
+        "id": 2026,
+        "year": 2026,
+        "startDate": "2026-01-01",
+        "endDate": "2026-12-31",
+        "status": "open",
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 2025,
+        "year": 2025,
+        "startDate": "2025-01-01",
+        "endDate": "2025-12-31",
+        "status": "closed",
+        "createdAt": "2025-01-01T00:00:00.000Z"
+      }
+    ],
+    "fiscalPeriods": [
+      {
+        "id": 202601,
+        "periodName": "الربع الأول 2026 (Q1)",
+        "startDate": "2026-01-01",
+        "endDate": "2026-03-31",
+        "status": "open",
+        "fiscalYear": 2026,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 202602,
+        "periodName": "الربع الثاني 2026 (Q2)",
+        "startDate": "2026-04-01",
+        "endDate": "2026-06-30",
+        "status": "open",
+        "fiscalYear": 2026,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 202603,
+        "periodName": "الربع الثالث 2026 (Q3)",
+        "startDate": "2026-07-01",
+        "endDate": "2026-09-30",
+        "status": "open",
+        "fiscalYear": 2026,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 202604,
+        "periodName": "الربع الرابع 2026 (Q4)",
+        "startDate": "2026-10-01",
+        "endDate": "2026-12-31",
+        "status": "open",
+        "fiscalYear": 2026,
+        "createdAt": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 202512,
+        "periodName": "الفترة المالية السنوية 2025 (مقفلة)",
+        "startDate": "2025-01-01",
+        "endDate": "2025-12-31",
+        "status": "closed",
+        "fiscalYear": 2025,
+        "createdAt": "2025-01-01T00:00:00.000Z"
+      }
+    ],
+    "idempotencyRecords": []
   }
 };

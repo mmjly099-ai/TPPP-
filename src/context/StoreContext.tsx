@@ -28,11 +28,30 @@ import {
   Courier,
   DeliveryTrip,
   DeliveryTripItem,
-  ChartAccount
+  ChartAccount,
+  FiscalPeriod,
+  FiscalYear,
+  AppRole,
+  Permission,
+  IdempotencyRecord
 } from '../types';
 import { exportToZip } from '../utils/dataExporter';
 import { INITIAL_DATA } from '../data/initialData';
 import { DEFAULT_CHART_OF_ACCOUNTS } from '../data/defaultChartOfAccounts';
+import {
+  roundCurrency,
+  isJournalEntryBalanced,
+  assertFiscalPeriodOpen,
+  checkIdempotency,
+  resolveChartAccount,
+  reconcileCustomerBalances,
+  CustomerReconciliationReport,
+  DEFAULT_FISCAL_PERIODS,
+  DEFAULT_FISCAL_YEARS,
+  generateYearEndClosingEntry,
+  generateAdjustingEntryForCustomer
+} from '../services/AccountingEngine';
+import { hasPermission, runDataIntegrityTests } from '../services/SecurityAndIntegrityTests';
 
 export interface MarketingStats {
   totalSpend: number;
@@ -77,6 +96,9 @@ interface StoreContextType {
   couriers: Courier[];
   deliveryTrips: DeliveryTrip[];
   chartAccounts: ChartAccount[];
+  fiscalPeriods: FiscalPeriod[];
+  fiscalYears: FiscalYear[];
+  idempotencyRecords: IdempotencyRecord[];
   marketingStats: MarketingStats;
   
   // Notification system
@@ -151,6 +173,17 @@ interface StoreContextType {
   updateJournalEntry: (id: number, data: { description?: string; lines?: JournalLine[]; date?: string }) => void;
   deleteJournalEntry: (id: number, cascadeOptions?: { deleteSourceDocument?: boolean }) => void;
   reverseJournalEntry: (id: number, reason?: string) => JournalEntry;
+  getCustomerReconciliationReport: () => CustomerReconciliationReport;
+  runIntegrityAudit: () => ReturnType<typeof runDataIntegrityTests>;
+  
+  // Phase 4: Fiscal Periods & Year-End Closing Engine
+  closeFiscalPeriod: (periodId: number, performedBy?: string) => void;
+  reopenFiscalPeriod: (periodId: number, reason?: string, performedBy?: string) => void;
+  lockFiscalPeriod: (periodId: number, performedBy?: string) => void;
+  closeFiscalYear: (yearId: number, performedBy?: string) => { closingEntry: JournalEntry; netIncome: number };
+  checkAndRegisterIdempotency: (key: string, operationType: string, entityId?: string | number) => boolean;
+  generateCustomerAdjustingEntry: (customerId: number, adjustmentAmount: number, reason?: string) => JournalEntry;
+  reconcileAllCustomerBalances: () => number;
   
   // Chart of Accounts (دليل شجرة الحسابات)
   addChartAccount: (acc: Omit<ChartAccount, 'id' | 'createdAt'>) => ChartAccount;
@@ -341,7 +374,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               otherReceivables: Array.isArray(parsed.tables.otherReceivables) && parsed.tables.otherReceivables.length > 0 ? parsed.tables.otherReceivables : (INITIAL_DATA.tables.otherReceivables || []),
               couriers: Array.isArray(parsed.tables.couriers) && parsed.tables.couriers.length > 0 ? parsed.tables.couriers : (INITIAL_DATA.tables.couriers || []),
               deliveryTrips: Array.isArray(parsed.tables.deliveryTrips) ? parsed.tables.deliveryTrips : [],
-              chartAccounts: Array.isArray(parsed.tables.chartAccounts) && parsed.tables.chartAccounts.length > 0 ? parsed.tables.chartAccounts : DEFAULT_CHART_OF_ACCOUNTS
+              chartAccounts: Array.isArray(parsed.tables.chartAccounts) && parsed.tables.chartAccounts.length > 0 ? parsed.tables.chartAccounts : DEFAULT_CHART_OF_ACCOUNTS,
+              fiscalPeriods: Array.isArray(parsed.tables.fiscalPeriods) && parsed.tables.fiscalPeriods.length > 0 ? parsed.tables.fiscalPeriods : DEFAULT_FISCAL_PERIODS,
+              fiscalYears: Array.isArray(parsed.tables.fiscalYears) && parsed.tables.fiscalYears.length > 0 ? parsed.tables.fiscalYears : DEFAULT_FISCAL_YEARS,
+              idempotencyRecords: Array.isArray(parsed.tables.idempotencyRecords) ? parsed.tables.idempotencyRecords : [],
+              auditLogs: Array.isArray(parsed.tables.auditLogs) ? parsed.tables.auditLogs : []
             }
           };
         }
@@ -455,6 +492,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const couriers = data.tables.couriers || INITIAL_DATA.tables.couriers || [];
   const deliveryTrips = data.tables.deliveryTrips || [];
   const chartAccounts = data.tables.chartAccounts && data.tables.chartAccounts.length > 0 ? data.tables.chartAccounts : DEFAULT_CHART_OF_ACCOUNTS;
+  const fiscalPeriods = data.tables.fiscalPeriods && data.tables.fiscalPeriods.length > 0 ? data.tables.fiscalPeriods : DEFAULT_FISCAL_PERIODS;
+  const fiscalYears = data.tables.fiscalYears && data.tables.fiscalYears.length > 0 ? data.tables.fiscalYears : DEFAULT_FISCAL_YEARS;
+  const idempotencyRecords = data.tables.idempotencyRecords || [];
 
   // Helper to compute account current balance
   const getAccountBalance = (accountId: number): number => {
@@ -492,7 +532,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       .filter(pay => pay.customerId === customerId && pay.status !== 'cancelled')
       .reduce((sum, pay) => sum + (pay.amount || 0), 0);
 
-    return Math.max(0, opening + totalOrdersDebit - totalPaymentsCredit);
+    return roundCurrency(opening + totalOrdersDebit - totalPaymentsCredit);
+  };
+
+  const getCustomerReconciliationReport = (): CustomerReconciliationReport => {
+    return reconcileCustomerBalances(customers, orders, payments, journalEntries);
+  };
+
+  const runIntegrityAudit = () => {
+    return runDataIntegrityTests(data);
   };
 
   // Total cash & wallets
@@ -641,6 +689,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     initialPayment?: { amount: number; accountId: number; paymentMethod: string }
   ): Order => {
     const orderId = Date.now();
+    const orderDate = new Date().toISOString();
+    const periodCheck = assertFiscalPeriodOpen(orderDate, fiscalPeriods);
+    if (!periodCheck.allowed) {
+      showNotification(periodCheck.reason || 'الفترة المالية مقفلة. لا يمكن إنشاء طلبات جديدة.', 'error');
+      throw new Error(periodCheck.reason);
+    }
     const totalAmount = (orderData.subtotal || 0) - (orderData.discount || 0) + (orderData.shippingFee || 0);
     const paidAmount = initialPayment ? initialPayment.amount : 0;
     const remainingAmount = Math.max(0, totalAmount - paidAmount);
@@ -709,6 +763,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       // Journal Entry
       const jeId = paymentId + 20;
+      const payAccChart = resolveChartAccount(acc?.name || 'الصندوق', 'debit');
+      const payCustChart = resolveChartAccount(`العميل: ${customer?.name || 'العميل'}`, 'credit');
+
       const journalEntry: JournalEntry = {
         id: jeId,
         entryNumber: `JE-PAY-${Date.now().toString().slice(-6)}`,
@@ -716,6 +773,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         sourceType: 'payment',
         sourceId: paymentId,
         sourceNumber: receiptNumber,
+        status: 'posted',
+        currency: 'YER',
+        exchangeRate: 1,
+        createdBy: 'admin',
+        postedBy: 'admin',
+        postedAt: new Date().toISOString(),
         description: `سند قبض #${receiptNumber} دفعة أولى للطلب ${orderData.orderNumber} - ${customer?.name}`,
         createdAt: new Date().toISOString(),
         lines: [
@@ -724,16 +787,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             journalEntryId: jeId,
             accountId: initialPayment.accountId,
             accountName: acc?.name || 'الحساب',
+            chartAccountId: payAccChart.id,
+            chartAccountCode: payAccChart.code,
             side: 'debit', // من حـ/ الصندوق أو المحفظة
-            amount: initialPayment.amount
+            amount: initialPayment.amount,
+            currency: 'YER',
+            exchangeRate: 1,
+            baseAmount: initialPayment.amount
           },
           {
             id: jeId + 2,
             journalEntryId: jeId,
             accountId: null,
             accountName: `العميل: ${customer?.name || 'العميل'}`,
+            chartAccountId: payCustChart.id,
+            chartAccountCode: payCustChart.code,
             side: 'credit', // إلى حـ/ العميل
-            amount: initialPayment.amount
+            amount: initialPayment.amount,
+            currency: 'YER',
+            exchangeRate: 1,
+            baseAmount: initialPayment.amount
           }
         ]
       };
@@ -742,12 +815,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // Journal Entry for the Sales Invoice (Debit Customer, Credit Sales)
     const orderJeId = orderId + 30;
+    const ordCustChart = resolveChartAccount(`حـ/ العميل: ${customer?.name || orderData.customerName}`, 'debit');
+    const ordSalesChart = resolveChartAccount('حـ/ إيرادات المبيعات والوساطة', 'credit');
+
     const orderJournalEntry: JournalEntry = {
       id: orderJeId,
       entryNumber: `JE-ORD-${Date.now().toString().slice(-6)}`,
       sourceType: 'order',
       sourceId: orderId,
       sourceNumber: String(orderData.orderNumber),
+      status: 'posted',
+      currency: 'YER',
+      exchangeRate: 1,
+      createdBy: 'admin',
+      postedBy: 'admin',
+      postedAt: new Date().toISOString(),
       description: `إثبات فاتورة الطلب #${orderData.orderNumber} - ${customer?.name || orderData.customerName}`,
       createdAt: new Date().toISOString(),
       lines: [
@@ -756,16 +838,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           journalEntryId: orderJeId,
           accountId: null,
           accountName: `حـ/ العميل: ${customer?.name || orderData.customerName}`,
+          chartAccountId: ordCustChart.id,
+          chartAccountCode: ordCustChart.code,
           side: 'debit', // مدين: إثبات استحقاق الفاتورة على العميل
-          amount: totalAmount
+          amount: totalAmount,
+          currency: 'YER',
+          exchangeRate: 1,
+          baseAmount: totalAmount
         },
         {
           id: orderJeId + 2,
           journalEntryId: orderJeId,
           accountId: null,
           accountName: 'حـ/ إيرادات المبيعات والوساطة',
+          chartAccountId: ordSalesChart.id,
+          chartAccountCode: ordSalesChart.code,
           side: 'credit', // دائن: إيرادات المبيعات
-          amount: totalAmount
+          amount: totalAmount,
+          currency: 'YER',
+          exchangeRate: 1,
+          baseAmount: totalAmount
         }
       ]
     };
@@ -875,53 +967,67 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const deleteOrder = (orderId: number, options?: { deleteJournal?: boolean; deletePayments?: boolean }) => {
     setData(prev => {
       const order = prev.tables.orders.find(o => o.id === orderId);
-      if (!order) return prev;
+      if (!order || order.status === 'cancelled') return prev;
 
-      // Find all payments linked to this order
-      const linkedPayments = prev.tables.payments.filter(p => p.orderId === orderId);
-      const linkedPaymentIds = new Set(linkedPayments.map(p => p.id));
+      const customer = prev.tables.customers.find(c => c.id === order.customerId);
 
-      // Find all transactions linked to this order or its payments
-      const linkedTrx = prev.tables.financialTransactions.filter(
-        t => t.orderId === orderId || (t.paymentId && linkedPaymentIds.has(t.paymentId))
-      );
-      const linkedTrxIds = new Set(linkedTrx.map(t => t.id));
-
-      // Find journal entries linked to this order or its payments
-      const linkedJournals = prev.tables.journalEntries.filter(je => {
-        if (je.sourceType === 'order' && (je.sourceId === orderId || je.sourceId === String(orderId))) return true;
-        if (je.sourceType === 'payment' && je.sourceId && linkedPaymentIds.has(Number(je.sourceId))) return true;
-        if (je.transactionId && linkedTrxIds.has(je.transactionId)) return true;
-        const desc = je.description || '';
-        if (order.orderNumber && desc.includes(String(order.orderNumber))) return true;
-        return false;
-      });
-      const linkedJournalIds = new Set(linkedJournals.map(j => j.id));
+      // Issue balancing reversal journal entry to reverse the sales recognition and customer receivable
+      const revJeId = Date.now();
+      const revEntryNumber = `JE-REV-${Date.now().toString().slice(-6)}`;
+      const reversalJe: JournalEntry = {
+        id: revJeId,
+        entryNumber: revEntryNumber,
+        sourceType: 'reversal',
+        sourceId: orderId,
+        sourceNumber: String(order.orderNumber),
+        status: 'posted',
+        description: `قيد عكسي لإلغاء مبيعات وفاتورة الطلب #${order.orderNumber} - ${customer?.name || order.customerName}`,
+        createdAt: new Date().toISOString(),
+        postedAt: new Date().toISOString(),
+        lines: [
+          {
+            id: revJeId + 1,
+            journalEntryId: revJeId,
+            accountId: null,
+            accountName: 'حـ/ عكس إيرادات المبيعات والوساطة',
+            side: 'debit', // عكس الإيراد
+            amount: order.totalAmount
+          },
+          {
+            id: revJeId + 2,
+            journalEntryId: revJeId,
+            accountId: null,
+            accountName: `حـ/ العميل: ${customer?.name || order.customerName}`,
+            side: 'credit', // تبرئة ذمة العميل من الفاتورة
+            amount: order.totalAmount
+          }
+        ]
+      };
 
       const auditLog: AuditLog = {
         id: Date.now(),
         createdAt: new Date().toISOString(),
-        action: 'حذف طلب وقيوده التلقائية (Cascade Delete)',
+        action: 'إلغاء طلب وإصدار قيد عكسي',
         performedBy: 'الإدارة المالية',
         entityType: 'order',
         entityId: orderId,
-        description: `تم حذف الطلب #${order.orderNumber} بمبلغ ${order.totalAmount} ريال مع ${linkedJournals.length} قيود يومية و${linkedPayments.length} سندات دفع مرتبطة`,
-        notes: `تصفية قيود وحركات الطلب #${order.orderNumber}`
+        description: `تم إلغاء الطلب #${order.orderNumber} بمبلغ ${order.totalAmount} ريال وإصدار قيد عكسي #${revEntryNumber} حفظاً للأثر المحاسبي`,
+        notes: `إلغاء الطلب #${order.orderNumber}`,
+        oldValue: 'قيد التنفيذ',
+        newValue: 'ملغى'
       };
 
       return {
         ...prev,
         tables: {
           ...prev.tables,
-          orders: prev.tables.orders.filter(o => o.id !== orderId),
-          payments: prev.tables.payments.filter(p => !linkedPaymentIds.has(p.id)),
-          financialTransactions: prev.tables.financialTransactions.filter(t => !linkedTrxIds.has(t.id) && t.orderId !== orderId),
-          journalEntries: prev.tables.journalEntries.filter(je => !linkedJournalIds.has(je.id)),
+          orders: prev.tables.orders.map(o => o.id === orderId ? { ...o, status: 'cancelled' } : o),
+          journalEntries: [reversalJe, ...prev.tables.journalEntries],
           auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
         }
       };
     });
-    showNotification(`تم حذف الطلب #${orderId} وحذف قيوده المحاسبية وسنداته المرتبطة بنجاح`, 'success');
+    showNotification(`تطبيق معايير التدقيق: تم إلغاء الطلب عبر قيد عكسي رسمي لحماية الأثر المحاسبي وعدم شطب الفواتير السابقة.`, 'warning');
   };
 
   const updateOrderStatus = (orderId: number, status: Order['status']) => {
@@ -1005,6 +1111,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const acc = accounts.find(a => a.id === p.accountId);
     const targetOrder = p.orderId ? orders.find(o => o.id === p.orderId) : undefined;
     const paymentId = Date.now();
+    const payDate = new Date().toISOString();
+    const periodCheck = assertFiscalPeriodOpen(payDate, fiscalPeriods);
+    if (!periodCheck.allowed) {
+      showNotification(periodCheck.reason || 'الفترة المالية مقفلة. لا يمكن تسجيل مقبوضات فيها.', 'error');
+      throw new Error(periodCheck.reason);
+    }
     const paymentNumber = `PAY-${Date.now().toString().slice(-6)}`;
     const trxNumber = `TRX-PAY-${Date.now().toString().slice(-6)}`;
     const receiptNumber = `RCT-${new Date().getFullYear()}-${String(payments.length + 1).padStart(3, '0')}`;
@@ -1060,10 +1172,22 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       createdAt: new Date().toISOString()
     };
 
+    const payAccChart = resolveChartAccount(acc?.name || 'الصندوق', 'debit');
+    const payCustChart = resolveChartAccount(`حـ/ العميل: ${customer?.name}`, 'credit');
+
     const je: JournalEntry = {
       id: paymentId + 2,
       entryNumber: `JE-PAY-${Date.now().toString().slice(-6)}`,
       description: `سند قبض #${receiptNumber} من العميل: ${customer?.name}`,
+      sourceType: 'payment',
+      sourceId: paymentId,
+      sourceNumber: receiptNumber,
+      status: 'posted',
+      currency: 'YER',
+      exchangeRate: 1,
+      createdBy: 'أحمد الإدريسي (أمين الصندوق)',
+      postedBy: 'أحمد الإدريسي (أمين الصندوق)',
+      postedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       lines: [
         {
@@ -1071,16 +1195,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           journalEntryId: paymentId + 2,
           accountId: p.accountId,
           accountName: acc?.name || 'الحساب',
+          chartAccountId: payAccChart.id,
+          chartAccountCode: payAccChart.code,
           side: 'debit',
-          amount: p.amount
+          amount: p.amount,
+          currency: 'YER',
+          exchangeRate: 1,
+          baseAmount: p.amount
         },
         {
           id: paymentId + 4,
           journalEntryId: paymentId + 2,
           accountId: null,
           accountName: `حـ/ العميل: ${customer?.name}`,
+          chartAccountId: payCustChart.id,
+          chartAccountCode: payCustChart.code,
           side: 'credit',
-          amount: p.amount
+          amount: p.amount,
+          currency: 'YER',
+          exchangeRate: 1,
+          baseAmount: p.amount
         }
       ]
     };
@@ -1319,60 +1453,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const deletePayment = (paymentId: number, options?: { deleteJournal?: boolean }) => {
-    setData(prev => {
-      const payment = prev.tables.payments.find(p => p.id === paymentId);
-      if (!payment) return prev;
+    const payment = data.tables.payments.find(p => p.id === paymentId);
+    if (!payment) return;
 
-      // Revert order remaining if orderId
-      let updatedOrders = prev.tables.orders;
-      if (payment.orderId) {
-        updatedOrders = prev.tables.orders.map(o => {
-          if (o.id === payment.orderId) {
-            const paid = Math.max(0, (o.paidAmount || 0) - Number(payment.amount));
-            const remaining = Math.max(0, (o.totalAmount || 0) - paid);
-            return { ...o, paidAmount: paid, remainingAmount: remaining };
-          }
-          return o;
-        });
-      }
-
-      // Linked transaction
-      const linkedTrx = prev.tables.financialTransactions.filter(
-        t => t.id === payment.id + 1 || t.id === payment.id + 10 || (t.type === 'payment' && (t.description?.includes(payment.receiptNumber || '') || t.amount === payment.amount))
-      );
-      const linkedTrxIds = new Set(linkedTrx.map(t => t.id));
-
-      // Linked journal entries
-      const linkedJournals = prev.tables.journalEntries.filter(
-        je => (je.sourceType === 'payment' && (je.sourceId === paymentId || je.sourceId === String(paymentId))) ||
-              (je.id === payment.id + 2 || je.id === payment.id + 20) ||
-              (payment.receiptNumber && je.description?.includes(payment.receiptNumber))
-      );
-      const linkedJournalIds = new Set(linkedJournals.map(j => j.id));
-
-      const auditLog: AuditLog = {
-        id: Date.now(),
-        createdAt: new Date().toISOString(),
-        action: 'حذف سند قبض وتصفية قيده المحاسبي',
-        performedBy: 'الإدارة المالية',
-        entityType: 'payment',
-        entityId: paymentId,
-        description: `تم حذف سند القبض #${payment.receiptNumber || payment.paymentNumber} بمبلغ ${payment.amount} ريال مع قيده المحاسبي`,
-      };
-
-      return {
-        ...prev,
-        tables: {
-          ...prev.tables,
-          orders: updatedOrders,
-          payments: prev.tables.payments.filter(p => p.id !== paymentId),
-          financialTransactions: prev.tables.financialTransactions.filter(t => !linkedTrxIds.has(t.id)),
-          journalEntries: prev.tables.journalEntries.filter(je => !linkedJournalIds.has(je.id)),
-          auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
-        }
-      };
-    });
-    showNotification(`تم حذف سند القبض وقيده المحاسبي وتحديث رصيد العميل بنجاح`, 'success');
+    // Financial ASVS Security Rule: Convert deletion of payment into cancelPayment (reversal entry)
+    cancelPayment(paymentId, 'إلغاء وعكس معتمد لسند القبض');
+    showNotification(`تطبيق معايير التدقيق: تم إلغاء سند القبض عبر قيد عكسي رسمي (Reversal Entry) للحفاظ على تسلسل الدفاتر.`, 'warning');
   };
 
   const addExpense = (exp: {
@@ -1386,6 +1472,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }) => {
     const acc = accounts.find(a => a.id === exp.accountId);
     const expId = Date.now();
+    const expDate = new Date().toISOString();
+    const periodCheck = assertFiscalPeriodOpen(expDate, fiscalPeriods);
+    if (!periodCheck.allowed) {
+      showNotification(periodCheck.reason || 'الفترة المالية مقفلة. لا يمكن تسجيل مصروفات فيها.', 'error');
+      throw new Error(periodCheck.reason);
+    }
     const expNumber = `EXP-${Date.now().toString().slice(-6)}`;
     const trxNumber = `TRX-EXP-${Date.now().toString().slice(-6)}`;
 
@@ -1415,12 +1507,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       createdAt: new Date().toISOString()
     };
 
+    const expChartRes = resolveChartAccount(exp.category, 'debit');
+    const accChartRes = resolveChartAccount(acc?.name || 'الصندوق', 'credit');
+
     const je: JournalEntry = {
       id: expId + 2,
       entryNumber: `JE-EXP-${Date.now().toString().slice(-6)}`,
       sourceType: 'expense',
       sourceId: expId,
       sourceNumber: expNumber,
+      status: 'posted',
+      currency: 'YER',
+      exchangeRate: 1,
+      createdBy: 'admin',
+      postedBy: 'admin',
+      postedAt: new Date().toISOString(),
       description: `مصروف ${exp.category} - ${exp.description}`,
       createdAt: new Date().toISOString(),
       lines: [
@@ -1429,16 +1530,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           journalEntryId: expId + 2,
           accountId: null,
           accountName: `مصروفات - ${exp.category}`,
+          chartAccountId: expChartRes.id,
+          chartAccountCode: expChartRes.code,
           side: 'debit',
-          amount: exp.amount
+          amount: exp.amount,
+          currency: 'YER',
+          exchangeRate: 1,
+          baseAmount: exp.amount
         },
         {
           id: expId + 4,
           journalEntryId: expId + 2,
           accountId: exp.accountId,
           accountName: acc?.name || 'المحفظة',
+          chartAccountId: accChartRes.id,
+          chartAccountCode: accChartRes.code,
           side: 'credit',
-          amount: exp.amount
+          amount: exp.amount,
+          currency: 'YER',
+          exchangeRate: 1,
+          baseAmount: exp.amount
         }
       ]
     };
@@ -1580,21 +1691,54 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const deleteExpense = (id: number, options?: { deleteJournal?: boolean }) => {
     setData(prev => {
       const exp = prev.tables.expenses.find(e => e.id === id);
-      if (!exp) return prev;
+      if (!exp || exp.status === 'cancelled') return prev;
 
-      // Find linked transactions
-      const linkedTrx = prev.tables.financialTransactions.filter(
-        t => t.id === exp.id + 1 || (t.type === 'expense' && (t.description?.includes(exp.expenseNumber) || (t.amount === exp.amount && t.accountId === exp.accountId)))
-      );
-      const linkedTrxIds = new Set(linkedTrx.map(t => t.id));
+      const acc = prev.tables.accounts.find(a => a.id === exp.accountId);
 
-      // Find linked journal entries
-      const linkedJournals = prev.tables.journalEntries.filter(
-        je => (je.sourceType === 'expense' && (je.sourceId === id || je.sourceId === String(id))) ||
-              (je.id === exp.id + 2) ||
-              (je.entryNumber?.includes(exp.expenseNumber) || je.description?.includes(exp.expenseNumber))
-      );
-      const linkedJournalIds = new Set(linkedJournals.map(j => j.id));
+      // Issue balancing reversal journal entry to restore funds and reverse the expense
+      const revJeId = Date.now();
+      const revEntryNumber = `JE-REV-${Date.now().toString().slice(-6)}`;
+      const reversalJe: JournalEntry = {
+        id: revJeId,
+        entryNumber: revEntryNumber,
+        sourceType: 'reversal',
+        sourceId: id,
+        sourceNumber: exp.expenseNumber,
+        status: 'posted',
+        description: `قيد عكسي لإلغاء المصروف #${exp.expenseNumber} (${exp.category}) واسترجاع المبلغ للرصيد`,
+        createdAt: new Date().toISOString(),
+        postedAt: new Date().toISOString(),
+        lines: [
+          {
+            id: revJeId + 1,
+            journalEntryId: revJeId,
+            accountId: exp.accountId,
+            accountName: acc?.name || 'المحفظة/الصندوق',
+            side: 'debit', // استعادة المبلغ لحساب الدفع
+            amount: exp.amount
+          },
+          {
+            id: revJeId + 2,
+            journalEntryId: revJeId,
+            accountId: null,
+            accountName: `حـ/ عكس مصروفات (${exp.category})`,
+            side: 'credit', // تصفية وعكس المصروف
+            amount: exp.amount
+          }
+        ]
+      };
+
+      // Create reversing financial transaction
+      const revTrx: FinancialTransaction = {
+        id: revJeId + 3,
+        transactionNumber: `TRX-REV-${Date.now().toString().slice(-6)}`,
+        transactionDate: new Date().toISOString(),
+        accountId: exp.accountId,
+        type: 'deposit',
+        amount: exp.amount,
+        description: `استرجاع مالي لإلغاء المصروف #${exp.expenseNumber}`,
+        createdAt: new Date().toISOString()
+      };
 
       // Update marketing campaign actual spend if attached
       let updatedCampaigns = prev.tables.marketingCampaigns || [];
@@ -1613,26 +1757,28 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const auditLog: AuditLog = {
         id: Date.now(),
         createdAt: new Date().toISOString(),
-        action: 'حذف مصروف وتصفية قيده المحاسبي',
+        action: 'إلغاء مصروف وإصدار قيد عكسي',
         performedBy: 'الإدارة المالية',
         entityType: 'expense',
         entityId: id,
-        description: `تم حذف المصروف ${exp.expenseNumber} (${exp.category}) بمبلغ ${exp.amount} ريال مع قيده المحاسبي وحركته النقدية`,
+        description: `تم إلغاء المصروف ${exp.expenseNumber} بمبلغ ${exp.amount} ريال وإصدار قيد عكسي #${revEntryNumber} بدلاً من الحذف الفيزيائي`,
+        oldValue: 'نشط',
+        newValue: 'ملغى'
       };
 
       return {
         ...prev,
         tables: {
           ...prev.tables,
-          expenses: prev.tables.expenses.filter(e => e.id !== id),
-          financialTransactions: prev.tables.financialTransactions.filter(t => !linkedTrxIds.has(t.id)),
-          journalEntries: prev.tables.journalEntries.filter(je => !linkedJournalIds.has(je.id)),
+          expenses: prev.tables.expenses.map(e => e.id === id ? { ...e, status: 'cancelled' } : e),
+          financialTransactions: [revTrx, ...prev.tables.financialTransactions],
+          journalEntries: [reversalJe, ...prev.tables.journalEntries],
           marketingCampaigns: updatedCampaigns,
           auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
         }
       };
     });
-    showNotification(`تم حذف المصروف وقيده المحاسبي وتحديث رصيد الحساب بنجاح`, 'success');
+    showNotification(`تطبيق معايير التدقيق: تم إلغاء المصروف عبر قيد عكسي رسمي للحفاظ على دورة حياة السجلات المالية.`, 'success');
   };
 
   // Automated & Manual Journal Entries Engine
@@ -1649,11 +1795,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const entryNumber = entryData.entryNumber || `JE-MAN-${Date.now().toString().slice(-6)}`;
     const createdAt = entryData.date ? new Date(entryData.date).toISOString() : new Date().toISOString();
 
+    const periodCheck = assertFiscalPeriodOpen(createdAt, fiscalPeriods);
+    if (!periodCheck.allowed) {
+      showNotification(periodCheck.reason || 'الفترة المالية مقفلة. لا يمكن ترحيل قيود فيها.', 'error');
+      throw new Error(periodCheck.reason);
+    }
+
     const formattedLines: JournalLine[] = entryData.lines.map((l, idx) => ({
       ...l,
       id: jeId + idx + 1,
       journalEntryId: jeId,
-      amount: parseFloat(String(l.amount)) || 0
+      amount: roundCurrency(parseFloat(String(l.amount)) || 0)
     }));
 
     const newEntry: JournalEntry = {
@@ -1663,19 +1815,29 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       sourceType: entryData.sourceType || 'manual',
       sourceId: entryData.sourceId || null,
       sourceNumber: entryData.sourceNumber || null,
+      status: 'posted',
       createdAt,
+      postedAt: createdAt,
+      postedByName: 'المحاسب المالي',
       lines: formattedLines
     };
+
+    // Strict Double-Entry validation: Reject unbalanced entry
+    if (!isJournalEntryBalanced(newEntry)) {
+      showNotification('خطأ محاسبي: القيد غير متوازن! مجموع المدين يجب أن يساوي مجموع الدائن تماماً.', 'error');
+      throw new Error('القيد غير متوازن: مجموع المدين لا يساوي مجموع الدائن');
+    }
 
     setData(prev => {
       const auditLog: AuditLog = {
         id: Date.now() + 1,
         createdAt: new Date().toISOString(),
-        action: 'إنشاء قيد يومية محاسبي',
+        action: 'ترحيل قيد يومية محاسبي (POSTED)',
         performedBy: 'المحاسب المعتمد',
         entityType: 'journalEntry',
         entityId: jeId,
-        description: `إنشاء قيد يومية #${entryNumber}: ${entryData.description}`,
+        description: `إنشاء وترحيل قيد يومية #${entryNumber}: ${entryData.description}`,
+        newValue: JSON.stringify({ entryNumber, linesCount: formattedLines.length })
       };
 
       return {
@@ -1688,29 +1850,30 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       };
     });
 
-    showNotification(`تم تسجيل قيد اليومية #${entryNumber} بنجاح`, 'success');
+    showNotification(`تم ترحيل قيد اليومية #${entryNumber} بنجاح`, 'success');
     return newEntry;
   };
 
   const updateJournalEntry = (id: number, updateData: { description?: string; lines?: JournalLine[]; date?: string }) => {
+    const existing = data.tables.journalEntries.find(j => j.id === id);
+    if (!existing) return;
+
+    // Enforce Posted Immutability Rule: If entry is POSTED, direct modification of financial lines is forbidden
+    if (existing.status === 'posted' && updateData.lines) {
+      showNotification('حظر رقابي: لا يمكن تعديل أسطر قيد مرحل (POSTED) مباشرة. يجب استخدام القيد العكسي (Reversal Entry) لتصحيح القيود المرحلة.', 'error');
+      return;
+    }
+
     setData(prev => {
-      const existing = prev.tables.journalEntries.find(j => j.id === id);
-      if (!existing) return prev;
+      const entryToUpdate = prev.tables.journalEntries.find(j => j.id === id);
+      if (!entryToUpdate) return prev;
 
       const updatedEntries = prev.tables.journalEntries.map(j => {
         if (j.id === id) {
-          const updatedLines = updateData.lines ? updateData.lines.map((l, idx) => ({
-            ...l,
-            id: l.id || id + idx + 1,
-            journalEntryId: id,
-            amount: parseFloat(String(l.amount)) || 0
-          })) : j.lines;
-
           return {
             ...j,
             description: updateData.description !== undefined ? updateData.description : j.description,
-            createdAt: updateData.date ? new Date(updateData.date).toISOString() : j.createdAt,
-            lines: updatedLines
+            createdAt: updateData.date ? new Date(updateData.date).toISOString() : j.createdAt
           };
         }
         return j;
@@ -1719,11 +1882,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const auditLog: AuditLog = {
         id: Date.now(),
         createdAt: new Date().toISOString(),
-        action: 'تعديل قيد يومية',
+        action: 'تعديل بيان قيد يومية',
         performedBy: 'المحاسب المعتمد',
         entityType: 'journalEntry',
         entityId: id,
-        description: `تعديل قيد اليومية #${existing.entryNumber}: ${updateData.description || existing.description}`,
+        description: `تعديل بيان القيد #${entryToUpdate.entryNumber}`,
+        oldValue: entryToUpdate.description,
+        newValue: updateData.description || entryToUpdate.description
       };
 
       return {
@@ -1736,72 +1901,29 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       };
     });
 
-    showNotification(`تم حفظ تعديلات قيد اليومية بنجاح`, 'success');
+    showNotification(`تم حفظ تعديلات بيان قيد اليومية بنجاح`, 'success');
   };
 
   const deleteJournalEntry = (id: number, cascadeOptions?: { deleteSourceDocument?: boolean }) => {
-    setData(prev => {
-      const entry = prev.tables.journalEntries.find(j => j.id === id);
-      if (!entry) return prev;
+    const entry = data.tables.journalEntries.find(j => j.id === id);
+    if (!entry) return;
 
-      let updatedExpenses = prev.tables.expenses;
-      let updatedPayments = prev.tables.payments;
-      let updatedOrders = prev.tables.orders;
-      let updatedTrx = prev.tables.financialTransactions;
-
-      if (cascadeOptions?.deleteSourceDocument && entry.sourceType) {
-        if (entry.sourceType === 'expense' && entry.sourceId) {
-          const expId = Number(entry.sourceId);
-          updatedExpenses = updatedExpenses.filter(e => e.id !== expId);
-          updatedTrx = updatedTrx.filter(t => t.id !== expId + 1);
-        } else if (entry.sourceType === 'payment' && entry.sourceId) {
-          const payId = Number(entry.sourceId);
-          const payment = updatedPayments.find(p => p.id === payId);
-          if (payment?.orderId) {
-            updatedOrders = updatedOrders.map(o => {
-              if (o.id === payment.orderId) {
-                const paid = Math.max(0, (o.paidAmount || 0) - Number(payment.amount));
-                const remaining = Math.max(0, (o.totalAmount || 0) - paid);
-                return { ...o, paidAmount: paid, remainingAmount: remaining };
-              }
-              return o;
-            });
-          }
-          updatedPayments = updatedPayments.filter(p => p.id !== payId);
-          updatedTrx = updatedTrx.filter(t => t.id !== payId + 10);
-        }
-      }
-
-      const auditLog: AuditLog = {
-        id: Date.now(),
-        createdAt: new Date().toISOString(),
-        action: 'حذف قيد يومية',
-        performedBy: 'المحاسب المعتمد',
-        entityType: 'journalEntry',
-        entityId: id,
-        description: `حذف قيد اليومية #${entry.entryNumber}: ${entry.description}`,
-      };
-
-      return {
-        ...prev,
-        tables: {
-          ...prev.tables,
-          expenses: updatedExpenses,
-          payments: updatedPayments,
-          orders: updatedOrders,
-          financialTransactions: updatedTrx,
-          journalEntries: prev.tables.journalEntries.filter(j => j.id !== id),
-          auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
-        }
-      };
-    });
-
-    showNotification(`تم حذف قيد اليومية بنجاح`, 'success');
+    // Financial Security ASVS Rule: Forbidden physical delete of posted entries
+    // Automatically convert deletion request into a standard Reversal Entry
+    showNotification(`تطبيق معايير المحاسبة: لا يجوز الحذف الفيزيائي لقيد مرحل. تم توجيه العملية لإصدار قيد عكسي رسمي (Reversal Entry).`, 'warning');
+    reverseJournalEntry(id, 'طلب إلغاء وتصفية محاسبية عبر الواجهة');
   };
 
   const reverseJournalEntry = (id: number, reason?: string) => {
     const entry = journalEntries.find(j => j.id === id);
     if (!entry) throw new Error('القيد غير موجود');
+
+    const now = new Date().toISOString();
+    const periodCheck = assertFiscalPeriodOpen(now, fiscalPeriods);
+    if (!periodCheck.allowed) {
+      showNotification(periodCheck.reason || 'الفترة المالية مقفلة. لا يمكن إصدار قيود عكسية فيها.', 'error');
+      throw new Error(periodCheck.reason);
+    }
 
     const revId = Date.now();
     const revEntryNumber = `JE-REV-${Date.now().toString().slice(-6)}`;
@@ -1915,6 +2037,322 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return true;
   };
 
+  // ==============================================================
+  // PHASE 4: FISCAL PERIODS, YEAR-END CLOSING & RECONCILIATION ENGINE
+  // ==============================================================
+
+  const closeFiscalPeriod = (periodId: number, performedBy = 'المحاسب المعتمد') => {
+    const targetPeriod = fiscalPeriods.find(p => p.id === periodId);
+    if (!targetPeriod) {
+      showNotification('الفترة المالية غير موجودة', 'error');
+      return;
+    }
+    if (targetPeriod.status === 'locked') {
+      showNotification('الفترة مقفلة نهائياً (LOCKED) ولا يمكن تعديلها.', 'error');
+      return;
+    }
+
+    setData(prev => {
+      const prevPeriods = prev.tables.fiscalPeriods && prev.tables.fiscalPeriods.length > 0 ? prev.tables.fiscalPeriods : DEFAULT_FISCAL_PERIODS;
+      const updated = prevPeriods.map(p =>
+        p.id === periodId
+          ? { ...p, status: 'closed' as const, closedAt: new Date().toISOString(), closedBy: 1 }
+          : p
+      );
+
+      const auditLog: AuditLog = {
+        id: Date.now(),
+        createdAt: new Date().toISOString(),
+        action: 'إغلاق الفترة المالية (CLOSED)',
+        performedBy,
+        entityType: 'fiscalPeriod',
+        entityId: periodId,
+        description: `تم إغلاق الفترة المالية: ${targetPeriod.periodName} وحظر الترحيل إليها مؤقتاً`,
+        previousValue: JSON.stringify({ status: targetPeriod.status }),
+        newValue: JSON.stringify({ status: 'closed', closedAt: new Date().toISOString() })
+      };
+
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          fiscalPeriods: updated,
+          auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
+        }
+      };
+    });
+
+    showNotification(`تم إغلاق الفترة المالية (${targetPeriod.periodName}) بنجاح.`, 'success');
+  };
+
+  const reopenFiscalPeriod = (periodId: number, reason = 'إعادة فتح إدارية للتدقيق', performedBy = 'مدير النظام') => {
+    const targetPeriod = fiscalPeriods.find(p => p.id === periodId);
+    if (!targetPeriod) {
+      showNotification('الفترة المالية غير موجودة', 'error');
+      return;
+    }
+    if (targetPeriod.status === 'locked') {
+      showNotification('حظر رقابي صارم: لا يمكن فتح فترة مقفلة نهائياً (LOCKED)', 'error');
+      return;
+    }
+
+    setData(prev => {
+      const prevPeriods = prev.tables.fiscalPeriods && prev.tables.fiscalPeriods.length > 0 ? prev.tables.fiscalPeriods : DEFAULT_FISCAL_PERIODS;
+      const updated = prevPeriods.map(p =>
+        p.id === periodId
+          ? { ...p, status: 'open' as const, closedAt: null, closedBy: null }
+          : p
+      );
+
+      const auditLog: AuditLog = {
+        id: Date.now(),
+        createdAt: new Date().toISOString(),
+        action: 'إعادة فتح الفترة المالية (REOPENED)',
+        performedBy,
+        entityType: 'fiscalPeriod',
+        entityId: periodId,
+        description: `إعادة فتح الفترة المالية: ${targetPeriod.periodName}. السبب: ${reason}`,
+        previousValue: JSON.stringify({ status: targetPeriod.status }),
+        newValue: JSON.stringify({ status: 'open', reason })
+      };
+
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          fiscalPeriods: updated,
+          auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
+        }
+      };
+    });
+
+    showNotification(`تمت إعادة فتح الفترة المالية (${targetPeriod.periodName}) بنجاح.`, 'success');
+  };
+
+  const lockFiscalPeriod = (periodId: number, performedBy = 'مدير التدقيق العام') => {
+    const targetPeriod = fiscalPeriods.find(p => p.id === periodId);
+    if (!targetPeriod) {
+      showNotification('الفترة المالية غير موجودة', 'error');
+      return;
+    }
+
+    setData(prev => {
+      const prevPeriods = prev.tables.fiscalPeriods && prev.tables.fiscalPeriods.length > 0 ? prev.tables.fiscalPeriods : DEFAULT_FISCAL_PERIODS;
+      const updated = prevPeriods.map(p =>
+        p.id === periodId
+          ? { ...p, status: 'locked' as const, closedAt: new Date().toISOString() }
+          : p
+      );
+
+      const auditLog: AuditLog = {
+        id: Date.now(),
+        createdAt: new Date().toISOString(),
+        action: 'قفل نهائي وحماية الفترة المالية (LOCKED)',
+        performedBy,
+        entityType: 'fiscalPeriod',
+        entityId: periodId,
+        description: `تم قفل الفترة المالية نهائياً: ${targetPeriod.periodName} وتأمينها رقابياً من أي تعديل`,
+        previousValue: JSON.stringify({ status: targetPeriod.status }),
+        newValue: JSON.stringify({ status: 'locked' })
+      };
+
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          fiscalPeriods: updated,
+          auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
+        }
+      };
+    });
+
+    showNotification(`تم قفل الفترة المالية (${targetPeriod.periodName}) نهائياً وتأمينها.`, 'warning');
+  };
+
+  const closeFiscalYear = (yearId: number, performedBy = 'المحاسب المالي المعتمد') => {
+    const targetYear = fiscalYears.find(y => y.id === yearId || y.year === yearId);
+    const yearNumber = targetYear ? targetYear.year : yearId;
+
+    if (targetYear && targetYear.status === 'locked') {
+      showNotification('هذه السنة المالية مقفلة نهائياً بالفعل.', 'error');
+      throw new Error('السنة المالية مقفلة نهائياً');
+    }
+
+    const closingResult = generateYearEndClosingEntry({
+      fiscalYear: yearNumber,
+      entries: journalEntries,
+      chartAccounts,
+      performedByName: performedBy
+    });
+
+    setData(prev => {
+      const prevYears = prev.tables.fiscalYears && prev.tables.fiscalYears.length > 0 ? prev.tables.fiscalYears : DEFAULT_FISCAL_YEARS;
+      const updatedYears = prevYears.map(y =>
+        y.year === yearNumber ? { ...y, status: 'closed' as const } : y
+      );
+
+      const prevPeriods = prev.tables.fiscalPeriods && prev.tables.fiscalPeriods.length > 0 ? prev.tables.fiscalPeriods : DEFAULT_FISCAL_PERIODS;
+      const updatedPeriods = prevPeriods.map(p =>
+        p.fiscalYear === yearNumber ? { ...p, status: 'locked' as const, closedAt: new Date().toISOString() } : p
+      );
+
+      const auditLog: AuditLog = {
+        id: Date.now(),
+        createdAt: new Date().toISOString(),
+        action: 'إقفال السنة المالية وتوليد قيد الإقفال السنوي',
+        performedBy,
+        entityType: 'fiscalYear',
+        entityId: yearNumber,
+        description: `تم إقفال السنة المالية ${yearNumber} وترحيل صافي النتيجة (${closingResult.netIncome} ر.ي) لحساب الأرباح المبقاة عبر قيد #${closingResult.closingEntry.entryNumber}`,
+        newValue: JSON.stringify({
+          closingEntryNumber: closingResult.closingEntry.entryNumber,
+          netIncome: closingResult.netIncome,
+          totalRevenue: closingResult.totalRevenue,
+          totalExpense: closingResult.totalExpense,
+          closedAccountsCount: closingResult.closedAccountsCount
+        })
+      };
+
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          journalEntries: [closingResult.closingEntry, ...prev.tables.journalEntries],
+          journalLines: [...(closingResult.closingEntry.lines || []), ...(prev.tables.journalLines || [])],
+          fiscalYears: updatedYears,
+          fiscalPeriods: updatedPeriods,
+          auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
+        }
+      };
+    });
+
+    showNotification(`تم إقفال السنة المالية ${yearNumber} بنجاح وترحيل صافي النتيجة (${closingResult.netIncome.toLocaleString()} ر.ي) لحساب الأرباح المبقاة.`, 'success');
+    return { closingEntry: closingResult.closingEntry, netIncome: closingResult.netIncome };
+  };
+
+  const checkAndRegisterIdempotency = (key: string, operationType: string, entityId?: string | number): boolean => {
+    if (!key) return true;
+    const currentRecords = data.tables.idempotencyRecords || [];
+    const check = checkIdempotency(key, currentRecords);
+    if (check.isDuplicate) {
+      showNotification('تنبيه أمان: تم حظر تكرار العملية (Idempotency Key Active)', 'warning');
+      return false;
+    }
+    const newRecord: IdempotencyRecord = {
+      key,
+      operationType,
+      entityId,
+      createdAt: new Date().toISOString()
+    };
+    setData(prev => ({
+      ...prev,
+      tables: {
+        ...prev.tables,
+        idempotencyRecords: [newRecord, ...(prev.tables.idempotencyRecords || [])]
+      }
+    }));
+    return true;
+  };
+
+  const generateCustomerAdjustingEntry = (customerId: number, adjustmentAmount: number, reason?: string) => {
+    const customer = customers.find(c => c.id === customerId);
+    if (!customer) {
+      showNotification('العميل غير موجود لتوليد قيد التسوية', 'error');
+      throw new Error('العميل غير موجود');
+    }
+
+    const adjEntry = generateAdjustingEntryForCustomer({
+      customer,
+      operationalBalance: getCustomerBalance(customerId),
+      ledgerBalance: getCustomerBalance(customerId) - adjustmentAmount,
+      difference: adjustmentAmount,
+      performedByName: 'المحاسب المعتمد'
+    });
+
+    if (reason) {
+      adjEntry.description = `${adjEntry.description} - ${reason}`;
+    }
+
+    setData(prev => {
+      const auditLog: AuditLog = {
+        id: Date.now(),
+        createdAt: new Date().toISOString(),
+        action: 'قيد تسوية وتصحيح رصيد عميل (ADJUSTING ENTRY)',
+        performedBy: 'المحاسب المعتمد',
+        entityType: 'customer',
+        entityId: customerId,
+        description: `توليد قيد تسوية #${adjEntry.entryNumber} بمبلغ ${Math.abs(adjustmentAmount)} ر.ي لمطابقة رصيد العميل (${customer.name}) مع الأستاذ العام`,
+        newValue: JSON.stringify({ entryNumber: adjEntry.entryNumber, amount: adjustmentAmount })
+      };
+
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          journalEntries: [adjEntry, ...prev.tables.journalEntries],
+          journalLines: [...(adjEntry.lines || []), ...(prev.tables.journalLines || [])],
+          auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
+        }
+      };
+    });
+
+    showNotification(`تم ترحيل قيد التسوية #${adjEntry.entryNumber} بنجاح ومطابقة رصيد العميل 100%.`, 'success');
+    return adjEntry;
+  };
+
+  const reconcileAllCustomerBalances = (): number => {
+    const recon = reconcileCustomerBalances(customers, orders, payments, journalEntries);
+    const mismatched = recon.items.filter(i => !i.isReconciled && Math.abs(i.difference) > 0.01);
+    if (mismatched.length === 0) {
+      showNotification('كافة أرصدة العملاء متطابقة بنسبة 100% ولا توجد فروقات للتسوية.', 'success');
+      return 0;
+    }
+
+    const newEntries: JournalEntry[] = [];
+    const newLines: JournalLine[] = [];
+    const newAuditLogs: AuditLog[] = [];
+
+    for (const item of mismatched) {
+      const cust = customers.find(c => c.id === item.customerId);
+      if (!cust) continue;
+
+      const adj = generateAdjustingEntryForCustomer({
+        customer: cust,
+        operationalBalance: item.operationalBalance,
+        ledgerBalance: item.ledgerBalance,
+        difference: item.difference,
+        performedByName: 'مركز التسوية الآلية'
+      });
+
+      newEntries.push(adj);
+      newLines.push(...(adj.lines || []));
+
+      newAuditLogs.push({
+        id: Date.now() + newEntries.length,
+        createdAt: new Date().toISOString(),
+        action: 'تسوية آلية شاملة لرصيد عميل',
+        performedBy: 'مركز التدقيق والتسوية',
+        entityType: 'customer',
+        entityId: cust.id,
+        description: `تسوية الفارق (${item.difference} ر.ي) للعميل ${cust.name} عبر قيد التسوية #${adj.entryNumber}`,
+        newValue: JSON.stringify({ diff: item.difference, entryNumber: adj.entryNumber })
+      });
+    }
+
+    setData(prev => ({
+      ...prev,
+      tables: {
+        ...prev.tables,
+        journalEntries: [...newEntries, ...prev.tables.journalEntries],
+        journalLines: [...newLines, ...(prev.tables.journalLines || [])],
+        auditLogs: [...newAuditLogs, ...(prev.tables.auditLogs || [])]
+      }
+    }));
+
+    showNotification(`تمت معالجة وتسوية ${newEntries.length} عميل وتوليد قيود التسوية بنجاح! نسبة التطابق الآن 100%.`, 'success');
+    return newEntries.length;
+  };
+
   const transferFunds = (
     fromAccountId: number,
     toAccountId: number,
@@ -1925,6 +2363,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const fromAcc = accounts.find(a => a.id === fromAccountId);
     const toAcc = accounts.find(a => a.id === toAccountId);
     if (!fromAcc || !toAcc) return;
+
+    const trfDate = new Date().toISOString();
+    const periodCheck = assertFiscalPeriodOpen(trfDate, fiscalPeriods);
+    if (!periodCheck.allowed) {
+      showNotification(periodCheck.reason || 'الفترة المالية مقفلة. لا يمكن إجراء تحويلات فيها.', 'error');
+      throw new Error(periodCheck.reason);
+    }
 
     const transferGroup = `TRF-${Date.now()}`;
     const baseId = Date.now();
@@ -2003,6 +2448,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const prefix = params.type === 'deposit' ? 'IN' : 'OUT';
     const trxNumber = params.referenceNumber || `TRX-${prefix}-${Date.now().toString().slice(-6)}`;
     const date = params.transactionDate || new Date().toISOString();
+    const periodCheck = assertFiscalPeriodOpen(date, fiscalPeriods);
+    if (!periodCheck.allowed) {
+      showNotification(periodCheck.reason || 'الفترة المالية مقفلة. لا يمكن إجراء عمليات في هذا التاريخ.', 'error');
+      throw new Error(periodCheck.reason);
+    }
     const isDeposit = params.type === 'deposit';
 
     const newTrx: FinancialTransaction = {
@@ -3632,6 +4082,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         couriers,
         deliveryTrips,
         chartAccounts,
+        fiscalPeriods,
+        fiscalYears,
+        idempotencyRecords,
         marketingStats,
         notification,
         showNotification,
@@ -3660,6 +4113,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         updateJournalEntry,
         deleteJournalEntry,
         reverseJournalEntry,
+        getCustomerReconciliationReport,
+        runIntegrityAudit,
+        closeFiscalPeriod,
+        reopenFiscalPeriod,
+        lockFiscalPeriod,
+        closeFiscalYear,
+        checkAndRegisterIdempotency,
+        generateCustomerAdjustingEntry,
+        reconcileAllCustomerBalances,
         addChartAccount,
         updateChartAccount,
         deleteChartAccount,
