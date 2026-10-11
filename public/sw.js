@@ -1,13 +1,17 @@
-// Top Store PWA Service Worker
-const CACHE_NAME = 'topstore-cache-v1';
+// Top Store PWA Service Worker - v2.0
+const CACHE_NAME = 'topstore-cache-v2';
+
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/top_store_logo.jpg',
   '/icon.svg',
   '/pwa-192x192.png',
   '/pwa-512x512.png',
-  '/apple-touch-icon.png'
+  '/pwa-maskable-512x512.png',
+  '/apple-touch-icon.png',
+  '/favicon.ico'
 ];
 
 self.addEventListener('install', (event) => {
@@ -15,7 +19,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(PRECACHE_ASSETS).catch((err) => {
-        console.warn('Pre-cache error (non-fatal):', err);
+        console.warn('[PWA SW] Pre-cache non-fatal warning:', err);
       });
     })
   );
@@ -34,46 +38,63 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests and http/https protocols
-  if (event.request.method !== 'GET') return;
-  if (!event.request.url.startsWith('http')) return;
+  const { request } = event;
 
+  // Only handle GET requests and http/https protocols
+  if (request.method !== 'GET') return;
+  if (!request.url.startsWith('http')) return;
+
+  const url = new URL(request.url);
+
+  // Bypass API requests to allow backend express sync to handle network/offline natively
+  if (url.pathname.startsWith('/api/')) {
+    return;
+  }
+
+  // HTML Navigation requests (opening installed PWA from home screen or Google launcher)
+  if (request.mode === 'navigate' || request.destination === 'document') {
+    event.respondWith(
+      fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          }
+          return networkResponse;
+        })
+        .catch(async () => {
+          // If offline or fetch fails, immediately load cached index.html or root
+          const cached = (await caches.match('/index.html')) || (await caches.match('/'));
+          if (cached) return cached;
+          return new Response('Top Store is offline', {
+            status: 200,
+            headers: { 'Content-Type': 'text/html; charset=utf-8' }
+          });
+        })
+    );
+    return;
+  }
+
+  // Static Assets (Scripts, Stylesheets, Images, Fonts, Icons)
   event.respondWith(
-    fetch(event.request)
-      .then((networkResponse) => {
-        // Cache valid responses for static assets and fonts
-        if (
-          networkResponse &&
-          networkResponse.status === 200 &&
-          (event.request.url.includes('/public/') ||
-            event.request.url.includes('fonts.googleapis.com') ||
-            event.request.url.includes('fonts.gstatic.com') ||
-            event.request.url.endsWith('.png') ||
-            event.request.url.endsWith('.svg') ||
-            event.request.url.endsWith('.json'))
-        ) {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-        }
-        return networkResponse;
-      })
-      .catch(() => {
-        // Offline fallback
-        return caches.match(event.request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
+    caches.match(request).then((cachedResponse) => {
+      const fetchPromise = fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseToCache);
+            });
           }
-          // If HTML navigation, return cached root or index.html
-          if (event.request.mode === 'navigate') {
-            return caches.match('/index.html').then((htmlRes) => htmlRes || caches.match('/'));
-          }
-          return new Response('Network error (Offline)', {
-            status: 503,
-            headers: { 'Content-Type': 'text/plain' }
-          });
+          return networkResponse;
+        })
+        .catch(() => {
+          // If network fails, return cached response if available
+          return cachedResponse;
         });
-      })
+
+      // Serve from cache if available, while fetching in background (Stale-While-Revalidate)
+      return cachedResponse || fetchPromise;
+    })
   );
 });
