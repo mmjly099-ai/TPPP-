@@ -8,9 +8,22 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="توب ستور" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <link rel="apple-touch-icon" href="/top_store_logo.jpg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="icon" type="image/jpeg" href="/top_store_logo.jpg" />
     <link rel="manifest" href="/manifest.json" />
+    <script>
+      window.__deferredPwaPrompt = null;
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        window.__deferredPwaPrompt = e;
+        window.dispatchEvent(new CustomEvent('pwa-prompt-available'));
+      });
+      window.addEventListener('appinstalled', function () {
+        window.__deferredPwaPrompt = null;
+        window.dispatchEvent(new CustomEvent('pwa-installed'));
+      });
+    </script>
     <title>Top Store System - توب ستور</title>
     <meta name="description" content="نظام حسابات وإدارة طلبات متجر توب ستور لوساطة الشراء والتسوق الإلكتروني في اليمن" />
     <meta property="og:title" content="Top Store System - توب ستور" />

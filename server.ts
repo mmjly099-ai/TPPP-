@@ -39,10 +39,20 @@ async function startServer() {
     console.warn('Could not read existing sync file', err);
   }
 
+  // Ensure sw.js and manifest.json are never served stale from browser HTTP cache
+  app.use((req, res, next) => {
+    if (req.path === '/sw.js' || req.path === '/manifest.json' || req.path === '/manifest.webmanifest') {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+    next();
+  });
+
   // Auth endpoint
   app.post('/api/auth/login', (req, res) => {
     const { password } = req.body || {};
-    if (password === 'masnaamasnaa') {
+    if (String(password || '').trim().toLowerCase() === 'masnaamasnaa') {
       return res.json({ success: true, token: 'authenticated_masnaamasnaa', timestamp: Date.now() });
     }
     return res.status(401).json({ success: false, message: 'كلمة المرور غير صحيحة' });

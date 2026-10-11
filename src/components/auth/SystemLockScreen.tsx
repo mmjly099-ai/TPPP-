@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Lock, KeyRound, Eye, EyeOff, ShieldCheck, ArrowLeft, Store, Smartphone, RefreshCw, AlertCircle } from 'lucide-react';
+import { PWAInstallButton } from '../common/PWAInstallButton';
 
 interface SystemLockScreenProps {
   onUnlock: () => void;
@@ -18,9 +19,9 @@ export const SystemLockScreen: React.FC<SystemLockScreenProps> = ({ onUnlock, sy
     setErrorMsg('');
     setIsSubmitting(true);
 
-    const trimmed = password.trim();
+    const trimmed = password.trim().toLowerCase();
 
-    // Check system password: masnaamasnaa
+    // Check system password: masnaamasnaa (case-insensitive for mobile keyboards)
     if (trimmed === 'masnaamasnaa') {
       if (rememberMe) {
         try {
@@ -41,15 +42,15 @@ export const SystemLockScreen: React.FC<SystemLockScreenProps> = ({ onUnlock, sy
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-gradient-to-br from-slate-900 via-slate-800 to-amber-950 flex items-center justify-center p-4 min-h-screen"
+      className="fixed inset-0 z-50 bg-gradient-to-br from-slate-900 via-slate-800 to-amber-950 flex items-center justify-center p-4 min-h-screen overflow-y-auto"
       dir="rtl"
     >
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-amber-500/20 relative">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-amber-500/20 relative my-auto">
         
         {/* Decorative Top Accent */}
         <div className="h-2 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600" />
 
-        <div className="p-6 sm:p-8 space-y-6">
+        <div className="p-6 sm:p-8 space-y-5">
           
           {/* Logo & Header */}
           <div className="text-center space-y-2">
@@ -69,20 +70,23 @@ export const SystemLockScreen: React.FC<SystemLockScreenProps> = ({ onUnlock, sy
             </p>
           </div>
 
-          {/* Sync & Device Cloud Badge */}
-          <div className="p-3 bg-amber-50/80 border border-amber-200/70 rounded-2xl flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
-              <Smartphone className="w-4 h-4" />
-            </div>
-            <div className="text-right flex-1 min-w-0">
-              <div className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                <span>تزامن سحابي فوري</span>
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          {/* Sync & Device Cloud Badge + Install App Button */}
+          <div className="p-3 bg-amber-50/80 border border-amber-200/70 rounded-2xl flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                <Smartphone className="w-4 h-4" />
               </div>
-              <p className="text-[11px] text-slate-500 truncate">
-                يتم تحديث البيانات لحظياً على أي جوال وجهاز مسجل
-              </p>
+              <div className="text-right min-w-0">
+                <div className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <span>تزامن سحابي فوري</span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                </div>
+                <p className="text-[11px] text-slate-500 truncate">
+                  متوافق مع كافة الهواتف والأجهزة
+                </p>
+              </div>
             </div>
+            <PWAInstallButton />
           </div>
 
           {/* Form */}
@@ -102,7 +106,10 @@ export const SystemLockScreen: React.FC<SystemLockScreenProps> = ({ onUnlock, sy
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
-                  autoFocus
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  autoComplete="current-password"
                   placeholder="أدخل كلمة المرور..."
                   value={password}
                   onChange={e => {

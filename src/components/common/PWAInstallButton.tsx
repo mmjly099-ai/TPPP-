@@ -13,6 +13,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
 }) => {
   const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
   const [showIOSGuide, setShowIOSGuide] = useState(false);
+  const [showGeneralGuide, setShowGeneralGuide] = useState(false);
   const [isInstalling, setIsInstalling] = useState(false);
 
   // If already running as an installed PWA (standalone), suppress button
@@ -21,19 +22,28 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
   }
 
   const handleInstallClick = async () => {
-    setIsInstalling(true);
-    try {
-      await install();
-    } finally {
-      setIsInstalling(false);
+    if (isInstallable) {
+      setIsInstalling(true);
+      try {
+        const installed = await install();
+        if (!installed && !window.__deferredPwaPrompt) {
+          setShowGeneralGuide(true);
+        }
+      } finally {
+        setIsInstalling(false);
+      }
+    } else if (isIOS) {
+      setShowIOSGuide(true);
+    } else {
+      setShowGeneralGuide(true);
     }
   };
 
-  // Chromium / Android / Desktop flow
+  // Chromium / Android / Desktop native prompt flow
   if (isInstallable) {
     if (variant === 'banner') {
       return (
-        <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-slate-950 p-3 sm:p-4 rounded-2xl shadow-md flex flex-col sm:flex-row items-center justify-between gap-3 border border-amber-400/40">
+        <div className={`bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-slate-950 p-3 sm:p-4 rounded-2xl shadow-md flex flex-col sm:flex-row items-center justify-between gap-3 border border-amber-400/40 ${className}`}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
               <Download className="w-5 h-5 text-slate-950" />
@@ -44,6 +54,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
             </div>
           </div>
           <button
+            type="button"
             onClick={handleInstallClick}
             disabled={isInstalling}
             className="w-full sm:w-auto px-5 py-2.5 bg-slate-950 hover:bg-slate-900 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-sm shrink-0"
@@ -57,6 +68,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
 
     return (
       <button
+        type="button"
         onClick={handleInstallClick}
         disabled={isInstalling}
         title="تثبيت توب ستور كتطبيق مستقل"
@@ -72,14 +84,37 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
   if (isIOS) {
     return (
       <>
-        <button
-          onClick={() => setShowIOSGuide(true)}
-          title="تثبيت توب ستور على الآيفون"
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold border border-slate-700 shadow-xs transition-all cursor-pointer shrink-0 ${className}`}
-        >
-          <Apple className="w-3.5 h-3.5 text-amber-400" />
-          <span>تثبيت على iOS</span>
-        </button>
+        {variant === 'banner' ? (
+          <div className={`bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-slate-950 p-3 sm:p-4 rounded-2xl shadow-md flex flex-col sm:flex-row items-center justify-between gap-3 border border-amber-400/40 ${className}`}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                <Apple className="w-5 h-5 text-slate-950" />
+              </div>
+              <div>
+                <h4 className="font-black text-sm text-slate-950">تثبيت تطبيق توب ستور على iPhone / iPad</h4>
+                <p className="text-xs text-slate-900/80">أضف التطبيق إلى شاشتك الرئيسية للفتح المباشر</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowIOSGuide(true)}
+              className="w-full sm:w-auto px-5 py-2.5 bg-slate-950 hover:bg-slate-900 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-sm shrink-0"
+            >
+              <Apple className="w-4 h-4 text-amber-400" />
+              <span>طريقة التثبيت على iOS</span>
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowIOSGuide(true)}
+            title="تثبيت توب ستور على الآيفون"
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold border border-slate-700 shadow-xs transition-all cursor-pointer shrink-0 ${className}`}
+          >
+            <Apple className="w-3.5 h-3.5 text-amber-400" />
+            <span>تثبيت على iOS</span>
+          </button>
+        )}
 
         {showIOSGuide && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs" dir="rtl">
@@ -90,6 +125,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
                   <h3 className="text-base font-black text-slate-900">تثبيت التطبيق على iPhone / iPad</h3>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setShowIOSGuide(false)}
                   className="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center cursor-pointer"
                 >
@@ -115,6 +151,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
               </div>
 
               <button
+                type="button"
                 onClick={() => setShowIOSGuide(false)}
                 className="mt-5 w-full rounded-xl bg-amber-500 hover:bg-amber-400 py-2.5 text-xs font-black text-slate-950 transition cursor-pointer"
               >
@@ -127,19 +164,40 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
     );
   }
 
-  const [showGeneralGuide, setShowGeneralGuide] = useState(false);
-
   // Fallback for desktop/browsers before prompt fires
   return (
     <>
-      <button
-        onClick={() => setShowGeneralGuide(true)}
-        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black shadow-xs transition-all cursor-pointer shrink-0 ${className}`}
-        title="تثبيت التطبيق على جهازك"
-      >
-        <Download className="w-3.5 h-3.5 text-slate-950" />
-        <span>تثبيت كتطبيق</span>
-      </button>
+      {variant === 'banner' ? (
+        <div className={`bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-slate-950 p-3 sm:p-4 rounded-2xl shadow-md flex flex-col sm:flex-row items-center justify-between gap-3 border border-amber-400/40 ${className}`}>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+              <Download className="w-5 h-5 text-slate-950" />
+            </div>
+            <div>
+              <h4 className="font-black text-sm text-slate-950">تثبيت تطبيق توب ستور على جهازك</h4>
+              <p className="text-xs text-slate-900/80">تشغيل أسرع، بدون شريط المتصفح، وعمل سلس في وضع عدم الاتصال</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowGeneralGuide(true)}
+            className="w-full sm:w-auto px-5 py-2.5 bg-slate-950 hover:bg-slate-900 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-sm shrink-0"
+          >
+            <Download className="w-4 h-4 text-amber-400" />
+            <span>تثبيت كتطبيق</span>
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowGeneralGuide(true)}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black shadow-xs transition-all cursor-pointer shrink-0 ${className}`}
+          title="تثبيت التطبيق على جهازك"
+        >
+          <Download className="w-3.5 h-3.5 text-slate-950" />
+          <span>تثبيت كتطبيق</span>
+        </button>
+      )}
 
       {showGeneralGuide && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs" dir="rtl">
@@ -150,6 +208,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
                 <h3 className="text-base font-black text-slate-900">تثبيت تطبيق توب ستور</h3>
               </div>
               <button
+                type="button"
                 onClick={() => setShowGeneralGuide(false)}
                 className="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center cursor-pointer"
               >
@@ -175,6 +234,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
             </div>
 
             <button
+              type="button"
               onClick={() => setShowGeneralGuide(false)}
               className="mt-5 w-full rounded-xl bg-amber-500 hover:bg-amber-400 py-2.5 text-xs font-black text-slate-950 transition cursor-pointer"
             >

@@ -15,15 +15,18 @@ export default defineConfig(() => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['apple-touch-icon.png', 'icon.svg', 'pwa-192x192.png', 'pwa-512x512.png', 'pwa-maskable-512x512.png'],
+        injectRegister: false,
+        manifestFilename: 'manifest.json',
+        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon.svg', 'pwa-192x192.png', 'pwa-512x512.png', 'pwa-maskable-512x512.png'],
         manifest: {
           id: '/',
           name: 'Top Store System - توب ستور',
           short_name: 'توب ستور',
           description: 'نظام حسابات وإدارة طلبات متجر توب ستور لوساطة الشراء والتسوق الإلكتروني في اليمن',
-          theme_color: '#d97706',
+          theme_color: '#1A3668',
           background_color: '#f8fafc',
           display: 'standalone',
+          orientation: 'portrait',
           start_url: '/',
           scope: '/',
           icons: [

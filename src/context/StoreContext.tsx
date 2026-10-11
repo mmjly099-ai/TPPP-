@@ -434,7 +434,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       console.warn('Could not clear legacy storage', e);
     }
 
-    const saved = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
+    let saved: string | null = null;
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        saved = localStorage.getItem(STORAGE_KEY);
+      }
+    } catch (e) {
+      console.warn('Could not read from localStorage', e);
+    }
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -506,7 +513,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const json = await res.json();
         if (json.success && json.data && json.data.tables) {
           setData(json.data);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(json.data));
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(json.data));
+          } catch (e) {
+            console.warn('Could not persist synced data to localStorage', e);
+          }
           setLastSyncTime(new Date().toLocaleTimeString('ar-YE'));
         }
       }
@@ -520,7 +531,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Push updates to server whenever data changes & persist to localStorage
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+      console.warn('Could not persist data to localStorage', e);
+    }
 
     // Prevent pushing default or stale data to server on new devices before initial pull completes
     if (!hasInitializedFromServer) {
