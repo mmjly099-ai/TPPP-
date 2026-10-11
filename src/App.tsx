@@ -19,6 +19,7 @@ import { InstallmentsView } from './components/InstallmentsView';
 import { CouriersView } from './components/CouriersView';
 import { DataImportView } from './components/import/DataImportView';
 import { InvoicesView } from './components/InvoicesView';
+import { OfflineIndicator } from './components/common/OfflineIndicator';
 
 // Modals
 import { NewOrderModal } from './components/modals/NewOrderModal';
@@ -135,6 +136,9 @@ const MainApp: React.FC = () => {
         </div>
       )}
 
+      {/* Offline Status Toast */}
+      <OfflineIndicator />
+
       {/* Sticky Header */}
       <Header
         onOpenNewOrder={() => setIsNewOrderOpen(true)}
@@ -193,6 +197,7 @@ const MainApp: React.FC = () => {
               onOpenNewOrder={() => setIsNewOrderOpen(true)}
               onOpenPaymentForOrder={handleOpenPaymentForOrder}
               onViewInvoice={order => setInvoiceOrder(order)}
+              onNavigate={setActiveTab}
             />
           )}
 

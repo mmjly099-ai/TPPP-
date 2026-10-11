@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { NavTab } from '../Navigation';
 import { useStore } from '../../context/StoreContext';
+import { PWAInstallButton } from '../common/PWAInstallButton';
 
 interface MobileAllSectionsSheetProps {
   isOpen: boolean;
@@ -87,9 +88,9 @@ export const MobileAllSectionsSheet: React.FC<MobileAllSectionsSheetProps> = ({
         },
         {
           id: 'installments',
-          label: 'نظام الدفعات والأقساط',
-          description: 'جدولة أقساط العملاء ومتابعة الدفعات المستحقة',
-          icon: CalendarDays,
+          label: 'دفعات الطلبات والتحصيل',
+          description: 'استعراض بيانات الطلب وسجل الدفعات السابقة وسداد الدفعة الحالية',
+          icon: Receipt,
           color: 'bg-amber-50 text-amber-700 border-amber-200'
         },
         {
@@ -333,6 +334,11 @@ export const MobileAllSectionsSheet: React.FC<MobileAllSectionsSheetProps> = ({
               </div>
             </div>
           ))}
+
+          {/* PWA Install Button Banner */}
+          <div className="pt-2">
+            <PWAInstallButton variant="banner" />
+          </div>
 
           {/* Quick Backup Action Row */}
           <div className="pt-2">

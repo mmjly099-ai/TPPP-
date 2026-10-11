@@ -18,19 +18,22 @@ import {
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { Order } from '../types';
+import { PackageCheck } from 'lucide-react';
 
 interface OrdersViewProps {
   onOpenNewOrder: () => void;
   onOpenPaymentForOrder?: (order: Order) => void;
   onPrintInvoice?: (order: Order) => void;
   onViewInvoice?: (order: Order) => void;
+  onNavigate?: (tab: any) => void;
 }
 
 export const OrdersView: React.FC<OrdersViewProps> = ({
   onOpenNewOrder,
   onOpenPaymentForOrder,
   onPrintInvoice,
-  onViewInvoice
+  onViewInvoice,
+  onNavigate
 }) => {
   const { orders, customers, accounts, updateOrderStatus, collectDeliveryFee, updateOrder, deleteOrder } = useStore();
   const [searchTerm, setSearchTerm] = useState('');
@@ -98,13 +101,25 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
           <p className="text-xs text-slate-500">طلبات المشتريات من SHEIN و AliExpress مع تتبع الدفعات والتوصيل</p>
         </div>
 
-        <button
-          onClick={onOpenNewOrder}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>إضافة طلب جديد</span>
-        </button>
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+          {onNavigate && (
+            <button
+              onClick={() => onNavigate('purchase-batches')}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold shadow-2xs transition-colors cursor-pointer"
+            >
+              <PackageCheck className="w-4 h-4" />
+              <span>دفعات الشراء المجمعة ({orders.filter(o => o.status === 'pending').length} معلق)</span>
+            </button>
+          )}
+
+          <button
+            onClick={onOpenNewOrder}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>إضافة طلب جديد</span>
+          </button>
+        </div>
       </div>
 
       {/* KPI Ribbon */}

@@ -19,7 +19,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   preSelectedOrder,
   onPaymentSuccess
 }) => {
-  const { customers, orders, accounts, recordPayment, getCustomerBalance } = useStore();
+  const { customers, orders, accounts, recordPayment, getCustomerBalance, payments } = useStore();
 
   const [customerId, setCustomerId] = useState<number>(() => preSelectedCustomer?.id || customers[0]?.id || 0);
   const [orderId, setOrderId] = useState<number | undefined>(() => preSelectedOrder?.id || undefined);
@@ -191,6 +191,61 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               </select>
             </div>
           )}
+
+          {/* Order Details & Previous Payments Panel */}
+          {orderId && (() => {
+            const linkedOrder = orders.find(o => o.id === orderId);
+            if (!linkedOrder) return null;
+            const prevPayments = payments.filter(p => p.orderId === orderId && p.status !== 'cancelled');
+            return (
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-slate-800">بيانات الطلب #{linkedOrder.orderNumber} ({linkedOrder.site || 'شي إن'})</span>
+                  <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700">
+                    إجمالي الطلب: {(linkedOrder.totalAmount || 0).toLocaleString()} YER
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                  <div className="p-2 bg-emerald-50 border border-emerald-200 rounded-lg">
+                    <span className="text-emerald-800 block font-medium">المدفوع سابقاً:</span>
+                    <span className="font-mono font-bold text-emerald-900 text-xs">{(linkedOrder.paidAmount || 0).toLocaleString()} YER</span>
+                  </div>
+                  <div className="p-2 bg-rose-50 border border-rose-200 rounded-lg">
+                    <span className="text-rose-800 block font-medium">المتبقي المطلوب:</span>
+                    <span className="font-mono font-bold text-rose-900 text-xs">{(linkedOrder.remainingAmount || 0).toLocaleString()} YER</span>
+                  </div>
+                </div>
+
+                {/* Previous Payments History */}
+                <div>
+                  <span className="text-[11px] font-bold text-slate-600 block mb-1">
+                    الدفعات السابقة المسجلة للطلب ({prevPayments.length}):
+                  </span>
+                  {prevPayments.length === 0 ? (
+                    <p className="text-[11px] text-slate-400 italic bg-white p-2 rounded-lg border border-slate-100">
+                      لا توجد دفعات سابقة لهذا الطلب حتى الآن.
+                    </p>
+                  ) : (
+                    <div className="max-h-24 overflow-y-auto space-y-1.5">
+                      {prevPayments.map((pmt) => (
+                        <div key={pmt.id} className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between text-[11px]">
+                          <div>
+                            <span className="font-bold text-slate-800 font-mono">#{pmt.receiptNumber || pmt.paymentNumber}</span>
+                            <span className="text-slate-400 mx-1.5">•</span>
+                            <span className="text-slate-600">{pmt.paymentType || 'دفعة'} ({pmt.paymentMethod})</span>
+                            <span className="text-slate-400 mx-1.5">•</span>
+                            <span className="font-mono text-slate-500">{pmt.paymentDate ? pmt.paymentDate.split('T')[0] : ''}</span>
+                          </div>
+                          <span className="font-mono font-bold text-emerald-700">{Number(pmt.amount).toLocaleString()} YER</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Amount & Account */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

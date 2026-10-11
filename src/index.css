@@ -78,11 +78,6 @@
     min-height: auto !important;
   }
 
-  body.is-thermal-printing @page {
-    size: 80mm auto !important;
-    margin: 2mm !important;
-  }
-
   /* Force background colors and borders in Chrome/Safari/Firefox */
   * {
     -webkit-print-color-adjust: exact !important;

@@ -113,10 +113,10 @@ export const Navigation: React.FC<NavigationProps> = ({
     },
     {
       id: 'installments',
-      label: 'نظام الدفعات والأقساط',
-      description: 'جدولة أقساط العملاء (عربون، شحن، واستلام) وتتبع الدفعات المتأخرة وسندات القبض',
-      icon: CalendarDays,
-      badge: activeInstallmentsCount > 0 ? activeInstallmentsCount : undefined,
+      label: 'دفعات الطلبات والتحصيل',
+      description: 'بيانات الطلب، وسجل الدفعات السابقة وسداد الدفعة الحالية مع إصدار سند القبض',
+      icon: Receipt,
+      badge: orders.filter(o => o.status !== 'cancelled' && (o.remainingAmount || 0) > 0).length || undefined,
       color: 'amber'
     },
     {

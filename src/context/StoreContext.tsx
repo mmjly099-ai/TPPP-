@@ -311,6 +311,7 @@ interface StoreContextType {
     notes?: string;
   }) => void;
   cancelPurchaseBatch: (id: number) => void;
+  deletePurchaseBatch: (id: number) => void;
 
   addAuditLog: (action: string, entityType: string, description: string, entityId?: number) => void;
 
@@ -487,7 +488,52 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const discountCodes = data.tables.discountCodes || INITIAL_DATA.tables.discountCodes || [];
   const marketingBudgets = data.tables.marketingBudgets || INITIAL_DATA.tables.marketingBudgets || [];
   const referrals = data.tables.referrals || INITIAL_DATA.tables.referrals || [];
-  const purchaseBatches = data.tables.purchaseBatches || INITIAL_DATA.tables.purchaseBatches || [];
+  const purchaseBatches = useMemo<PurchaseBatch[]>(() => {
+    const raw: any[] = data.tables.purchaseBatches && data.tables.purchaseBatches.length > 0
+      ? data.tables.purchaseBatches
+      : (INITIAL_DATA.tables.purchaseBatches || []);
+
+    const batchOrdersMap: Record<number, number[]> = {};
+    const batchOrdersList: any[] = (data.tables as any).purchaseBatchOrders || (INITIAL_DATA.tables as any).purchaseBatchOrders || [];
+    batchOrdersList.forEach((pbo: any) => {
+      if (!batchOrdersMap[pbo.purchaseBatchId]) batchOrdersMap[pbo.purchaseBatchId] = [];
+      if (pbo.orderId && !batchOrdersMap[pbo.purchaseBatchId].includes(pbo.orderId)) {
+        batchOrdersMap[pbo.purchaseBatchId].push(pbo.orderId);
+      }
+    });
+
+    rawOrders.forEach(o => {
+      if (o.purchaseBatchId) {
+        if (!batchOrdersMap[o.purchaseBatchId]) batchOrdersMap[o.purchaseBatchId] = [];
+        if (!batchOrdersMap[o.purchaseBatchId].includes(o.id)) {
+          batchOrdersMap[o.purchaseBatchId].push(o.id);
+        }
+      }
+    });
+
+    return raw.map(b => {
+      const pCost = typeof b.purchaseCost === 'string' ? parseFloat(b.purchaseCost) || 0 : (Number(b.purchaseCost) || 0);
+      const pFees = typeof b.purchaseFees === 'string' ? parseFloat(b.purchaseFees) || 0 : (Number(b.purchaseFees) || 0);
+      const tFees = typeof b.transferFees === 'string' ? parseFloat(b.transferFees) || 0 : (Number(b.transferFees) || 0);
+      const totalCost = Number(b.totalCost) || (pCost + pFees + tFees);
+      const ordIds = Array.isArray(b.orderIds) && b.orderIds.length > 0
+        ? b.orderIds
+        : (batchOrdersMap[b.id] || []);
+      const acc = accounts.find(a => a.id === b.accountId);
+
+      return {
+        ...b,
+        purchaseCost: pCost,
+        purchaseFees: pFees,
+        transferFees: tFees,
+        totalCost,
+        orderIds: ordIds,
+        accountName: b.accountName || acc?.name || 'البطاقة / الحساب',
+        status: b.status || 'active',
+        purchaseDate: b.purchaseDate ? b.purchaseDate.split('T')[0] : (b.createdAt ? b.createdAt.split('T')[0] : new Date().toISOString().split('T')[0])
+      };
+    });
+  }, [data.tables.purchaseBatches, (data.tables as any).purchaseBatchOrders, rawOrders, accounts]);
   const installmentPlans = data.tables.installmentPlans || [];
   const couriers = data.tables.couriers || INITIAL_DATA.tables.couriers || [];
   const deliveryTrips = data.tables.deliveryTrips || [];
@@ -3860,16 +3906,63 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
       };
     });
+    showNotification(`تم تسجيل دفعة الشراء الجماعية #${batchNumber} بنجاح وقيد حركاتها المالية`, 'success');
   };
 
   const cancelPurchaseBatch = (id: number) => {
-    setData(prev => ({
-      ...prev,
-      tables: {
-        ...prev.tables,
-        purchaseBatches: (prev.tables.purchaseBatches || []).map(b => b.id === id ? { ...b, status: 'cancelled' as const } : b)
-      }
-    }));
+    setData(prev => {
+      const target = (prev.tables.purchaseBatches || []).find(b => b.id === id);
+      const batchOrderIds = target?.orderIds || [];
+
+      const updatedOrders = prev.tables.orders.map(o => {
+        if (batchOrderIds.includes(o.id) || o.purchaseBatchId === id) {
+          return {
+            ...o,
+            purchaseBatchId: null,
+            status: o.status === 'purchased' ? ('pending' as const) : o.status
+          };
+        }
+        return o;
+      });
+
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          orders: updatedOrders,
+          purchaseBatches: (prev.tables.purchaseBatches || []).map(b => b.id === id ? { ...b, status: 'cancelled' as const } : b)
+        }
+      };
+    });
+    showNotification('تم إلغاء دفعة الشراء الجماعية وإرجاع الطلبات لحالة قيد التنفيذ', 'warning');
+  };
+
+  const deletePurchaseBatch = (id: number) => {
+    setData(prev => {
+      const target = (prev.tables.purchaseBatches || []).find(b => b.id === id);
+      const batchOrderIds = target?.orderIds || [];
+
+      const updatedOrders = prev.tables.orders.map(o => {
+        if (batchOrderIds.includes(o.id) || o.purchaseBatchId === id) {
+          return {
+            ...o,
+            purchaseBatchId: null,
+            status: o.status === 'purchased' ? ('pending' as const) : o.status
+          };
+        }
+        return o;
+      });
+
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          orders: updatedOrders,
+          purchaseBatches: (prev.tables.purchaseBatches || []).filter(b => b.id !== id)
+        }
+      };
+    });
+    showNotification('تم حذف دفعة الشراء الجماعية بنجاح', 'success');
   };
 
   const updateSetting = (key: string, value: string) => {
@@ -4157,6 +4250,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         updateReferralStatus,
         addPurchaseBatch,
         cancelPurchaseBatch,
+        deletePurchaseBatch,
         addAuditLog,
         updateSetting,
         clearAllData,

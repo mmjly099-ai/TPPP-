@@ -12,7 +12,17 @@ import {
   CheckCircle2,
   Clock,
   Ban,
-  FileText
+  FileText,
+  Search,
+  Filter,
+  Trash2,
+  X,
+  AlertTriangle,
+  Receipt,
+  User,
+  Hash,
+  Share2,
+  Printer
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { PurchaseBatch, Order } from '../types';
@@ -23,11 +33,17 @@ export const PurchaseBatchesView: React.FC = () => {
     orders,
     accounts,
     addPurchaseBatch,
-    cancelPurchaseBatch
+    cancelPurchaseBatch,
+    deletePurchaseBatch
   } = useStore();
 
   const [isNewBatchOpen, setIsNewBatchOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState<PurchaseBatch | null>(null);
+
+  // Search & Filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sourceFilter, setSourceFilter] = useState<'all' | 'SHEIN' | 'AliExpress' | 'Other'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'cancelled'>('all');
 
   // Form State
   const [source, setSource] = useState('SHEIN');
@@ -37,20 +53,44 @@ export const PurchaseBatchesView: React.FC = () => {
   const [purchaseFees, setPurchaseFees] = useState('0');
   const [transferFees, setTransferFees] = useState('0');
   const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
+  const [orderFilterMode, setOrderFilterMode] = useState<'pending' | 'all'>('pending');
+  const [orderModalSearch, setOrderModalSearch] = useState('');
   const [notes, setNotes] = useState('');
   const [formError, setFormError] = useState('');
 
-  // Pending orders eligible for purchasing
+  // Eligible orders for purchasing
   const eligibleOrders = useMemo(() => {
-    return orders.filter(o => o.status === 'pending' || (o.status !== 'cancelled' && !o.purchaseBatchId));
-  }, [orders]);
+    return orders.filter(o => {
+      if (o.status === 'cancelled') return false;
+      if (orderFilterMode === 'pending') {
+        return (o.status === 'pending' || !o.purchaseBatchId) && o.status !== 'delivered';
+      }
+      return true;
+    });
+  }, [orders, orderFilterMode]);
+
+  const selectedOrdersTotal = useMemo(() => {
+    return orders
+      .filter(o => selectedOrderIds.includes(o.id))
+      .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+  }, [orders, selectedOrderIds]);
+
+  const filteredEligibleOrders = useMemo(() => {
+    if (!orderModalSearch.trim()) return eligibleOrders;
+    const q = orderModalSearch.toLowerCase().trim();
+    return eligibleOrders.filter(o =>
+      String(o.orderNumber).toLowerCase().includes(q) ||
+      (o.customerName || '').toLowerCase().includes(q) ||
+      (o.itemsDescription || '').toLowerCase().includes(q)
+    );
+  }, [eligibleOrders, orderModalSearch]);
 
   // Overall Statistics
   const stats = useMemo(() => {
-    const activeBatches = purchaseBatches.filter(b => b.status === 'active');
-    const totalSpent = activeBatches.reduce((sum, b) => sum + (b.totalCost || 0), 0);
-    const totalFees = activeBatches.reduce((sum, b) => sum + ((b.purchaseFees || 0) + (b.transferFees || 0)), 0);
-    const totalOrdersCovered = activeBatches.reduce((sum, b) => sum + (b.orderIds?.length || 0), 0);
+    const activeBatches = purchaseBatches.filter(b => b.status !== 'cancelled');
+    const totalSpent = activeBatches.reduce((sum, b) => sum + (Number(b.totalCost) || 0), 0);
+    const totalFees = activeBatches.reduce((sum, b) => sum + ((Number(b.purchaseFees) || 0) + (Number(b.transferFees) || 0)), 0);
+    const totalOrdersCovered = activeBatches.reduce((sum, b) => sum + ((b.orderIds || []).length), 0);
 
     return {
       batchesCount: activeBatches.length,
@@ -60,6 +100,43 @@ export const PurchaseBatchesView: React.FC = () => {
     };
   }, [purchaseBatches]);
 
+  // Filtered Batches List
+  const filteredBatches = useMemo(() => {
+    return purchaseBatches.filter(b => {
+      // Source filter
+      if (sourceFilter !== 'all') {
+        if (sourceFilter === 'Other') {
+          if (b.source === 'SHEIN' || b.source === 'شي ان' || b.source === 'AliExpress' || b.source === 'علي اكسبرس') {
+            return false;
+          }
+        } else if (sourceFilter === 'SHEIN') {
+          if (b.source !== 'SHEIN' && b.source !== 'شي ان' && b.source !== 'شي إن') return false;
+        } else if (sourceFilter === 'AliExpress') {
+          if (b.source !== 'AliExpress' && b.source !== 'علي اكسبرس' && b.source !== 'علي إكسبرس') return false;
+        }
+      }
+
+      // Status filter
+      if (statusFilter !== 'all') {
+        const isCancelled = b.status === 'cancelled';
+        if (statusFilter === 'active' && isCancelled) return false;
+        if (statusFilter === 'cancelled' && !isCancelled) return false;
+      }
+
+      // Search Query
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const matchBatch = (b.batchNumber || '').toLowerCase().includes(q);
+        const matchSupplier = (b.supplierOrderNumber || '').toLowerCase().includes(q);
+        const matchSource = (b.source || '').toLowerCase().includes(q);
+        const matchAccount = (b.accountName || '').toLowerCase().includes(q);
+        return matchBatch || matchSupplier || matchSource || matchAccount;
+      }
+
+      return true;
+    });
+  }, [purchaseBatches, sourceFilter, statusFilter, searchQuery]);
+
   const handleToggleOrder = (orderId: number) => {
     setSelectedOrderIds(prev =>
       prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]
@@ -67,11 +144,20 @@ export const PurchaseBatchesView: React.FC = () => {
   };
 
   const handleSelectAllOrders = () => {
-    if (selectedOrderIds.length === eligibleOrders.length) {
+    if (selectedOrderIds.length === filteredEligibleOrders.length) {
       setSelectedOrderIds([]);
     } else {
-      setSelectedOrderIds(eligibleOrders.map(o => o.id));
+      setSelectedOrderIds(filteredEligibleOrders.map(o => o.id));
     }
+  };
+
+  const handleOpenNewBatch = () => {
+    if (accounts.length > 0 && !accountId) {
+      const defaultAcc = accounts.find(a => a.type === 'بطاقة' || a.name.includes('فيزا') || a.name.includes('كريمي')) || accounts[0];
+      setAccountId(String(defaultAcc.id));
+    }
+    setFormError('');
+    setIsNewBatchOpen(true);
   };
 
   const handleSubmitBatch = (e: React.FormEvent) => {
@@ -131,13 +217,8 @@ export const PurchaseBatchesView: React.FC = () => {
           </div>
 
           <button
-            onClick={() => {
-              if (accounts.length > 0 && !accountId) {
-                setAccountId(String(accounts[0].id));
-              }
-              setIsNewBatchOpen(true);
-            }}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl shadow-xs transition-all cursor-pointer text-xs sm:text-sm shrink-0"
+            onClick={handleOpenNewBatch}
+            className="inline-flex items-center gap-2 px-5 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl shadow-xs transition-all cursor-pointer text-xs sm:text-sm shrink-0"
           >
             <Plus className="w-4 h-4" />
             <span>تسجيل دفعة شراء جماعية</span>
@@ -149,7 +230,7 @@ export const PurchaseBatchesView: React.FC = () => {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
         
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-          <span className="text-xs text-slate-500 font-bold block mb-1">إجمالي دفعات الشراء</span>
+          <span className="text-xs text-slate-500 font-bold block mb-1">دفعات الشراء النشطة</span>
           <div className="text-2xl font-black text-slate-900 font-mono">
             {stats.batchesCount}
           </div>
@@ -157,7 +238,7 @@ export const PurchaseBatchesView: React.FC = () => {
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-          <span className="text-xs text-slate-500 font-bold block mb-1">الطلبات المشمولة</span>
+          <span className="text-xs text-slate-500 font-bold block mb-1">الطلبات المشمولة بالشراء</span>
           <div className="text-2xl font-black text-indigo-700 font-mono">
             {stats.totalOrdersCovered}
           </div>
@@ -165,7 +246,7 @@ export const PurchaseBatchesView: React.FC = () => {
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-          <span className="text-xs text-slate-500 font-bold block mb-1">إجمالي قيمة المشتريات</span>
+          <span className="text-xs text-slate-500 font-bold block mb-1">إجمالي تكلفة المشتريات</span>
           <div className="text-xl sm:text-2xl font-black text-emerald-700 font-mono">
             {stats.totalSpent.toLocaleString()} <span className="text-xs font-normal text-slate-500">YER</span>
           </div>
@@ -173,11 +254,70 @@ export const PurchaseBatchesView: React.FC = () => {
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-          <span className="text-xs text-slate-500 font-bold block mb-1">رسوم التحويل وفروق العملة</span>
+          <span className="text-xs text-slate-500 font-bold block mb-1">رسوم الشراء وفروق الصرف</span>
           <div className="text-xl sm:text-2xl font-black text-amber-800 font-mono">
             {stats.totalFees.toLocaleString()} <span className="text-xs font-normal text-slate-500">YER</span>
           </div>
-          <span className="text-[11px] text-slate-400">عمولات شراء مصرفية</span>
+          <span className="text-[11px] text-slate-400">عمولات مصرفية مسجلة</span>
+        </div>
+
+      </div>
+
+      {/* Search and Filters Bar */}
+      <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
+        
+        {/* Search Input */}
+        <div className="relative w-full md:w-80">
+          <Search className="w-4 h-4 absolute right-3 top-3 text-slate-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="بحث برقم الدفعة أو المورد أو الحساب..."
+            className="w-full pr-9 pl-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-amber-500 font-sans"
+          />
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          {/* Source Filter */}
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs">
+            <button
+              onClick={() => setSourceFilter('all')}
+              className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer ${
+                sourceFilter === 'all' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              الكل
+            </button>
+            <button
+              onClick={() => setSourceFilter('SHEIN')}
+              className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer ${
+                sourceFilter === 'SHEIN' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              شي إن
+            </button>
+            <button
+              onClick={() => setSourceFilter('AliExpress')}
+              className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer ${
+                sourceFilter === 'AliExpress' ? 'bg-white text-amber-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              علي إكسبرس
+            </button>
+          </div>
+
+          {/* Status Filter */}
+          <select
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value as any)}
+            className="p-1.5 px-3 rounded-xl border border-slate-200 text-xs bg-slate-50 font-bold focus:outline-amber-500"
+          >
+            <option value="all">جميع الحالات</option>
+            <option value="active">النشطة فقط</option>
+            <option value="cancelled">الملغاة</option>
+          </select>
         </div>
 
       </div>
@@ -190,37 +330,49 @@ export const PurchaseBatchesView: React.FC = () => {
             <h2 className="text-base font-bold text-slate-900">سجل دفعات الشراء الجماعية</h2>
           </div>
           <span className="text-xs text-slate-500">
-            {purchaseBatches.length} دفعة مسجلة
+            {filteredBatches.length} من أصل {purchaseBatches.length} دفعة
           </span>
         </div>
 
-        {purchaseBatches.length === 0 ? (
+        {filteredBatches.length === 0 ? (
           <div className="p-12 text-center space-y-3">
             <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto">
               <ShoppingBag className="w-6 h-6" />
             </div>
-            <p className="text-slate-600 font-bold text-sm">لا توجد دفعات شراء مجمعة مسجلة بعد.</p>
+            <p className="text-slate-600 font-bold text-sm">لا توجد دفعات شراء مطابقة للشروط المحددة.</p>
             <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              عند شراء مجموعة طلبات لعملاء من شي إن أو علي إكسبرس، سجّل دفعة شراء جماعية هنا لخصم المبلغ من الحساب وقيد التكلفة آلياً.
+              يمكنك تسجيل دفعة شراء جماعية جديدة بالضغط على الزر أعلاه لتسجيل مشتريات شي إن وعلي إكسبرس بضغطة واحدة.
             </p>
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
-            {purchaseBatches.map(batch => {
-              const batchOrders = orders.filter(o => batch.orderIds.includes(o.id));
+            {filteredBatches.map(batch => {
+              const orderIdList = batch.orderIds || [];
+              const batchOrders = orders.filter(o => orderIdList.includes(o.id));
+              const isCancelled = batch.status === 'cancelled';
 
               return (
-                <div key={batch.id} className="p-4 hover:bg-slate-50 transition-colors space-y-3">
+                <div
+                  key={batch.id}
+                  className={`p-4 transition-colors space-y-3 ${
+                    isCancelled ? 'bg-slate-50/60 opacity-75' : 'hover:bg-slate-50/80'
+                  }`}
+                >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="flex items-center gap-3">
-                      <span className="font-mono font-black text-xs px-2.5 py-1 bg-slate-100 text-slate-800 rounded-lg border border-slate-200">
+                    <div className="flex items-start sm:items-center gap-3">
+                      <span className="font-mono font-black text-xs px-2.5 py-1 bg-slate-100 text-slate-800 rounded-lg border border-slate-200 shrink-0">
                         {batch.batchNumber}
                       </span>
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="font-bold text-sm text-slate-900">شراء مجمع من {batch.source}</span>
+                          {isCancelled && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200">
+                              ملغى
+                            </span>
+                          )}
                           {batch.supplierOrderNumber && (
-                            <span className="text-xs text-slate-500 font-mono bg-amber-50 text-amber-900 px-2 py-0.5 rounded border border-amber-200">
+                            <span className="text-xs text-slate-600 font-mono bg-amber-50 text-amber-900 px-2 py-0.5 rounded border border-amber-200">
                               رقم المورد: {batch.supplierOrderNumber}
                             </span>
                           )}
@@ -233,40 +385,90 @@ export const PurchaseBatchesView: React.FC = () => {
 
                     <div className="text-left flex items-center sm:flex-col sm:items-end justify-between gap-1">
                       <div className="text-base font-black text-slate-900 font-mono">
-                        {batch.totalCost.toLocaleString()} <span className="text-xs font-normal text-slate-400">YER</span>
+                        {(batch.totalCost || 0).toLocaleString()} <span className="text-xs font-normal text-slate-400">YER</span>
                       </div>
                       <div className="text-[11px] text-slate-500">
-                        تكلفة البضاعة: {batch.purchaseCost.toLocaleString()} + رسوم: {(batch.purchaseFees + batch.transferFees).toLocaleString()} YER
+                        تكلفة البضاعة: {(batch.purchaseCost || 0).toLocaleString()} + رسوم: {((batch.purchaseFees || 0) + (batch.transferFees || 0)).toLocaleString()} YER
                       </div>
                     </div>
                   </div>
 
                   {/* Orders in this batch */}
                   <div className="bg-slate-50/80 rounded-xl p-3 border border-slate-200/80">
-                    <div className="text-[11px] font-bold text-slate-500 mb-2 flex items-center justify-between">
+                    <div className="text-[11px] font-bold text-slate-500 mb-2 flex flex-wrap items-center justify-between gap-1">
                       <span>الطلبات المتضمنة في هذه الدفعة ({batchOrders.length} طلبات):</span>
-                      <span className="text-[10px] text-slate-400">تكلفة الشراء المقدرة للطلب: ~{batch.orderIds.length > 0 ? Math.round(batch.purchaseCost / batch.orderIds.length).toLocaleString() : 0} YER</span>
+                      <span className="text-[10px] text-slate-400">
+                        تكلفة الشراء المقدرة للطلب: ~{orderIdList.length > 0 ? Math.round((batch.purchaseCost || 0) / orderIdList.length).toLocaleString() : 0} YER
+                      </span>
                     </div>
 
-                    <div className="flex flex-wrap gap-2">
-                      {batchOrders.map(o => (
-                        <span
-                          key={o.id}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-lg border border-slate-200 text-xs text-slate-700 shadow-2xs"
+                    {batchOrders.length === 0 ? (
+                      <span className="text-xs text-slate-400 italic">لا توجد طلبات مرتبطة بالدفعة حالياً</span>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {batchOrders.map(o => (
+                          <span
+                            key={o.id}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-lg border border-slate-200 text-xs text-slate-700 shadow-2xs"
+                          >
+                            <span className="font-mono font-bold text-slate-900">{o.orderNumber}</span>
+                            <span className="text-slate-400">|</span>
+                            <span className="font-medium text-slate-600">{o.customerName}</span>
+                            <span className="text-slate-400">|</span>
+                            <span className="font-mono font-bold text-emerald-700">{(o.totalAmount || 0).toLocaleString()} YER</span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions & Notes Footer */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100">
+                    <div className="text-xs text-slate-500">
+                      {batch.notes ? (
+                        <span className="italic">ملاحظات: {batch.notes}</span>
+                      ) : (
+                        <span className="text-slate-400">لا توجد ملاحظات إضافية</span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setSelectedBatch(batch)}
+                        className="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition cursor-pointer flex items-center gap-1"
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        <span>تفاصيل الدفعة</span>
+                      </button>
+
+                      {!isCancelled && (
+                        <button
+                          onClick={() => {
+                            if (confirm(`هل أنت متأكد من إلغاء دفعة الشراء ${batch.batchNumber}؟ سيتم إعادة الطلبات لحالة قيد التنفيذ.`)) {
+                              cancelPurchaseBatch(batch.id);
+                            }
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition cursor-pointer flex items-center gap-1"
                         >
-                          <span className="font-mono font-bold text-slate-900">{o.orderNumber}</span>
-                          <span className="text-slate-400">|</span>
-                          <span className="font-medium text-slate-600">{o.customerName}</span>
-                          <span className="text-slate-400">|</span>
-                          <span className="font-mono font-bold text-emerald-700">{o.totalAmount?.toLocaleString()} YER</span>
-                        </span>
-                      ))}
+                          <Ban className="w-3.5 h-3.5" />
+                          <span>إلغاء</span>
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => {
+                          if (confirm(`هل أنت متأكد من حذف دفعة الشراء ${batch.batchNumber} نهائياً؟`)) {
+                            deletePurchaseBatch(batch.id);
+                          }
+                        }}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                        title="حذف الدفعة"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
 
-                  {batch.notes && (
-                    <p className="text-xs text-slate-500 italic">ملاحظات: {batch.notes}</p>
-                  )}
                 </div>
               );
             })}
@@ -274,9 +476,119 @@ export const PurchaseBatchesView: React.FC = () => {
         )}
       </div>
 
+      {/* Modal: Batch Details View */}
+      {selectedBatch && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 overflow-y-auto backdrop-blur-xs" dir="rtl">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-5 my-8">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
+                  <PackageCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-slate-900">
+                    تفاصيل دفعة الشراء {selectedBatch.batchNumber}
+                  </h3>
+                  <span className="text-xs text-slate-500">
+                    مصدر الشراء: {selectedBatch.source} • تاريخ: {selectedBatch.purchaseDate}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedBatch(null)}
+                className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Financial Summary */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span className="text-slate-500 block mb-1">تكلفة البضاعة الصافية</span>
+                <span className="font-mono font-black text-slate-900 text-sm">
+                  {(selectedBatch.purchaseCost || 0).toLocaleString()} YER
+                </span>
+              </div>
+
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span className="text-slate-500 block mb-1">الرسوم والعمولات المصرفية</span>
+                <span className="font-mono font-black text-amber-800 text-sm">
+                  {((selectedBatch.purchaseFees || 0) + (selectedBatch.transferFees || 0)).toLocaleString()} YER
+                </span>
+              </div>
+
+              <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 col-span-2 sm:col-span-1">
+                <span className="text-amber-900 block mb-1 font-bold">إجمالي المبلغ المسحوب</span>
+                <span className="font-mono font-black text-amber-950 text-sm">
+                  {(selectedBatch.totalCost || 0).toLocaleString()} YER
+                </span>
+              </div>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <span className="text-slate-500">الحساب المسحوب منه: </span>
+                <span className="font-bold text-slate-900">{selectedBatch.accountName}</span>
+              </div>
+              {selectedBatch.supplierOrderNumber && (
+                <div>
+                  <span className="text-slate-500">رقم طلب المورد: </span>
+                  <span className="font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                    {selectedBatch.supplierOrderNumber}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Orders Included */}
+            <div>
+              <h4 className="font-bold text-xs text-slate-700 mb-2">
+                الطلبيات المشمولة في هذه الدفعة ({(selectedBatch.orderIds || []).length} طلبات):
+              </h4>
+              <div className="max-h-56 overflow-y-auto border border-slate-200 rounded-xl divide-y divide-slate-100 text-xs">
+                {orders
+                  .filter(o => (selectedBatch.orderIds || []).includes(o.id))
+                  .map(ord => (
+                    <div key={ord.id} className="p-3 flex items-center justify-between hover:bg-slate-50">
+                      <div>
+                        <div className="font-bold text-slate-900">
+                          {ord.orderNumber} • {ord.customerName}
+                        </div>
+                        <div className="text-[11px] text-slate-400 mt-0.5">
+                          {ord.itemsDescription || 'طلبية ملابس ومنتجات'}
+                        </div>
+                      </div>
+                      <div className="text-left font-mono font-bold text-emerald-700">
+                        {(ord.totalAmount || 0).toLocaleString()} YER
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            {selectedBatch.notes && (
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+                <span className="font-bold text-slate-700 block mb-1">ملاحظات:</span>
+                <p className="text-slate-600">{selectedBatch.notes}</p>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 text-xs">
+              <button
+                onClick={() => setSelectedBatch(null)}
+                className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition cursor-pointer"
+              >
+                إغلاق
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal: Register Collective Purchase Batch */}
       {isNewBatchOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 overflow-y-auto backdrop-blur-xs">
           <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 my-8" dir="rtl">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
@@ -381,28 +693,83 @@ export const PurchaseBatchesView: React.FC = () => {
                 </span>
               </div>
 
-              {/* Order Selection */}
+              {/* Selected Orders Total & Auto Cost Calculation */}
+              {selectedOrderIds.length > 0 && (
+                <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl space-y-2 text-xs">
+                  <div className="flex items-center justify-between font-bold text-indigo-900">
+                    <span>إجمالي مبيعات الطلبات المحددة ({selectedOrderIds.length} طلبات):</span>
+                    <span className="font-mono text-sm">{selectedOrdersTotal.toLocaleString()} YER</span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-indigo-200/60 text-[11px]">
+                    <span className="text-slate-600 font-bold">حساب تكلفة الشراء تلقائياً:</span>
+                    <button
+                      type="button"
+                      onClick={() => setPurchaseCost(String(selectedOrdersTotal))}
+                      className="px-2 py-0.5 rounded-lg bg-white hover:bg-indigo-100 border border-indigo-300 text-indigo-800 font-bold cursor-pointer transition shadow-2xs"
+                    >
+                      كامل القيمة ({selectedOrdersTotal.toLocaleString()})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPurchaseCost(String(Math.round(selectedOrdersTotal * 0.85)))}
+                      className="px-2 py-0.5 rounded-lg bg-white hover:bg-indigo-100 border border-indigo-300 text-indigo-800 font-bold cursor-pointer transition shadow-2xs"
+                    >
+                      خصم 15% شي إن ({Math.round(selectedOrdersTotal * 0.85).toLocaleString()})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPurchaseCost(String(Math.round(selectedOrdersTotal * 0.80)))}
+                      className="px-2 py-0.5 rounded-lg bg-white hover:bg-indigo-100 border border-indigo-300 text-indigo-800 font-bold cursor-pointer transition shadow-2xs"
+                    >
+                      خصم 20% ({Math.round(selectedOrdersTotal * 0.80).toLocaleString()})
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Order Selection Controls */}
               <div>
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
                   <label className="font-bold text-slate-800">
                     حدد الطلبيات التي تم شراؤها ضمن هذه الدفعة * ({selectedOrderIds.length} محددة)
                   </label>
-                  <button
-                    type="button"
-                    onClick={handleSelectAllOrders}
-                    className="text-xs text-indigo-600 hover:text-indigo-800 font-bold cursor-pointer"
-                  >
-                    {selectedOrderIds.length === eligibleOrders.length ? 'إلغاء تحديد الكل' : 'تحديد جميع الطلبات المتاحة'}
-                  </button>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setOrderFilterMode(prev => prev === 'pending' ? 'all' : 'pending')}
+                      className="text-[11px] text-indigo-700 hover:text-indigo-900 font-bold bg-indigo-50 px-2 py-0.5 rounded cursor-pointer"
+                    >
+                      {orderFilterMode === 'pending' ? 'عرض كافة الطلبات النشطة' : 'فقط الطلبات المعلقة وغير المشتراة'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSelectAllOrders}
+                      className="text-[11px] text-amber-800 hover:text-amber-950 font-bold bg-amber-100 px-2 py-0.5 rounded cursor-pointer"
+                    >
+                      {selectedOrderIds.length === filteredEligibleOrders.length && filteredEligibleOrders.length > 0 ? 'إلغاء تحديد الكل' : 'تحديد الكل'}
+                    </button>
+                  </div>
                 </div>
 
-                {eligibleOrders.length === 0 ? (
+                {/* Search input for modal orders */}
+                <div className="mb-2">
+                  <input
+                    type="text"
+                    value={orderModalSearch}
+                    onChange={e => setOrderModalSearch(e.target.value)}
+                    placeholder="ابحث برقم الطلب أو اسم العميل لاختياره..."
+                    className="w-full p-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                {filteredEligibleOrders.length === 0 ? (
                   <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center text-slate-400">
-                    لا توجد طلبات معلقة بانتظار الشراء حالياً.
+                    لا توجد طلبات تطابق البحث حالياً.
                   </div>
                 ) : (
                   <div className="max-h-48 overflow-y-auto border border-slate-200 rounded-xl divide-y divide-slate-100">
-                    {eligibleOrders.map(o => {
+                    {filteredEligibleOrders.map(o => {
                       const isChecked = selectedOrderIds.includes(o.id);
                       return (
                         <div
@@ -428,7 +795,7 @@ export const PurchaseBatchesView: React.FC = () => {
                           </div>
 
                           <div className="text-left font-mono font-bold text-slate-800">
-                            {o.totalAmount?.toLocaleString()} YER
+                            {(o.totalAmount || 0).toLocaleString()} YER
                           </div>
                         </div>
                       );

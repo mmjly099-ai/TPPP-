@@ -14,6 +14,7 @@ import {
 import { useStore } from '../context/StoreContext';
 
 import { NavTab } from './Navigation';
+import { PWAInstallButton } from './common/PWAInstallButton';
 
 interface HeaderProps {
   onOpenNewOrder: () => void;
@@ -65,6 +66,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Quick Mobile Header Action Buttons */}
           <div className="flex items-center gap-1.5 shrink-0">
+            <PWAInstallButton className="text-[11px] px-2 py-1" />
             <button
               onClick={onOpenNewOrder}
               className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
@@ -208,6 +210,8 @@ export const Header: React.FC<HeaderProps> = ({
                 <span>استيراد بيانات</span>
               </button>
             )}
+
+            <PWAInstallButton />
           </div>
 
         </div>

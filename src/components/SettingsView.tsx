@@ -12,10 +12,12 @@ import {
   CreditCard,
   Tag,
   PenTool,
-  Trash2
+  Trash2,
+  Smartphone
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { SignaturePad } from './common/SignaturePad';
+import { PWAInstallButton } from './common/PWAInstallButton';
 
 export const SettingsView: React.FC = () => {
   const {
@@ -94,6 +96,9 @@ export const SettingsView: React.FC = () => {
           تخصيص بيانات المتجر، أرقام التواصل، العملة، مواقع الشراء والنسخ الاحتياطي
         </p>
       </div>
+
+      {/* PWA App Installation Card */}
+      <PWAInstallButton variant="banner" />
 
       {savedSuccess && (
         <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-bold flex items-center gap-2">
