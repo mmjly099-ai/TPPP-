@@ -10,11 +10,14 @@ interface NewExpenseModalProps {
 export const NewExpenseModal: React.FC<NewExpenseModalProps> = ({ isOpen, onClose }) => {
   const { accounts, addExpense, settings, marketingCampaigns } = useStore();
 
-  const categories = (settings.expenseCategories || 'تسويق، إنترنت، مواصلات، رواتب، تشغيل، رسوم بنكية، رسوم تحويل، إيجار، صيانة، أخرى')
+  const rawCats = (settings.expenseCategories || 'قات، عشاء، تشغيل، إنترنت، مواصلات، رواتب، تسويق، شحن ونقل لوجستي، مصاريف عمال، رسوم بنكية، رسوم تحويل، إيجار، صيانة، أخرى')
     .split('،')
-    .map(c => c.trim());
+    .map(c => c.trim())
+    .filter(Boolean);
 
-  const [category, setCategory] = useState<string>(categories[0] || 'تشغيل');
+  const categories = Array.from(new Set(['قات', 'عشاء', ...rawCats]));
+
+  const [category, setCategory] = useState<string>('قات');
   const [vendorName, setVendorName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [amount, setAmount] = useState<number>(0);
@@ -25,6 +28,22 @@ export const NewExpenseModal: React.FC<NewExpenseModalProps> = ({ isOpen, onClos
   });
   const [notes, setNotes] = useState<string>('');
   const [formError, setFormError] = useState<string>('');
+
+  const quickCategories = [
+    { label: 'قات', emoji: '🌿', defaultDesc: 'قات' },
+    { label: 'عشاء', emoji: '🍽️', defaultDesc: 'عشاء' },
+    { label: 'تشغيل', emoji: '⚡', defaultDesc: 'مصروف تشغيل' },
+    { label: 'إنترنت', emoji: '🌐', defaultDesc: 'باقة نت' },
+    { label: 'مواصلات', emoji: '🚗', defaultDesc: 'مواصلات وتوصيل' },
+    { label: 'مصاريف عمال', emoji: '👷', defaultDesc: 'صرفية عمال' }
+  ];
+
+  const handleSelectQuickCategory = (qc: typeof quickCategories[0]) => {
+    setCategory(qc.label);
+    if (!description.trim() || quickCategories.some(c => c.defaultDesc === description.trim())) {
+      setDescription(qc.defaultDesc);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -77,6 +96,35 @@ export const NewExpenseModal: React.FC<NewExpenseModalProps> = ({ isOpen, onClos
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           
+          {/* Quick Choice Buttons for Priority Categories */}
+          <div>
+            <label className="font-bold text-slate-700 block mb-1.5">اختيار سريع للتصنيف:</label>
+            <div className="flex flex-wrap gap-1.5">
+              {quickCategories.map(qc => {
+                const isSelected = category === qc.label;
+                return (
+                  <button
+                    key={qc.label}
+                    type="button"
+                    onClick={() => handleSelectQuickCategory(qc)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      isSelected
+                        ? qc.label === 'قات'
+                          ? 'bg-emerald-600 text-white shadow-sm'
+                          : qc.label === 'عشاء'
+                          ? 'bg-amber-600 text-white shadow-sm'
+                          : 'bg-rose-600 text-white shadow-sm'
+                        : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                    }`}
+                  >
+                    <span>{qc.emoji}</span>
+                    <span>{qc.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Category & Vendor */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
@@ -84,10 +132,12 @@ export const NewExpenseModal: React.FC<NewExpenseModalProps> = ({ isOpen, onClos
               <select
                 value={category}
                 onChange={e => setCategory(e.target.value)}
-                className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-medium"
+                className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-bold"
               >
                 {categories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
+                  <option key={cat} value={cat}>
+                    {cat === 'قات' ? '🌿 قات (الصنف الأول)' : cat === 'عشاء' ? '🍽️ عشاء (الصنف الثاني)' : cat}
+                  </option>
                 ))}
               </select>
             </div>
@@ -109,14 +159,36 @@ export const NewExpenseModal: React.FC<NewExpenseModalProps> = ({ isOpen, onClos
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="font-bold text-slate-700 block mb-1">المستفيد / الجهة (اختياري)</label>
+              <label className="font-bold text-slate-700 block mb-1">المستفيد / العامل / الجهة:</label>
               <input
                 type="text"
                 value={vendorName}
                 onChange={e => setVendorName(e.target.value)}
-                placeholder="مثال: فيسبوك، يمن نت، شركة النقل..."
+                placeholder="مثال: محمد طه، عبد الرحمن، المقوت، يمن نت..."
                 className="w-full border border-slate-200 rounded-lg p-2.5"
               />
+              <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+                <span className="text-[10px] text-slate-400 font-bold">اختيار عامل:</span>
+                {['محمد طه', 'عبد الرحمن', 'مالك', 'معتز'].map(wName => (
+                  <button
+                    key={wName}
+                    type="button"
+                    onClick={() => {
+                      setVendorName(wName);
+                      if (!description || description === 'قات' || description === 'عشاء' || description === 'صرفية عمال') {
+                        setDescription(`${category} لـ ${wName}`);
+                      }
+                    }}
+                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                      vendorName === wName
+                        ? 'bg-amber-600 text-white'
+                        : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
+                    }`}
+                  >
+                    👷 {wName}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

@@ -15,16 +15,18 @@ import {
   Edit2,
   Trash2,
   ShieldAlert,
-  X
+  X,
+  Users
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { Expense } from '../types';
 
 interface ExpensesViewProps {
   onOpenNewExpense: () => void;
+  onNavigate?: (tab: any) => void;
 }
 
-export const ExpensesView: React.FC<ExpensesViewProps> = ({ onOpenNewExpense }) => {
+export const ExpensesView: React.FC<ExpensesViewProps> = ({ onOpenNewExpense, onNavigate }) => {
   const { expenses, accounts, totalExpenses, shipments, updateExpense, deleteExpense } = useStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
@@ -34,7 +36,9 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({ onOpenNewExpense }) 
   const [deletingExpense, setDeletingExpense] = useState<Expense | null>(null);
 
   const categories = useMemo(() => {
-    return Array.from(new Set(expenses.map(e => e.category).filter(Boolean)));
+    const priority = ['قات', 'عشاء', 'تشغيل', 'إنترنت', 'مواصلات', 'تسويق', 'شحن ونقل لوجستي', 'مصاريف عمال', 'نثريات'];
+    const existing = expenses.map(e => e.category).filter(Boolean) as string[];
+    return Array.from(new Set([...priority, ...existing]));
   }, [expenses]);
 
   // Breakdown metrics
@@ -45,7 +49,9 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({ onOpenNewExpense }) 
     expenses.forEach(e => {
       if (e.status === 'cancelled') return;
       const amt = parseFloat(String(e.amount || 0)) || 0;
-      if (e.category === 'شحن ونقل لوجستي' || e.category === 'شحن' || e.expenseNumber.startsWith('EXP-SHP-')) {
+      const cat = e.category || '';
+      const expNum = String(e.expenseNumber || '');
+      if (cat === 'شحن ونقل لوجستي' || cat === 'شحن' || expNum.startsWith('EXP-SHP-')) {
         logisticsTotal += amt;
       } else {
         operationalTotal += amt;
@@ -61,12 +67,19 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({ onOpenNewExpense }) 
   }, [expenses, shipments]);
 
   const filteredExpenses = useMemo(() => {
+    const term = (searchTerm || '').trim().toLowerCase();
     return expenses.filter(e => {
-      const term = searchTerm.toLowerCase();
+      const desc = String(e.description || '').toLowerCase();
+      const vendor = String(e.vendorName || '').toLowerCase();
+      const expNum = String(e.expenseNumber || '').toLowerCase();
+      const cat = String(e.category || '').toLowerCase();
+
       const matchesSearch =
-        e.description.toLowerCase().includes(term) ||
-        (e.vendorName && e.vendorName.toLowerCase().includes(term)) ||
-        e.expenseNumber.toLowerCase().includes(term);
+        !term ||
+        desc.includes(term) ||
+        vendor.includes(term) ||
+        expNum.includes(term) ||
+        cat.includes(term);
 
       const matchesCategory = selectedCategory === 'ALL' || e.category === selectedCategory;
 
@@ -91,13 +104,26 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({ onOpenNewExpense }) 
           </p>
         </div>
 
-        <button
-          onClick={onOpenNewExpense}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>تسجيل مصروف جديد</span>
-        </button>
+        <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto">
+          {onNavigate && (
+            <button
+              onClick={() => onNavigate('workers')}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold transition-colors cursor-pointer"
+              title="الانتقال إلى قسم العمال وصرفياتهم"
+            >
+              <Users className="w-4 h-4 text-amber-600" />
+              <span>قسم العمال وصرفياتهم</span>
+            </button>
+          )}
+
+          <button
+            onClick={onOpenNewExpense}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>تسجيل مصروف جديد</span>
+          </button>
+        </div>
       </div>
 
       {/* KPI & Summary Ribbon */}
@@ -163,7 +189,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({ onOpenNewExpense }) 
         <select
           value={selectedCategory}
           onChange={e => setSelectedCategory(e.target.value)}
-          className="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700 focus:outline-hidden focus:border-rose-500"
+          className="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700 focus:outline-hidden focus:border-rose-500 font-bold"
         >
           <option value="ALL">جميع التصنيفات ({expenses.length})</option>
           {categories.map(cat => (
@@ -172,6 +198,49 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({ onOpenNewExpense }) 
             </option>
           ))}
         </select>
+      </div>
+
+      {/* Quick Category Filter Pills */}
+      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+        <button
+          onClick={() => setSelectedCategory('ALL')}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+            selectedCategory === 'ALL'
+              ? 'bg-slate-900 text-white shadow-xs'
+              : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+          }`}
+        >
+          الكل ({expenses.length})
+        </button>
+        {categories.slice(0, 8).map(cat => {
+          const count = expenses.filter(e => e.category === cat).length;
+          const isSelected = selectedCategory === cat;
+          return (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(isSelected ? 'ALL' : cat)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1 ${
+                isSelected
+                  ? 'bg-rose-600 text-white shadow-xs'
+                  : 'bg-white border border-slate-200 text-slate-700 hover:border-rose-300 hover:bg-rose-50/50'
+              }`}
+            >
+              {cat === 'قات' && '🌿'}
+              {cat === 'عشاء' && '🍽️'}
+              {cat === 'تشغيل' && '⚡'}
+              {cat === 'إنترنت' && '🌐'}
+              {cat === 'مواصلات' && '🚗'}
+              {cat === 'شحن ونقل لوجستي' && '📦'}
+              {cat === 'مصاريف عمال' && '👷'}
+              <span>{cat}</span>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+              }`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Expenses Table */}
@@ -189,7 +258,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({ onOpenNewExpense }) 
                   <th className="py-3 px-4">التاريخ</th>
                   <th className="py-3 px-4">التصنيف</th>
                   <th className="py-3 px-4">البيان والتفاصيل</th>
-                  <th className="py-3 px-4">المستفيد / الناقل</th>
+                  <th className="py-3 px-4">المستفيد / العامل / الناقل</th>
                   <th className="py-3 px-4">الحساب الدافع</th>
                   <th className="py-3 px-4 text-left">المبلغ</th>
                   <th className="py-3 px-4 text-center w-28">إجراءات</th>
@@ -199,32 +268,42 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({ onOpenNewExpense }) 
                 {filteredExpenses.map(expense => {
                   const acc = accounts.find(a => a.id === expense.accountId);
                   const amt = parseFloat(String(expense.amount || 0));
-                  const isLogistics = expense.category === 'شحن ونقل لوجستي' || expense.category === 'شحن' || expense.expenseNumber.startsWith('EXP-SHP-');
+                  const expNum = String(expense.expenseNumber || `EXP-${expense.id}`);
+                  const isLogistics = expense.category === 'شحن ونقل لوجستي' || expense.category === 'شحن' || expNum.startsWith('EXP-SHP-');
+                  const dateStr = expense.createdAt ? new Date(expense.createdAt).toLocaleDateString('ar-YE') : '-';
 
                   return (
                     <tr key={expense.id} className={`hover:bg-slate-50/70 transition-colors ${isLogistics ? 'bg-purple-50/15' : ''}`}>
                       <td className="py-3.5 px-4 font-mono font-bold text-slate-700">
-                        {expense.expenseNumber}
+                        {expNum}
                       </td>
                       <td className="py-3.5 px-4 font-mono text-slate-600">
-                        {new Date(expense.createdAt).toLocaleDateString('ar-YE')}
+                        {dateStr}
                       </td>
                       <td className="py-3.5 px-4">
-                        {isLogistics ? (
+                        {expense.category === 'قات' ? (
+                          <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold px-2 py-0.5 rounded-md text-[11px] inline-flex items-center gap-1">
+                            🌿 قات
+                          </span>
+                        ) : expense.category === 'عشاء' ? (
+                          <span className="bg-amber-50 text-amber-800 border border-amber-200 font-bold px-2 py-0.5 rounded-md text-[11px] inline-flex items-center gap-1">
+                            🍽️ عشاء
+                          </span>
+                        ) : isLogistics ? (
                           <span className="bg-purple-50 text-purple-700 border border-purple-200 font-bold px-2 py-0.5 rounded-md text-[11px] inline-flex items-center gap-1">
                             <Truck className="w-3 h-3" />
                             {expense.category}
                           </span>
                         ) : (
                           <span className="bg-rose-50 text-rose-700 font-medium px-2 py-0.5 rounded-md text-[11px]">
-                            {expense.category}
+                            {expense.category || 'عام'}
                           </span>
                         )}
                       </td>
                       <td className="py-3.5 px-4 font-medium text-slate-800">
-                        {expense.description}
+                        {expense.description || '-'}
                       </td>
-                      <td className="py-3.5 px-4 text-slate-600 font-medium">
+                      <td className="py-3.5 px-4 text-slate-700 font-bold">
                         {expense.vendorName || '-'}
                       </td>
                       <td className="py-3.5 px-4 font-semibold text-slate-700">

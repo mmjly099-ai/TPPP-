@@ -34,6 +34,7 @@ export type NavTab =
   | 'purchase-batches'
   | 'marketing'
   | 'customers'
+  | 'workers'
   | 'accounts'
   | 'expenses'
   | 'shipments'
@@ -56,7 +57,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   onSelectTab,
   setActiveTab
 }) => {
-  const { customers, orders, accounts, expenses, shipments, otherReceivables, purchaseBatches, marketingCampaigns, installmentPlans, couriers, deliveryTrips, journalEntries } = useStore();
+  const { customers, orders, accounts, expenses, shipments, otherReceivables, purchaseBatches, marketingCampaigns, installmentPlans, couriers, deliveryTrips, deliveryOrders, journalEntries, workers } = useStore();
   const [isFullMenuOpen, setIsFullMenuOpen] = useState(false);
 
   const selectedTab: NavTab = activeTab || currentTab || 'dashboard';
@@ -106,9 +107,9 @@ export const Navigation: React.FC<NavigationProps> = ({
     {
       id: 'couriers',
       label: 'الموصلين والتوزيع',
-      description: 'إدارة مناديب التوصيل، إنشاء رحلات التوزيع، تحصيلات COD وتصفية العهد النقدية',
+      description: 'إدارة وتتبع مناديب التوصيل، تسليم طلبات العميلات، عهد الكاش، وحسابات المحافظ المنفصلة',
       icon: Bike,
-      badge: activeTripsCount > 0 ? activeTripsCount : (couriers?.length || undefined),
+      badge: deliveryOrders.filter(d => d.status === 'out_for_delivery' || d.status === 'pending_dispatch').length || (couriers?.length || undefined),
       color: 'blue'
     },
     {
@@ -165,6 +166,14 @@ export const Navigation: React.FC<NavigationProps> = ({
       icon: Receipt,
       badge: expenses.length,
       color: 'rose'
+    },
+    {
+      id: 'workers',
+      label: 'العمال والصرفيات',
+      description: 'سجل العمال وصرفيات القات والعشاء والمواصلات والسلف لكل عامل',
+      icon: Users,
+      badge: workers?.length || undefined,
+      color: 'amber'
     },
     {
       id: 'shipments',

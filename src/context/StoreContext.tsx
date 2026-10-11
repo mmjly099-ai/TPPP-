@@ -28,6 +28,10 @@ import {
   Courier,
   DeliveryTrip,
   DeliveryTripItem,
+  DeliveryOrder,
+  CourierSettlement,
+  DeliveryCashCollection,
+  Worker,
   ChartAccount,
   FiscalPeriod,
   FiscalYear,
@@ -95,6 +99,7 @@ interface StoreContextType {
   installmentPlans: InstallmentPlan[];
   couriers: Courier[];
   deliveryTrips: DeliveryTrip[];
+  workers: Worker[];
   chartAccounts: ChartAccount[];
   fiscalPeriods: FiscalPeriod[];
   fiscalYears: FiscalYear[];
@@ -282,7 +287,87 @@ interface StoreContextType {
   ) => void;
   cancelDeliveryTrip: (tripId: number) => void;
   deleteDeliveryTrip: (tripId: number) => void;
+
+  // New Dedicated Delivery System Operations (نظام إدارة الموصلين والتوزيع)
+  deliveryOrders: DeliveryOrder[];
+  courierSettlements: CourierSettlement[];
+  deliveryCashCollections: DeliveryCashCollection[];
+  createDeliveryOrder: (orderData: {
+    orderId?: number | null;
+    orderNumber?: string | number;
+    shipmentNumber?: string;
+    customerName: string;
+    customerPhone: string;
+    governorate: string;
+    district?: string;
+    address: string;
+    courierId: number;
+    dispatchDate?: string;
+    orderOriginalValue?: number;
+    orderRemainingAmount?: number;
+    deliveryFee: number;
+    collectionMethod?: 'cash_to_courier' | 'transfer_to_wallet' | 'waived' | 'unassigned';
+    walletId?: number;
+    walletReference?: string;
+    notes?: string;
+  }) => DeliveryOrder;
+  updateDeliveryOrderStatus: (
+    deliveryId: number,
+    status: DeliveryOrder['status'],
+    details?: {
+      failedReason?: string;
+      deliveredAt?: string;
+      collectionMethod?: DeliveryOrder['collectionMethod'];
+      walletId?: number;
+      walletReference?: string;
+    }
+  ) => void;
+  updateDeliveryOrder: (order: DeliveryOrder) => void;
+  deleteDeliveryOrder: (deliveryId: number) => void;
+  recordDeliveryCashToCourier: (deliveryId: number, notes?: string) => void;
+  recordDeliveryTransferToWallet: (params: {
+    deliveryId: number;
+    walletId: number;
+    referenceNumber?: string;
+    transferDate?: string;
+    notes?: string;
+  }) => void;
+  receiveCashFromCourier: (params: {
+    courierId: number;
+    amount: number;
+    depositAccountId?: number; // إذا تم إيداعه في محفظة أو صندوق
+    receivedDate?: string;
+    notes?: string;
+  }) => DeliveryCashCollection;
+  settleCourierPayable: (params: {
+    courierId: number;
+    amount: number;
+    walletId: number;
+    paymentDate: string;
+    referenceNumber?: string;
+    notes?: string;
+  }) => CourierSettlement;
+  cancelCourierSettlement: (settlementId: number, reason?: string) => void;
   
+  // Workers Management (قسم العمال والصرفيات)
+  addWorker: (worker: Omit<Worker, 'id' | 'createdAt'>) => Worker;
+  updateWorker: (worker: Worker) => void;
+  deleteWorker: (id: number) => void;
+  addWorkerExpense: (params: {
+    workerId: number;
+    workerName: string;
+    category: string;
+    amount: number;
+    accountId: number;
+    description?: string;
+    notes?: string;
+  }) => void;
+
+  // Cloud Synchronization (التزامن السحابي الفوري)
+  isSyncing: boolean;
+  lastSyncTime: string | null;
+  syncWithServer: () => Promise<void>;
+
   // Marketing & Batches
   addMarketingCampaign: (campaign: Omit<MarketingCampaign, 'id' | 'campaignNumber' | 'actualSpend' | 'createdAt'>) => void;
   updateMarketingCampaign: (campaign: MarketingCampaign) => void;
@@ -375,6 +460,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               otherReceivables: Array.isArray(parsed.tables.otherReceivables) && parsed.tables.otherReceivables.length > 0 ? parsed.tables.otherReceivables : (INITIAL_DATA.tables.otherReceivables || []),
               couriers: Array.isArray(parsed.tables.couriers) && parsed.tables.couriers.length > 0 ? parsed.tables.couriers : (INITIAL_DATA.tables.couriers || []),
               deliveryTrips: Array.isArray(parsed.tables.deliveryTrips) ? parsed.tables.deliveryTrips : [],
+              deliveryOrders: Array.isArray(parsed.tables.deliveryOrders) ? parsed.tables.deliveryOrders : [],
+              courierSettlements: Array.isArray(parsed.tables.courierSettlements) ? parsed.tables.courierSettlements : [],
+              deliveryCashCollections: Array.isArray(parsed.tables.deliveryCashCollections) ? parsed.tables.deliveryCashCollections : [],
+              workers: Array.isArray(parsed.tables.workers) && parsed.tables.workers.length > 0 ? parsed.tables.workers : (INITIAL_DATA.tables.workers || []),
               chartAccounts: Array.isArray(parsed.tables.chartAccounts) && parsed.tables.chartAccounts.length > 0 ? parsed.tables.chartAccounts : DEFAULT_CHART_OF_ACCOUNTS,
               fiscalPeriods: Array.isArray(parsed.tables.fiscalPeriods) && parsed.tables.fiscalPeriods.length > 0 ? parsed.tables.fiscalPeriods : DEFAULT_FISCAL_PERIODS,
               fiscalYears: Array.isArray(parsed.tables.fiscalYears) && parsed.tables.fiscalYears.length > 0 ? parsed.tables.fiscalYears : DEFAULT_FISCAL_YEARS,
@@ -400,10 +489,65 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, 4500);
   };
 
-  // Persist to localStorage
+  // Cloud Synchronization state
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
+
+  // Sync pull from server
+  const syncWithServer = async () => {
+    try {
+      setIsSyncing(true);
+      const res = await fetch('/api/sync/pull');
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data && json.data.tables) {
+          setData(json.data);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(json.data));
+          setLastSyncTime(new Date().toLocaleTimeString('ar-YE'));
+        }
+      }
+    } catch (err) {
+      console.warn('Server sync notice: operating offline/local', err);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  // Push updates to server whenever data changes & persist to localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+
+    const timer = setTimeout(async () => {
+      try {
+        await fetch('/api/sync/push', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data })
+        });
+        setLastSyncTime(new Date().toLocaleTimeString('ar-YE'));
+      } catch (e) {
+        // Fallback silently if network offline
+      }
+    }, 600);
+
+    return () => clearTimeout(timer);
   }, [data]);
+
+  // Initial pull and periodic 15-second heartbeat sync for cross-device/mobile sync
+  useEffect(() => {
+    syncWithServer();
+    const interval = setInterval(() => {
+      syncWithServer();
+    }, 15000);
+
+    const onFocus = () => syncWithServer();
+    window.addEventListener('focus', onFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, []);
 
   // Quick settings dictionary
   const settings = useMemo(() => {
@@ -537,6 +681,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const installmentPlans = data.tables.installmentPlans || [];
   const couriers = data.tables.couriers || INITIAL_DATA.tables.couriers || [];
   const deliveryTrips = data.tables.deliveryTrips || [];
+  const deliveryOrders: DeliveryOrder[] = data.tables.deliveryOrders || [];
+  const courierSettlements: CourierSettlement[] = data.tables.courierSettlements || [];
+  const deliveryCashCollections: DeliveryCashCollection[] = data.tables.deliveryCashCollections || [];
+  const workers = data.tables.workers || INITIAL_DATA.tables.workers || [];
   const chartAccounts = data.tables.chartAccounts && data.tables.chartAccounts.length > 0 ? data.tables.chartAccounts : DEFAULT_CHART_OF_ACCOUNTS;
   const fiscalPeriods = data.tables.fiscalPeriods && data.tables.fiscalPeriods.length > 0 ? data.tables.fiscalPeriods : DEFAULT_FISCAL_PERIODS;
   const fiscalYears = data.tables.fiscalYears && data.tables.fiscalYears.length > 0 ? data.tables.fiscalYears : DEFAULT_FISCAL_YEARS;
@@ -3255,6 +3403,75 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     addAuditLog('DELETE', 'courier', `تم حذف الموصل #${id}`, id);
   };
 
+  // Workers Operations
+  const addWorker = (workerInput: Omit<Worker, 'id' | 'createdAt'>): Worker => {
+    const id = Date.now();
+    const newWorker: Worker = {
+      ...workerInput,
+      id,
+      status: workerInput.status || 'active',
+      createdAt: new Date().toISOString()
+    };
+
+    setData(prev => ({
+      ...prev,
+      tables: {
+        ...prev.tables,
+        workers: [newWorker, ...(prev.tables.workers || INITIAL_DATA.tables.workers || [])]
+      }
+    }));
+
+    addAuditLog('CREATE', 'worker', `تم تسجيل عامل جديد: ${newWorker.name} (${newWorker.role})`, id);
+    showNotification(`تمت إضافة العامل ${newWorker.name} بنجاح`, 'success');
+    return newWorker;
+  };
+
+  const updateWorker = (updated: Worker) => {
+    setData(prev => ({
+      ...prev,
+      tables: {
+        ...prev.tables,
+        workers: (prev.tables.workers || INITIAL_DATA.tables.workers || []).map(w => w.id === updated.id ? updated : w)
+      }
+    }));
+    addAuditLog('UPDATE', 'worker', `تم تحديث بيانات العامل: ${updated.name}`, updated.id);
+    showNotification(`تم تحديث بيانات العامل ${updated.name}`, 'success');
+  };
+
+  const deleteWorker = (id: number) => {
+    const target = (data.tables.workers || INITIAL_DATA.tables.workers || []).find(w => w.id === id);
+    setData(prev => ({
+      ...prev,
+      tables: {
+        ...prev.tables,
+        workers: (prev.tables.workers || INITIAL_DATA.tables.workers || []).filter(w => w.id !== id)
+      }
+    }));
+    addAuditLog('DELETE', 'worker', `تم حذف العامل #${id}`, id);
+    showNotification(`تم حذف العامل ${target?.name || ''}`, 'success');
+  };
+
+  const addWorkerExpense = (params: {
+    workerId: number;
+    workerName: string;
+    category: string;
+    amount: number;
+    accountId: number;
+    description?: string;
+    notes?: string;
+  }) => {
+    const desc = params.description || `صرفية ${params.category} للعامل ${params.workerName}`;
+    addExpense({
+      category: params.category,
+      vendorName: params.workerName,
+      amount: params.amount,
+      accountId: params.accountId,
+      description: desc,
+      notes: params.notes || `صرفية عامل: ${params.workerName}`
+    });
+    showNotification(`تم تسجيل صرفية ${params.category} للعامل ${params.workerName} بمبلغ ${params.amount.toLocaleString()} ريال بنجاح`, 'success');
+  };
+
   const createDeliveryTrip = (tripData: {
     courierId: number;
     date: string;
@@ -3590,6 +3807,518 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         deliveryTrips: (prev.tables.deliveryTrips || []).filter(t => t.id !== tripId)
       }
     }));
+  };
+
+  // ----------------------------------------------------
+  // DEDICATED DELIVERY SYSTEM (إدارة الموصلين والتوزيع المستقل)
+  // ----------------------------------------------------
+  const createDeliveryOrder = (orderData: {
+    orderId?: number | null;
+    orderNumber?: string | number;
+    shipmentNumber?: string;
+    customerName: string;
+    customerPhone: string;
+    governorate: string;
+    district?: string;
+    address: string;
+    courierId: number;
+    dispatchDate?: string;
+    orderOriginalValue?: number;
+    orderRemainingAmount?: number;
+    deliveryFee: number;
+    collectionMethod?: 'cash_to_courier' | 'transfer_to_wallet' | 'waived' | 'unassigned';
+    walletId?: number;
+    walletReference?: string;
+    notes?: string;
+  }): DeliveryOrder => {
+    const courier = (data.tables.couriers || []).find(c => c.id === orderData.courierId);
+    const id = Date.now();
+    const deliveryNumber = `DLV-${Date.now().toString().slice(-6)}`;
+    const nowStr = new Date().toISOString();
+
+    const newDelivery: DeliveryOrder = {
+      id,
+      deliveryNumber,
+      orderId: orderData.orderId || null,
+      orderNumber: orderData.orderNumber || (orderData.orderId ? String(orderData.orderId) : 'مباشر'),
+      shipmentNumber: orderData.shipmentNumber || '',
+      customerName: orderData.customerName,
+      customerPhone: orderData.customerPhone,
+      governorate: orderData.governorate || 'صنعاء',
+      district: orderData.district || '',
+      address: orderData.address,
+      courierId: orderData.courierId,
+      courierName: courier?.name || 'مندوب توصيل',
+      dispatchDate: orderData.dispatchDate || nowStr,
+      orderOriginalValue: Number(orderData.orderOriginalValue) || 0,
+      orderRemainingAmount: Number(orderData.orderRemainingAmount) || 0,
+      deliveryFee: Number(orderData.deliveryFee) || (courier?.defaultDeliveryFee || 1500),
+      status: 'pending_dispatch',
+      collectionMethod: orderData.collectionMethod || 'unassigned',
+      collectionStatus: 'pending',
+      walletId: orderData.walletId,
+      walletName: orderData.walletId ? accounts.find(a => a.id === orderData.walletId)?.name : undefined,
+      walletReference: orderData.walletReference,
+      notes: orderData.notes,
+      createdAt: nowStr
+    };
+
+    setData(prev => ({
+      ...prev,
+      tables: {
+        ...prev.tables,
+        deliveryOrders: [newDelivery, ...(prev.tables.deliveryOrders || [])]
+      }
+    }));
+
+    addAuditLog('CREATE', 'deliveryOrder', `إسناد طلب توصيل جديد #${deliveryNumber} للعميلة ${orderData.customerName} إلى الموصل ${courier?.name}`, id);
+    showNotification(`تم تسجيل طلب التوصيل #${deliveryNumber} بنجاح`, 'success');
+    return newDelivery;
+  };
+
+  const updateDeliveryOrderStatus = (
+    deliveryId: number,
+    status: DeliveryOrder['status'],
+    details?: {
+      failedReason?: string;
+      deliveredAt?: string;
+      collectionMethod?: DeliveryOrder['collectionMethod'];
+      walletId?: number;
+      walletReference?: string;
+    }
+  ) => {
+    const delivery = (data.tables.deliveryOrders || []).find(d => d.id === deliveryId);
+    if (!delivery) return;
+
+    const courier = (data.tables.couriers || []).find(c => c.id === delivery.courierId);
+    const nowStr = new Date().toISOString();
+    const todayStr = nowStr.split('T')[0];
+
+    // Determine collection changes
+    let nextCollectionMethod = details?.collectionMethod || delivery.collectionMethod;
+    let nextCollectionStatus = delivery.collectionStatus;
+    let custodyDelta = 0; // change in courier custody
+    let walletDepositTrx: FinancialTransaction | null = null;
+
+    if (status === 'delivered') {
+      if (nextCollectionMethod === 'cash_to_courier') {
+        // Cash collected by courier: added to courier's custody
+        nextCollectionStatus = 'collected_cash';
+        if (delivery.collectionStatus !== 'collected_cash') {
+          custodyDelta = delivery.deliveryFee;
+        }
+      } else if (nextCollectionMethod === 'transfer_to_wallet' && details?.walletId) {
+        // Customer transferred delivery fee to store wallet
+        nextCollectionStatus = 'transferred_to_wallet';
+        const targetWallet = accounts.find(a => a.id === details.walletId);
+        if (targetWallet && delivery.collectionStatus !== 'transferred_to_wallet') {
+          const trxId = Date.now();
+          walletDepositTrx = {
+            id: trxId,
+            transactionNumber: `TRX-DLV-WAL-${Date.now().toString().slice(-6)}`,
+            transactionDate: nowStr,
+            accountId: details.walletId,
+            type: 'deposit',
+            amount: delivery.deliveryFee,
+            description: `أجرة توصيل محولة من العميلة ${delivery.customerName} للطلب #${delivery.orderNumber} (حساب توصيل منفصل)`,
+            referenceNumber: details.walletReference,
+            createdAt: nowStr
+          };
+        }
+      }
+    } else if (status === 'cancelled' || status === 'returned' || status === 'delivery_failed') {
+      // Revert custody if it was previously collected cash
+      if (delivery.collectionStatus === 'collected_cash') {
+        custodyDelta = -delivery.deliveryFee;
+        nextCollectionStatus = 'pending';
+      }
+    }
+
+    setData(prev => {
+      const updatedCouriers = (prev.tables.couriers || []).map(c => {
+        if (c.id !== delivery.courierId) return c;
+        const currentCustody = Number(c.currentCustodyBalance) || 0;
+        const deliveredCount = Number(c.deliveredOrdersCount) || 0;
+        return {
+          ...c,
+          currentCustodyBalance: Math.max(0, currentCustody + custodyDelta),
+          deliveredOrdersCount: status === 'delivered' && delivery.status !== 'delivered' ? deliveredCount + 1 : deliveredCount
+        };
+      });
+
+      const updatedDeliveries = (prev.tables.deliveryOrders || []).map(d => {
+        if (d.id !== deliveryId) return d;
+        return {
+          ...d,
+          status,
+          collectionMethod: nextCollectionMethod,
+          collectionStatus: nextCollectionStatus,
+          walletId: details?.walletId !== undefined ? details.walletId : d.walletId,
+          walletName: details?.walletId ? accounts.find(a => a.id === details.walletId)?.name : d.walletName,
+          walletReference: details?.walletReference !== undefined ? details.walletReference : d.walletReference,
+          failedReason: details?.failedReason,
+          deliveredAt: status === 'delivered' ? (details?.deliveredAt || todayStr) : d.deliveredAt
+        };
+      });
+
+      const nextTrx = walletDepositTrx
+        ? [walletDepositTrx, ...(prev.tables.financialTransactions || [])]
+        : prev.tables.financialTransactions;
+
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          deliveryOrders: updatedDeliveries,
+          couriers: updatedCouriers,
+          financialTransactions: nextTrx
+        }
+      };
+    });
+
+    addAuditLog('UPDATE', 'deliveryOrder', `تحديث حالة طلب التوصيل #${delivery.deliveryNumber} إلى ${status}`, deliveryId);
+    showNotification(`تم تحديث حالة طلب التوصيل #${delivery.deliveryNumber}`, 'success');
+  };
+
+  const updateDeliveryOrder = (updated: DeliveryOrder) => {
+    setData(prev => ({
+      ...prev,
+      tables: {
+        ...prev.tables,
+        deliveryOrders: (prev.tables.deliveryOrders || []).map(d => d.id === updated.id ? updated : d)
+      }
+    }));
+    addAuditLog('UPDATE', 'deliveryOrder', `تعديل بيانات طلب التوصيل #${updated.deliveryNumber}`, updated.id);
+  };
+
+  const deleteDeliveryOrder = (deliveryId: number) => {
+    const delivery = (data.tables.deliveryOrders || []).find(d => d.id === deliveryId);
+    if (!delivery) return;
+
+    // If courier held cash custody, deduct it safely
+    let custodyAdjustment = 0;
+    if (delivery.collectionStatus === 'collected_cash') {
+      custodyAdjustment = -delivery.deliveryFee;
+    }
+
+    setData(prev => ({
+      ...prev,
+      tables: {
+        ...prev.tables,
+        couriers: custodyAdjustment !== 0
+          ? (prev.tables.couriers || []).map(c => c.id === delivery.courierId ? { ...c, currentCustodyBalance: Math.max(0, (c.currentCustodyBalance || 0) + custodyAdjustment) } : c)
+          : prev.tables.couriers,
+        deliveryOrders: (prev.tables.deliveryOrders || []).filter(d => d.id !== deliveryId)
+      }
+    }));
+
+    addAuditLog('DELETE', 'deliveryOrder', `حذف طلب التوصيل #${delivery.deliveryNumber}`, deliveryId);
+    showNotification(`تم حذف طلب التوصيل بنجاح`, 'success');
+  };
+
+  const recordDeliveryCashToCourier = (deliveryId: number, notes?: string) => {
+    const delivery = (data.tables.deliveryOrders || []).find(d => d.id === deliveryId);
+    if (!delivery) return;
+
+    // If already recorded as cash, prevent duplicate
+    if (delivery.collectionStatus === 'collected_cash') {
+      showNotification('تم تسجيل التحصيل النقدي لهذا الطلب مسبقاً', 'warning');
+      return;
+    }
+
+    setData(prev => {
+      const updatedCouriers = (prev.tables.couriers || []).map(c => {
+        if (c.id !== delivery.courierId) return c;
+        return {
+          ...c,
+          currentCustodyBalance: (Number(c.currentCustodyBalance) || 0) + delivery.deliveryFee
+        };
+      });
+
+      const updatedDeliveries = (prev.tables.deliveryOrders || []).map(d => {
+        if (d.id !== deliveryId) return d;
+        return {
+          ...d,
+          collectionMethod: 'cash_to_courier' as const,
+          collectionStatus: 'collected_cash' as const,
+          collectedAt: new Date().toISOString(),
+          notes: notes ? (d.notes ? `${d.notes} | ${notes}` : notes) : d.notes
+        };
+      });
+
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          deliveryOrders: updatedDeliveries,
+          couriers: updatedCouriers
+        }
+      };
+    });
+
+    addAuditLog('UPDATE', 'deliveryOrder', `تسجيل دفع أجرة التوصيل ${delivery.deliveryFee} ريال نقداً لعهدة الموصل ${delivery.courierName} للطلب #${delivery.deliveryNumber}`, deliveryId);
+    showNotification(`تم قيد أجرة التوصيل في عهدة الموصل ${delivery.courierName} بنجاح`, 'success');
+  };
+
+  const recordDeliveryTransferToWallet = (params: {
+    deliveryId: number;
+    walletId: number;
+    referenceNumber?: string;
+    transferDate?: string;
+    notes?: string;
+  }) => {
+    const delivery = (data.tables.deliveryOrders || []).find(d => d.id === params.deliveryId);
+    if (!delivery) return;
+
+    // Prevent duplicate recording
+    if (delivery.collectionStatus === 'transferred_to_wallet') {
+      showNotification('تم تسجيل التحويل إلى المحفظة لهذا الطلب مسبقاً', 'warning');
+      return;
+    }
+
+    const wallet = accounts.find(a => a.id === params.walletId);
+    const nowStr = new Date().toISOString();
+    const trxId = Date.now();
+
+    // Independent delivery wallet deposit transaction
+    const walletDepositTrx: FinancialTransaction = {
+      id: trxId,
+      transactionNumber: `TRX-DLV-${Date.now().toString().slice(-6)}`,
+      transactionDate: params.transferDate || nowStr,
+      accountId: params.walletId,
+      type: 'deposit',
+      amount: delivery.deliveryFee,
+      description: `أجرة توصيل محولة لمحفظة ${wallet?.name || ''} للطلب #${delivery.orderNumber} (العميلة ${delivery.customerName})`,
+      referenceNumber: params.referenceNumber,
+      createdAt: nowStr
+    };
+
+    // If courier previously held it as cash, remove from courier's custody
+    const wasCash = delivery.collectionStatus === 'collected_cash';
+
+    setData(prev => {
+      const updatedCouriers = wasCash
+        ? (prev.tables.couriers || []).map(c => c.id === delivery.courierId ? { ...c, currentCustodyBalance: Math.max(0, (c.currentCustodyBalance || 0) - delivery.deliveryFee) } : c)
+        : prev.tables.couriers;
+
+      const updatedDeliveries = (prev.tables.deliveryOrders || []).map(d => {
+        if (d.id !== params.deliveryId) return d;
+        return {
+          ...d,
+          collectionMethod: 'transfer_to_wallet' as const,
+          collectionStatus: 'transferred_to_wallet' as const,
+          walletId: params.walletId,
+          walletName: wallet?.name,
+          walletReference: params.referenceNumber,
+          collectedAt: nowStr,
+          notes: params.notes ? (d.notes ? `${d.notes} | ${params.notes}` : params.notes) : d.notes
+        };
+      });
+
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          deliveryOrders: updatedDeliveries,
+          couriers: updatedCouriers,
+          financialTransactions: [walletDepositTrx, ...(prev.tables.financialTransactions || [])]
+        }
+      };
+    });
+
+    addAuditLog('CREATE', 'financialTransaction', `إيداع أجرة توصيل ${delivery.deliveryFee} ريال في محفظة ${wallet?.name} للطلب #${delivery.deliveryNumber}`, trxId);
+    showNotification(`تم إيداع أجرة التوصيل في محفظة ${wallet?.name} بنجاح`, 'success');
+  };
+
+  const receiveCashFromCourier = (params: {
+    courierId: number;
+    amount: number;
+    depositAccountId?: number;
+    receivedDate?: string;
+    notes?: string;
+  }): DeliveryCashCollection => {
+    const courier = (data.tables.couriers || []).find(c => c.id === params.courierId);
+    const amount = Number(params.amount) || 0;
+    const nowStr = new Date().toISOString();
+    const id = Date.now();
+    const receiptNumber = `DCR-${Date.now().toString().slice(-6)}`;
+    const depositAcc = params.depositAccountId ? accounts.find(a => a.id === params.depositAccountId) : undefined;
+
+    const collection: DeliveryCashCollection = {
+      id,
+      receiptNumber,
+      courierId: params.courierId,
+      courierName: courier?.name || 'مندوب توصيل',
+      amount,
+      receivedDate: params.receivedDate || nowStr.split('T')[0],
+      receivedIntoAccountId: params.depositAccountId,
+      receivedIntoAccountName: depositAcc?.name,
+      notes: params.notes,
+      status: 'confirmed',
+      createdAt: nowStr,
+      createdByName: 'إدارة توب ستور'
+    };
+
+    let newTrx: FinancialTransaction | null = null;
+    if (params.depositAccountId && depositAcc) {
+      newTrx = {
+        id: id + 1,
+        transactionNumber: `TRX-DCR-${Date.now().toString().slice(-6)}`,
+        transactionDate: nowStr,
+        accountId: params.depositAccountId,
+        type: 'deposit',
+        amount,
+        description: `توريد عهدة نقدية من الموصل ${courier?.name || ''} بموجب سند #${receiptNumber}`,
+        createdAt: nowStr
+      };
+    }
+
+    setData(prev => {
+      const updatedCouriers = (prev.tables.couriers || []).map(c => {
+        if (c.id !== params.courierId) return c;
+        return {
+          ...c,
+          currentCustodyBalance: Math.max(0, (Number(c.currentCustodyBalance) || 0) - amount)
+        };
+      });
+
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          couriers: updatedCouriers,
+          deliveryCashCollections: [collection, ...(prev.tables.deliveryCashCollections || [])],
+          financialTransactions: newTrx ? [newTrx, ...(prev.tables.financialTransactions || [])] : prev.tables.financialTransactions
+        }
+      };
+    });
+
+    addAuditLog('CREATE', 'deliveryCashCollection', `استلام نقدية عهدة ${amount} ريال من الموصل ${courier?.name} بسند #${receiptNumber}`, id);
+    showNotification(`تم تسجيل استلام النقدية من الموصل ${courier?.name} وتحديث عهدته بنجاح`, 'success');
+    return collection;
+  };
+
+  const settleCourierPayable = (params: {
+    courierId: number;
+    amount: number;
+    walletId: number;
+    paymentDate: string;
+    referenceNumber?: string;
+    notes?: string;
+  }): CourierSettlement => {
+    const courier = (data.tables.couriers || []).find(c => c.id === params.courierId);
+    const wallet = accounts.find(a => a.id === params.walletId);
+    const amount = Number(params.amount) || 0;
+    const nowStr = new Date().toISOString();
+    const id = Date.now();
+    const settlementNumber = `STL-${Date.now().toString().slice(-6)}`;
+
+    const settlement: CourierSettlement = {
+      id,
+      settlementNumber,
+      courierId: params.courierId,
+      courierName: courier?.name || 'مندوب توصيل',
+      amount,
+      walletId: params.walletId,
+      walletName: wallet?.name || 'محفظة',
+      paymentDate: params.paymentDate || nowStr.split('T')[0],
+      referenceNumber: params.referenceNumber,
+      type: 'fee_payment',
+      notes: params.notes,
+      status: 'confirmed',
+      createdAt: nowStr,
+      createdByName: 'إدارة توب ستور'
+    };
+
+    // Financial transaction for payout from wallet (Isolated from brokerage expenses!)
+    const payoutTrx: FinancialTransaction = {
+      id: id + 1,
+      transactionNumber: `TRX-STL-${Date.now().toString().slice(-6)}`,
+      transactionDate: nowStr,
+      accountId: params.walletId,
+      type: 'withdrawal',
+      amount,
+      description: `تسوية وصرف مستحقات الموصل ${courier?.name || ''} بموجب تسوية #${settlementNumber}`,
+      referenceNumber: params.referenceNumber,
+      createdAt: nowStr
+    };
+
+    setData(prev => {
+      const updatedCouriers = (prev.tables.couriers || []).map(c => {
+        if (c.id !== params.courierId) return c;
+        const currentPayable = Number(c.currentPayableBalance) || 0;
+        return {
+          ...c,
+          currentPayableBalance: Math.max(0, currentPayable - amount)
+        };
+      });
+
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          couriers: updatedCouriers,
+          courierSettlements: [settlement, ...(prev.tables.courierSettlements || [])],
+          financialTransactions: [payoutTrx, ...(prev.tables.financialTransactions || [])]
+        }
+      };
+    });
+
+    addAuditLog('CREATE', 'courierSettlement', `صرف تسوية بمبلغ ${amount} ريال للموصل ${courier?.name} من محفظة ${wallet?.name} برقم #${settlementNumber}`, id);
+    showNotification(`تم تأكيد صرف تسوية الموصل بمبلغ ${amount.toLocaleString()} ريال بنجاح`, 'success');
+    return settlement;
+  };
+
+  const cancelCourierSettlement = (settlementId: number, reason?: string) => {
+    const settlement = (data.tables.courierSettlements || []).find(s => s.id === settlementId);
+    if (!settlement || settlement.status === 'cancelled') return;
+
+    const nowStr = new Date().toISOString();
+    const reverseTrxId = Date.now();
+
+    // Reverse transaction into wallet
+    const reverseTrx: FinancialTransaction = {
+      id: reverseTrxId,
+      transactionNumber: `TRX-REV-STL-${Date.now().toString().slice(-6)}`,
+      transactionDate: nowStr,
+      accountId: settlement.walletId,
+      type: 'deposit',
+      amount: settlement.amount,
+      description: `إلغاء وقيد عكسي لتسوية الموصل #${settlement.settlementNumber} (${settlement.courierName}) - سبب: ${reason || 'إلغاء التسوية'}`,
+      createdAt: nowStr
+    };
+
+    setData(prev => {
+      const updatedCouriers = (prev.tables.couriers || []).map(c => {
+        if (c.id !== settlement.courierId) return c;
+        return {
+          ...c,
+          currentPayableBalance: (Number(c.currentPayableBalance) || 0) + settlement.amount
+        };
+      });
+
+      const updatedSettlements = (prev.tables.courierSettlements || []).map(s => {
+        if (s.id !== settlementId) return s;
+        return {
+          ...s,
+          status: 'cancelled' as const,
+          notes: reason ? `${s.notes || ''} | تم الإلغاء: ${reason}` : `${s.notes || ''} | ملغي`
+        };
+      });
+
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          couriers: updatedCouriers,
+          courierSettlements: updatedSettlements,
+          financialTransactions: [reverseTrx, ...(prev.tables.financialTransactions || [])]
+        }
+      };
+    });
+
+    addAuditLog('CANCEL', 'courierSettlement', `إلغاء تسوية الموصل #${settlement.settlementNumber} واستعادة ${settlement.amount} ريال للمحفظة`, settlementId);
+    showNotification(`تم إلغاء التسوية واسترجاع المبلغ للمحفظة بنجاح`, 'success');
   };
 
   // Audit Log Action
@@ -4174,6 +4903,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         installmentPlans,
         couriers,
         deliveryTrips,
+        workers,
+        isSyncing,
+        lastSyncTime,
+        syncWithServer,
         chartAccounts,
         fiscalPeriods,
         fiscalYears,
@@ -4233,10 +4966,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         addCourier,
         updateCourier,
         deleteCourier,
+        addWorker,
+        updateWorker,
+        deleteWorker,
+        addWorkerExpense,
         createDeliveryTrip,
         settleDeliveryTrip,
         cancelDeliveryTrip,
         deleteDeliveryTrip,
+        deliveryOrders,
+        courierSettlements,
+        deliveryCashCollections,
+        createDeliveryOrder,
+        updateDeliveryOrderStatus,
+        updateDeliveryOrder,
+        deleteDeliveryOrder,
+        recordDeliveryCashToCourier,
+        recordDeliveryTransferToWallet,
+        receiveCashFromCourier,
+        settleCourierPayable,
+        cancelCourierSettlement,
         addMarketingCampaign,
         updateMarketingCampaign,
         deleteMarketingCampaign,

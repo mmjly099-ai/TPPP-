@@ -9,7 +9,8 @@ import {
   Sparkles,
   Phone,
   MapPin,
-  RefreshCw
+  RefreshCw,
+  Lock
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 
@@ -24,6 +25,7 @@ interface HeaderProps {
   onOpenBackup: () => void;
   onOpenAssistant: () => void;
   onNavigate?: (tab: NavTab) => void;
+  onLock?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -33,9 +35,10 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenPayment,
   onOpenBackup,
   onOpenAssistant,
-  onNavigate
+  onNavigate,
+  onLock
 }) => {
-  const { settings, totalCashAndBanks, totalCustomerDebts } = useStore();
+  const { settings, totalCashAndBanks, totalCustomerDebts, isSyncing, lastSyncTime, syncWithServer } = useStore();
 
   const storeName = settings.storeName || 'TOP STORE – توب ستور';
   const businessName = settings.businessName || 'وسيط شراء وتسوق إلكتروني';
@@ -91,6 +94,28 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <FileDown className="w-4 h-4 text-amber-700" />
             </button>
+
+            <button
+              onClick={() => syncWithServer()}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-colors cursor-pointer ${
+                isSyncing
+                  ? 'bg-amber-100 text-amber-800 border-amber-300'
+                  : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+              }`}
+              title={lastSyncTime ? `متزامن سحابياً (${lastSyncTime}) - انقر للتحديث` : 'مزامنة مع السيرفر'}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-amber-600' : ''}`} />
+            </button>
+
+            {onLock && (
+              <button
+                onClick={onLock}
+                className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-slate-200 flex items-center justify-center transition-colors cursor-pointer"
+                title="قفل النظام وتسجيل الخروج"
+              >
+                <Lock className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -208,6 +233,35 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <FileUp className="w-4 h-4" />
                 <span>استيراد بيانات</span>
+              </button>
+            )}
+
+            {/* Cloud Sync Status Button */}
+            <button
+              onClick={() => syncWithServer()}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-colors cursor-pointer ${
+                isSyncing
+                  ? 'bg-amber-100 text-amber-800 border-amber-300'
+                  : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+              }`}
+              title="مزامنة فورية لكافة الأجهزة والجوالات"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-amber-600' : 'text-emerald-600'}`} />
+              <span className="hidden lg:inline">{isSyncing ? 'جارٍ التزامن...' : 'متزامن سحابياً'}</span>
+              {lastSyncTime && !isSyncing && (
+                <span className="font-mono text-[10px] text-emerald-600 hidden xl:inline">({lastSyncTime})</span>
+              )}
+            </button>
+
+            {/* Lock / Logout Button */}
+            {onLock && (
+              <button
+                onClick={onLock}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 text-xs font-bold transition-colors cursor-pointer"
+                title="قفل النظام وتسجيل الخروج"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                <span>قفل</span>
               </button>
             )}
 

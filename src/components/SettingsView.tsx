@@ -47,7 +47,7 @@ export const SettingsView: React.FC = () => {
     currencySymbol: settings.currencySymbol || 'ريال',
     purchaseSites: settings.purchaseSites || 'SHEIN، AliExpress، موقع آخر',
     defaultPurchaseAccount: settings.defaultPurchaseAccount || 'VISA CARDبنك التضامن +VISA CARD البنك التجاري',
-    expenseCategories: settings.expenseCategories || 'تسويق، إنترنت، مواصلات، رواتب، تشغيل، رسوم بنكية، رسوم تحويل، إيجار، صيانة، أخرى'
+    expenseCategories: settings.expenseCategories || 'قات، عشاء، تشغيل، إنترنت، مواصلات، رواتب، تسويق، شحن ونقل لوجستي، مصاريف عمال، رسوم بنكية، رسوم تحويل، إيجار، صيانة، أخرى'
   });
 
   const [savedSuccess, setSavedSuccess] = useState(false);

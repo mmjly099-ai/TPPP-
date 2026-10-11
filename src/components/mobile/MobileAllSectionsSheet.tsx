@@ -143,6 +143,13 @@ export const MobileAllSectionsSheet: React.FC<MobileAllSectionsSheetProps> = ({
           color: 'bg-rose-50 text-rose-700 border-rose-200'
         },
         {
+          id: 'workers',
+          label: 'العمال وصرفياتهم',
+          description: 'صرفيات القات، العشاء، المواصلات والسلف لكل عامل',
+          icon: Users,
+          color: 'bg-amber-50 text-amber-700 border-amber-200'
+        },
+        {
           id: 'journal',
           label: 'دفتر قيود اليومية المحاسبية',
           description: 'شجرة الحسابات، ميزان المراجعة، والقيد المزدوج',

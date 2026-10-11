@@ -19,6 +19,8 @@ import { InstallmentsView } from './components/InstallmentsView';
 import { CouriersView } from './components/CouriersView';
 import { DataImportView } from './components/import/DataImportView';
 import { InvoicesView } from './components/InvoicesView';
+import { WorkersView } from './components/WorkersView';
+import { SystemLockScreen } from './components/auth/SystemLockScreen';
 import { OfflineIndicator } from './components/common/OfflineIndicator';
 
 // Modals
@@ -44,8 +46,26 @@ import { MobileAllSectionsSheet } from './components/mobile/MobileAllSectionsShe
 import { Customer, Order, Payment } from './types';
 
 const MainApp: React.FC = () => {
-  const { notification } = useStore();
+  const { notification, lastSyncTime } = useStore();
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
+
+  // System password lock state (masnaamasnaa)
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    try {
+      return localStorage.getItem('topstore_auth_session') === 'authenticated_masnaamasnaa';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleLogout = () => {
+    try {
+      localStorage.removeItem('topstore_auth_session');
+    } catch (e) {
+      console.warn('Error clearing auth session', e);
+    }
+    setIsAuthenticated(false);
+  };
 
   // Mobile Bottom Sheets
   const [isMobileQuickActionsOpen, setIsMobileQuickActionsOpen] = useState(false);
@@ -113,6 +133,16 @@ const MainApp: React.FC = () => {
     setIsTransferOpen(true);
   };
 
+  // Lock Screen Check
+  if (!isAuthenticated) {
+    return (
+      <SystemLockScreen
+        onUnlock={() => setIsAuthenticated(true)}
+        syncTime={lastSyncTime}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col font-sans text-slate-800" dir="rtl">
       
@@ -156,6 +186,7 @@ const MainApp: React.FC = () => {
         onOpenBackup={() => setIsExportBackupOpen(true)}
         onOpenAssistant={() => setActiveTab('assistant')}
         onNavigate={setActiveTab}
+        onLock={handleLogout}
       />
 
       {/* Main Container with Mobile Bottom Nav Padding */}
@@ -229,8 +260,10 @@ const MainApp: React.FC = () => {
           )}
 
           {activeTab === 'expenses' && (
-            <ExpensesView onOpenNewExpense={() => setIsNewExpenseOpen(true)} />
+            <ExpensesView onOpenNewExpense={() => setIsNewExpenseOpen(true)} onNavigate={setActiveTab} />
           )}
+
+          {activeTab === 'workers' && <WorkersView />}
 
           {activeTab === 'shipments' && (
             <ShipmentsView onOpenNewShipment={() => setIsNewShipmentOpen(true)} />

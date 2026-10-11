@@ -420,12 +420,103 @@ export interface Courier {
   code: string; // e.g. "DLV-01"
   name: string;
   phone: string;
-  vehicleType?: 'دراجة نارية' | 'سيارة' | 'دباب' | 'مكتب نقل' | 'أخرى';
+  zone?: string; // المنطقة التي يعمل فيها
   coverageZones: string; // e.g. "صنعاء - عصر، الستين، حدة"
+  vehicleType?: 'دراجة نارية' | 'سيارة' | 'دباب' | 'مكتب نقل' | 'أخرى';
   defaultDeliveryFee?: number; // أجرة التوصيل الافتراضية
-  status: 'available' | 'on_delivery' | 'inactive';
-  currentCustodyBalance: number; // رصيد العهدة النقدية في ذمته حالياً
+  status: 'active' | 'inactive' | 'available' | 'on_delivery';
+  startDate?: string; // تاريخ بدء العمل
+  currentCustodyBalance: number; // رصيد العهدة النقدية المحصلة من العميلات في ذمته حالياً
+  currentPayableBalance?: number; // مستحقات الموصل التي لم تسدد له بعد
   deliveredOrdersCount?: number;
+  notes?: string;
+  createdAt: string;
+}
+
+export type DeliveryOrderStatus = 
+  | 'pending_dispatch' // بانتظار تسليم الطلب للموصل
+  | 'received_by_courier' // استلمه الموصل
+  | 'out_for_delivery' // خرج للتوصيل
+  | 'delivered' // تم التسليم
+  | 'delivery_failed' // تعذر التسليم
+  | 'returned' // أعيد الطلب
+  | 'cancelled'; // ألغي التوصيل
+
+export type DeliveryFeeCollectionMethod = 
+  | 'cash_to_courier' // العميلة تدفع نقداً للموصل (عهدة نقدية للموصل)
+  | 'transfer_to_wallet' // العميلة تحول للمحفظة (زيادة رصيد المحفظة)
+  | 'waived' // معفاة / مجانية
+  | 'unassigned'; // غير محددة بعد
+
+export interface DeliveryOrder {
+  id: number;
+  deliveryNumber: string; // DLV-ORD-2026-001
+  orderId?: number | null; // معرف الطلب في توب ستور
+  orderNumber?: string | number; // رقم طلب العميلة في توب ستور
+  shipmentNumber?: string; // رقم شحنة الطلب إن وجد
+  customerName: string;
+  customerPhone: string;
+  governorate: string; // المحافظة
+  district?: string; // المديرية
+  address: string; // العنوان التفصيلي
+  courierId: number; // الموصل المسؤول
+  courierName: string;
+  dispatchDate: string; // تاريخ ووقت استلام الموصل للطلب
+  orderOriginalValue: number; // قيمة الطلب الأصلية (للعرض والمرجعية فقط، لا تخلط بحسابات التوصيل)
+  orderRemainingAmount?: number; // المبلغ المتبقي على العميلة من قيمة الطلب
+  deliveryFee: number; // أجرة التوصيل المستحقة
+  status: DeliveryOrderStatus;
+  collectionMethod: DeliveryFeeCollectionMethod;
+  collectionStatus: 'pending' | 'collected_cash' | 'transferred_to_wallet' | 'settled';
+  walletId?: number; // المحفظة المستقبلة في حال التحويل
+  walletName?: string;
+  walletReference?: string; // الرقم المرجعي للحوالة
+  collectedAt?: string;
+  deliveredAt?: string;
+  failedReason?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface CourierSettlement {
+  id: number;
+  settlementNumber: string; // STL-2026-001
+  courierId: number;
+  courierName: string;
+  amount: number; // المبلغ المراد تسويته
+  walletId: number; // المحفظة التي تم الدفع منها
+  walletName: string;
+  paymentDate: string; // تاريخ الدفع
+  referenceNumber?: string; // رقم العملية أو مرجع التحويل
+  type: 'fee_payment' | 'cash_handover' | 'adjustment'; // دفع أجور للموصل / استلام عهدة نقدية من الموصل / تسوية
+  notes?: string;
+  status: 'confirmed' | 'cancelled';
+  createdAt: string;
+  createdByName?: string;
+}
+
+export interface DeliveryCashCollection {
+  id: number;
+  receiptNumber: string; // DCR-2026-001
+  courierId: number;
+  courierName: string;
+  amount: number;
+  receivedDate: string;
+  receivedIntoAccountId?: number; // إذا تم إيداعه في محفظة أو صندوق
+  receivedIntoAccountName?: string;
+  notes?: string;
+  status: 'confirmed' | 'cancelled';
+  createdAt: string;
+  createdByName?: string;
+}
+
+export interface Worker {
+  id: number;
+  name: string;
+  role: string;
+  phone?: string;
+  dailyWage?: number;
+  status: 'active' | 'inactive';
   notes?: string;
   createdAt: string;
 }
@@ -643,6 +734,10 @@ export interface TopStoreBackup {
     installmentPlans?: InstallmentPlan[];
     couriers?: Courier[];
     deliveryTrips?: DeliveryTrip[];
+    deliveryOrders?: DeliveryOrder[];
+    courierSettlements?: CourierSettlement[];
+    deliveryCashCollections?: DeliveryCashCollection[];
+    workers?: Worker[];
     chartAccounts?: ChartAccount[];
     fiscalPeriods?: FiscalPeriod[];
     fiscalYears?: FiscalYear[];
