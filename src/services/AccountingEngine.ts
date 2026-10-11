@@ -1,5 +1,13 @@
-import { TopStoreBackup, JournalEntry, JournalLine, Customer, Order, Payment, Expense, FinancialTransaction, ChartAccount, FiscalPeriod, FiscalYear, AppRole, Permission, IdempotencyRecord } from '../types';
+import { TopStoreBackup, JournalEntry, JournalLine, Customer, Order, Payment, Expense, FinancialTransaction, ChartAccount, AccountCategory, FiscalPeriod, FiscalYear, AppRole, Permission, IdempotencyRecord } from '../types';
 import { DEFAULT_CHART_OF_ACCOUNTS } from '../data/defaultChartOfAccounts';
+
+export function getCategoryFromCode(code: string): AccountCategory {
+  if (code.startsWith('1')) return 'asset';
+  if (code.startsWith('2')) return 'liability';
+  if (code.startsWith('3')) return 'equity';
+  if (code.startsWith('4')) return 'revenue';
+  return 'expense';
+}
 
 export interface AccountingIntegrityReport {
   isBalanced: boolean;
@@ -129,7 +137,7 @@ export function checkIdempotency(key: string, registry: IdempotencyRecord[]): { 
 /**
  * Maps any transaction or operational account name to the standardized Chart of Accounts.
  */
-export function resolveChartAccount(
+function resolveChartAccountRaw(
   accountName: string,
   side: 'debit' | 'credit' = 'debit',
   fallbackAccountId?: number | null
@@ -261,6 +269,18 @@ export function resolveChartAccount(
 
   // Default fallback to General Expenses
   return { id: 509, code: '509', name: 'مصاريف ونثريات تشغيلية متنوعة' };
+}
+
+export function resolveChartAccount(
+  accountName: string,
+  side: 'debit' | 'credit' = 'debit',
+  fallbackAccountId?: number | null
+): { id: number; code: string; name: string; category: AccountCategory } {
+  const raw = resolveChartAccountRaw(accountName, side, fallbackAccountId);
+  return {
+    ...raw,
+    category: getCategoryFromCode(raw.code)
+  };
 }
 
 export interface CustomerReconciliationItem {

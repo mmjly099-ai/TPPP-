@@ -491,6 +491,7 @@ export interface AuditLog {
   description: string;
   notes?: string;
   oldValue?: string | null;
+  previousValue?: string | null;
   newValue?: string | null;
   createdAt: string;
 }
