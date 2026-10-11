@@ -78,7 +78,7 @@ export const CourierProfileModal: React.FC<CourierProfileModalProps> = ({
     // Cash collected from customers by this courier
     const cashCollected = courierOrders
       .filter(o => o.collectionStatus === 'collected_cash' || (o.collectionMethod === 'cash_to_courier' && o.status === 'delivered'))
-      .reduce((sum, o) => sum + (Number(o.deliveryFee) || 0), 0);
+      .reduce((sum, o) => sum + (Number(o.custodyRecordedAmount) || Number(o.finalPaymentAmount) || Number(o.deliveryFee) || 0), 0);
 
     // Settled payouts from store wallets
     const totalSettledFromWallets = courierSettlementList
@@ -376,38 +376,67 @@ export const CourierProfileModal: React.FC<CourierProfileModalProps> = ({
                 <table className="w-full text-right text-xs">
                   <thead className="bg-slate-50 text-slate-700 border-b border-slate-200">
                     <tr>
-                      <th className="py-2.5 px-3 font-bold">رقم التوصيل</th>
-                      <th className="py-2.5 px-3 font-bold">طلب توب ستور</th>
+                      <th className="py-2.5 px-3 font-bold">رقم الطلب</th>
                       <th className="py-2.5 px-3 font-bold">العميلة</th>
                       <th className="py-2.5 px-3 font-bold">العنوان</th>
-                      <th className="py-2.5 px-3 font-bold">الأجرة</th>
-                      <th className="py-2.5 px-3 font-bold">طريقة التحصيل</th>
+                      <th className="py-2.5 px-3 font-bold">أجرة التوصيل</th>
+                      <th className="py-2.5 px-3 font-bold">طريقة الدفع</th>
+                      <th className="py-2.5 px-3 font-bold">الأثر في رصيد / استحقاق المندوب</th>
                       <th className="py-2.5 px-3 font-bold">الحالة</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {courierOrders.map(ord => (
-                      <tr key={ord.id} className="hover:bg-slate-50/70">
-                        <td className="py-2.5 px-3 font-mono font-bold text-slate-900">{ord.deliveryNumber}</td>
-                        <td className="py-2.5 px-3 font-bold text-blue-700">#{ord.orderNumber}</td>
-                        <td className="py-2.5 px-3 font-bold text-slate-900">{ord.customerName}</td>
-                        <td className="py-2.5 px-3 text-slate-600 truncate max-w-[150px]">{ord.address}</td>
-                        <td className="py-2.5 px-3 font-bold text-[#1A3668]">{ord.deliveryFee.toLocaleString()} ريال</td>
-                        <td className="py-2.5 px-3 text-slate-600">
-                          {ord.collectionMethod === 'cash_to_courier' ? 'نقداً للموصل' : ord.collectionMethod === 'transfer_to_wallet' ? 'محفظة' : 'معفاة'}
-                        </td>
-                        <td className="py-2.5 px-3 font-bold">
-                          <span className={`px-2 py-0.5 rounded-lg text-[10px] ${
-                            ord.status === 'delivered' ? 'bg-emerald-100 text-emerald-800' :
-                            ord.status === 'out_for_delivery' ? 'bg-amber-100 text-amber-800' :
-                            ord.status === 'delivery_failed' || ord.status === 'returned' ? 'bg-rose-100 text-rose-800' :
-                            'bg-slate-100 text-slate-700'
-                          }`}>
-                            {ord.status === 'delivered' ? 'تم التسليم' : ord.status === 'out_for_delivery' ? 'خرج للتوصيل' : ord.status === 'delivery_failed' ? 'تعذر' : ord.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                    {courierOrders.map(ord => {
+                      const custodyAmt = Number(ord.custodyRecordedAmount) || Number(ord.finalPaymentAmount) || Number(ord.deliveryFee) || 0;
+                      const payableAmt = Number(ord.payableRecordedAmount) || Number(ord.deliveryFee) || 0;
+                      return (
+                        <tr key={ord.id} className="hover:bg-slate-50/70">
+                          <td className="py-2.5 px-3 font-black text-[#1A3668]">
+                            طلب رقم #{ord.orderNumber}
+                            <span className="block font-mono text-[10px] text-slate-400 font-normal">{ord.deliveryNumber}</span>
+                          </td>
+                          <td className="py-2.5 px-3 font-bold text-slate-900">{ord.customerName}</td>
+                          <td className="py-2.5 px-3 text-slate-600 truncate max-w-[140px]">{ord.address}</td>
+                          <td className="py-2.5 px-3 font-bold text-[#1A3668]">{ord.deliveryFee.toLocaleString()} ريال</td>
+                          <td className="py-2.5 px-3 font-bold">
+                            {ord.collectionMethod === 'cash_to_courier' ? (
+                              <span className="text-amber-900 bg-amber-100 px-2 py-0.5 rounded-md text-[10px]">
+                                نقدي للمندوب نفسه
+                              </span>
+                            ) : ord.collectionMethod === 'transfer_to_wallet' ? (
+                              <span className="text-blue-900 bg-blue-100 px-2 py-0.5 rounded-md text-[10px]">
+                                محفظة ({ord.walletName || 'تحويل'})
+                              </span>
+                            ) : (
+                              <span className="text-slate-500 text-[10px]">معفاة</span>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-3 font-bold">
+                            {ord.collectionMethod === 'cash_to_courier' ? (
+                              <span className="text-amber-800 text-[11px] font-black">
+                                برصيد المندوب: طلب رقم #{ord.orderNumber} ({custodyAmt.toLocaleString()} ريال)
+                              </span>
+                            ) : ord.collectionMethod === 'transfer_to_wallet' ? (
+                              <span className="text-purple-800 text-[11px] font-black">
+                                استحقاق للمندوب عندنا: {payableAmt.toLocaleString()} ريال
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">—</span>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-3 font-bold">
+                            <span className={`px-2 py-0.5 rounded-lg text-[10px] ${
+                              ord.status === 'delivered' ? 'bg-emerald-100 text-emerald-800' :
+                              ord.status === 'out_for_delivery' ? 'bg-amber-100 text-amber-800' :
+                              ord.status === 'delivery_failed' || ord.status === 'returned' ? 'bg-rose-100 text-rose-800' :
+                              'bg-slate-100 text-slate-700'
+                            }`}>
+                              {ord.status === 'delivered' ? 'تم التسليم' : ord.status === 'out_for_delivery' ? 'خرج للتوصيل' : ord.status === 'delivery_failed' ? 'تعذر' : ord.status}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                     {courierOrders.length === 0 && (
                       <tr>
                         <td colSpan={7} className="py-6 text-center text-slate-400">

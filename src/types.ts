@@ -128,6 +128,10 @@ export interface Payment {
   method?: string;
   deliverySettlementStatus?: string;
   paymentType?: 'دفعة أولى' | 'دفعة لاحقة' | 'دفعة نهائية' | string;
+  courierId?: number | null;
+  courierName?: string | null;
+  deliveryCollectionMethod?: 'cash_to_courier' | 'transfer_to_wallet' | 'unassigned' | null;
+  deliveryFee?: number;
   statement?: string;
   notes?: string | null;
   reversalReason?: string | null;
@@ -454,6 +458,7 @@ export interface DeliveryOrder {
   deliveryNumber: string; // DLV-ORD-2026-001
   orderId?: number | null; // معرف الطلب في توب ستور
   orderNumber?: string | number; // رقم طلب العميلة في توب ستور
+  customerId?: number | null;
   shipmentNumber?: string; // رقم شحنة الطلب إن وجد
   customerName: string;
   customerPhone: string;
@@ -465,6 +470,11 @@ export interface DeliveryOrder {
   dispatchDate: string; // تاريخ ووقت استلام الموصل للطلب
   orderOriginalValue: number; // قيمة الطلب الأصلية (للعرض والمرجعية فقط، لا تخلط بحسابات التوصيل)
   orderRemainingAmount?: number; // المبلغ المتبقي على العميلة من قيمة الطلب
+  finalPaymentAmount?: number; // مبلغ الدفعة النهائية للطلب عند التسليم
+  custodyRecordedAmount?: number; // المبلغ المسجل فعلياً في رصيد المندوب عن هذا الطلب
+  payableRecordedAmount?: number; // مبلغ الاستحقاق المسجل للمندوب بذمة الإدارة عن هذا الطلب
+  walletDepositedAmount?: number; // المبلغ المودع في المحفظة عن هذا الطلب
+  paymentId?: number | null; // معرف سند القبض المرتبط بالدفعة النهائية
   deliveryFee: number; // أجرة التوصيل المستحقة
   status: DeliveryOrderStatus;
   collectionMethod: DeliveryFeeCollectionMethod;

@@ -141,6 +141,10 @@ interface StoreContextType {
     paymentType?: string;
     statement?: string;
     notes?: string;
+    courierId?: number;
+    deliveryPaymentMethod?: 'cash_to_courier' | 'transfer_to_wallet';
+    deliveryFee?: number;
+    courierCustodyAmount?: number;
   }) => Payment;
   cancelPayment: (paymentId: number, reason?: string) => void;
   updatePayment: (paymentId: number, data: {
@@ -323,6 +327,8 @@ interface StoreContextType {
       collectionMethod?: DeliveryOrder['collectionMethod'];
       walletId?: number;
       walletReference?: string;
+      courierId?: number;
+      deliveryFee?: number;
     }
   ) => void;
   updateDeliveryOrder: (order: DeliveryOrder) => void;
@@ -470,9 +476,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               otherReceivables: Array.isArray(parsed.tables.otherReceivables) && parsed.tables.otherReceivables.length > 0 ? parsed.tables.otherReceivables : (INITIAL_DATA.tables.otherReceivables || []),
               couriers: Array.isArray(parsed.tables.couriers) && parsed.tables.couriers.length > 0 ? parsed.tables.couriers : (INITIAL_DATA.tables.couriers || []),
               deliveryTrips: Array.isArray(parsed.tables.deliveryTrips) ? parsed.tables.deliveryTrips : [],
-              deliveryOrders: Array.isArray(parsed.tables.deliveryOrders) ? parsed.tables.deliveryOrders : [],
-              courierSettlements: Array.isArray(parsed.tables.courierSettlements) ? parsed.tables.courierSettlements : [],
-              deliveryCashCollections: Array.isArray(parsed.tables.deliveryCashCollections) ? parsed.tables.deliveryCashCollections : [],
+              deliveryOrders: Array.isArray(parsed.tables.deliveryOrders) && parsed.tables.deliveryOrders.length > 0 ? parsed.tables.deliveryOrders : (INITIAL_DATA.tables.deliveryOrders || []),
+              courierSettlements: Array.isArray(parsed.tables.courierSettlements) && parsed.tables.courierSettlements.length > 0 ? parsed.tables.courierSettlements : (INITIAL_DATA.tables.courierSettlements || []),
+              deliveryCashCollections: Array.isArray(parsed.tables.deliveryCashCollections) && parsed.tables.deliveryCashCollections.length > 0 ? parsed.tables.deliveryCashCollections : (INITIAL_DATA.tables.deliveryCashCollections || []),
               workers: Array.isArray(parsed.tables.workers) && parsed.tables.workers.length > 0 ? parsed.tables.workers : (INITIAL_DATA.tables.workers || []),
               chartAccounts: Array.isArray(parsed.tables.chartAccounts) && parsed.tables.chartAccounts.length > 0 ? parsed.tables.chartAccounts : DEFAULT_CHART_OF_ACCOUNTS,
               fiscalPeriods: Array.isArray(parsed.tables.fiscalPeriods) && parsed.tables.fiscalPeriods.length > 0 ? parsed.tables.fiscalPeriods : DEFAULT_FISCAL_PERIODS,
@@ -706,9 +712,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const installmentPlans = data.tables.installmentPlans || [];
   const couriers = data.tables.couriers || INITIAL_DATA.tables.couriers || [];
   const deliveryTrips = data.tables.deliveryTrips || [];
-  const deliveryOrders: DeliveryOrder[] = data.tables.deliveryOrders || [];
-  const courierSettlements: CourierSettlement[] = data.tables.courierSettlements || [];
-  const deliveryCashCollections: DeliveryCashCollection[] = data.tables.deliveryCashCollections || [];
+  const deliveryOrders: DeliveryOrder[] = (data.tables.deliveryOrders && data.tables.deliveryOrders.length > 0)
+    ? data.tables.deliveryOrders
+    : (INITIAL_DATA.tables.deliveryOrders || []);
+  const courierSettlements: CourierSettlement[] = (data.tables.courierSettlements && data.tables.courierSettlements.length > 0)
+    ? data.tables.courierSettlements
+    : (INITIAL_DATA.tables.courierSettlements || []);
+  const deliveryCashCollections: DeliveryCashCollection[] = (data.tables.deliveryCashCollections && data.tables.deliveryCashCollections.length > 0)
+    ? data.tables.deliveryCashCollections
+    : (INITIAL_DATA.tables.deliveryCashCollections || []);
   const workers = data.tables.workers || INITIAL_DATA.tables.workers || [];
   const chartAccounts = data.tables.chartAccounts && data.tables.chartAccounts.length > 0 ? data.tables.chartAccounts : DEFAULT_CHART_OF_ACCOUNTS;
   const fiscalPeriods = data.tables.fiscalPeriods && data.tables.fiscalPeriods.length > 0 ? data.tables.fiscalPeriods : DEFAULT_FISCAL_PERIODS;
@@ -1325,12 +1337,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     paymentType?: string;
     statement?: string;
     notes?: string;
+    courierId?: number;
+    deliveryPaymentMethod?: 'cash_to_courier' | 'transfer_to_wallet';
+    deliveryFee?: number;
+    courierCustodyAmount?: number;
   }): Payment => {
     const customer = customers.find(c => c.id === p.customerId);
     const acc = accounts.find(a => a.id === p.accountId);
     const targetOrder = p.orderId ? orders.find(o => o.id === p.orderId) : undefined;
     const paymentId = Date.now();
     const payDate = new Date().toISOString();
+    const todayStr = payDate.split('T')[0];
     const periodCheck = assertFiscalPeriodOpen(payDate, fiscalPeriods);
     if (!periodCheck.allowed) {
       showNotification(periodCheck.reason || 'الفترة المالية مقفلة. لا يمكن تسجيل مقبوضات فيها.', 'error');
@@ -1356,8 +1373,31 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     }
 
+    const isFinalPayment = Boolean(
+      computedType === 'دفعة نهائية' ||
+      (targetOrder && p.amount >= (targetOrder.remainingAmount || 0) && (targetOrder.remainingAmount || 0) > 0)
+    );
+
+    const selectedCourier = p.courierId ? couriers.find(c => c.id === p.courierId) : undefined;
+    const isCashToCourier = Boolean(p.courierId && p.deliveryPaymentMethod === 'cash_to_courier');
+    const isWalletWithCourier = Boolean(p.courierId && p.deliveryPaymentMethod === 'transfer_to_wallet');
+    const resolvedDeliveryFee = p.deliveryFee !== undefined
+      ? Number(p.deliveryFee)
+      : (Number(targetOrder?.deliveryFee) || Number(selectedCourier?.defaultDeliveryFee) || 1500);
+    const custodyAmountToRecord = p.courierCustodyAmount !== undefined
+      ? Number(p.courierCustodyAmount)
+      : Number(p.amount);
+
+    const effectivePaymentMethod = isCashToCourier
+      ? `نقدي للمندوب (${selectedCourier?.name || 'المندوب'})`
+      : p.paymentMethod;
+
     const defaultStatement = targetOrder
-      ? `سداد ${computedType} للطلب ${targetOrder.orderNumber}`
+      ? isCashToCourier
+        ? `سداد ${computedType} للطلب #${targetOrder.orderNumber} - نقدي للمندوب ${selectedCourier?.name || ''}`
+        : isWalletWithCourier
+        ? `سداد ${computedType} للطلب #${targetOrder.orderNumber} عبر ${acc?.name || p.paymentMethod} (توصيل المندوب ${selectedCourier?.name || ''})`
+        : `سداد ${computedType} للطلب ${targetOrder.orderNumber}`
       : `سداد دفعة على الحساب من العميل ${customer?.name || ''}`;
 
     const newPayment: Payment = {
@@ -1368,36 +1408,48 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       orderId: p.orderId || null,
       accountId: p.accountId,
       amount: p.amount,
-      paymentDate: new Date().toISOString().split('T')[0],
-      paymentMethod: p.paymentMethod,
+      paymentDate: todayStr,
+      paymentMethod: effectivePaymentMethod,
       paymentType: computedType,
       statement: p.statement || defaultStatement,
       notes: p.notes,
       status: 'approved',
       createdByName: 'أحمد الإدريسي (أمين الصندوق)',
-      createdAt: new Date().toISOString()
+      courierId: p.courierId || null,
+      courierName: selectedCourier?.name,
+      deliveryPaymentMethod: p.deliveryPaymentMethod,
+      deliveryFee: p.courierId ? resolvedDeliveryFee : undefined,
+      createdAt: payDate
     };
 
-    const trx: FinancialTransaction = {
-      id: paymentId + 1,
-      transactionNumber: trxNumber,
-      transactionDate: new Date().toISOString(),
-      accountId: p.accountId,
-      type: 'payment',
-      amount: p.amount,
-      description: `سند قبض #${receiptNumber} من ${customer?.name || 'العميل'} ${p.notes ? `(${p.notes})` : ''}`,
-      customerId: p.customerId,
-      orderId: p.orderId,
-      createdAt: new Date().toISOString()
-    };
+    // Only create a wallet deposit transaction if NOT paid in cash directly to the courier's custody
+    const trx: FinancialTransaction | null = isCashToCourier
+      ? null
+      : {
+          id: paymentId + 1,
+          transactionNumber: trxNumber,
+          transactionDate: payDate,
+          accountId: p.accountId,
+          type: 'payment',
+          amount: p.amount,
+          description: `سند قبض #${receiptNumber} من ${customer?.name || 'العميل'}${targetOrder ? ` - طلب رقم #${targetOrder.orderNumber}` : ''} ${p.notes ? `(${p.notes})` : ''}`,
+          customerId: p.customerId,
+          orderId: p.orderId,
+          createdAt: payDate
+        };
 
-    const payAccChart = resolveChartAccount(acc?.name || 'الصندوق', 'debit');
+    const debitAccountLabel = isCashToCourier
+      ? `حـ/ عهدة المندوب: ${selectedCourier?.name || 'المندوب'} (طلب رقم #${targetOrder?.orderNumber || p.orderId || ''})`
+      : (acc?.name || 'الصندوق');
+    const payAccChart = resolveChartAccount(isCashToCourier ? 'الصندوق' : (acc?.name || 'الصندوق'), 'debit');
     const payCustChart = resolveChartAccount(`حـ/ العميل: ${customer?.name}`, 'credit');
 
     const je: JournalEntry = {
       id: paymentId + 2,
       entryNumber: `JE-PAY-${Date.now().toString().slice(-6)}`,
-      description: `سند قبض #${receiptNumber} من العميل: ${customer?.name}`,
+      description: isCashToCourier
+        ? `سند قبض #${receiptNumber} نقدي للمندوب ${selectedCourier?.name || ''} عن طلب رقم #${targetOrder?.orderNumber || ''} - العميل: ${customer?.name}`
+        : `سند قبض #${receiptNumber} من العميل: ${customer?.name}${targetOrder ? ` (طلب رقم #${targetOrder.orderNumber})` : ''}`,
       sourceType: 'payment',
       sourceId: paymentId,
       sourceNumber: receiptNumber,
@@ -1406,14 +1458,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       exchangeRate: 1,
       createdBy: 'أحمد الإدريسي (أمين الصندوق)',
       postedBy: 'أحمد الإدريسي (أمين الصندوق)',
-      postedAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
+      postedAt: payDate,
+      createdAt: payDate,
       lines: [
         {
           id: paymentId + 3,
           journalEntryId: paymentId + 2,
-          accountId: p.accountId,
-          accountName: acc?.name || 'الحساب',
+          accountId: isCashToCourier ? null : p.accountId,
+          accountName: debitAccountLabel,
           chartAccountId: payAccChart.id,
           chartAccountCode: payAccChart.code,
           side: 'debit',
@@ -1440,44 +1492,205 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const auditLog: AuditLog = {
       id: paymentId + 5,
-      createdAt: new Date().toISOString(),
-      action: 'إصدار سند قبض',
+      createdAt: payDate,
+      action: isCashToCourier
+        ? 'سداد دفعة نهائية نقدي للمندوب'
+        : isWalletWithCourier
+        ? 'سداد دفعة نهائية للمحفظة وإثبات استحقاق مندوب'
+        : 'إصدار سند قبض',
       performedBy: 'أحمد الإدريسي (أمين الصندوق)',
       entityType: 'payment',
       entityId: paymentId,
-      description: `إصدار سند قبض رقم ${receiptNumber} بمبلغ ${p.amount.toLocaleString()} ريال للعميل ${customer?.name}`,
-      notes: `إصدار سند قبض رقم ${receiptNumber} بمبلغ ${p.amount.toLocaleString()} ريال للعميل ${customer?.name}`,
+      description: isCashToCourier
+        ? `سداد دفعة نهائية للطلب #${targetOrder?.orderNumber || ''} بمبلغ ${p.amount.toLocaleString()} ريال نقداً للمندوب ${selectedCourier?.name} (سجل برصيد المندوب: ${custodyAmountToRecord.toLocaleString()} ريال)`
+        : isWalletWithCourier
+        ? `سداد دفعة نهائية للطلب #${targetOrder?.orderNumber || ''} بمبلغ ${p.amount.toLocaleString()} ريال في ${acc?.name} وإثبات استحقاق توصيل للمندوب ${selectedCourier?.name} بمبلغ ${resolvedDeliveryFee.toLocaleString()} ريال`
+        : `إصدار سند قبض رقم ${receiptNumber} بمبلغ ${p.amount.toLocaleString()} ريال للعميل ${customer?.name}`,
+      notes: p.notes || defaultStatement,
       oldValue: null,
       newValue: `${p.amount} ريال (${computedType})`
     };
 
     setData(prev => {
-      // If linked to specific order, deduct from order remainingAmount
+      // 1. Update orders paidAmount, remainingAmount, and status if delivered by courier
       let updatedOrders = prev.tables.orders;
+      let settledOrderForDelivery: Order | undefined = undefined;
+
       if (p.orderId) {
         updatedOrders = prev.tables.orders.map(o => {
           if (o.id === p.orderId) {
             const paid = (o.paidAmount || 0) + p.amount;
             const remaining = Math.max(0, (o.totalAmount || 0) - paid);
-            return { ...o, paidAmount: paid, remainingAmount: remaining };
+            const nextStatus = (remaining === 0 && p.courierId) ? ('delivered' as const) : o.status;
+            const updatedOrd: Order = {
+              ...o,
+              paidAmount: paid,
+              remainingAmount: remaining,
+              status: nextStatus,
+              courierId: p.courierId || o.courierId,
+              deliveryFee: p.courierId ? resolvedDeliveryFee : o.deliveryFee,
+              deliveryFeeCollectionStatus: p.courierId ? 'collected' : o.deliveryFeeCollectionStatus
+            };
+            settledOrderForDelivery = updatedOrd;
+            return updatedOrd;
           }
           return o;
         });
       } else {
-        // If not specific order, reduce opening balance or earliest order with remaining balance
         let remainingToDeduct = p.amount;
         updatedOrders = prev.tables.orders.map(o => {
           if (o.customerId === p.customerId && o.remainingAmount > 0 && remainingToDeduct > 0) {
             const deduct = Math.min(o.remainingAmount, remainingToDeduct);
             remainingToDeduct -= deduct;
-            return {
+            const nextRemaining = Math.max(0, (o.remainingAmount || 0) - deduct);
+            const updatedOrd: Order = {
               ...o,
               paidAmount: (o.paidAmount || 0) + deduct,
-              remainingAmount: Math.max(0, (o.remainingAmount || 0) - deduct)
+              remainingAmount: nextRemaining,
+              status: (nextRemaining === 0 && p.courierId) ? ('delivered' as const) : o.status,
+              courierId: p.courierId || o.courierId
             };
+            if (!settledOrderForDelivery && (nextRemaining === 0 || p.courierId)) {
+              settledOrderForDelivery = updatedOrd;
+            }
+            return updatedOrd;
           }
           return o;
         });
+      }
+
+      const activeDeliveryTarget = settledOrderForDelivery || targetOrder;
+      const shouldSyncToDeliverySystem = Boolean(p.courierId || (isFinalPayment && activeDeliveryTarget));
+
+      // 2. Sync order to Delivery Orders (نظام الموصلين) & update Courier balances
+      const currentDeliveryOrders = prev.tables.deliveryOrders && prev.tables.deliveryOrders.length > 0
+        ? prev.tables.deliveryOrders
+        : (INITIAL_DATA.tables.deliveryOrders || []);
+      const currentCouriers = prev.tables.couriers && prev.tables.couriers.length > 0
+        ? prev.tables.couriers
+        : (INITIAL_DATA.tables.couriers || []);
+
+      let nextDeliveryOrders = currentDeliveryOrders;
+      let nextCouriers = currentCouriers;
+
+      if (shouldSyncToDeliverySystem) {
+        const orderNum = activeDeliveryTarget?.orderNumber || p.orderId || `PAY-${paymentId.toString().slice(-4)}`;
+        const existingDelivery = currentDeliveryOrders.find(
+          d =>
+            (activeDeliveryTarget && d.orderId === activeDeliveryTarget.id) ||
+            (activeDeliveryTarget && String(d.orderNumber) === String(activeDeliveryTarget.orderNumber))
+        );
+
+        const prevCustodyOnOrder = existingDelivery?.collectionStatus === 'collected_cash'
+          ? (Number(existingDelivery.custodyRecordedAmount) || Number(existingDelivery.deliveryFee) || 0)
+          : 0;
+        const prevPayableOnOrder = existingDelivery?.collectionStatus === 'transferred_to_wallet'
+          ? (Number(existingDelivery.payableRecordedAmount) || 0)
+          : 0;
+
+        const newCustodyForOrder = isCashToCourier ? custodyAmountToRecord : 0;
+        const newPayableForOrder = isWalletWithCourier ? resolvedDeliveryFee : 0;
+
+        const deliveryNoteText = isCashToCourier
+          ? `طلب رقم #${orderNum} — دفع نقدي للمندوب نفسه (${custodyAmountToRecord.toLocaleString()} ريال مسجلة برصيد المندوب)`
+          : isWalletWithCourier
+          ? `طلب رقم #${orderNum} — دفع لمحفظة ${acc?.name || ''} (${p.amount.toLocaleString()} ريال) واستحقاق للمندوب عندنا (${resolvedDeliveryFee.toLocaleString()} ريال)`
+          : `طلب رقم #${orderNum} — تم سداد الدفعة النهائية (${p.amount.toLocaleString()} ريال) وبانتظار تحديد المندوب وطريقة الدفع`;
+
+        if (existingDelivery) {
+          nextDeliveryOrders = currentDeliveryOrders.map(d => {
+            if (d.id !== existingDelivery.id) return d;
+            return {
+              ...d,
+              orderId: activeDeliveryTarget?.id || d.orderId,
+              orderNumber: orderNum,
+              customerId: p.customerId,
+              customerName: customer?.name || d.customerName,
+              customerPhone: customer?.phone || d.customerPhone,
+              governorate: customer?.governorate || d.governorate || 'صنعاء',
+              address: customer?.address || d.address || customer?.governorate || 'صنعاء',
+              courierId: p.courierId || d.courierId,
+              courierName: selectedCourier?.name || d.courierName || 'بانتظار تحديد المندوب',
+              orderOriginalValue: activeDeliveryTarget?.totalAmount || d.orderOriginalValue || p.amount,
+              orderRemainingAmount: 0,
+              finalPaymentAmount: p.amount,
+              custodyRecordedAmount: isCashToCourier ? newCustodyForOrder : 0,
+              payableRecordedAmount: isWalletWithCourier ? newPayableForOrder : 0,
+              walletDepositedAmount: isWalletWithCourier ? p.amount : d.walletDepositedAmount,
+              paymentId,
+              deliveryFee: resolvedDeliveryFee,
+              status: p.courierId ? ('delivered' as const) : d.status,
+              collectionMethod: p.deliveryPaymentMethod || d.collectionMethod || 'unassigned',
+              collectionStatus: isCashToCourier
+                ? ('collected_cash' as const)
+                : isWalletWithCourier
+                ? ('transferred_to_wallet' as const)
+                : d.collectionStatus,
+              walletId: isWalletWithCourier ? p.accountId : d.walletId,
+              walletName: isWalletWithCourier ? acc?.name : d.walletName,
+              collectedAt: p.courierId ? payDate : d.collectedAt,
+              deliveredAt: p.courierId ? todayStr : d.deliveredAt,
+              notes: deliveryNoteText
+            };
+          });
+        } else {
+          const newDeliveryOrder: DeliveryOrder = {
+            id: paymentId + 10,
+            deliveryNumber: `DLV-${Date.now().toString().slice(-6)}`,
+            orderId: activeDeliveryTarget?.id || null,
+            orderNumber: orderNum,
+            customerId: p.customerId,
+            shipmentNumber: activeDeliveryTarget?.shipmentId ? String(activeDeliveryTarget.shipmentId) : '',
+            customerName: customer?.name || activeDeliveryTarget?.customerName || 'عميل',
+            customerPhone: customer?.phone || '',
+            governorate: customer?.governorate || 'صنعاء',
+            district: customer?.address || '',
+            address: customer?.address || customer?.governorate || 'صنعاء',
+            courierId: p.courierId || 0,
+            courierName: selectedCourier?.name || 'بانتظار تحديد المندوب',
+            dispatchDate: payDate,
+            orderOriginalValue: activeDeliveryTarget?.totalAmount || p.amount,
+            orderRemainingAmount: 0,
+            finalPaymentAmount: p.amount,
+            custodyRecordedAmount: newCustodyForOrder,
+            payableRecordedAmount: newPayableForOrder,
+            walletDepositedAmount: isWalletWithCourier ? p.amount : 0,
+            paymentId,
+            deliveryFee: resolvedDeliveryFee,
+            status: p.courierId ? 'delivered' : 'pending_dispatch',
+            collectionMethod: p.deliveryPaymentMethod || 'unassigned',
+            collectionStatus: isCashToCourier
+              ? 'collected_cash'
+              : isWalletWithCourier
+              ? 'transferred_to_wallet'
+              : 'pending',
+            walletId: isWalletWithCourier ? p.accountId : undefined,
+            walletName: isWalletWithCourier ? acc?.name : undefined,
+            collectedAt: p.courierId ? payDate : undefined,
+            deliveredAt: p.courierId ? todayStr : undefined,
+            notes: deliveryNoteText,
+            createdAt: payDate
+          };
+          nextDeliveryOrders = [newDeliveryOrder, ...currentDeliveryOrders];
+        }
+
+        if (p.courierId) {
+          const custodyDiff = newCustodyForOrder - (existingDelivery?.courierId === p.courierId ? prevCustodyOnOrder : 0);
+          const payableDiff = newPayableForOrder - (existingDelivery?.courierId === p.courierId ? prevPayableOnOrder : 0);
+          const wasAlreadyDelivered = existingDelivery?.status === 'delivered' && existingDelivery?.courierId === p.courierId;
+
+          nextCouriers = currentCouriers.map(c => {
+            if (c.id !== p.courierId) return c;
+            return {
+              ...c,
+              currentCustodyBalance: Math.max(0, (Number(c.currentCustodyBalance) || 0) + custodyDiff),
+              currentPayableBalance: Math.max(0, (Number(c.currentPayableBalance) || 0) + payableDiff),
+              deliveredOrdersCount: wasAlreadyDelivered
+                ? (Number(c.deliveredOrdersCount) || 0)
+                : (Number(c.deliveredOrdersCount) || 0) + 1
+            };
+          });
+        }
       }
 
       return {
@@ -1486,12 +1699,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           ...prev.tables,
           orders: updatedOrders,
           payments: [newPayment, ...prev.tables.payments],
-          financialTransactions: [trx, ...prev.tables.financialTransactions],
+          financialTransactions: trx ? [trx, ...prev.tables.financialTransactions] : prev.tables.financialTransactions,
           journalEntries: [je, ...prev.tables.journalEntries],
+          deliveryOrders: nextDeliveryOrders,
+          couriers: nextCouriers,
           auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
         }
       };
     });
+
+    if (isCashToCourier) {
+      showNotification(
+        `تم تسجيل الدفعة النهائية نقداً للمندوب ${selectedCourier?.name} وقيد (${custodyAmountToRecord.toLocaleString()} ريال) برصيد المندوب — طلب رقم #${targetOrder?.orderNumber || ''}`,
+        'success'
+      );
+    } else if (isWalletWithCourier) {
+      showNotification(
+        `تم إيداع (${p.amount.toLocaleString()} ريال) في ${acc?.name} وتسجيل استحقاق (${resolvedDeliveryFee.toLocaleString()} ريال) للمندوب ${selectedCourier?.name} — طلب رقم #${targetOrder?.orderNumber || ''}`,
+        'success'
+      );
+    }
 
     return newPayment;
   };
@@ -3915,16 +4142,22 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     walletReference?: string;
     notes?: string;
   }): DeliveryOrder => {
-    const courier = (data.tables.couriers || []).find(c => c.id === orderData.courierId);
+    const courier = couriers.find(c => c.id === orderData.courierId);
     const id = Date.now();
     const deliveryNumber = `DLV-${Date.now().toString().slice(-6)}`;
     const nowStr = new Date().toISOString();
+    const fee = Number(orderData.deliveryFee) || (courier?.defaultDeliveryFee || 1500);
+    const method = orderData.collectionMethod || 'unassigned';
+    const isCash = method === 'cash_to_courier';
+    const isWallet = method === 'transfer_to_wallet';
+    const targetWallet = orderData.walletId ? accounts.find(a => a.id === orderData.walletId) : undefined;
+    const orderNumLabel = orderData.orderNumber || (orderData.orderId ? String(orderData.orderId) : 'مباشر');
 
     const newDelivery: DeliveryOrder = {
       id,
       deliveryNumber,
       orderId: orderData.orderId || null,
-      orderNumber: orderData.orderNumber || (orderData.orderId ? String(orderData.orderId) : 'مباشر'),
+      orderNumber: orderNumLabel,
       shipmentNumber: orderData.shipmentNumber || '',
       customerName: orderData.customerName,
       customerPhone: orderData.customerPhone,
@@ -3936,27 +4169,67 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       dispatchDate: orderData.dispatchDate || nowStr,
       orderOriginalValue: Number(orderData.orderOriginalValue) || 0,
       orderRemainingAmount: Number(orderData.orderRemainingAmount) || 0,
-      deliveryFee: Number(orderData.deliveryFee) || (courier?.defaultDeliveryFee || 1500),
+      custodyRecordedAmount: isCash ? fee : 0,
+      payableRecordedAmount: isWallet ? fee : 0,
+      walletDepositedAmount: isWallet ? fee : 0,
+      deliveryFee: fee,
       status: 'pending_dispatch',
-      collectionMethod: orderData.collectionMethod || 'unassigned',
-      collectionStatus: 'pending',
+      collectionMethod: method,
+      collectionStatus: isCash ? 'collected_cash' : isWallet ? 'transferred_to_wallet' : 'pending',
       walletId: orderData.walletId,
-      walletName: orderData.walletId ? accounts.find(a => a.id === orderData.walletId)?.name : undefined,
+      walletName: targetWallet?.name,
       walletReference: orderData.walletReference,
-      notes: orderData.notes,
+      collectedAt: (isCash || isWallet) ? nowStr : undefined,
+      notes: orderData.notes || (isCash ? `طلب رقم #${orderNumLabel} - نقدي للمندوب` : isWallet ? `طلب رقم #${orderNumLabel} - محفظة (${targetWallet?.name || ''})` : undefined),
       createdAt: nowStr
     };
 
-    setData(prev => ({
-      ...prev,
-      tables: {
-        ...prev.tables,
-        deliveryOrders: [newDelivery, ...(prev.tables.deliveryOrders || [])]
-      }
-    }));
+    const walletDepositTrx: FinancialTransaction | null = (isWallet && orderData.walletId)
+      ? {
+          id: id + 1,
+          transactionNumber: `TRX-DLV-WAL-${Date.now().toString().slice(-6)}`,
+          transactionDate: nowStr,
+          accountId: orderData.walletId,
+          type: 'deposit',
+          amount: fee,
+          description: `إيداع توصيل طلب رقم #${orderNumLabel} (العميلة ${orderData.customerName}) - استحقاق للمندوب ${courier?.name || ''}`,
+          referenceNumber: orderData.walletReference,
+          createdAt: nowStr
+        }
+      : null;
 
-    addAuditLog('CREATE', 'deliveryOrder', `إسناد طلب توصيل جديد #${deliveryNumber} للعميلة ${orderData.customerName} إلى الموصل ${courier?.name}`, id);
-    showNotification(`تم تسجيل طلب التوصيل #${deliveryNumber} بنجاح`, 'success');
+    setData(prev => {
+      const currentCouriers = prev.tables.couriers && prev.tables.couriers.length > 0
+        ? prev.tables.couriers
+        : (INITIAL_DATA.tables.couriers || []);
+      const currentDeliveries = prev.tables.deliveryOrders && prev.tables.deliveryOrders.length > 0
+        ? prev.tables.deliveryOrders
+        : (INITIAL_DATA.tables.deliveryOrders || []);
+
+      const updatedCouriers = currentCouriers.map(c => {
+        if (c.id !== orderData.courierId) return c;
+        return {
+          ...c,
+          currentCustodyBalance: isCash ? (Number(c.currentCustodyBalance) || 0) + fee : (Number(c.currentCustodyBalance) || 0),
+          currentPayableBalance: isWallet ? (Number(c.currentPayableBalance) || 0) + fee : (Number(c.currentPayableBalance) || 0)
+        };
+      });
+
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          couriers: updatedCouriers,
+          deliveryOrders: [newDelivery, ...currentDeliveries],
+          financialTransactions: walletDepositTrx
+            ? [walletDepositTrx, ...(prev.tables.financialTransactions || [])]
+            : prev.tables.financialTransactions
+        }
+      };
+    });
+
+    addAuditLog('CREATE', 'deliveryOrder', `إسناد طلب توصيل جديد #${deliveryNumber} (طلب رقم #${orderNumLabel}) للعميلة ${orderData.customerName} إلى الموصل ${courier?.name}`, id);
+    showNotification(`تم تسجيل طلب التوصيل #${deliveryNumber} (طلب رقم #${orderNumLabel}) بنجاح`, 'success');
     return newDelivery;
   };
 
@@ -3969,76 +4242,122 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       collectionMethod?: DeliveryOrder['collectionMethod'];
       walletId?: number;
       walletReference?: string;
+      courierId?: number;
+      deliveryFee?: number;
     }
   ) => {
-    const delivery = (data.tables.deliveryOrders || []).find(d => d.id === deliveryId);
+    const delivery = deliveryOrders.find(d => d.id === deliveryId);
     if (!delivery) return;
 
-    const courier = (data.tables.couriers || []).find(c => c.id === delivery.courierId);
+    const targetCourierId = details?.courierId !== undefined ? details.courierId : delivery.courierId;
+    const courier = couriers.find(c => c.id === targetCourierId);
+    const nextFee = details?.deliveryFee !== undefined ? Number(details.deliveryFee) : Number(delivery.deliveryFee) || (courier?.defaultDeliveryFee || 1500);
     const nowStr = new Date().toISOString();
     const todayStr = nowStr.split('T')[0];
 
-    // Determine collection changes
     let nextCollectionMethod = details?.collectionMethod || delivery.collectionMethod;
     let nextCollectionStatus = delivery.collectionStatus;
-    let custodyDelta = 0; // change in courier custody
     let walletDepositTrx: FinancialTransaction | null = null;
 
-    if (status === 'delivered') {
+    const prevCustody = delivery.collectionStatus === 'collected_cash'
+      ? (Number(delivery.custodyRecordedAmount) || Number(delivery.deliveryFee) || 0)
+      : 0;
+    const prevPayable = delivery.collectionStatus === 'transferred_to_wallet'
+      ? (Number(delivery.payableRecordedAmount) || Number(delivery.deliveryFee) || 0)
+      : 0;
+
+    let nextCustody = prevCustody;
+    let nextPayable = prevPayable;
+
+    if (status === 'delivered' || nextCollectionMethod === 'cash_to_courier' || nextCollectionMethod === 'transfer_to_wallet') {
       if (nextCollectionMethod === 'cash_to_courier') {
-        // Cash collected by courier: added to courier's custody
         nextCollectionStatus = 'collected_cash';
-        if (delivery.collectionStatus !== 'collected_cash') {
-          custodyDelta = delivery.deliveryFee;
-        }
-      } else if (nextCollectionMethod === 'transfer_to_wallet' && details?.walletId) {
-        // Customer transferred delivery fee to store wallet
+        nextCustody = Number(delivery.finalPaymentAmount) > 0 && Number(delivery.custodyRecordedAmount) > 0
+          ? Number(delivery.custodyRecordedAmount)
+          : (Number(delivery.finalPaymentAmount) || nextFee);
+        nextPayable = 0;
+      } else if (nextCollectionMethod === 'transfer_to_wallet') {
         nextCollectionStatus = 'transferred_to_wallet';
-        const targetWallet = accounts.find(a => a.id === details.walletId);
-        if (targetWallet && delivery.collectionStatus !== 'transferred_to_wallet') {
+        nextCustody = 0;
+        nextPayable = nextFee;
+        const targetWalletId = details?.walletId || delivery.walletId;
+        const targetWallet = targetWalletId ? accounts.find(a => a.id === targetWalletId) : undefined;
+        const depositAmt = Number(delivery.finalPaymentAmount) || nextFee;
+        if (targetWallet && delivery.collectionStatus !== 'transferred_to_wallet' && !delivery.paymentId) {
           const trxId = Date.now();
           walletDepositTrx = {
             id: trxId,
             transactionNumber: `TRX-DLV-WAL-${Date.now().toString().slice(-6)}`,
             transactionDate: nowStr,
-            accountId: details.walletId,
+            accountId: targetWallet.id,
             type: 'deposit',
-            amount: delivery.deliveryFee,
-            description: `أجرة توصيل محولة من العميلة ${delivery.customerName} للطلب #${delivery.orderNumber} (حساب توصيل منفصل)`,
-            referenceNumber: details.walletReference,
+            amount: depositAmt,
+            description: `تحويل لمحفظة ${targetWallet.name} عن طلب رقم #${delivery.orderNumber} (العميلة ${delivery.customerName}) - استحقاق للمندوب ${courier?.name || ''}`,
+            referenceNumber: details?.walletReference || delivery.walletReference,
             createdAt: nowStr
           };
         }
-      }
-    } else if (status === 'cancelled' || status === 'returned' || status === 'delivery_failed') {
-      // Revert custody if it was previously collected cash
-      if (delivery.collectionStatus === 'collected_cash') {
-        custodyDelta = -delivery.deliveryFee;
-        nextCollectionStatus = 'pending';
+      } else if (nextCollectionMethod === 'waived') {
+        nextCollectionStatus = 'settled';
+        nextCustody = 0;
+        nextPayable = 0;
       }
     }
 
+    if (status === 'cancelled' || status === 'returned' || status === 'delivery_failed') {
+      nextCustody = 0;
+      nextPayable = 0;
+      nextCollectionStatus = 'pending';
+    }
+
     setData(prev => {
-      const updatedCouriers = (prev.tables.couriers || []).map(c => {
-        if (c.id !== delivery.courierId) return c;
+      const currentCouriers = prev.tables.couriers && prev.tables.couriers.length > 0
+        ? prev.tables.couriers
+        : (INITIAL_DATA.tables.couriers || []);
+      const currentDeliveries = prev.tables.deliveryOrders && prev.tables.deliveryOrders.length > 0
+        ? prev.tables.deliveryOrders
+        : (INITIAL_DATA.tables.deliveryOrders || []);
+
+      const updatedCouriers = currentCouriers.map(c => {
+        // If courier changed, revert from old courier and apply to new courier
+        if (delivery.courierId && delivery.courierId !== targetCourierId && c.id === delivery.courierId) {
+          return {
+            ...c,
+            currentCustodyBalance: Math.max(0, (Number(c.currentCustodyBalance) || 0) - prevCustody),
+            currentPayableBalance: Math.max(0, (Number(c.currentPayableBalance) || 0) - prevPayable)
+          };
+        }
+        if (c.id !== targetCourierId) return c;
         const currentCustody = Number(c.currentCustodyBalance) || 0;
+        const currentPayable = Number(c.currentPayableBalance) || 0;
         const deliveredCount = Number(c.deliveredOrdersCount) || 0;
+        const custodyDelta = delivery.courierId === targetCourierId ? (nextCustody - prevCustody) : nextCustody;
+        const payableDelta = delivery.courierId === targetCourierId ? (nextPayable - prevPayable) : nextPayable;
+
         return {
           ...c,
           currentCustodyBalance: Math.max(0, currentCustody + custodyDelta),
+          currentPayableBalance: Math.max(0, currentPayable + payableDelta),
           deliveredOrdersCount: status === 'delivered' && delivery.status !== 'delivered' ? deliveredCount + 1 : deliveredCount
         };
       });
 
-      const updatedDeliveries = (prev.tables.deliveryOrders || []).map(d => {
+      const updatedDeliveries = currentDeliveries.map(d => {
         if (d.id !== deliveryId) return d;
+        const resolvedWalletId = details?.walletId !== undefined ? details.walletId : d.walletId;
+        const resolvedWalletName = resolvedWalletId ? accounts.find(a => a.id === resolvedWalletId)?.name : d.walletName;
         return {
           ...d,
+          courierId: targetCourierId,
+          courierName: courier?.name || d.courierName,
+          deliveryFee: nextFee,
           status,
           collectionMethod: nextCollectionMethod,
           collectionStatus: nextCollectionStatus,
-          walletId: details?.walletId !== undefined ? details.walletId : d.walletId,
-          walletName: details?.walletId ? accounts.find(a => a.id === details.walletId)?.name : d.walletName,
+          custodyRecordedAmount: nextCustody,
+          payableRecordedAmount: nextPayable,
+          walletId: resolvedWalletId,
+          walletName: resolvedWalletName,
           walletReference: details?.walletReference !== undefined ? details.walletReference : d.walletReference,
           failedReason: details?.failedReason,
           deliveredAt: status === 'delivered' ? (details?.deliveredAt || todayStr) : d.deliveredAt
@@ -4060,8 +4379,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       };
     });
 
-    addAuditLog('UPDATE', 'deliveryOrder', `تحديث حالة طلب التوصيل #${delivery.deliveryNumber} إلى ${status}`, deliveryId);
-    showNotification(`تم تحديث حالة طلب التوصيل #${delivery.deliveryNumber}`, 'success');
+    addAuditLog('UPDATE', 'deliveryOrder', `تحديث حالة طلب التوصيل #${delivery.deliveryNumber} (طلب رقم #${delivery.orderNumber}) إلى ${status}`, deliveryId);
+    showNotification(`تم تحديث بيانات وطريقة تحصيل طلب رقم #${delivery.orderNumber} بنجاح`, 'success');
   };
 
   const updateDeliveryOrder = (updated: DeliveryOrder) => {
@@ -4101,7 +4420,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const recordDeliveryCashToCourier = (deliveryId: number, notes?: string) => {
-    const delivery = (data.tables.deliveryOrders || []).find(d => d.id === deliveryId);
+    const delivery = deliveryOrders.find(d => d.id === deliveryId);
     if (!delivery) return;
 
     // If already recorded as cash, prevent duplicate
@@ -4110,23 +4429,38 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return;
     }
 
+    const amountToRecord = Number(delivery.finalPaymentAmount) || Number(delivery.deliveryFee) || 0;
+    const prevPayable = delivery.collectionStatus === 'transferred_to_wallet'
+      ? (Number(delivery.payableRecordedAmount) || Number(delivery.deliveryFee) || 0)
+      : 0;
+
     setData(prev => {
-      const updatedCouriers = (prev.tables.couriers || []).map(c => {
+      const currentCouriers = prev.tables.couriers && prev.tables.couriers.length > 0
+        ? prev.tables.couriers
+        : (INITIAL_DATA.tables.couriers || []);
+      const currentDeliveries = prev.tables.deliveryOrders && prev.tables.deliveryOrders.length > 0
+        ? prev.tables.deliveryOrders
+        : (INITIAL_DATA.tables.deliveryOrders || []);
+
+      const updatedCouriers = currentCouriers.map(c => {
         if (c.id !== delivery.courierId) return c;
         return {
           ...c,
-          currentCustodyBalance: (Number(c.currentCustodyBalance) || 0) + delivery.deliveryFee
+          currentCustodyBalance: (Number(c.currentCustodyBalance) || 0) + amountToRecord,
+          currentPayableBalance: Math.max(0, (Number(c.currentPayableBalance) || 0) - prevPayable)
         };
       });
 
-      const updatedDeliveries = (prev.tables.deliveryOrders || []).map(d => {
+      const updatedDeliveries = currentDeliveries.map(d => {
         if (d.id !== deliveryId) return d;
         return {
           ...d,
           collectionMethod: 'cash_to_courier' as const,
           collectionStatus: 'collected_cash' as const,
+          custodyRecordedAmount: amountToRecord,
+          payableRecordedAmount: 0,
           collectedAt: new Date().toISOString(),
-          notes: notes ? (d.notes ? `${d.notes} | ${notes}` : notes) : d.notes
+          notes: notes ? (d.notes ? `${d.notes} | ${notes}` : notes) : `طلب رقم #${d.orderNumber} — سجل برصيد المندوب (${amountToRecord.toLocaleString()} ريال)`
         };
       });
 
@@ -4140,8 +4474,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       };
     });
 
-    addAuditLog('UPDATE', 'deliveryOrder', `تسجيل دفع أجرة التوصيل ${delivery.deliveryFee} ريال نقداً لعهدة الموصل ${delivery.courierName} للطلب #${delivery.deliveryNumber}`, deliveryId);
-    showNotification(`تم قيد أجرة التوصيل في عهدة الموصل ${delivery.courierName} بنجاح`, 'success');
+    addAuditLog('UPDATE', 'deliveryOrder', `تسجيل دفع نقدي ${amountToRecord} ريال برصيد المندوب ${delivery.courierName} عن طلب رقم #${delivery.orderNumber}`, deliveryId);
+    showNotification(`تم تسجيل طلب رقم #${delivery.orderNumber} بمبلغ (${amountToRecord.toLocaleString()} ريال) في رصيد المندوب ${delivery.courierName} بنجاح`, 'success');
   };
 
   const recordDeliveryTransferToWallet = (params: {
@@ -4151,7 +4485,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     transferDate?: string;
     notes?: string;
   }) => {
-    const delivery = (data.tables.deliveryOrders || []).find(d => d.id === params.deliveryId);
+    const delivery = deliveryOrders.find(d => d.id === params.deliveryId);
     if (!delivery) return;
 
     // Prevent duplicate recording
@@ -4163,39 +4497,62 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const wallet = accounts.find(a => a.id === params.walletId);
     const nowStr = new Date().toISOString();
     const trxId = Date.now();
+    const depositAmount = Number(delivery.finalPaymentAmount) || Number(delivery.deliveryFee) || 0;
+    const courierEntitlement = Number(delivery.deliveryFee) || 1500;
 
-    // Independent delivery wallet deposit transaction
-    const walletDepositTrx: FinancialTransaction = {
-      id: trxId,
-      transactionNumber: `TRX-DLV-${Date.now().toString().slice(-6)}`,
-      transactionDate: params.transferDate || nowStr,
-      accountId: params.walletId,
-      type: 'deposit',
-      amount: delivery.deliveryFee,
-      description: `أجرة توصيل محولة لمحفظة ${wallet?.name || ''} للطلب #${delivery.orderNumber} (العميلة ${delivery.customerName})`,
-      referenceNumber: params.referenceNumber,
-      createdAt: nowStr
-    };
+    // Independent delivery wallet deposit transaction (if not already deposited via paymentId)
+    const walletDepositTrx: FinancialTransaction | null = delivery.paymentId
+      ? null
+      : {
+          id: trxId,
+          transactionNumber: `TRX-DLV-${Date.now().toString().slice(-6)}`,
+          transactionDate: params.transferDate || nowStr,
+          accountId: params.walletId,
+          type: 'deposit',
+          amount: depositAmount,
+          description: `إيداع لمحفظة ${wallet?.name || ''} عن طلب رقم #${delivery.orderNumber} (العميلة ${delivery.customerName}) - استحقاق للمندوب ${delivery.courierName}`,
+          referenceNumber: params.referenceNumber,
+          createdAt: nowStr
+        };
 
-    // If courier previously held it as cash, remove from courier's custody
     const wasCash = delivery.collectionStatus === 'collected_cash';
+    const prevCustody = wasCash ? (Number(delivery.custodyRecordedAmount) || Number(delivery.deliveryFee) || 0) : 0;
 
     setData(prev => {
-      const updatedCouriers = wasCash
-        ? (prev.tables.couriers || []).map(c => c.id === delivery.courierId ? { ...c, currentCustodyBalance: Math.max(0, (c.currentCustodyBalance || 0) - delivery.deliveryFee) } : c)
-        : prev.tables.couriers;
+      const currentCouriers = prev.tables.couriers && prev.tables.couriers.length > 0
+        ? prev.tables.couriers
+        : (INITIAL_DATA.tables.couriers || []);
+      const currentDeliveries = prev.tables.deliveryOrders && prev.tables.deliveryOrders.length > 0
+        ? prev.tables.deliveryOrders
+        : (INITIAL_DATA.tables.deliveryOrders || []);
 
-      const updatedDeliveries = (prev.tables.deliveryOrders || []).map(d => {
+      const updatedCouriers = currentCouriers.map(c => {
+        if (c.id !== delivery.courierId) return c;
+        return {
+          ...c,
+          currentCustodyBalance: wasCash
+            ? Math.max(0, (Number(c.currentCustodyBalance) || 0) - prevCustody)
+            : (Number(c.currentCustodyBalance) || 0),
+          currentPayableBalance: (Number(c.currentPayableBalance) || 0) + courierEntitlement
+        };
+      });
+
+      const updatedDeliveries = currentDeliveries.map(d => {
         if (d.id !== params.deliveryId) return d;
         return {
           ...d,
           collectionMethod: 'transfer_to_wallet' as const,
           collectionStatus: 'transferred_to_wallet' as const,
+          custodyRecordedAmount: 0,
+          payableRecordedAmount: courierEntitlement,
+          walletDepositedAmount: depositAmount,
           walletId: params.walletId,
           walletName: wallet?.name,
           walletReference: params.referenceNumber,
           collectedAt: nowStr,
-          notes: params.notes ? (d.notes ? `${d.notes} | ${params.notes}` : params.notes) : d.notes
+          notes: params.notes
+            ? (d.notes ? `${d.notes} | ${params.notes}` : params.notes)
+            : `طلب رقم #${d.orderNumber} — محول لمحفظة ${wallet?.name || ''} + استحقاق للمندوب (${courierEntitlement.toLocaleString()} ريال)`
         };
       });
 
@@ -4205,13 +4562,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           ...prev.tables,
           deliveryOrders: updatedDeliveries,
           couriers: updatedCouriers,
-          financialTransactions: [walletDepositTrx, ...(prev.tables.financialTransactions || [])]
+          financialTransactions: walletDepositTrx
+            ? [walletDepositTrx, ...(prev.tables.financialTransactions || [])]
+            : prev.tables.financialTransactions
         }
       };
     });
 
-    addAuditLog('CREATE', 'financialTransaction', `إيداع أجرة توصيل ${delivery.deliveryFee} ريال في محفظة ${wallet?.name} للطلب #${delivery.deliveryNumber}`, trxId);
-    showNotification(`تم إيداع أجرة التوصيل في محفظة ${wallet?.name} بنجاح`, 'success');
+    addAuditLog('CREATE', 'financialTransaction', `إيداع ${depositAmount} ريال في محفظة ${wallet?.name} عن طلب رقم #${delivery.orderNumber} وتسجيل استحقاق ${courierEntitlement} ريال للمندوب ${delivery.courierName}`, trxId);
+    showNotification(`زاد رصيد محفظة ${wallet?.name} وتم تسجيل استحقاق (${courierEntitlement.toLocaleString()} ريال) للمندوب ${delivery.courierName} عن طلب رقم #${delivery.orderNumber}`, 'success');
   };
 
   const receiveCashFromCourier = (params: {

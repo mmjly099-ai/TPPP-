@@ -23,7 +23,8 @@ import {
   FileText,
   BadgeAlert,
   ChevronDown,
-  Sparkles
+  Sparkles,
+  Bike
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { Order, Payment, Customer } from '../types';
@@ -36,11 +37,15 @@ export const InstallmentsView: React.FC = () => {
     payments,
     customers,
     accounts,
+    couriers = [],
+    deliveryOrders = [],
     recordPayment,
     getCustomerBalance
   } = useStore();
 
-  // Selected Order
+  // Selected Customer & Selected Order
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
+  const [customerSearchQuery, setCustomerSearchQuery] = useState<string>('');
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
 
   // Search & Filter for Orders list
@@ -60,6 +65,13 @@ export const InstallmentsView: React.FC = () => {
   const [formError, setFormError] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Courier & Delivery System State for Final Payment
+  const [courierId, setCourierId] = useState<number>(() => couriers[0]?.id || 0);
+  const [deliveryPaymentMethod, setDeliveryPaymentMethod] = useState<'cash_to_courier' | 'transfer_to_wallet'>('cash_to_courier');
+  const [deliveryFee, setDeliveryFee] = useState<number>(1500);
+  const [courierCustodyAmount, setCourierCustodyAmount] = useState<number>(0);
+  const [customCustodyEdited, setCustomCustodyEdited] = useState<boolean>(false);
+
   // Receipt Modal State
   const [receiptToPrint, setReceiptToPrint] = useState<Payment | null>(null);
 
@@ -68,14 +80,55 @@ export const InstallmentsView: React.FC = () => {
     return orders.filter(o => o.status !== 'cancelled');
   }, [orders]);
 
-  // Set default selected order if none is selected
+  // Helper to get all orders for a specific customer (matches by customerId or exact customerName)
+  const getOrdersForCustomer = (custId: number | null) => {
+    if (!custId) return [];
+    const custObj = customers.find(c => c.id === custId);
+    return activeOrders.filter(o =>
+      o.customerId === custId ||
+      (custObj?.name && o.customerName && o.customerName.trim() === custObj.name.trim())
+    );
+  };
+
+  // Set default selected customer and order if none is selected
   useEffect(() => {
     if (!selectedOrderId && activeOrders.length > 0) {
       // Prioritize order with remaining debt
       const withDebt = activeOrders.find(o => (o.remainingAmount || 0) > 0);
-      setSelectedOrderId(withDebt ? withDebt.id : activeOrders[0].id);
+      const initialOrder = withDebt || activeOrders[0];
+      setSelectedOrderId(initialOrder.id);
+      if (initialOrder.customerId) {
+        setSelectedCustomerId(initialOrder.customerId);
+      } else {
+        const matchedCust = customers.find(c => c.name?.trim() === initialOrder.customerName?.trim());
+        if (matchedCust) setSelectedCustomerId(matchedCust.id);
+      }
     }
-  }, [activeOrders, selectedOrderId]);
+  }, [activeOrders, selectedOrderId, customers]);
+
+  // Handler when user selects a customer
+  const handleSelectCustomer = (custId: number) => {
+    setSelectedCustomerId(custId);
+    const custOrders = getOrdersForCustomer(custId);
+    if (custOrders.length > 0) {
+      // Prioritize an order with remaining balance, otherwise pick the latest/first order
+      const unpaidOrd = custOrders.find(o => (o.remainingAmount || 0) > 0);
+      setSelectedOrderId(unpaidOrd ? unpaidOrd.id : custOrders[0].id);
+    } else {
+      setSelectedOrderId(null);
+    }
+  };
+
+  // Handler when user selects an order directly
+  const handleSelectOrder = (order: Order) => {
+    setSelectedOrderId(order.id);
+    if (order.customerId) {
+      setSelectedCustomerId(order.customerId);
+    } else {
+      const matchedCust = customers.find(c => c.name?.trim() === order.customerName?.trim());
+      if (matchedCust) setSelectedCustomerId(matchedCust.id);
+    }
+  };
 
   // Current Selected Order Object
   const selectedOrder = useMemo(() => {
@@ -83,11 +136,54 @@ export const InstallmentsView: React.FC = () => {
     return orders.find(o => o.id === selectedOrderId) || null;
   }, [orders, selectedOrderId]);
 
-  // Customer for Selected Order
+  // Customer for Selected Customer ID or Selected Order
   const selectedCustomer = useMemo(() => {
+    if (selectedCustomerId) {
+      return customers.find(c => c.id === selectedCustomerId) || null;
+    }
     if (!selectedOrder) return null;
     return customers.find(c => c.id === selectedOrder.customerId) || null;
-  }, [customers, selectedOrder]);
+  }, [customers, selectedCustomerId, selectedOrder]);
+
+  // All orders belonging to the currently selected customer
+  const selectedCustomerOrders = useMemo(() => {
+    if (!selectedCustomer) {
+      if (selectedOrder?.customerName) {
+        return activeOrders.filter(o => o.customerName?.trim() === selectedOrder.customerName?.trim());
+      }
+      return [];
+    }
+    return activeOrders.filter(o =>
+      o.customerId === selectedCustomer.id ||
+      (selectedCustomer.name && o.customerName && o.customerName.trim() === selectedCustomer.name.trim())
+    );
+  }, [activeOrders, selectedCustomer, selectedOrder]);
+
+  // Filtered customers for the customer selector search
+  const customersWithOrderStats = useMemo(() => {
+    return customers.map(c => {
+      const cOrders = activeOrders.filter(
+        o => o.customerId === c.id || (c.name && o.customerName && o.customerName.trim() === c.name.trim())
+      );
+      const totalRem = cOrders.reduce((sum, o) => sum + (Number(o.remainingAmount) || 0), 0);
+      const totalVal = cOrders.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
+      return {
+        customer: c,
+        ordersCount: cOrders.length,
+        totalRemaining: totalRem,
+        totalValue: totalVal
+      };
+    }).filter(item => {
+      if (!customerSearchQuery.trim()) return true;
+      const q = customerSearchQuery.toLowerCase().trim();
+      return (
+        (item.customer.name || '').toLowerCase().includes(q) ||
+        (item.customer.phone || '').includes(q) ||
+        (item.customer.code || '').toLowerCase().includes(q) ||
+        (item.customer.governorate || '').toLowerCase().includes(q)
+      );
+    }).sort((a, b) => b.ordersCount - a.ordersCount || b.totalRemaining - a.totalRemaining);
+  }, [customers, activeOrders, customerSearchQuery]);
 
   // Previous payments specifically for this order
   const previousPayments = useMemo(() => {
@@ -103,10 +199,22 @@ export const InstallmentsView: React.FC = () => {
       const remaining = selectedOrder.remainingAmount || 0;
       setPaymentAmount(remaining > 0 ? String(remaining) : '0');
       
-      const pType = (selectedOrder.paidAmount || 0) === 0 ? 'عربون / دفعة أولى' : (remaining <= 0 ? 'دفعة تسوية' : 'دفعة لاحقة');
+      const pType = (selectedOrder.paidAmount || 0) === 0
+        ? 'عربون / دفعة أولى'
+        : (remaining <= 0 ? 'دفعة تسوية' : 'دفعة نهائية');
       setPaymentType(pType);
-      setStatement(`سداد ${pType} للطلب ${selectedOrder.orderNumber} (${selectedOrder.site || 'شي إن'})`);
+      setStatement(`سداد ${pType} للطلب #${selectedOrder.orderNumber} (${selectedOrder.site || 'شي إن'})`);
       setFormError('');
+
+      const existingDlv = deliveryOrders.find(
+        d => d.orderId === selectedOrder.id || String(d.orderNumber) === String(selectedOrder.orderNumber)
+      );
+      const initCourierId = selectedOrder.courierId || existingDlv?.courierId || couriers[0]?.id || 0;
+      setCourierId(initCourierId);
+      const cObj = couriers.find(c => c.id === initCourierId);
+      setDeliveryFee(Number(selectedOrder.deliveryFee) || Number(existingDlv?.deliveryFee) || Number(cObj?.defaultDeliveryFee) || 1500);
+      setCourierCustodyAmount(remaining);
+      setCustomCustodyEdited(false);
     }
   }, [selectedOrderId]);
 
@@ -159,6 +267,20 @@ export const InstallmentsView: React.FC = () => {
   const remainingAfterPayment = Math.max(0, currentRem - numPayNow);
   const amountWords = numPayNow > 0 ? numberToArabicWords(numPayNow) : '';
 
+  const isFinalPaymentFlow = Boolean(
+    paymentType === 'دفعة نهائية' ||
+    paymentType === 'دفعة استلام نهائية' ||
+    (selectedOrder && numPayNow > 0 && remainingAfterPayment === 0)
+  );
+  const selectedCourier = couriers.find(c => c.id === courierId);
+  const selectedAcc = accounts.find(a => a.id === selectedAccountId);
+
+  useEffect(() => {
+    if (!customCustodyEdited) {
+      setCourierCustodyAmount(numPayNow);
+    }
+  }, [numPayNow, customCustodyEdited]);
+
   // Handle Recording the Payment Now
   const handleRecordPaymentNow = (e: React.FormEvent) => {
     e.preventDefault();
@@ -174,7 +296,12 @@ export const InstallmentsView: React.FC = () => {
       return;
     }
 
-    if (!selectedAccountId) {
+    if (isFinalPaymentFlow && !courierId && couriers.length > 0) {
+      setFormError('يرجى اختيار المندوب الذي وصّل الطلب ليتم قيده في نظام الموصلين');
+      return;
+    }
+
+    if ((!isFinalPaymentFlow || deliveryPaymentMethod === 'transfer_to_wallet') && !selectedAccountId) {
       setFormError('يرجى تحديد حساب الدفع أو المحفظة');
       return;
     }
@@ -183,17 +310,23 @@ export const InstallmentsView: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const selectedAcc = accounts.find(a => a.id === selectedAccountId);
-
       const created = recordPayment({
         customerId: selectedOrder.customerId,
         orderId: selectedOrder.id,
         amount: numPayNow,
         accountId: selectedAccountId,
-        paymentMethod: selectedAcc?.name || 'محفظة',
-        paymentType,
-        statement: statement.trim() || `سداد ${paymentType} للطلب ${selectedOrder.orderNumber}`,
-        notes: notes.trim() || undefined
+        paymentMethod: isFinalPaymentFlow && deliveryPaymentMethod === 'cash_to_courier'
+          ? `نقدي للمندوب (${selectedCourier?.name || 'المندوب'})`
+          : (selectedAcc?.name || 'محفظة'),
+        paymentType: isFinalPaymentFlow ? 'دفعة نهائية' : paymentType,
+        statement: statement.trim() || `سداد ${isFinalPaymentFlow ? 'دفعة نهائية' : paymentType} للطلب #${selectedOrder.orderNumber}`,
+        notes: notes.trim() || undefined,
+        courierId: isFinalPaymentFlow && courierId ? courierId : undefined,
+        deliveryPaymentMethod: isFinalPaymentFlow && courierId ? deliveryPaymentMethod : undefined,
+        deliveryFee: isFinalPaymentFlow && courierId ? Number(deliveryFee) : undefined,
+        courierCustodyAmount: isFinalPaymentFlow && courierId && deliveryPaymentMethod === 'cash_to_courier'
+          ? Number(courierCustodyAmount)
+          : undefined
       });
 
       setIsSubmitting(false);
@@ -271,30 +404,210 @@ export const InstallmentsView: React.FC = () => {
         </div>
       </div>
 
-      {/* Quick Order Switcher Selector Bar */}
-      <div className="bg-white p-4 rounded-2xl border-2 border-amber-500/30 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold shrink-0">
-            <ShoppingBag className="w-5 h-5" />
+      {/* Step 1 & Step 2: Select Customer -> View All Customer Orders -> Pick Order */}
+      <div className="bg-white rounded-2xl border-2 border-[#1A3668]/20 shadow-sm overflow-hidden">
+        {/* Step 1: Customer Selection Bar */}
+        <div className="p-4 sm:p-5 bg-gradient-to-l from-[#1A3668]/5 via-slate-50 to-amber-50/40 border-b border-slate-200 space-y-4">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-[#1A3668] text-[#C5A059] flex items-center justify-center font-black shadow-sm shrink-0">
+                <User className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-md bg-[#1A3668] text-white text-[10px] font-black">الخطوة 1</span>
+                  <h3 className="text-sm sm:text-base font-black text-slate-900">اختر العميل لعرض جميع طلباته</h3>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  عند اختيار العميل ستظهر لك جميع طلباته فوراً، وعند اختيار أي طلب ستظهر كامل بياناته وسجل دفعاته
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full lg:w-auto">
+              {/* Quick Search Customer */}
+              <div className="relative sm:w-56">
+                <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={customerSearchQuery}
+                  onChange={e => setCustomerSearchQuery(e.target.value)}
+                  placeholder="ابحث باسم أو رقم العميل..."
+                  className="w-full pr-9 pl-3 py-2.5 rounded-xl border border-slate-300 bg-white text-xs font-bold focus:outline-none focus:border-[#1A3668]"
+                />
+              </div>
+
+              {/* Customer Dropdown Selector */}
+              <div className="sm:w-80">
+                <select
+                  value={selectedCustomer?.id || ''}
+                  onChange={e => {
+                    const val = Number(e.target.value);
+                    if (val) handleSelectCustomer(val);
+                  }}
+                  className="w-full p-2.5 rounded-xl border-2 border-[#1A3668] bg-white text-xs font-black text-slate-900 focus:outline-none cursor-pointer shadow-2xs"
+                >
+                  <option value="" disabled>-- اختر العميل من القائمة --</option>
+                  {customersWithOrderStats.map(({ customer: c, ordersCount, totalRemaining }) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} ({c.governorate || 'صنعاء'}) — {ordersCount} طلبات {totalRemaining > 0 ? `• المتبقي: ${totalRemaining.toLocaleString()} ر.ي` : '• مسدد'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm font-black text-slate-900">اختيار الطلب الحالي للسداد والاستعراض</h3>
-            <p className="text-[11px] text-slate-500">اختر أي طلبية مباشرة لعرض تفاصيلها ودفعاتها السابقة وسداد الدفعة الآن</p>
+
+          {/* Quick Horizontal Customer Pills (Customers with orders) */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 no-scrollbar">
+            <span className="text-[11px] font-bold text-slate-500 shrink-0">اختيار سريع للعميل:</span>
+            {customersWithOrderStats.filter(x => x.ordersCount > 0).slice(0, 12).map(({ customer: c, ordersCount, totalRemaining }) => {
+              const isCustSelected = selectedCustomer?.id === c.id;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => handleSelectCustomer(c.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-2 cursor-pointer border ${
+                    isCustSelected
+                      ? 'bg-[#1A3668] text-white border-[#1A3668] shadow-xs'
+                      : 'bg-white text-slate-700 border-slate-200 hover:border-[#1A3668]/40 hover:bg-slate-50'
+                  }`}
+                >
+                  <span>{c.name}</span>
+                  <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-mono font-black ${
+                    isCustSelected ? 'bg-[#C5A059] text-slate-950' : 'bg-slate-100 text-slate-700'
+                  }`}>
+                    {ordersCount} طلب
+                  </span>
+                  {totalRemaining > 0 && (
+                    <span className={`text-[10px] font-mono ${isCustSelected ? 'text-amber-200' : 'text-rose-600'}`}>
+                      ({totalRemaining.toLocaleString()})
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <div className="w-full md:w-96">
-          <select
-            value={selectedOrderId || ''}
-            onChange={e => setSelectedOrderId(Number(e.target.value))}
-            className="w-full p-2.5 rounded-xl border-2 border-amber-500/50 focus:border-amber-500 bg-amber-50/40 text-xs font-black text-slate-900 focus:outline-none cursor-pointer"
-          >
-            {activeOrders.map(o => (
-              <option key={o.id} value={o.id}>
-                طلب #{o.orderNumber} • {o.customerName} • {o.site || 'شي إن'} (المتبقي: {(o.remainingAmount || 0).toLocaleString()} YER)
-              </option>
-            ))}
-          </select>
+        {/* Step 2: All Orders of the Selected Customer */}
+        <div className="p-4 sm:p-5 bg-white space-y-3.5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <span className="px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 text-[10px] font-black">الخطوة 2</span>
+              <h4 className="text-sm font-black text-slate-900">
+                جميع طلبات العميل: <span className="text-[#1A3668] underline decoration-[#C5A059]">{selectedCustomer?.name || selectedOrder?.customerName || 'غير محدد'}</span>
+                <span className="mr-2 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs font-mono">
+                  {selectedCustomerOrders.length} طلبات
+                </span>
+              </h4>
+            </div>
+
+            {selectedCustomerOrders.length > 0 && (
+              <div className="flex flex-wrap items-center gap-3 text-xs">
+                <span className="text-slate-500">
+                  إجمالي طلبات العميل: <strong className="font-mono text-slate-900">{selectedCustomerOrders.reduce((s, o) => s + (o.totalAmount || 0), 0).toLocaleString()} ر.ي</strong>
+                </span>
+                <span className="text-emerald-700">
+                  المدفوع: <strong className="font-mono">{selectedCustomerOrders.reduce((s, o) => s + (o.paidAmount || 0), 0).toLocaleString()} ر.ي</strong>
+                </span>
+                <span className="text-rose-700">
+                  المتبقي: <strong className="font-mono font-black">{selectedCustomerOrders.reduce((s, o) => s + (o.remainingAmount || 0), 0).toLocaleString()} ر.ي</strong>
+                </span>
+              </div>
+            )}
+          </div>
+
+          {selectedCustomerOrders.length === 0 ? (
+            <div className="p-6 text-center bg-slate-50 rounded-xl border border-dashed border-slate-300 text-xs text-slate-500">
+              لا توجد طلبات مسجلة لهذا العميل حالياً. اختر عميلاً آخر من الأعلى لعرض طلباته.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {selectedCustomerOrders.map(ord => {
+                const isSelected = selectedOrder?.id === ord.id;
+                const rem = ord.remainingAmount || 0;
+                const paid = ord.paidAmount || 0;
+                const total = ord.totalAmount || 0;
+                const orderStatusLabel =
+                  ord.status === 'delivered' ? 'تم التسليم للعميل' :
+                  ord.status === 'shipped' ? 'في الشحن' :
+                  ord.status === 'purchased' ? 'تم الشراء' : 'قيد الانتظار';
+
+                return (
+                  <div
+                    key={ord.id}
+                    onClick={() => handleSelectOrder(ord)}
+                    className={`p-3.5 rounded-2xl border-2 transition-all cursor-pointer relative flex flex-col justify-between gap-2.5 ${
+                      isSelected
+                        ? 'border-[#1A3668] bg-gradient-to-br from-[#1A3668]/5 via-blue-50/40 to-amber-50/40 shadow-md ring-2 ring-[#C5A059]/40'
+                        : 'border-slate-200 bg-slate-50/60 hover:bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono font-black text-sm text-slate-950">
+                            طلب #{ord.orderNumber}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-[10px] font-bold text-indigo-700">
+                            {ord.site || 'شي إن'}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-2">
+                          <span>تاريخ: <strong className="font-mono">{ord.orderDate ? ord.orderDate.split('T')[0] : '—'}</strong></span>
+                          <span>•</span>
+                          <span>{ord.itemsCount || 1} قطع</span>
+                          <span>•</span>
+                          <span className="text-slate-700 font-semibold">{orderStatusLabel}</span>
+                        </div>
+                      </div>
+
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-black shrink-0 ${
+                        rem === 0
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                          : paid > 0
+                          ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                          : 'bg-rose-100 text-rose-800 border border-rose-300'
+                      }`}>
+                        {rem === 0 ? 'مسدد بالكامل ✓' : paid > 0 ? 'مسدد جزئياً' : 'غير مسدد'}
+                      </span>
+                    </div>
+
+                    {ord.notes && (
+                      <p className="text-[11px] text-slate-600 line-clamp-1 bg-white/80 px-2 py-1 rounded-lg border border-slate-200/70">
+                        {ord.notes}
+                      </p>
+                    )}
+
+                    <div className="grid grid-cols-3 gap-1.5 pt-2 border-t border-slate-200/80 text-center text-[11px]">
+                      <div className="bg-white p-1.5 rounded-lg border border-slate-200/80">
+                        <span className="text-[10px] text-slate-400 block">الإجمالي</span>
+                        <span className="font-mono font-black text-slate-900">{total.toLocaleString()}</span>
+                      </div>
+                      <div className="bg-emerald-50/70 p-1.5 rounded-lg border border-emerald-200/70">
+                        <span className="text-[10px] text-emerald-700 block">المدفوع</span>
+                        <span className="font-mono font-black text-emerald-700">{paid.toLocaleString()}</span>
+                      </div>
+                      <div className="bg-rose-50/70 p-1.5 rounded-lg border border-rose-200/70">
+                        <span className="text-[10px] text-rose-700 block">المتبقي</span>
+                        <span className="font-mono font-black text-rose-700">{rem.toLocaleString()}</span>
+                      </div>
+                    </div>
+
+                    <div className={`w-full py-1.5 px-3 rounded-xl text-center text-[11px] font-black transition ${
+                      isSelected
+                        ? 'bg-[#1A3668] text-white'
+                        : 'bg-white border border-slate-200 text-slate-700 hover:bg-amber-50 hover:text-amber-900'
+                    }`}>
+                      {isSelected ? '✓ الطلب المحدد حالياً (بياناته معروضة أدناه)' : 'اضغط لعرض بيانات الطلب وسداد دفعة'}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
@@ -306,29 +619,36 @@ export const InstallmentsView: React.FC = () => {
           <div className="lg:col-span-7 space-y-5">
             
             {/* Panel 1: بيانات الطلب المختار */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 space-y-4">
+            <div className="bg-white rounded-2xl border-2 border-[#1A3668]/20 shadow-xs p-5 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-2">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold shrink-0">
+                  <div className="w-11 h-11 rounded-xl bg-[#1A3668] text-[#C5A059] flex items-center justify-center font-bold shrink-0 shadow-xs">
                     <ShoppingBag className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-base font-bold text-slate-900">
-                        الطلب #{selectedOrder.orderNumber}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-black">الخطوة 3</span>
+                      <h3 className="text-base sm:text-lg font-black text-slate-900">
+                        بيانات الطلب المختار #{selectedOrder.orderNumber}
                       </h3>
-                      <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 font-sans">
+                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 font-sans">
                         {selectedOrder.site || 'شي إن SHEIN'}
                       </span>
                     </div>
-                    <span className="text-xs text-slate-400">
-                      تاريخ الطلب: <span className="font-mono text-slate-600">{selectedOrder.orderDate ? selectedOrder.orderDate.split('T')[0] : '—'}</span>
-                    </span>
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 mt-1">
+                      <span>تاريخ الطلب: <strong className="font-mono text-slate-800">{selectedOrder.orderDate ? selectedOrder.orderDate.split('T')[0] : '—'}</strong></span>
+                      {selectedOrder.shipmentNumber && (
+                        <span>• رقم الشحنة: <strong className="font-mono text-indigo-700">{selectedOrder.shipmentNumber}</strong></span>
+                      )}
+                      {selectedOrder.invoiceNumber && (
+                        <span>• رقم الفاتورة: <strong className="font-mono text-slate-800">{selectedOrder.invoiceNumber}</strong></span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                  <span className={`px-3 py-1 rounded-full text-xs font-black ${
                     (selectedOrder.remainingAmount || 0) === 0
                       ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                       : (selectedOrder.paidAmount || 0) > 0
@@ -345,31 +665,38 @@ export const InstallmentsView: React.FC = () => {
               </div>
 
               {/* Customer Info Box */}
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 font-bold shrink-0">
+                  <div className="w-9 h-9 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-[#1A3668] font-bold shrink-0">
                     <User className="w-4 h-4" />
                   </div>
                   <div>
                     <span className="text-[11px] text-slate-400 block">العميل صاحب الطلب:</span>
-                    <span className="font-bold text-slate-900 text-sm">{selectedOrder.customerName}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-black text-slate-900 text-sm">{selectedCustomer?.name || selectedOrder.customerName}</span>
+                      {(selectedCustomer?.governorate || selectedCustomer?.address) && (
+                        <span className="px-2 py-0.5 rounded bg-white border border-slate-200 text-[10px] font-bold text-slate-600">
+                          {selectedCustomer?.governorate} {selectedCustomer?.address ? `- ${selectedCustomer.address}` : ''}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {selectedOrder.customerPhone && (
+                {(selectedCustomer?.phone || (selectedOrder as any).customerPhone) && (
                   <div className="flex items-center gap-2">
                     <a
-                      href={`tel:${selectedOrder.customerPhone}`}
+                      href={`tel:${selectedCustomer?.phone || (selectedOrder as any).customerPhone}`}
                       className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:text-slate-900 font-mono text-xs font-medium"
                     >
                       <Phone className="w-3 h-3 text-slate-500" />
-                      <span>{selectedOrder.customerPhone}</span>
+                      <span>{selectedCustomer?.phone || (selectedOrder as any).customerPhone}</span>
                     </a>
                     <a
-                      href={`https://wa.me/967${selectedOrder.customerPhone.replace(/^0+/, '')}`}
+                      href={`https://wa.me/967${String(selectedCustomer?.phone || (selectedOrder as any).customerPhone).replace(/^0+/, '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 font-bold text-xs"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 font-bold text-xs"
                       title="مراسلة عبر واتساب"
                     >
                       <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
@@ -379,11 +706,59 @@ export const InstallmentsView: React.FC = () => {
                 )}
               </div>
 
-              {/* Description of items */}
-              {selectedOrder.itemsDescription && (
-                <div className="text-xs text-slate-600 bg-amber-50/50 p-2.5 rounded-xl border border-amber-200/60">
-                  <span className="font-bold text-amber-900 block mb-0.5">محتويات وأصناف الطلبية:</span>
-                  <p>{selectedOrder.itemsDescription}</p>
+              {/* Detailed Order Specifications Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+                <div className="p-2.5 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                  <span className="text-[10px] text-slate-400 block">عدد القطع / الأصناف</span>
+                  <span className="font-black text-slate-900 font-mono text-sm">{selectedOrder.itemsCount || 1} قطعة</span>
+                </div>
+                <div className="p-2.5 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                  <span className="text-[10px] text-slate-400 block">حالة الطلبية</span>
+                  <span className="font-black text-indigo-900 text-xs">
+                    {selectedOrder.status === 'delivered' ? 'تم التسليم ✓' :
+                     selectedOrder.status === 'shipped' ? 'في الشحن الدولي/المحلي' :
+                     selectedOrder.status === 'purchased' ? 'تم الشراء من الموقع' : 'قيد الانتظار والطلب'}
+                  </span>
+                </div>
+                <div className="p-2.5 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                  <span className="text-[10px] text-slate-400 block">قيمة السلة / الفرعي</span>
+                  <span className="font-black text-slate-800 font-mono text-xs">
+                    {(selectedOrder.subtotal || selectedOrder.totalAmount || 0).toLocaleString()} ر.ي
+                  </span>
+                </div>
+                <div className="p-2.5 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                  <span className="text-[10px] text-slate-400 block">الشحن / التوصيل المحلي</span>
+                  <span className="font-black text-slate-800 font-mono text-xs">
+                    {((Number(selectedOrder.shippingFee) || 0) + (Number(selectedOrder.deliveryFee) || 0)).toLocaleString()} ر.ي
+                  </span>
+                </div>
+              </div>
+
+              {/* Description of items or Order Notes */}
+              {((selectedOrder as any).itemsDescription || selectedOrder.notes) && (
+                <div className="text-xs text-slate-700 bg-amber-50/60 p-3 rounded-xl border border-amber-200/70">
+                  <span className="font-black text-amber-950 block mb-1">تفاصيل وملاحظات الطلبية:</span>
+                  <p className="leading-relaxed">{(selectedOrder as any).itemsDescription || selectedOrder.notes}</p>
+                </div>
+              )}
+
+              {/* Order Items Table if available */}
+              {selectedOrder.items && selectedOrder.items.length > 0 && (
+                <div className="border border-slate-200 rounded-xl overflow-hidden">
+                  <div className="bg-slate-50 px-3 py-2 border-b border-slate-200 text-[11px] font-black text-slate-700">
+                    بنود وأصناف الفاتورة ({selectedOrder.items.length})
+                  </div>
+                  <div className="divide-y divide-slate-100 text-xs">
+                    {selectedOrder.items.map((item, idx) => (
+                      <div key={item.id || idx} className="px-3 py-2 flex items-center justify-between">
+                        <div>
+                          <span className="font-bold text-slate-800">{item.name}</span>
+                          <span className="text-[11px] text-slate-400 mr-2">({item.quantity} × {Number(item.unitPrice).toLocaleString()})</span>
+                        </div>
+                        <span className="font-mono font-bold text-slate-900">{Number(item.total).toLocaleString()} ر.ي</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -616,25 +991,6 @@ export const InstallmentsView: React.FC = () => {
                   )}
                 </div>
 
-                {/* Account / Wallet Selector */}
-                <div>
-                  <label className="font-bold text-slate-800 block mb-1">
-                    الحساب / المحفظة المستلمة *
-                  </label>
-                  <select
-                    required
-                    value={selectedAccountId}
-                    onChange={e => setSelectedAccountId(Number(e.target.value))}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500 bg-white font-medium text-xs"
-                  >
-                    {accounts.filter(a => a.status === 'active').map(a => (
-                      <option key={a.id} value={a.id}>
-                        {a.name} ({a.type})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
                 {/* Payment Type & Date */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
@@ -644,14 +1000,14 @@ export const InstallmentsView: React.FC = () => {
                       onChange={e => {
                         setPaymentType(e.target.value);
                         if (selectedOrder) {
-                          setStatement(`سداد ${e.target.value} للطلب ${selectedOrder.orderNumber}`);
+                          setStatement(`سداد ${e.target.value} للطلب #${selectedOrder.orderNumber}`);
                         }
                       }}
-                      className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500 bg-white text-xs"
+                      className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500 bg-white text-xs font-bold"
                     >
                       <option value="عربون / دفعة أولى">عربون / دفعة أولى</option>
                       <option value="دفعة ثانية (شحن)">دفعة ثانية (عند الشحن)</option>
-                      <option value="دفعة استلام نهائية">دفعة استلام نهائية</option>
+                      <option value="دفعة نهائية">دفعة نهائية (عند التسليم للمندوب)</option>
                       <option value="دفعة لاحقة">دفعة لاحقة</option>
                       <option value="سداد على الحساب">سداد على الحساب</option>
                     </select>
@@ -667,6 +1023,174 @@ export const InstallmentsView: React.FC = () => {
                     />
                   </div>
                 </div>
+
+                {/* Courier & Delivery System Integration when Final Payment */}
+                {isFinalPaymentFlow ? (
+                  <div className="p-3.5 rounded-2xl bg-gradient-to-br from-[#1A3668]/5 via-blue-50/70 to-amber-50/50 border-2 border-[#1A3668]/25 space-y-3">
+                    <div className="flex items-center justify-between border-b border-[#1A3668]/15 pb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-[#1A3668] text-[#C5A059] flex items-center justify-center">
+                          <Bike className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="font-black text-slate-900 text-xs">
+                            نظام الموصلين — الدفعة النهائية
+                          </h4>
+                          <p className="text-[10px] text-slate-600">
+                            يظهر طلب العميل في نظام الموصلين باسم المندوب المختار
+                          </p>
+                        </div>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-md bg-[#1A3668] text-white font-mono font-bold text-[10px]">
+                        طلب رقم #{selectedOrder.orderNumber}
+                      </span>
+                    </div>
+
+                    {/* 1. Select Courier */}
+                    <div>
+                      <label className="font-bold text-slate-800 block mb-1">
+                        1. اختر المندوب الذي وصّل الطلب *
+                      </label>
+                      <select
+                        value={courierId}
+                        onChange={e => {
+                          const cId = Number(e.target.value);
+                          setCourierId(cId);
+                          const cObj = couriers.find(c => c.id === cId);
+                          if (cObj?.defaultDeliveryFee) {
+                            setDeliveryFee(Number(cObj.defaultDeliveryFee));
+                          }
+                        }}
+                        className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-bold text-slate-900 text-xs"
+                        required
+                      >
+                        {couriers.map(c => (
+                          <option key={c.id} value={c.id}>
+                            {c.name} ({c.zone || c.coverageZones || 'صنعاء'}) — رصيده الحالي: {(Number(c.currentCustodyBalance) || 0).toLocaleString()} ريال
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* 2. Payment Method: Cash to Courier vs Wallet */}
+                    <div>
+                      <label className="font-bold text-slate-800 block mb-1.5">
+                        2. اختر طريقة الدفع *
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setDeliveryPaymentMethod('cash_to_courier')}
+                          className={`p-2.5 rounded-xl border-2 text-right transition cursor-pointer ${
+                            deliveryPaymentMethod === 'cash_to_courier'
+                              ? 'border-amber-600 bg-amber-50 text-amber-950 shadow-xs'
+                              : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                          }`}
+                        >
+                          <div className="font-black text-xs flex items-center gap-1">
+                            <DollarSign className="w-3.5 h-3.5 text-amber-600" />
+                            <span>نقدي للمندوب نفسه</span>
+                          </div>
+                          <div className="text-[10px] text-slate-600 mt-0.5">
+                            تسجل برصيد المندوب <strong>طلب رقم #{selectedOrder.orderNumber}</strong>
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setDeliveryPaymentMethod('transfer_to_wallet')}
+                          className={`p-2.5 rounded-xl border-2 text-right transition cursor-pointer ${
+                            deliveryPaymentMethod === 'transfer_to_wallet'
+                              ? 'border-[#1A3668] bg-blue-50 text-[#1A3668] shadow-xs'
+                              : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                          }`}
+                        >
+                          <div className="font-black text-xs flex items-center gap-1">
+                            <Wallet className="w-3.5 h-3.5 text-[#1A3668]" />
+                            <span>محفظة إلكترونية</span>
+                          </div>
+                          <div className="text-[10px] text-slate-600 mt-0.5">
+                            يزداد رصيد المحفظة + <strong>استحقاق للمندوب عندنا</strong>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+
+                    {deliveryPaymentMethod === 'cash_to_courier' ? (
+                      <div className="p-2.5 bg-amber-100/70 border border-amber-300 rounded-xl space-y-2">
+                        <label className="font-bold text-amber-950 block text-[11px]">
+                          المبلغ المسجل في رصيد المندوب ({selectedCourier?.name}) عن طلب رقم #{selectedOrder.orderNumber}:
+                        </label>
+                        <input
+                          type="number"
+                          value={courierCustodyAmount || ''}
+                          onChange={e => {
+                            setCourierCustodyAmount(Number(e.target.value));
+                            setCustomCustodyEdited(true);
+                          }}
+                          className="w-full p-2 rounded-lg border border-amber-400 bg-white font-mono font-black text-amber-900 text-xs"
+                        />
+                        <div className="text-[10px] text-amber-900 font-bold">
+                          ✓ يسجل برصيد المندوب {selectedCourier?.name}: <strong>طلب رقم #{selectedOrder.orderNumber}</strong> بمبلغ <strong>{(Number(courierCustodyAmount) || 0).toLocaleString()} ريال</strong>.
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-2.5 bg-blue-100/60 border border-blue-300 rounded-xl space-y-2.5">
+                        <div>
+                          <label className="font-bold text-blue-950 block mb-1 text-[11px]">
+                            المحفظة المستلمة (يزداد رصيدها) *
+                          </label>
+                          <select
+                            required
+                            value={selectedAccountId}
+                            onChange={e => setSelectedAccountId(Number(e.target.value))}
+                            className="w-full p-2 rounded-lg border border-blue-300 bg-white font-bold text-slate-900 text-xs"
+                          >
+                            {accounts.filter(a => a.status === 'active').map(a => (
+                              <option key={a.id} value={a.id}>
+                                {a.name} ({a.type})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="font-bold text-purple-950 block mb-1 text-[11px]">
+                            استحقاق المندوب عندنا (لازم ندفعه له) *
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={deliveryFee}
+                            onChange={e => setDeliveryFee(Number(e.target.value))}
+                            className="w-full p-2 rounded-lg border border-purple-300 bg-white font-mono font-black text-purple-900 text-xs"
+                          />
+                        </div>
+                        <div className="text-[10px] text-blue-950 font-bold space-y-0.5">
+                          <div>✓ يزداد رصيد <strong>{selectedAcc?.name}</strong> بمبلغ <strong>{numPayNow.toLocaleString()} ريال</strong></div>
+                          <div className="text-purple-900">✓ يسجل للمندوب <strong>{selectedCourier?.name}</strong> استحقاق عندنا: <strong>{Number(deliveryFee).toLocaleString()} ريال</strong> عن طلب رقم #{selectedOrder.orderNumber}</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <label className="font-bold text-slate-800 block mb-1">
+                      الحساب / المحفظة المستلمة *
+                    </label>
+                    <select
+                      required
+                      value={selectedAccountId}
+                      onChange={e => setSelectedAccountId(Number(e.target.value))}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500 bg-white font-medium text-xs"
+                    >
+                      {accounts.filter(a => a.status === 'active').map(a => (
+                        <option key={a.id} value={a.id}>
+                          {a.name} ({a.type})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 {/* Statement & Notes */}
                 <div>
@@ -826,7 +1350,7 @@ export const InstallmentsView: React.FC = () => {
                   return (
                     <tr
                       key={order.id}
-                      onClick={() => setSelectedOrderId(order.id)}
+                      onClick={() => handleSelectOrder(order)}
                       className={`cursor-pointer transition-colors ${
                         isSelected
                           ? 'bg-amber-50/80 font-bold border-r-4 border-r-amber-500'
@@ -838,8 +1362,8 @@ export const InstallmentsView: React.FC = () => {
                       </td>
                       <td className="p-3">
                         <span className="font-bold text-slate-900 block">{order.customerName}</span>
-                        {order.customerPhone && (
-                          <span className="text-[11px] text-slate-400 font-mono">{order.customerPhone}</span>
+                        {(order as any).customerPhone && (
+                          <span className="text-[11px] text-slate-400 font-mono">{(order as any).customerPhone}</span>
                         )}
                       </td>
                       <td className="p-3">
@@ -871,7 +1395,7 @@ export const InstallmentsView: React.FC = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSelectedOrderId(order.id);
+                            handleSelectOrder(order);
                           }}
                           className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
                             isSelected

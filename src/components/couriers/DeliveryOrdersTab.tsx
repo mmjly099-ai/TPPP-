@@ -58,6 +58,8 @@ export const DeliveryOrdersTab: React.FC<DeliveryOrdersTabProps> = ({
   // Status Change Dialog state
   const [statusModalOrder, setStatusModalOrder] = useState<DeliveryOrder | null>(null);
   const [targetStatus, setTargetStatus] = useState<DeliveryOrderStatus>('delivered');
+  const [statusCourierId, setStatusCourierId] = useState<number>(couriers[0]?.id || 0);
+  const [statusDeliveryFee, setStatusDeliveryFee] = useState<number>(1500);
   const [statusNotes, setStatusNotes] = useState('');
   const [statusCollectionMethod, setStatusCollectionMethod] = useState<'cash_to_courier' | 'transfer_to_wallet' | 'waived'>('cash_to_courier');
   const [statusWalletId, setStatusWalletId] = useState<number>(accounts.find(a => a.type === 'محفظة')?.id || accounts[0]?.id || 0);
@@ -172,7 +174,9 @@ export const DeliveryOrdersTab: React.FC<DeliveryOrdersTabProps> = ({
 
   const handleOpenStatusModal = (order: DeliveryOrder) => {
     setStatusModalOrder(order);
-    setTargetStatus(order.status);
+    setTargetStatus(order.status === 'pending_dispatch' ? 'delivered' : order.status);
+    setStatusCourierId(order.courierId || couriers[0]?.id || 0);
+    setStatusDeliveryFee(Number(order.deliveryFee) || 1500);
     setStatusCollectionMethod(order.collectionMethod === 'unassigned' ? 'cash_to_courier' : (order.collectionMethod as any));
     setStatusWalletId(order.walletId || accounts.find(a => a.type === 'محفظة')?.id || accounts[0]?.id || 0);
     setStatusWalletRef(order.walletReference || '');
@@ -184,6 +188,8 @@ export const DeliveryOrdersTab: React.FC<DeliveryOrdersTabProps> = ({
     if (!statusModalOrder) return;
 
     updateDeliveryOrderStatus(statusModalOrder.id, targetStatus, {
+      courierId: statusCourierId,
+      deliveryFee: Number(statusDeliveryFee) || 1500,
       failedReason: targetStatus === 'delivery_failed' || targetStatus === 'returned' ? statusNotes : undefined,
       deliveredAt: targetStatus === 'delivered' ? new Date().toISOString().split('T')[0] : undefined,
       collectionMethod: statusCollectionMethod,
@@ -346,9 +352,14 @@ export const DeliveryOrdersTab: React.FC<DeliveryOrdersTabProps> = ({
 
                     {/* Order Reference */}
                     <td className="py-3.5 px-3.5 whitespace-nowrap">
-                      <div className="font-bold text-[#1A3668]">
-                        #{order.orderNumber || 'مباشر'}
+                      <div className="font-black text-[#1A3668] bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-lg inline-block">
+                        طلب رقم #{order.orderNumber || 'مباشر'}
                       </div>
+                      {order.finalPaymentAmount ? (
+                        <div className="text-[10px] text-emerald-700 font-bold mt-0.5">
+                          الدفعة النهائية: {order.finalPaymentAmount.toLocaleString()} ريال
+                        </div>
+                      ) : null}
                       {order.shipmentNumber && (
                         <div className="text-[10px] text-slate-500">
                           شحنة: {order.shipmentNumber}
@@ -370,14 +381,23 @@ export const DeliveryOrdersTab: React.FC<DeliveryOrdersTabProps> = ({
 
                     {/* Courier */}
                     <td className="py-3.5 px-3.5 whitespace-nowrap">
-                      <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                        <Bike className="w-3.5 h-3.5 text-blue-600" />
-                        {order.courierName}
-                      </div>
-                      {assignedCourier && (
-                        <div className="text-[10px] text-slate-400">
-                          {assignedCourier.zone || assignedCourier.coverageZones}
-                        </div>
+                      {order.courierId && assignedCourier ? (
+                        <>
+                          <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                            <Bike className="w-3.5 h-3.5 text-blue-600" />
+                            {order.courierName}
+                          </div>
+                          <div className="text-[10px] text-slate-400">
+                            {assignedCourier.zone || assignedCourier.coverageZones}
+                          </div>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => handleOpenStatusModal(order)}
+                          className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold rounded-lg text-[11px] cursor-pointer"
+                        >
+                          اختر المندوب وطريقة الدفع ←
+                        </button>
                       )}
                     </td>
 
@@ -386,7 +406,7 @@ export const DeliveryOrdersTab: React.FC<DeliveryOrdersTabProps> = ({
                       <div className="font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg inline-block text-[11px]">
                         {order.orderOriginalValue ? `${order.orderOriginalValue.toLocaleString()} ريال` : '0 ريال'}
                       </div>
-                      <span className="block text-[9px] text-slate-400 mt-0.5">مرجعية فقط</span>
+                      <span className="block text-[9px] text-slate-400 mt-0.5">قيمة الطلب</span>
                     </td>
 
                     {/* Delivery Fee */}
@@ -394,13 +414,14 @@ export const DeliveryOrdersTab: React.FC<DeliveryOrdersTabProps> = ({
                       <div className="font-black text-sm text-[#1A3668]">
                         {order.deliveryFee.toLocaleString()} ريال
                       </div>
+                      <span className="block text-[9px] text-slate-400">أجرة المندوب</span>
                     </td>
 
                     {/* Delivery Status */}
                     <td className="py-3.5 px-3.5 text-center whitespace-nowrap">
                       <button
                         onClick={() => handleOpenStatusModal(order)}
-                        title="انقر لتحديث حالة التوصيل"
+                        title="انقر لتحديث المندوب وحالة التوصيل وطريقة الدفع"
                         className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all cursor-pointer hover:shadow-xs ${statusBadge.color}`}
                       >
                         <BadgeIcon className="w-3.5 h-3.5" />
@@ -418,44 +439,58 @@ export const DeliveryOrdersTab: React.FC<DeliveryOrdersTabProps> = ({
                     <td className="py-3.5 px-3.5 whitespace-nowrap">
                       {order.collectionMethod === 'cash_to_courier' ? (
                         <div className="space-y-1">
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-lg border border-amber-300">
                             <DollarSign className="w-3 h-3" />
-                            نقداً بعهدة الموصل
+                            نقدي للمندوب نفسه
                           </span>
                           {order.collectionStatus === 'collected_cash' ? (
-                            <div className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3" />
-                              محصّلة بعهدة الموصل
+                            <div className="text-[10px] text-amber-800 font-black flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                              <span>
+                                سُجّل برصيد المندوب: طلب رقم #{order.orderNumber} ({(Number(order.custodyRecordedAmount) || Number(order.finalPaymentAmount) || Number(order.deliveryFee)).toLocaleString()} ريال)
+                              </span>
                             </div>
                           ) : (
                             <button
                               onClick={() => recordDeliveryCashToCourier(order.id)}
                               className="block text-[10px] text-amber-700 hover:text-amber-900 font-bold hover:underline cursor-pointer"
                             >
-                              قيد بالعهدة الآن ✓
+                              تسجيل برصيد المندوب الآن (طلب رقم #{order.orderNumber}) ✓
                             </button>
                           )}
                         </div>
                       ) : order.collectionMethod === 'transfer_to_wallet' ? (
                         <div className="space-y-1">
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-800 bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-200">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-900 bg-blue-100 px-2 py-0.5 rounded-lg border border-blue-300">
                             <Wallet className="w-3 h-3" />
-                            تحويل للمحفظة
+                            محفظة ({order.walletName || 'تحويل'})
                           </span>
-                          {order.walletName && (
-                            <div className="text-[10px] text-slate-600 font-medium">
-                              {order.walletName} {order.walletReference ? `(#${order.walletReference})` : ''}
+                          {order.collectionStatus === 'transferred_to_wallet' ? (
+                            <div className="space-y-0.5">
+                              <div className="text-[10px] text-emerald-700 font-bold flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3" />
+                                <span>زاد رصيد المحفظة ({order.walletName || 'المحفظة'})</span>
+                              </div>
+                              <div className="text-[10px] text-purple-800 font-black bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+                                استحقاق للمندوب عندنا: {(Number(order.payableRecordedAmount) || Number(order.deliveryFee)).toLocaleString()} ريال (طلب رقم #{order.orderNumber})
+                              </div>
                             </div>
-                          )}
-                          {order.collectionStatus !== 'transferred_to_wallet' && (
+                          ) : (
                             <button
                               onClick={() => setWalletTransferModalOrder(order)}
                               className="block text-[10px] text-blue-700 hover:text-blue-900 font-bold hover:underline cursor-pointer"
                             >
-                              توثيق التحويل للمحفظة ✓
+                              تأكيد المحفظة وإثبات استحقاق المندوب ✓
                             </button>
                           )}
                         </div>
+                      ) : order.collectionMethod === 'unassigned' ? (
+                        <button
+                          onClick={() => handleOpenStatusModal(order)}
+                          className="px-2.5 py-1 bg-[#1A3668] hover:bg-[#234885] text-white rounded-lg text-[10px] font-bold cursor-pointer"
+                        >
+                          اختيار المندوب وطريقة الدفع
+                        </button>
                       ) : (
                         <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-lg">
                           معفاة / بدون تحصيل
@@ -543,6 +578,45 @@ export const DeliveryOrdersTab: React.FC<DeliveryOrdersTabProps> = ({
 
             <form onSubmit={handleConfirmStatusChange} className="p-5 sm:p-6 space-y-4 text-xs">
               
+              {/* Courier Selector & Fee */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    المندوب الذي وصّل الطلب (طلب رقم #{statusModalOrder.orderNumber}):
+                  </label>
+                  <select
+                    value={statusCourierId}
+                    onChange={e => {
+                      const cId = Number(e.target.value);
+                      setStatusCourierId(cId);
+                      const cObj = couriers.find(c => c.id === cId);
+                      if (cObj?.defaultDeliveryFee) {
+                        setStatusDeliveryFee(Number(cObj.defaultDeliveryFee));
+                      }
+                    }}
+                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1A3668]"
+                  >
+                    {couriers.map(c => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} ({c.zone || c.coverageZones || 'صنعاء'})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    أجرة / استحقاق توصيل المندوب (ريال):
+                  </label>
+                  <input
+                    type="number"
+                    value={statusDeliveryFee}
+                    onChange={e => setStatusDeliveryFee(Number(e.target.value))}
+                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#1A3668]"
+                  />
+                </div>
+              </div>
+
               {/* Target Status Selection (7 statuses) */}
               <div>
                 <label className="block font-bold text-slate-700 mb-1.5">
@@ -566,7 +640,7 @@ export const DeliveryOrdersTab: React.FC<DeliveryOrdersTabProps> = ({
               {/* Delivery Fee Collection Method */}
               <div>
                 <label className="block font-bold text-slate-700 mb-1.5">
-                  طريقة تحصيل أجرة التوصيل ({statusModalOrder.deliveryFee.toLocaleString()} ريال):
+                  طريقة الدفع عند التسليم (طلب رقم #{statusModalOrder.orderNumber}):
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   <button
@@ -578,8 +652,8 @@ export const DeliveryOrdersTab: React.FC<DeliveryOrdersTabProps> = ({
                         : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
                     }`}
                   >
-                    نقداً للموصل
-                    <span className="block text-[10px] text-slate-400 font-normal mt-0.5">عهدة نقدية</span>
+                    نقدي للمندوب نفسه
+                    <span className="block text-[10px] text-amber-700 font-normal mt-0.5">تسجل برصيد المندوب</span>
                   </button>
                   <button
                     type="button"
@@ -590,8 +664,8 @@ export const DeliveryOrdersTab: React.FC<DeliveryOrdersTabProps> = ({
                         : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
                     }`}
                   >
-                    تحويل لمحفظة
-                    <span className="block text-[10px] text-slate-400 font-normal mt-0.5">حساب توصيل</span>
+                    محفظة إلكترونية
+                    <span className="block text-[10px] text-purple-700 font-normal mt-0.5">يزداد رصيدها + استحقاق للمندوب</span>
                   </button>
                   <button
                     type="button"

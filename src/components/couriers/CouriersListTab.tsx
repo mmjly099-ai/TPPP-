@@ -236,6 +236,14 @@ export const CouriersListTab: React.FC<CouriersListTabProps> = ({
           const pendingCount = courierAssigned.filter(
             o => o.status === 'out_for_delivery' || o.status === 'received_by_courier' || o.status === 'pending_dispatch'
           ).length;
+          const cashCustodyOrders = courierAssigned.filter(
+            o => o.collectionMethod === 'cash_to_courier' && (o.collectionStatus === 'collected_cash' || o.status === 'delivered')
+          );
+          const payableOrders = courierAssigned.filter(
+            o => o.collectionMethod === 'transfer_to_wallet' && (o.collectionStatus === 'transferred_to_wallet' || o.status === 'delivered')
+          );
+          const custodyBal = Number(courier.currentCustodyBalance) || 0;
+          const payableBal = Number(courier.currentPayableBalance) || 0;
 
           return (
             <div
@@ -294,30 +302,72 @@ export const CouriersListTab: React.FC<CouriersListTabProps> = ({
                   <span className="font-bold text-[#1A3668]">{(courier.defaultDeliveryFee || 1500).toLocaleString()} ريال</span>
                 </div>
                 <div className="flex items-center justify-between text-slate-600">
-                  <span className="text-slate-500">تاريخ بدء العمل:</span>
-                  <span className="font-mono text-slate-700">{courier.startDate || courier.createdAt?.split('T')[0]}</span>
+                  <span className="text-slate-500">الطلبات المسلمة بنجاح:</span>
+                  <span className="font-black text-emerald-700">{deliveredCount} طلب ({pendingCount} قيد التسليم)</span>
                 </div>
               </div>
 
               {/* Operational & Financial Stats Grid */}
-              <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
                 
-                {/* Orders Done */}
-                <div className="p-2.5 bg-emerald-50/70 border border-emerald-200/60 rounded-xl">
-                  <span className="text-[11px] text-emerald-800 font-bold block">سلم بنجاح</span>
-                  <span className="text-base font-black text-emerald-700 mt-0.5 block">
-                    {deliveredCount} <span className="text-[10px] font-normal">طلب</span>
-                  </span>
-                  <span className="text-[10px] text-slate-500">{pendingCount} قيد التسليم</span>
+                {/* Cash Custody (رصيد المندوب - نقدي للمندوب نفسه) */}
+                <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-2xl flex flex-col justify-between space-y-2">
+                  <div>
+                    <span className="text-[11px] text-amber-950 font-black block">رصيد المندوب (نقدي عنده)</span>
+                    <span className="text-base font-black text-amber-800 mt-0.5 block">
+                      {custodyBal.toLocaleString()} <span className="text-[10px] font-normal">ريال</span>
+                    </span>
+                    {cashCustodyOrders.length > 0 ? (
+                      <div className="mt-1.5 space-y-1 max-h-20 overflow-y-auto">
+                        {cashCustodyOrders.slice(0, 3).map(o => (
+                          <div key={o.id} className="text-[10px] bg-white/90 border border-amber-200 rounded-md px-1.5 py-0.5 font-bold text-amber-900 flex items-center justify-between">
+                            <span>طلب رقم #{o.orderNumber}</span>
+                            <span className="font-mono">{(Number(o.custodyRecordedAmount) || Number(o.finalPaymentAmount) || Number(o.deliveryFee)).toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-[10px] text-slate-500 block mt-1">لا توجد مبالغ نقدية بعهدته</span>
+                    )}
+                  </div>
+                  {custodyBal > 0 && (
+                    <button
+                      onClick={() => onOpenReceiveCashFromCourier(courier)}
+                      className="w-full py-1 px-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[10px] font-bold transition cursor-pointer"
+                    >
+                      استلام النقدية منه ←
+                    </button>
+                  )}
                 </div>
 
-                {/* Cash Custody */}
-                <div className="p-2.5 bg-amber-50/70 border border-amber-200/60 rounded-xl">
-                  <span className="text-[11px] text-amber-900 font-bold block">العهدة النقدية</span>
-                  <span className="text-base font-black text-amber-700 mt-0.5 block">
-                    {(Number(courier.currentCustodyBalance) || 0).toLocaleString()} <span className="text-[10px] font-normal">ريال</span>
-                  </span>
-                  <span className="text-[10px] text-slate-500">بذمته للإدارة</span>
+                {/* Courier Payable Entitlement (استحقاق المندوب عندنا - محفظة) */}
+                <div className="p-3 bg-purple-50/80 border border-purple-200 rounded-2xl flex flex-col justify-between space-y-2">
+                  <div>
+                    <span className="text-[11px] text-purple-950 font-black block">استحقاق المندوب عندنا</span>
+                    <span className="text-base font-black text-purple-800 mt-0.5 block">
+                      {payableBal.toLocaleString()} <span className="text-[10px] font-normal">ريال</span>
+                    </span>
+                    {payableOrders.length > 0 ? (
+                      <div className="mt-1.5 space-y-1 max-h-20 overflow-y-auto">
+                        {payableOrders.slice(0, 3).map(o => (
+                          <div key={o.id} className="text-[10px] bg-white/90 border border-purple-200 rounded-md px-1.5 py-0.5 font-bold text-purple-900 flex items-center justify-between">
+                            <span>طلب رقم #{o.orderNumber}</span>
+                            <span className="font-mono">{(Number(o.payableRecordedAmount) || Number(o.deliveryFee)).toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-[10px] text-slate-500 block mt-1">مستحقاته مسواة بالكامل</span>
+                    )}
+                  </div>
+                  {payableBal > 0 && (
+                    <button
+                      onClick={() => onOpenSettlementForCourier(courier)}
+                      className="w-full py-1 px-2 bg-[#1A3668] hover:bg-[#234885] text-white rounded-lg text-[10px] font-bold transition cursor-pointer"
+                    >
+                      دفع استحقاق المندوب ←
+                    </button>
+                  )}
                 </div>
 
               </div>
@@ -329,7 +379,7 @@ export const CouriersListTab: React.FC<CouriersListTabProps> = ({
                   className="flex-1 py-2 px-3 bg-[#1A3668] hover:bg-[#234885] text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs"
                 >
                   <FileText className="w-3.5 h-3.5" />
-                  <span>فتح الملف الكامل</span>
+                  <span>فتح كشف حساب المندوب</span>
                 </button>
 
                 <div className="flex items-center gap-1.5">

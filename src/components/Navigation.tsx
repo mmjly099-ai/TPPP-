@@ -98,7 +98,7 @@ export const Navigation: React.FC<NavigationProps> = ({
     },
     {
       id: 'orders',
-      label: 'الطلبات والمشتريات',
+      label: 'الطلبات',
       description: 'طلبيات الشراء من شي إن وعلي إكسبرس مع الفواتير وتتبع الدفعات',
       icon: ShoppingBag,
       badge: pendingOrdersCount > 0 ? pendingOrdersCount : undefined,
@@ -106,7 +106,7 @@ export const Navigation: React.FC<NavigationProps> = ({
     },
     {
       id: 'couriers',
-      label: 'الموصلين والتوزيع',
+      label: 'نظام الموصلين',
       description: 'إدارة وتتبع مناديب التوصيل، تسليم طلبات العميلات، عهد الكاش، وحسابات المحافظ المنفصلة',
       icon: Bike,
       badge: deliveryOrders.filter(d => d.status === 'out_for_delivery' || d.status === 'pending_dispatch').length || (couriers?.length || undefined),

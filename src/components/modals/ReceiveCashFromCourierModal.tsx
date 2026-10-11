@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   Wallet,
@@ -24,7 +24,7 @@ export const ReceiveCashFromCourierModal: React.FC<ReceiveCashFromCourierModalPr
   onClose,
   preselectedCourierId
 }) => {
-  const { couriers, accounts, receiveCashFromCourier, showNotification } = useStore();
+  const { couriers, accounts, deliveryOrders, receiveCashFromCourier, showNotification } = useStore();
 
   const [courierId, setCourierId] = useState<number>(preselectedCourierId || couriers[0]?.id || 0);
   const [amount, setAmount] = useState<number>(0);
@@ -34,10 +34,26 @@ export const ReceiveCashFromCourierModal: React.FC<ReceiveCashFromCourierModalPr
   const [receivedDate, setReceivedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState<string>('');
 
+  useEffect(() => {
+    if (isOpen) {
+      const targetId = preselectedCourierId || couriers[0]?.id || 0;
+      setCourierId(targetId);
+      const targetCourier = couriers.find(c => c.id === targetId);
+      if (targetCourier && (targetCourier.currentCustodyBalance || 0) > 0) {
+        setAmount(Number(targetCourier.currentCustodyBalance) || 0);
+      } else {
+        setAmount(0);
+      }
+    }
+  }, [isOpen, preselectedCourierId, couriers]);
+
   if (!isOpen) return null;
 
   const selectedCourier = couriers.find(c => c.id === courierId);
   const selectedAccount = accounts.find(a => a.id === depositAccountId);
+  const courierCashOrders = deliveryOrders.filter(
+    o => o.courierId === courierId && ((o.custodyRecordedAmount || 0) > 0 || (o.collectionMethod === 'cash_to_courier' && o.status === 'delivered'))
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,11 +131,22 @@ export const ReceiveCashFromCourierModal: React.FC<ReceiveCashFromCourierModalPr
             </select>
 
             {selectedCourier && (
-              <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-xl flex items-center justify-between text-xs">
-                <span className="text-amber-900 font-semibold">إجمالي العهدة النقدية في ذمته الآن:</span>
-                <span className="font-black text-sm text-amber-950">
-                  {(Number(selectedCourier.currentCustodyBalance) || 0).toLocaleString()} ريال
-                </span>
+              <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-xl space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-amber-900 font-semibold">إجمالي الرصيد النقدي في ذمته الآن:</span>
+                  <span className="font-black text-sm text-amber-950">
+                    {(Number(selectedCourier.currentCustodyBalance) || 0).toLocaleString()} ريال
+                  </span>
+                </div>
+                {courierCashOrders.length > 0 && (
+                  <div className="pt-1.5 border-t border-amber-200/70 flex flex-wrap gap-1.5">
+                    {courierCashOrders.map(o => (
+                      <span key={o.id} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white border border-amber-300 text-[10px] font-black text-amber-900">
+                        طلب رقم #{o.orderNumber} ({o.customerName}): {(o.custodyRecordedAmount || o.finalPaymentAmount || o.deliveryFee || 0).toLocaleString()} ر.ي
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>

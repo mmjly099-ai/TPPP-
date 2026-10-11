@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   Wallet,
@@ -24,7 +24,7 @@ export const SettleCourierPayableModal: React.FC<SettleCourierPayableModalProps>
   onClose,
   preselectedCourierId
 }) => {
-  const { couriers, accounts, settleCourierPayable, showNotification } = useStore();
+  const { couriers, accounts, deliveryOrders, settleCourierPayable, showNotification } = useStore();
 
   const [courierId, setCourierId] = useState<number>(preselectedCourierId || couriers[0]?.id || 0);
   const [amount, setAmount] = useState<number>(0);
@@ -35,10 +35,26 @@ export const SettleCourierPayableModal: React.FC<SettleCourierPayableModalProps>
   const [referenceNumber, setReferenceNumber] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
 
+  useEffect(() => {
+    if (isOpen) {
+      const targetId = preselectedCourierId || couriers[0]?.id || 0;
+      setCourierId(targetId);
+      const targetCourier = couriers.find(c => c.id === targetId);
+      if (targetCourier && (targetCourier.currentPayableBalance || 0) > 0) {
+        setAmount(Number(targetCourier.currentPayableBalance) || 0);
+      } else {
+        setAmount(0);
+      }
+    }
+  }, [isOpen, preselectedCourierId, couriers]);
+
   if (!isOpen) return null;
 
   const selectedCourier = couriers.find(c => c.id === courierId);
   const selectedWallet = accounts.find(a => a.id === walletId);
+  const courierPayableOrders = deliveryOrders.filter(
+    o => o.courierId === courierId && ((o.payableRecordedAmount || 0) > 0 || (o.collectionMethod === 'transfer_to_wallet' && o.status === 'delivered'))
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,19 +137,30 @@ export const SettleCourierPayableModal: React.FC<SettleCourierPayableModalProps>
             </select>
 
             {selectedCourier && (
-              <div className="grid grid-cols-2 gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs">
-                <div>
-                  <span className="text-slate-500 block">العهدة النقدية بذمته:</span>
-                  <span className="font-bold text-amber-700">
-                    {(Number(selectedCourier.currentCustodyBalance) || 0).toLocaleString()} ريال
-                  </span>
+              <div className="space-y-2 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <span className="text-slate-500 block">العهدة النقدية بذمته:</span>
+                    <span className="font-bold text-amber-700">
+                      {(Number(selectedCourier.currentCustodyBalance) || 0).toLocaleString()} ريال
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block">استحقاق المندوب عندنا (للدفع):</span>
+                    <span className="font-black text-blue-700 text-sm">
+                      {(Number(selectedCourier.currentPayableBalance) || 0).toLocaleString()} ريال
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-slate-500 block">مستحقات أجور معلقة:</span>
-                  <span className="font-bold text-blue-700">
-                    {(Number(selectedCourier.currentPayableBalance) || 0).toLocaleString()} ريال
-                  </span>
-                </div>
+                {courierPayableOrders.length > 0 && (
+                  <div className="pt-2 border-t border-slate-200 flex flex-wrap gap-1.5">
+                    {courierPayableOrders.map(o => (
+                      <span key={o.id} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 border border-blue-200 text-[10px] font-black text-blue-900">
+                        طلب رقم #{o.orderNumber} ({o.customerName}): {(o.payableRecordedAmount || o.deliveryFee || 0).toLocaleString()} ر.ي
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
