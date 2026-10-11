@@ -112,10 +112,27 @@ export const SettingsView: React.FC = () => {
         
         {/* Section 1: Basic Identity */}
         <div>
-          <h3 className="text-sm font-bold text-slate-900 mb-3 pb-2 border-b border-slate-100 flex items-center gap-2">
-            <Building className="w-4 h-4 text-amber-600" />
-            <span>بيانات المنشأة والهوية</span>
+          <h3 className="text-sm font-bold text-slate-900 mb-3 pb-2 border-b border-slate-100 flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Building className="w-4 h-4 text-amber-600" />
+              <span>بيانات المنشأة والهوية</span>
+            </span>
+            <span className="text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full font-bold border border-emerald-200 hidden sm:inline-block">
+              شعار توب ستور مفعّل لجميع الفواتير والمستندات
+            </span>
           </h3>
+
+          <div className="flex flex-col sm:flex-row items-center gap-4 p-3.5 bg-slate-50 border border-slate-200 rounded-xl mb-4">
+            <div className="w-16 h-16 rounded-2xl bg-white p-1 border-2 border-[#C5A059] shadow-sm flex items-center justify-center shrink-0 overflow-hidden">
+              <img src="/top_store_logo.jpg" alt="شعار توب ستور TOP STORE" className="w-full h-full object-contain" />
+            </div>
+            <div className="text-center sm:text-right">
+              <h4 className="text-xs font-bold text-slate-900">الشعار الرسمي المعتمد لمتجر توب ستور</h4>
+              <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                يظهر هذا الشعار الرسمي بجودته الكاملة في جميع الفواتير، سندات القبض والصرف، كشوفات الحساب، بوالص التوصيل، ومستندات النظام.
+              </p>
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div>

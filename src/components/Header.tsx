@@ -52,8 +52,8 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Mobile Compact Header (شاشات الهواتف) */}
         <div className="flex md:hidden items-center justify-between py-2.5">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-amber-600 to-amber-500 text-white flex items-center justify-center font-black text-sm shadow-xs shrink-0 tracking-tighter">
-              TOP
+            <div className="w-8 h-8 rounded-lg bg-white border border-amber-400 p-0.5 shadow-xs shrink-0 overflow-hidden flex items-center justify-center">
+              <img src="/top_store_logo.jpg" alt="TOP STORE" className="w-full h-full object-contain" />
             </div>
             <div className="min-w-0">
               <h1 className="text-sm font-bold text-slate-900 leading-none truncate">
@@ -124,8 +124,8 @@ export const Header: React.FC<HeaderProps> = ({
           
           {/* Brand & Store Info */}
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-amber-600 to-amber-500 text-white flex items-center justify-center font-black text-xl shadow-sm tracking-tighter">
-              TOP
+            <div className="w-11 h-11 rounded-xl bg-white border-2 border-[#C5A059] p-0.5 shadow-xs shrink-0 overflow-hidden flex items-center justify-center">
+              <img src="/top_store_logo.jpg" alt="TOP STORE" className="w-full h-full object-contain" />
             </div>
             <div>
               <div className="flex items-center gap-2">

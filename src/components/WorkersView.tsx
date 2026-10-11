@@ -859,8 +859,12 @@ const WorkerStatementModal: React.FC<WorkerStatementModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-700 flex items-center justify-center font-bold text-lg">
-              {worker.name.charAt(0)}
+            <div className="w-12 h-12 rounded-xl bg-white p-1 border-2 border-amber-400 shadow-xs flex items-center justify-center shrink-0 overflow-hidden">
+              <img
+                src="/top_store_logo.jpg"
+                alt="شعار توب ستور TOP STORE"
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
               <h3 className="font-bold text-slate-900 text-base">

@@ -16,12 +16,24 @@ async function startServer() {
 
   const DATA_DIR = path.resolve(__dirname, 'src/data/tables');
   const SYNC_FILE = path.resolve(DATA_DIR, 'server_synced_data.json');
+  const BACKUP_FILE = path.resolve(__dirname, 'src/data/user_backup.json');
+
+  if (!fs.existsSync(DATA_DIR)) {
+    try {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    } catch (e) {
+      console.warn('Could not create DATA_DIR', e);
+    }
+  }
 
   // Helper to load current master store
   let serverStore: any = null;
   try {
     if (fs.existsSync(SYNC_FILE)) {
       serverStore = JSON.parse(fs.readFileSync(SYNC_FILE, 'utf-8'));
+    } else if (fs.existsSync(BACKUP_FILE)) {
+      serverStore = JSON.parse(fs.readFileSync(BACKUP_FILE, 'utf-8'));
+      fs.writeFileSync(SYNC_FILE, JSON.stringify(serverStore, null, 2), 'utf-8');
     }
   } catch (err) {
     console.warn('Could not read existing sync file', err);

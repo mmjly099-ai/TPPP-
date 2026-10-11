@@ -435,6 +435,29 @@ export const AnalyticsCenterView: React.FC<AnalyticsCenterViewProps> = ({ onNavi
   return (
     <div className="space-y-6" id="analytics-center-container">
       
+      {/* Printable Header with Official TOP STORE Logo */}
+      <div className="hidden print:flex items-center justify-between pb-4 border-b-2 border-slate-900 mb-6" dir="rtl">
+        <div className="flex items-center gap-3">
+          <div className="w-14 h-14 rounded-2xl bg-white p-1 border border-slate-300 shadow-xs flex items-center justify-center shrink-0 overflow-hidden">
+            <img
+              src="/top_store_logo.jpg"
+              alt="TOP STORE"
+              className="w-full h-full object-contain"
+            />
+          </div>
+          <div>
+            <h2 className="text-lg font-black text-slate-900 tracking-tight">متجر توب ستور | TOP STORE</h2>
+            <p className="text-[11px] text-slate-600 font-semibold">
+              مركز التحليلات المالية والتجارية 360° • تقرير الأداء المالي والربحية
+            </p>
+          </div>
+        </div>
+        <div className="text-left font-mono text-xs">
+          <div className="font-bold text-slate-900">تقرير تحليلي مالي رسمي</div>
+          <div className="text-slate-500 text-[10px]">تاريخ الاستخراج: {new Date().toLocaleDateString('ar-YE')}</div>
+        </div>
+      </div>
+
       {/* Top Header & Navigation Banner */}
       <div className="bg-gradient-to-l from-slate-900 via-slate-800 to-indigo-950 rounded-2xl p-5 sm:p-6 text-white shadow-md border border-slate-700/60">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

@@ -232,6 +232,7 @@ export interface FinancialTransaction {
   transferGroup?: string | null;
   createdBy?: number;
   notes?: string | null;
+  referenceNumber?: string | null;
   createdAt: string;
 }
 

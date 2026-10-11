@@ -123,7 +123,7 @@ export const TopStoreOfficialVoucher: React.FC<TopStoreOfficialVoucherProps> = (
       )}
 
       {/* ======================================================== */}
-      {/* 1️⃣ HEADER SECTION: Deep Navy Block - No Logo, Data on Right */}
+      {/* 1️⃣ HEADER SECTION: Deep Navy Block - Official Logo & Data */}
       {/* ======================================================== */}
       <div className="bg-[#112952] text-white rounded-2xl p-3.5 sm:p-5 print:p-2.5 relative shadow-md print:shadow-none">
         <div className="flex flex-row items-center justify-between gap-3">
@@ -167,14 +167,23 @@ export const TopStoreOfficialVoucher: React.FC<TopStoreOfficialVoucherProps> = (
             </div>
           </div>
 
-          {/* Left Side in RTL: Clean Verification & Store Badge (No Logo Image) */}
-          <div className="text-left text-xs space-y-1 shrink-0 min-w-[120px] sm:min-w-[155px]">
-            <div className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-[#0c1e3d] border border-[#C5A059]/40 text-white text-[10px] sm:text-[11px] font-bold">
-              <Award className="w-3.5 h-3.5 text-[#C5A059]" />
-              <span>مستند مالي معتمد</span>
+          {/* Left Side in RTL: Official TOP STORE Logo & Verification Badge */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0 text-left min-w-[120px] sm:min-w-[170px] justify-end">
+            <div className="hidden sm:flex flex-col items-end text-left space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-[#0c1e3d] border border-[#C5A059]/40 text-white text-[10px] sm:text-[11px] font-bold">
+                <Award className="w-3.5 h-3.5 text-[#C5A059]" />
+                <span>مستند مالي معتمد</span>
+              </div>
+              <div className="text-[10px] text-white/80 print:text-[9px]">
+                متجر توب ستور للتسوق
+              </div>
             </div>
-            <div className="text-[10px] text-white/70 print:text-[9px]">
-              متجر توب ستور للتسوق
+            <div className="w-13 h-13 sm:w-16 sm:h-16 print:w-14 print:h-14 rounded-2xl bg-white p-1 shadow-md border-2 border-[#C5A059] flex items-center justify-center shrink-0 overflow-hidden">
+              <img
+                src="/top_store_logo.jpg"
+                alt="شعار توب ستور TOP STORE"
+                className="w-full h-full object-contain"
+              />
             </div>
           </div>
 
@@ -710,9 +719,14 @@ export const TopStoreOfficialVoucher: React.FC<TopStoreOfficialVoucherProps> = (
           </div>
 
           {/* Left Text */}
-          <div className="text-center sm:text-left">
-            <h4 className="text-xs sm:text-sm print:text-[10px] font-black text-slate-900">متجر توب ستور</h4>
-            <p className="text-[9px] sm:text-[10px] print:text-[8px] text-slate-500">متخصصون في طلب وشحن المنتجات من المواقع العالمية</p>
+          <div className="flex items-center gap-2.5 text-center sm:text-left justify-center sm:justify-start">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white p-0.5 border border-[#112952]/20 shadow-2xs shrink-0 overflow-hidden flex items-center justify-center">
+              <img src="/top_store_logo.jpg" alt="TOP STORE" className="w-full h-full object-contain" />
+            </div>
+            <div>
+              <h4 className="text-xs sm:text-sm print:text-[10px] font-black text-slate-900">متجر توب ستور</h4>
+              <p className="text-[9px] sm:text-[10px] print:text-[8px] text-slate-500">متخصصون في طلب وشحن المنتجات من المواقع العالمية</p>
+            </div>
           </div>
 
         </div>

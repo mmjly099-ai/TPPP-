@@ -65,9 +65,9 @@ self.addEventListener('fetch', (event) => {
           if (cachedResponse) {
             return cachedResponse;
           }
-          // If HTML navigation, return cached root
+          // If HTML navigation, return cached root or index.html
           if (event.request.mode === 'navigate') {
-            return caches.match('/');
+            return caches.match('/index.html').then((htmlRes) => htmlRes || caches.match('/'));
           }
           return new Response('Network error (Offline)', {
             status: 503,

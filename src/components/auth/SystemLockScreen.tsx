@@ -53,8 +53,12 @@ export const SystemLockScreen: React.FC<SystemLockScreenProps> = ({ onUnlock, sy
           
           {/* Logo & Header */}
           <div className="text-center space-y-2">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-600 to-amber-400 text-white flex items-center justify-center mx-auto shadow-lg shadow-amber-500/30">
-              <Store className="w-8 h-8 stroke-[2.2]" />
+            <div className="w-20 h-20 rounded-2xl bg-white p-1 border-2 border-amber-500 shadow-xl mx-auto overflow-hidden flex items-center justify-center">
+              <img
+                src="/top_store_logo.jpg"
+                alt="شعار توب ستور TOP STORE"
+                className="w-full h-full object-contain"
+              />
             </div>
 
             <h1 className="text-xl font-black text-slate-900 pt-2 tracking-tight">

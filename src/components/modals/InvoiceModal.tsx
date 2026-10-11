@@ -390,13 +390,22 @@ ${activeOrder.shipmentNumber ? `🔹 *رقم الشحنة:* #${activeOrder.shipm
                 
                 {/* 1️⃣ HEADER: Clean, Luxurious, Compact */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 border-b border-slate-200 gap-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h1 className="text-lg sm:text-xl font-black text-[#1A3668] tracking-tight">TOP STORE</h1>
-                      <span className="text-xs font-bold text-[#C5A059]">توب ستور</span>
+                  <div className="flex items-center gap-3">
+                    <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl bg-white p-1 border-2 border-[#C5A059] shadow-md flex items-center justify-center shrink-0 overflow-hidden">
+                      <img
+                        src="/top_store_logo.jpg"
+                        alt="شعار توب ستور TOP STORE"
+                        className="w-full h-full object-contain"
+                      />
                     </div>
-                    <p className="text-[11px] text-slate-500 font-medium">وسيط شراء وتسوق إلكتروني معتمد</p>
-                    <p className="text-[10px] text-slate-400 font-mono mt-0.5">{phone} | {whatsapp}</p>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h1 className="text-lg sm:text-xl font-black text-[#1A3668] tracking-tight">TOP STORE</h1>
+                        <span className="text-xs font-bold text-[#C5A059]">توب ستور</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 font-medium">وسيط شراء وتسوق إلكتروني معتمد</p>
+                      <p className="text-[10px] text-slate-400 font-mono mt-0.5">{phone} | {whatsapp}</p>
+                    </div>
                   </div>
 
                   <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100">

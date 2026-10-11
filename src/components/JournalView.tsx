@@ -635,6 +635,29 @@ export const JournalView: React.FC = () => {
   return (
     <div className="space-y-6">
       
+      {/* Printable Header with Official TOP STORE Logo */}
+      <div className="hidden print:flex items-center justify-between pb-4 border-b-2 border-slate-900 mb-6" dir="rtl">
+        <div className="flex items-center gap-3">
+          <div className="w-14 h-14 rounded-2xl bg-white p-1 border border-slate-300 shadow-xs flex items-center justify-center shrink-0 overflow-hidden">
+            <img
+              src="/top_store_logo.jpg"
+              alt="TOP STORE"
+              className="w-full h-full object-contain"
+            />
+          </div>
+          <div>
+            <h2 className="text-lg font-black text-slate-900 tracking-tight">متجر توب ستور | TOP STORE</h2>
+            <p className="text-[11px] text-slate-600 font-semibold">
+              النظام المحاسبي ودفتر الأستاذ المالي • قيود اليومية وميزان المراجعة
+            </p>
+          </div>
+        </div>
+        <div className="text-left font-mono text-xs">
+          <div className="font-bold text-slate-900">مستند محاسبي رسمي معتمد</div>
+          <div className="text-slate-500 text-[10px]">تاريخ الطباعة: {new Date().toLocaleDateString('ar-YE')}</div>
+        </div>
+      </div>
+
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
         <div>

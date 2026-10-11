@@ -225,6 +225,9 @@ interface StoreContextType {
     orderIds?: number[];
     updateOrderStatusToShipped?: boolean;
   }) => void;
+  updateShipmentStatus: (id: number, status: Shipment['status']) => void;
+  updateShipment: (shipment: Shipment) => void;
+  deleteShipment: (id: number) => void;
   
   addOtherReceivable: (receivable: Omit<OtherReceivable, 'id' | 'createdAt' | 'status'>) => void;
   settleReceivable: (id: number, accountId: number, amount?: number, notes?: string) => void;
@@ -491,6 +494,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Cloud Synchronization state
   const [isSyncing, setIsSyncing] = useState(false);
+  const [hasInitializedFromServer, setHasInitializedFromServer] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
 
   // Sync pull from server
@@ -510,12 +514,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       console.warn('Server sync notice: operating offline/local', err);
     } finally {
       setIsSyncing(false);
+      setHasInitializedFromServer(true);
     }
   };
 
   // Push updates to server whenever data changes & persist to localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+
+    // Prevent pushing default or stale data to server on new devices before initial pull completes
+    if (!hasInitializedFromServer) {
+      return;
+    }
 
     const timer = setTimeout(async () => {
       try {
@@ -531,7 +541,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, 600);
 
     return () => clearTimeout(timer);
-  }, [data]);
+  }, [data, hasInitializedFromServer]);
 
   // Initial pull and periodic 15-second heartbeat sync for cross-device/mobile sync
   useEffect(() => {
@@ -2862,6 +2872,65 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
       };
     });
+    addAuditLog('CREATE', 'shipment', `تسجيل شحنة جديدة #${s.shipmentNumber} عبر ${s.carrier} بتكلفة ${s.shippingCost} ريال`, shipId);
+    showNotification(`تم تسجيل الشحنة #${s.shipmentNumber} وتضمين الطلبات بنجاح`, 'success');
+  };
+
+  const updateShipmentStatus = (id: number, status: Shipment['status']) => {
+    setData(prev => ({
+      ...prev,
+      tables: {
+        ...prev.tables,
+        shipments: prev.tables.shipments.map(s => s.id === id ? { ...s, status, updatedAt: new Date().toISOString() } : s)
+      }
+    }));
+    addAuditLog('UPDATE', 'shipment', `تحديث حالة الشحنة رقم #${id} إلى ${status}`, id);
+    showNotification('تم تحديث حالة الشحنة بنجاح', 'success');
+  };
+
+  const updateShipment = (shipment: Shipment) => {
+    setData(prev => ({
+      ...prev,
+      tables: {
+        ...prev.tables,
+        shipments: prev.tables.shipments.map(s => s.id === shipment.id ? { ...shipment, updatedAt: new Date().toISOString() } : s)
+      }
+    }));
+    addAuditLog('UPDATE', 'shipment', `تعديل بيانات الشحنة #${shipment.shipmentNumber}`, shipment.id);
+    showNotification('تم تحديث بيانات الشحنة بنجاح', 'success');
+  };
+
+  const deleteShipment = (id: number) => {
+    const shipmentToDelete = (data.tables.shipments || []).find(s => s.id === id);
+    if (!shipmentToDelete) return;
+
+    setData(prev => {
+      const updatedOrders = prev.tables.orders.map(o => {
+        if (o.shipmentId === id || o.shipmentNumber === shipmentToDelete.shipmentNumber) {
+          return {
+            ...o,
+            shipmentId: undefined,
+            shipmentNumber: undefined,
+            status: o.status === 'shipped' ? ('purchased' as const) : o.status
+          };
+        }
+        return o;
+      });
+
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          orders: updatedOrders,
+          shipments: prev.tables.shipments.filter(s => s.id !== id),
+          expenses: prev.tables.expenses.filter(e => e.expenseNumber !== `EXP-SHP-${shipmentToDelete.shipmentNumber}`),
+          financialTransactions: prev.tables.financialTransactions.filter(t => t.id !== shipmentToDelete.financialTransactionId)
+        }
+      };
+    });
+
+    addAuditLog('DELETE', 'shipment', `حذف الشحنة #${shipmentToDelete.shipmentNumber}`, id);
+    showNotification(`تم حذف الشحنة #${shipmentToDelete.shipmentNumber} بنجاح`, 'success');
   };
 
   const addOtherReceivable = (rec: Omit<OtherReceivable, 'id' | 'createdAt' | 'status'>) => {
@@ -4956,6 +5025,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         addAccount,
         updateAccount,
         addShipment,
+        updateShipmentStatus,
+        updateShipment,
+        deleteShipment,
         addOtherReceivable,
         settleReceivable,
         addInstallmentPlan,

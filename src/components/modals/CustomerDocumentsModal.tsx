@@ -73,8 +73,12 @@ export const CustomerDocumentsModal: React.FC<CustomerDocumentsModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#1A3668] text-white flex items-center justify-center font-bold">
-              <FileText className="w-5 h-5 text-[#C5A059]" />
+            <div className="w-12 h-12 rounded-xl bg-white p-1 border-2 border-[#C5A059] shadow-xs flex items-center justify-center shrink-0 overflow-hidden">
+              <img
+                src="/top_store_logo.jpg"
+                alt="شعار توب ستور TOP STORE"
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
               <div className="flex items-center gap-2">

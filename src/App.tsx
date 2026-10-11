@@ -266,7 +266,10 @@ const MainApp: React.FC = () => {
           {activeTab === 'workers' && <WorkersView />}
 
           {activeTab === 'shipments' && (
-            <ShipmentsView onOpenNewShipment={() => setIsNewShipmentOpen(true)} />
+            <ShipmentsView
+              onOpenNewShipment={() => setIsNewShipmentOpen(true)}
+              onNavigate={setActiveTab}
+            />
           )}
 
           {activeTab === 'journal' && <JournalView />}

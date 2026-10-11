@@ -157,17 +157,20 @@ export const TopStoreDocumentCard: React.FC<TopStoreDocumentCardProps> = ({
       {/* ======================================================== */}
       <div className="bg-[#1A3668] text-white px-5 sm:px-7 py-3.5 flex items-center justify-between shadow-md print:shadow-none">
         {/* Right in RTL: Logo & Store Name */}
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 bg-white rounded-xl shadow flex flex-col items-center justify-center p-1 shrink-0 border border-[#C5A059]/40">
-            <span className="text-[11px] font-black text-[#1A3668] leading-none">TOP</span>
-            <span className="text-[8px] font-extrabold text-[#C5A059] leading-none mt-0.5">STORE</span>
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white rounded-2xl shadow-md p-1 shrink-0 border-2 border-[#C5A059] overflow-hidden flex items-center justify-center">
+            <img
+              src="/top_store_logo.jpg"
+              alt="شعار توب ستور TOP STORE"
+              className="w-full h-full object-contain"
+            />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-lg sm:text-xl font-black text-white tracking-wide">TOP STORE</h1>
-              <span className="text-xs font-bold text-[#C5A059] hidden sm:inline-block">توب ستور</span>
+              <span className="text-xs font-bold text-[#C5A059]">توب ستور</span>
             </div>
-            <p className="text-[11px] text-slate-200 font-medium">نظام الإدارة المالية والتجارية</p>
+            <p className="text-[11px] text-slate-200 font-medium">نظام الإدارة المالية والتجارية للوساطة</p>
           </div>
         </div>
 
@@ -832,9 +835,15 @@ export const TopStoreDocumentCard: React.FC<TopStoreDocumentCardProps> = ({
       {/* ======================================================== */}
       {/* 6. FOOTER: TOP STORE Document Authentication             */}
       {/* ======================================================== */}
-      <div className="px-5 sm:px-7 py-4 border-t border-slate-100 text-center">
-        <p className="text-[11px] text-slate-400 font-medium">
-          TOP STORE — مستند صادر من بيانات النظام الأصلية
+      <div className="px-5 sm:px-7 py-3.5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-right">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-md bg-white border border-slate-200 p-0.5 overflow-hidden shrink-0 flex items-center justify-center">
+            <img src="/top_store_logo.jpg" alt="TOP STORE" className="w-full h-full object-contain" />
+          </div>
+          <span className="text-xs font-bold text-slate-800">متجر توب ستور للتسوق والوساطة</span>
+        </div>
+        <p className="text-[11px] text-slate-400 font-medium font-mono">
+          TOP STORE — وثيقة معتمدة ومسجلة في النظام
         </p>
       </div>
     </div>
