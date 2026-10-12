@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Order, Payment, Customer, Expense, OtherReceivable, PurchaseBatch } from '../../types';
 import { numberToArabicWords } from '../../utils/tafqeet';
+import topStoreDocumentLogo from '../../assets/images/regenerated_image_1791812456699.webp';
 
 export interface TopStoreDocumentCardProps {
   documentType:
@@ -160,7 +161,7 @@ export const TopStoreDocumentCard: React.FC<TopStoreDocumentCardProps> = ({
         <div className="flex items-center gap-3 sm:gap-4">
           <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white rounded-2xl shadow-md p-1 shrink-0 border-2 border-[#C5A059] overflow-hidden flex items-center justify-center">
             <img
-              src="/top_store_logo.jpg"
+              src={topStoreDocumentLogo}
               alt="شعار توب ستور TOP STORE"
               className="w-full h-full object-contain"
             />

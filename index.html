@@ -13,6 +13,38 @@
     <link rel="icon" type="image/jpeg" href="/top_store_logo.jpg" />
     <link rel="manifest" href="/manifest.json" />
     <script>
+      (function() {
+        // Suppress benign Vite HMR WebSocket errors in iframe preview
+        var origConsoleError = console.error;
+        console.error = function() {
+          var args = Array.prototype.slice.call(arguments);
+          var text = args.map(function(a) { return (a && a.stack) || (a && a.message) || String(a); }).join(' ');
+          if (text.indexOf('WebSocket closed without opened') !== -1 || text.indexOf('WebSocket closed') !== -1) {
+            return;
+          }
+          origConsoleError.apply(console, args);
+        };
+        window.addEventListener('error', function (event) {
+          var msg = event?.message || (event?.error && event?.error?.message) || '';
+          if (
+            msg.indexOf('WebSocket closed') !== -1 ||
+            (event?.filename && event.filename.indexOf('@vite/client') !== -1)
+          ) {
+            event.stopImmediatePropagation();
+            event.preventDefault();
+            return true;
+          }
+        }, true);
+        window.addEventListener('unhandledrejection', function (event) {
+          var reason = event?.reason;
+          var msg = (typeof reason === 'string' ? reason : reason?.message) || '';
+          if (msg.indexOf('WebSocket closed') !== -1) {
+            event.stopImmediatePropagation();
+            event.preventDefault();
+          }
+        }, true);
+      })();
+
       window.__deferredPwaPrompt = null;
       window.addEventListener('beforeinstallprompt', function (e) {
         e.preventDefault();

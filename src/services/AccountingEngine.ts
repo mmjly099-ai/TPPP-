@@ -310,6 +310,31 @@ export interface CustomerReconciliationReport {
 }
 
 /**
+ * Determines whether a journal entry should be counted in active ledger balances.
+ * - Excludes deleted ('void') entries.
+ * - Excludes entries marked as 'reversed' or isReversed.
+ * - Excludes reversal entries whose target entry is already marked as 'reversed'/isReversed (prevents double-subtraction).
+ */
+export function isEntryActiveInLedger(entry: JournalEntry, allEntries: JournalEntry[]): boolean {
+  if (!entry) return false;
+  if (entry.status === 'void') return false;
+  if (entry.status === 'reversed' || entry.isReversed) return false;
+
+  if (entry.sourceType === 'reversal' || entry.reversesEntryId) {
+    const targetId = entry.reversesEntryId ?? (typeof entry.sourceId === 'number' ? entry.sourceId : Number(entry.sourceId));
+    if (targetId) {
+      const targetEntry = allEntries.find(e => Number(e.id) === Number(targetId));
+      // If the original entry is already excluded (void or reversed), do not apply the reversal entry a second time
+      if (targetEntry && (targetEntry.status === 'void' || targetEntry.status === 'reversed' || targetEntry.isReversed)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+/**
  * Reconciles customer balances calculated from operational orders/payments
  * with General Ledger journal lines.
  */
@@ -319,21 +344,64 @@ export function reconcileCustomerBalances(
   payments: Payment[],
   journalEntries: JournalEntry[]
 ): CustomerReconciliationReport {
-  const ledgerDebits: Record<string, number> = {};
-  const ledgerCredits: Record<string, number> = {};
+  const ledgerDebitsById: Record<number, number> = {};
+  const ledgerCreditsById: Record<number, number> = {};
 
-  // Aggregate posted entries
+  const ordersById = new Map<number, Order>();
+  orders.forEach(o => ordersById.set(Number(o.id), o));
+
+  const paymentsById = new Map<number, Payment>();
+  payments.forEach(p => paymentsById.set(Number(p.id), p));
+
+  const customersById = new Map<number, Customer>();
+  customers.forEach(c => customersById.set(Number(c.id), c));
+
+  // Resolve customer ID from entry context or customer name
+  const resolveCustomerIdForLine = (entry: JournalEntry, rawAccountName: string): number | null => {
+    const srcId = entry.sourceId != null ? Number(entry.sourceId) : null;
+    if (entry.sourceType === 'order' && srcId && ordersById.has(srcId)) {
+      return ordersById.get(srcId)!.customerId;
+    }
+    if (entry.sourceType === 'payment' && srcId && paymentsById.has(srcId)) {
+      return paymentsById.get(srcId)!.customerId;
+    }
+    if ((entry.sourceType === 'opening_balance' || entry.sourceType === 'manual') && srcId && customersById.has(srcId)) {
+      return srcId;
+    }
+
+    const custName = rawAccountName.replace(/^.*العميل:\s*/, '').trim();
+    if (!custName) return null;
+
+    const matchingCustomers = customers.filter(c => c.name.trim() === custName);
+    if (matchingCustomers.length === 1) {
+      return matchingCustomers[0].id;
+    }
+    if (matchingCustomers.length > 1) {
+      // Prefer the customer that has active orders, payments, or opening balance
+      const activeMatch = matchingCustomers.find(c =>
+        (Number(c.openingBalance) || 0) > 0 ||
+        orders.some(o => o.customerId === c.id) ||
+        payments.some(p => p.customerId === c.id)
+      );
+      return (activeMatch || matchingCustomers[matchingCustomers.length - 1]).id;
+    }
+    return null;
+  };
+
+  // Aggregate active posted entries
   journalEntries.forEach(entry => {
-    if (entry.status === 'void' || entry.status === 'reversed') return;
+    if (!isEntryActiveInLedger(entry, journalEntries)) return;
     (entry.lines || []).forEach(line => {
       const name = line.accountName || '';
       if (name.includes('العميل:')) {
-        const custName = name.replace(/^.*العميل:\s*/, '').trim();
-        const amt = typeof line.amount === 'string' ? parseFloat(line.amount) || 0 : (line.amount || 0);
-        if (line.side === 'debit') {
-          ledgerDebits[custName] = roundCurrency((ledgerDebits[custName] || 0) + amt);
-        } else if (line.side === 'credit') {
-          ledgerCredits[custName] = roundCurrency((ledgerCredits[custName] || 0) + amt);
+        const custId = resolveCustomerIdForLine(entry, name);
+        if (custId != null) {
+          const amt = typeof line.amount === 'string' ? parseFloat(line.amount) || 0 : (line.amount || 0);
+          if (line.side === 'debit') {
+            ledgerDebitsById[custId] = roundCurrency((ledgerDebitsById[custId] || 0) + amt);
+          } else if (line.side === 'credit') {
+            ledgerCreditsById[custId] = roundCurrency((ledgerCreditsById[custId] || 0) + amt);
+          }
         }
       }
     });
@@ -354,8 +422,8 @@ export function reconcileCustomerBalances(
       .reduce((sum, p) => sum + (p.amount || 0), 0);
 
     const operationalBalance = roundCurrency(opening + custOrders - custPayments);
-    const legDebit = ledgerDebits[cust.name] || 0;
-    const legCredit = ledgerCredits[cust.name] || 0;
+    const legDebit = ledgerDebitsById[cust.id] || 0;
+    const legCredit = ledgerCreditsById[cust.id] || 0;
     const ledgerBalance = roundCurrency(legDebit - legCredit);
     const difference = roundCurrency(operationalBalance - ledgerBalance);
     const isReconciled = Math.abs(difference) < 0.01;
@@ -750,5 +818,393 @@ export function generateAdjustingEntryForCustomer(params: {
     postedAt: new Date().toISOString(),
     postedByName: performedByName,
     lines
+  };
+}
+
+/**
+ * Automatically sanitizes, deduplicates, and reconciles journal entries in a TopStoreBackup:
+ * 1. Attaches missing embedded lines from tables.journalLines.
+ * 2. Removes duplicate legacy 179* JE-PAY, JE-EXP, JE-ORD, and JE-SHP entries that were duplicated by canonical entries.
+ * 3. Fixes corrupted sourceType/sourceId on JE-IN, JE-OUT, JE-TRF, JE-REC, and JE-SHP entries.
+ * 4. Deduplicates multiple active entries pointing to the same order, payment, expense, or opening_balance.
+ * 5. Ensures every active order, payment, and customer opening balance has a balanced journal entry (preserving soft-deleted 'void' entries unless forceRestoreMissing is true).
+ * 6. Resolves chartAccountId and chartAccountCode on all lines and syncs tables.journalLines.
+ */
+export function sanitizeAndReconcileJournalEntries(
+  backup: TopStoreBackup,
+  options?: { forceRestoreMissing?: boolean }
+): TopStoreBackup {
+  if (!backup || !backup.tables) return backup;
+
+  const forceRestore = Boolean(options?.forceRestoreMissing);
+  const t = backup.tables;
+  const customers = t.customers || [];
+  const orders = t.orders || [];
+  const payments = t.payments || [];
+  const accounts = t.accounts || [];
+  const rawEntries = Array.isArray(t.journalEntries) ? t.journalEntries : [];
+  const rawLines = Array.isArray(t.journalLines) ? t.journalLines : [];
+
+  const hasSyntheticCanonicalSet = rawEntries.some(
+    j => String(j.id).length >= 13 && !String(j.id).startsWith('179')
+  );
+
+  // Step 1: Hydrate lines & filter out known legacy duplicate 179* entries
+  let entries: JournalEntry[] = [];
+  for (const rawJe of rawEntries) {
+    if (!rawJe) continue;
+    const idStr = String(rawJe.id || '');
+    const numStr = String(rawJe.entryNumber || '');
+
+    if (hasSyntheticCanonicalSet && idStr.startsWith('179') && idStr.length === 13) {
+      // Legacy 179* JE-PAY, JE-EXP, JE-ORD, and JE-SHP-427527 were duplicated by canonical 2000*/3000*/4000*/5000* entries
+      if (
+        numStr.startsWith('JE-PAY-') ||
+        numStr.startsWith('JE-EXP-') ||
+        numStr.startsWith('JE-ORD-') ||
+        numStr === 'JE-SHP-427527'
+      ) {
+        // Only skip if it wasn't created recently after 2026-10-05 (all legacy corrupted ones have id <= 1791150000000)
+        if (Number(rawJe.id) <= 1791150000000) {
+          continue;
+        }
+      }
+    }
+
+    const hydratedLines =
+      Array.isArray(rawJe.lines) && rawJe.lines.length > 0
+        ? rawJe.lines
+        : rawLines.filter(l => Number(l.journalEntryId) === Number(rawJe.id));
+
+    let fixedSourceType = rawJe.sourceType;
+    let fixedSourceId = rawJe.sourceId;
+    let fixedSourceNumber = rawJe.sourceNumber;
+
+    // Fix corrupted sourceType: 'order' on non-order entries
+    if (numStr.startsWith('JE-IN-') || numStr.startsWith('JE-OUT-') || numStr.startsWith('JE-TRF-')) {
+      fixedSourceType = 'manual';
+      fixedSourceId = null;
+      fixedSourceNumber = numStr;
+    } else if (numStr.startsWith('JE-REC-')) {
+      fixedSourceType = 'receivable';
+      if (fixedSourceType !== rawJe.sourceType) {
+        fixedSourceId = null;
+        fixedSourceNumber = numStr;
+      }
+    } else if (numStr.startsWith('JE-SHP-')) {
+      fixedSourceType = 'expense';
+      if (rawJe.sourceType === 'order') {
+        fixedSourceId = null;
+        fixedSourceNumber = numStr;
+      }
+    } else if (numStr.startsWith('JE-EXP-')) {
+      fixedSourceType = 'expense';
+    } else if (numStr.startsWith('JE-PAY-')) {
+      fixedSourceType = 'payment';
+    } else if (numStr.startsWith('JE-ORD-')) {
+      fixedSourceType = 'order';
+    } else if (numStr.startsWith('JE-REV-')) {
+      fixedSourceType = 'reversal';
+    } else if (numStr.startsWith('JE-OPEN-')) {
+      fixedSourceType = 'opening_balance';
+    }
+
+    const normalizedLines: JournalLine[] = hydratedLines.map((l, idx) => {
+      const amt = roundCurrency(typeof l.amount === 'string' ? parseFloat(l.amount) || 0 : (Number(l.amount) || 0));
+      const resolved = resolveChartAccount(l.accountName || '', l.side || 'debit', l.accountId);
+      return {
+        ...l,
+        id: l.id || Number(rawJe.id) * 10 + idx + 1,
+        journalEntryId: Number(rawJe.id),
+        side: l.side === 'credit' ? 'credit' : 'debit',
+        amount: amt,
+        baseAmount: amt,
+        currency: l.currency || 'YER',
+        exchangeRate: l.exchangeRate || 1,
+        chartAccountId: l.chartAccountId || resolved.id,
+        chartAccountCode: l.chartAccountCode || resolved.code
+      };
+    });
+
+    const resolvedStatus =
+      rawJe.status === 'void'
+        ? (forceRestore ? 'posted' : 'void')
+        : rawJe.isReversed || rawJe.status === 'reversed'
+        ? 'reversed'
+        : rawJe.status || 'posted';
+
+    entries.push({
+      ...rawJe,
+      sourceType: fixedSourceType || 'manual',
+      sourceId: fixedSourceId ?? null,
+      sourceNumber: fixedSourceNumber ?? null,
+      status: resolvedStatus,
+      deletedAt: resolvedStatus === 'void' ? rawJe.deletedAt || new Date().toISOString() : null,
+      deleteReason: resolvedStatus === 'void' ? rawJe.deleteReason || null : null,
+      lines: normalizedLines
+    });
+  }
+
+  // Step 2: Deduplicate entries with same ID or duplicate active (sourceType, sourceId) for singular operational docs
+  const seenIds = new Set<number>();
+  const seenSourceKeys = new Set<string>();
+  const dedupedEntries: JournalEntry[] = [];
+
+  for (const je of entries) {
+    const numId = Number(je.id);
+    if (seenIds.has(numId)) continue;
+
+    if (
+      je.status !== 'void' &&
+      je.sourceId != null &&
+      (je.sourceType === 'order' || je.sourceType === 'payment' || je.sourceType === 'expense' || je.sourceType === 'opening_balance')
+    ) {
+      const key = `${je.sourceType}:${je.sourceId}`;
+      if (seenSourceKeys.has(key)) {
+        continue;
+      }
+      seenSourceKeys.add(key);
+    }
+
+    seenIds.add(numId);
+    dedupedEntries.push(je);
+  }
+  entries = dedupedEntries;
+
+  // Step 3: Ensure every non-cancelled Order has a balanced JE-ORD entry
+  for (const o of orders) {
+    if (o.status === 'cancelled') continue;
+    const totalAmt = roundCurrency(Number(o.totalAmount) || 0);
+    if (totalAmt <= 0) continue;
+
+    const existing = entries.find(
+      je => je.sourceType === 'order' && Number(je.sourceId) === Number(o.id)
+    );
+
+    if (existing) {
+      // If active, ensure customer name and amount match the order if it's a standard 2-line order entry
+      const cust = customers.find(c => c.id === o.customerId);
+      const custName = cust?.name || o.customerName || 'العميل';
+      if (existing.status !== 'void' && existing.lines.length === 2) {
+        existing.lines = existing.lines.map(l => {
+          if (l.side === 'debit') {
+            return {
+              ...l,
+              accountName: `حـ/ العميل: ${custName}`,
+              amount: totalAmt,
+              baseAmount: totalAmt
+            };
+          }
+          return {
+            ...l,
+            amount: totalAmt,
+            baseAmount: totalAmt
+          };
+        });
+      }
+      continue;
+    }
+
+    // Create missing order journal entry
+    const cust = customers.find(c => c.id === o.customerId);
+    const custName = cust?.name || o.customerName || 'العميل';
+    const jeId = 2000000000000 + Number(o.id);
+    const ordCustChart = resolveChartAccount(`حـ/ العميل: ${custName}`, 'debit');
+    const ordSalesChart = resolveChartAccount('حـ/ إيرادات المبيعات والوساطة', 'credit');
+    const createdAt = o.createdAt || o.orderDate || new Date().toISOString();
+
+    entries.push({
+      id: jeId,
+      entryNumber: `JE-ORD-${String(o.orderNumber || o.id).trim().padStart(4, '0')}`,
+      sourceType: 'order',
+      sourceId: o.id,
+      sourceNumber: String(o.orderNumber || o.id),
+      status: 'posted',
+      currency: 'YER',
+      exchangeRate: 1,
+      createdBy: 'admin',
+      postedBy: 'admin',
+      postedAt: createdAt,
+      description: `فاتورة مبيعات للطلب #${o.orderNumber} - العميل: ${custName}`,
+      createdAt,
+      lines: [
+        {
+          id: jeId * 10 + 1,
+          journalEntryId: jeId,
+          accountId: null,
+          accountName: `حـ/ العميل: ${custName}`,
+          chartAccountId: ordCustChart.id,
+          chartAccountCode: ordCustChart.code,
+          side: 'debit',
+          amount: totalAmt,
+          currency: 'YER',
+          exchangeRate: 1,
+          baseAmount: totalAmt
+        },
+        {
+          id: jeId * 10 + 2,
+          journalEntryId: jeId,
+          accountId: null,
+          accountName: 'حـ/ إيرادات المبيعات والوساطة',
+          chartAccountId: ordSalesChart.id,
+          chartAccountCode: ordSalesChart.code,
+          side: 'credit',
+          amount: totalAmt,
+          currency: 'YER',
+          exchangeRate: 1,
+          baseAmount: totalAmt
+        }
+      ]
+    });
+  }
+
+  // Step 4: Ensure every non-cancelled Payment has a balanced JE-PAY entry
+  for (const p of payments) {
+    if (p.status === 'cancelled') continue;
+    const payAmt = roundCurrency(Number(p.amount) || 0);
+    if (payAmt <= 0) continue;
+
+    const existing = entries.find(
+      je => je.sourceType === 'payment' && Number(je.sourceId) === Number(p.id)
+    );
+    if (existing) continue;
+
+    const cust = customers.find(c => c.id === p.customerId);
+    const custName = cust?.name || 'العميل';
+    const acc = accounts.find(a => a.id === p.accountId);
+    const accName = acc?.name || p.paymentMethod || 'الصندوق';
+    const jeId = 4000000000000 + Number(p.id);
+    const rctNum = p.receiptNumber || p.paymentNumber || `PAY-${p.id}`;
+    const payAccChart = resolveChartAccount(accName, 'debit', p.accountId);
+    const payCustChart = resolveChartAccount(`حـ/ العميل: ${custName}`, 'credit');
+    const createdAt = p.createdAt || p.paymentDate || new Date().toISOString();
+
+    entries.push({
+      id: jeId,
+      entryNumber: `JE-PAY-${rctNum}`,
+      sourceType: 'payment',
+      sourceId: p.id,
+      sourceNumber: rctNum,
+      status: 'posted',
+      currency: 'YER',
+      exchangeRate: 1,
+      createdBy: 'admin',
+      postedBy: 'admin',
+      postedAt: createdAt,
+      description: `سند قبض #${rctNum} من العميل: ${custName}`,
+      createdAt,
+      lines: [
+        {
+          id: jeId * 10 + 1,
+          journalEntryId: jeId,
+          accountId: p.accountId || null,
+          accountName: accName,
+          chartAccountId: payAccChart.id,
+          chartAccountCode: payAccChart.code,
+          side: 'debit',
+          amount: payAmt,
+          currency: 'YER',
+          exchangeRate: 1,
+          baseAmount: payAmt
+        },
+        {
+          id: jeId * 10 + 2,
+          journalEntryId: jeId,
+          accountId: null,
+          accountName: `حـ/ العميل: ${custName}`,
+          chartAccountId: payCustChart.id,
+          chartAccountCode: payCustChart.code,
+          side: 'credit',
+          amount: payAmt,
+          currency: 'YER',
+          exchangeRate: 1,
+          baseAmount: payAmt
+        }
+      ]
+    });
+  }
+
+  // Step 5: Ensure every Customer with openingBalance > 0 has a balanced JE-OPEN entry
+  for (const c of customers) {
+    const openBal = roundCurrency(parseFloat(String(c.openingBalance || 0)) || 0);
+    if (openBal <= 0) continue;
+
+    const existing = entries.find(
+      je => je.sourceType === 'opening_balance' && Number(je.sourceId) === Number(c.id)
+    );
+    if (existing) {
+      if (existing.status !== 'void' && existing.lines.length === 2) {
+        existing.lines = existing.lines.map(l => ({
+          ...l,
+          amount: openBal,
+          baseAmount: openBal
+        }));
+      }
+      continue;
+    }
+
+    const jeId = 1000000000000 + Number(c.id);
+    const custChart = resolveChartAccount(`حـ/ العميل: ${c.name}`, 'debit');
+    const capChart = resolveChartAccount('حـ/ الأرصدة الافتتاحية ورأس المال', 'credit');
+    const createdAt = c.openingBalanceDate || c.createdAt || new Date().toISOString();
+    const codeClean = (c.code || String(c.id)).replace(/\s+/g, '');
+
+    entries.push({
+      id: jeId,
+      entryNumber: `JE-OPEN-${codeClean}`,
+      sourceType: 'opening_balance',
+      sourceId: c.id,
+      sourceNumber: c.code || String(c.id),
+      status: 'posted',
+      currency: 'YER',
+      exchangeRate: 1,
+      createdBy: 'admin',
+      postedBy: 'admin',
+      postedAt: createdAt,
+      description: `إثبات الرصيد الافتتاحي للعميل: ${c.name} (${c.code || ''})`,
+      createdAt,
+      lines: [
+        {
+          id: jeId * 10 + 1,
+          journalEntryId: jeId,
+          accountId: null,
+          accountName: `حـ/ العميل: ${c.name}`,
+          chartAccountId: custChart.id,
+          chartAccountCode: custChart.code,
+          side: 'debit',
+          amount: openBal,
+          currency: 'YER',
+          exchangeRate: 1,
+          baseAmount: openBal
+        },
+        {
+          id: jeId * 10 + 2,
+          journalEntryId: jeId,
+          accountId: null,
+          accountName: 'حـ/ الأرصدة الافتتاحية ورأس المال',
+          chartAccountId: capChart.id,
+          chartAccountCode: capChart.code,
+          side: 'credit',
+          amount: openBal,
+          currency: 'YER',
+          exchangeRate: 1,
+          baseAmount: openBal
+        }
+      ]
+    });
+  }
+
+  // Sort newest first
+  entries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const syncedLines = entries.flatMap(e => e.lines || []);
+
+  return {
+    ...backup,
+    tables: {
+      ...backup.tables,
+      journalEntries: entries,
+      journalLines: syncedLines
+    }
   };
 }

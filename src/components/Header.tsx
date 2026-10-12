@@ -16,6 +16,7 @@ import { useStore } from '../context/StoreContext';
 
 import { NavTab } from './Navigation';
 import { PWAInstallButton } from './common/PWAInstallButton';
+import topStoreLogo from '../assets/images/regenerated_image_1791812410862.webp';
 
 interface HeaderProps {
   onOpenNewOrder: () => void;
@@ -53,7 +54,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex md:hidden items-center justify-between py-2.5">
           <div className="flex items-center gap-2 min-w-0">
             <div className="w-8 h-8 rounded-lg bg-white border border-amber-400 p-0.5 shadow-xs shrink-0 overflow-hidden flex items-center justify-center">
-              <img src="/top_store_logo.jpg" alt="TOP STORE" className="w-full h-full object-contain" />
+              <img src={topStoreLogo} alt="TOP STORE" className="w-full h-full object-contain" />
             </div>
             <div className="min-w-0">
               <h1 className="text-sm font-bold text-slate-900 leading-none truncate">
@@ -125,7 +126,7 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Brand & Store Info */}
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl bg-white border-2 border-[#C5A059] p-0.5 shadow-xs shrink-0 overflow-hidden flex items-center justify-center">
-              <img src="/top_store_logo.jpg" alt="TOP STORE" className="w-full h-full object-contain" />
+              <img src={topStoreLogo} alt="TOP STORE" className="w-full h-full object-contain" />
             </div>
             <div>
               <div className="flex items-center gap-2">

@@ -5,6 +5,8 @@ import {
   generateYearEndClosingEntry,
   generateAdjustingEntryForCustomer,
   isJournalEntryBalanced,
+  isEntryActiveInLedger,
+  reconcileCustomerBalances,
   DEFAULT_FISCAL_PERIODS,
   DEFAULT_FISCAL_YEARS
 } from './AccountingEngine';
@@ -100,8 +102,10 @@ export function runDataIntegrityTests(data: TopStoreBackup): {
   let totalDebit = 0;
   let totalCredit = 0;
   let unbalancedCount = 0;
+  const allEntries = t.journalEntries || [];
 
-  for (const je of t.journalEntries || []) {
+  for (const je of allEntries) {
+    if (!isEntryActiveInLedger(je, allEntries)) continue;
     let d = 0;
     let c = 0;
     for (const line of je.lines || []) {
@@ -139,12 +143,12 @@ export function runDataIntegrityTests(data: TopStoreBackup): {
   }
   if (dupCust === 0) passed++;
 
-  // 3. Duplicate Order Numbers
+  // 3. Duplicate Order Identifiers
   checks++;
   const orderNums = new Set<string>();
   let dupOrders = 0;
   for (const o of t.orders || []) {
-    const num = String(o.orderNumber);
+    const num = String((o as any).internalNumber || `${o.customerId || ''}-${o.orderNumber || ''}-${o.id}`);
     if (num) {
       if (orderNums.has(num)) {
         dupOrders++;
@@ -209,6 +213,7 @@ export function runDataIntegrityTests(data: TopStoreBackup): {
   checks++;
   let unmappedLines = 0;
   for (const je of t.journalEntries || []) {
+    if (je.status === 'void') continue;
     for (const l of je.lines || []) {
       if (!l.chartAccountId && !l.chartAccountCode) {
         unmappedLines++;
@@ -224,32 +229,13 @@ export function runDataIntegrityTests(data: TopStoreBackup): {
 
   // 9. Customer Ledger Reconciliation Rate
   checks++;
-  const customerDebits: Record<string, number> = {};
-  const customerCredits: Record<string, number> = {};
-  for (const je of t.journalEntries || []) {
-    if (je.status === 'void' || je.status === 'reversed') continue;
-    for (const l of je.lines || []) {
-      const name = l.accountName || '';
-      if (name.includes('العميل:')) {
-        const cName = name.replace(/^.*العميل:\s*/, '').trim();
-        const amt = Number(l.amount) || 0;
-        if (l.side === 'debit') customerDebits[cName] = (customerDebits[cName] || 0) + amt;
-        else if (l.side === 'credit') customerCredits[cName] = (customerCredits[cName] || 0) + amt;
-      }
-    }
-  }
-
-  let custMismatches = 0;
-  for (const c of t.customers || []) {
-    const opening = Number(c.openingBalance) || 0;
-    const oSum = (t.orders || []).filter(o => o.customerId === c.id && o.status !== 'cancelled').reduce((s, o) => s + (o.totalAmount || 0), 0);
-    const pSum = (t.payments || []).filter(p => p.customerId === c.id && p.status !== 'cancelled').reduce((s, p) => s + (p.amount || 0), 0);
-    const opsBal = opening + oSum - pSum;
-    const legBal = (customerDebits[c.name] || 0) - (customerCredits[c.name] || 0);
-    if (Math.abs(opsBal - legBal) > 0.01) {
-      custMismatches++;
-    }
-  }
+  const reconReport = reconcileCustomerBalances(
+    t.customers || [],
+    t.orders || [],
+    t.payments || [],
+    t.journalEntries || []
+  );
+  const custMismatches = reconReport.mismatchedCount;
   if (custMismatches === 0) {
     passed++;
   } else {

@@ -41,8 +41,9 @@ import {
 import * as XLSX from 'xlsx';
 import { useStore } from '../context/StoreContext';
 import { JournalEntry, JournalLine, ChartAccount, AccountCategory, AuditLog, FiscalPeriod, FiscalYear } from '../types';
+import { isEntryActiveInLedger, resolveChartAccount } from '../services/AccountingEngine';
 
-type ActiveViewTab = 'entries' | 'chart_accounts' | 'trial_balance' | 'ledger' | 'income_statement' | 'balance_sheet' | 'reconciliation' | 'fiscal_periods' | 'audit_trail';
+type ActiveViewTab = 'entries' | 'deleted_entries' | 'chart_accounts' | 'trial_balance' | 'ledger' | 'income_statement' | 'balance_sheet' | 'reconciliation' | 'fiscal_periods' | 'audit_trail';
 
 export const JournalView: React.FC = () => {
   const {
@@ -57,6 +58,10 @@ export const JournalView: React.FC = () => {
     addJournalEntry,
     updateJournalEntry,
     deleteJournalEntry,
+    restoreJournalEntry,
+    permanentlyDeleteJournalEntry,
+    restoreAllDeletedJournalEntries,
+    repairAllJournalEntries,
     reverseJournalEntry,
     addChartAccount,
     updateChartAccount,
@@ -78,6 +83,7 @@ export const JournalView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveViewTab>('entries');
   const [searchTerm, setSearchTerm] = useState('');
   const [sourceFilter, setSourceFilter] = useState<string>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'active' | 'posted' | 'reversed' | 'void' | 'ALL'>('active');
   const [balanceFilter, setBalanceFilter] = useState<'ALL' | 'balanced' | 'unbalanced'>('ALL');
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
     start: '',
@@ -93,9 +99,28 @@ export const JournalView: React.FC = () => {
   const [isAddEntryOpen, setIsAddEntryOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<JournalEntry | null>(null);
   const [deletingEntry, setDeletingEntry] = useState<JournalEntry | null>(null);
-  const [deleteCascadeOption, setDeleteCascadeOption] = useState(true);
+  const [deleteCascadeOption, setDeleteCascadeOption] = useState(false);
+  const [deleteReasonInput, setDeleteReasonInput] = useState('حذف القيد ونقله إلى سلة المحذوفات');
   const [reversingEntry, setReversingEntry] = useState<JournalEntry | null>(null);
   const [reversalReason, setReversalReason] = useState('إلغاء وتسوية القيد بالكامل');
+
+  // Deleted & Reversed (Restorable) Entries
+  const activeJournalEntries = useMemo(
+    () => journalEntries.filter(e => e.status !== 'void'),
+    [journalEntries]
+  );
+  const deletedEntries = useMemo(
+    () => journalEntries.filter(e => e.status === 'void'),
+    [journalEntries]
+  );
+  const reversedEntries = useMemo(
+    () => journalEntries.filter(e => e.status !== 'void' && (e.isReversed || e.status === 'reversed')),
+    [journalEntries]
+  );
+  const restorableEntries = useMemo(
+    () => journalEntries.filter(e => e.status === 'void' || e.isReversed || e.status === 'reversed'),
+    [journalEntries]
+  );
 
   // Chart account modals
   const [isAddAccountOpen, setIsAddAccountOpen] = useState(false);
@@ -154,7 +179,7 @@ export const JournalView: React.FC = () => {
     let rev = 0;
     let exp = 0;
     for (const je of journalEntries) {
-      if (je.status !== 'posted') continue;
+      if (!isEntryActiveInLedger(je, journalEntries)) continue;
       const y = new Date(je.createdAt).getFullYear();
       if (y !== selectedFiscalYear) continue;
       for (const l of je.lines || []) {
@@ -181,6 +206,12 @@ export const JournalView: React.FC = () => {
   // Filtered Journal Entries
   const filteredEntries = useMemo(() => {
     return journalEntries.filter(entry => {
+      // Status filter
+      if (statusFilter === 'active' && entry.status === 'void') return false;
+      if (statusFilter === 'posted' && !isEntryActiveInLedger(entry, journalEntries)) return false;
+      if (statusFilter === 'reversed' && !(entry.status !== 'void' && (entry.isReversed || entry.status === 'reversed'))) return false;
+      if (statusFilter === 'void' && entry.status !== 'void') return false;
+
       const desc = entry.description?.toLowerCase() || '';
       const num = entry.entryNumber?.toLowerCase() || '';
       const srcNum = entry.sourceNumber?.toLowerCase() || '';
@@ -195,6 +226,7 @@ export const JournalView: React.FC = () => {
         if (sourceFilter === 'payment' && entry.sourceType !== 'payment') return false;
         if (sourceFilter === 'expense' && entry.sourceType !== 'expense') return false;
         if (sourceFilter === 'reversal' && entry.sourceType !== 'reversal') return false;
+        if (sourceFilter === 'opening_balance' && entry.sourceType !== 'opening_balance') return false;
       }
 
       const totalDebit = (entry.lines || [])
@@ -213,15 +245,18 @@ export const JournalView: React.FC = () => {
 
       return true;
     });
-  }, [journalEntries, searchTerm, sourceFilter, balanceFilter, dateRange]);
+  }, [journalEntries, statusFilter, searchTerm, sourceFilter, balanceFilter, dateRange]);
 
-  // Overall statistics
+  // Overall statistics (for active ledger entries)
   const journalStats = useMemo(() => {
     let grandDebit = 0;
     let grandCredit = 0;
     let unbalancedCount = 0;
+    let activeCount = 0;
 
     journalEntries.forEach(entry => {
+      if (!isEntryActiveInLedger(entry, journalEntries)) return;
+      activeCount += 1;
       let d = 0;
       let c = 0;
       (entry.lines || []).forEach(l => {
@@ -237,7 +272,7 @@ export const JournalView: React.FC = () => {
     });
 
     return {
-      totalEntries: journalEntries.length,
+      totalEntries: activeCount,
       grandDebit,
       grandCredit,
       unbalancedCount,
@@ -261,8 +296,9 @@ export const JournalView: React.FC = () => {
       };
     });
 
-    // Aggregate from journal lines
+    // Aggregate from active journal lines
     journalEntries.forEach(entry => {
+      if (!isEntryActiveInLedger(entry, journalEntries)) return;
       (entry.lines || []).forEach(line => {
         const amt = parseFloat(String(line.amount)) || 0;
         if (amt <= 0) return;
@@ -360,8 +396,10 @@ export const JournalView: React.FC = () => {
     let totalDebit = 0;
     let totalCredit = 0;
 
-    // Sort entries chronologically
-    const sorted = [...journalEntries].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    // Sort active entries chronologically
+    const sorted = journalEntries
+      .filter(e => isEntryActiveInLedger(e, journalEntries))
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
     sorted.forEach(entry => {
       (entry.lines || []).forEach(line => {
@@ -430,32 +468,30 @@ export const JournalView: React.FC = () => {
     const expenseBreakdown: Record<string, number> = {};
 
     journalEntries.forEach(entry => {
+      if (!isEntryActiveInLedger(entry, journalEntries)) return;
       (entry.lines || []).forEach(l => {
         const amt = parseFloat(String(l.amount)) || 0;
-        const name = l.accountName.toLowerCase();
+        const name = (l.accountName || '').toLowerCase();
 
-        // Revenue lines (Credit)
-        if (l.side === 'credit') {
-          if (name.includes('مبيعات') || name.includes('وساطة') || l.chartAccountCode === '401') {
-            salesRevenue += amt;
-          } else if (name.includes('توصيل') || l.chartAccountCode === '402') {
-            deliveryRevenue += amt;
-          } else if (l.chartAccountCode === '409' || name.includes('إيراد')) {
-            otherRevenue += amt;
-          }
+        // Revenue lines (Normal Credit, Reversal Debit)
+        if (name.includes('مبيعات') || name.includes('وساطة') || l.chartAccountCode === '401') {
+          salesRevenue += l.side === 'credit' ? amt : -amt;
+        } else if (name.includes('توصيل') || l.chartAccountCode === '402') {
+          deliveryRevenue += l.side === 'credit' ? amt : -amt;
+        } else if (l.chartAccountCode === '409' || name.includes('إيراد')) {
+          otherRevenue += l.side === 'credit' ? amt : -amt;
         }
 
-        // Expense lines (Debit)
-        if (l.side === 'debit') {
-          if (name.includes('تكلفة') || name.includes('مشتريات') || l.chartAccountCode === '501') {
-            cogs += amt;
-          } else if (name.includes('شحن') || l.chartAccountCode === '502') {
-            shippingCosts += amt;
-          } else if (name.includes('مصروف') || l.chartAccountCode?.startsWith('5')) {
-            operatingExpenses += amt;
-            const categoryName = l.accountName.replace('مصروفات - ', '').replace('مصاريف ', '');
-            expenseBreakdown[categoryName] = (expenseBreakdown[categoryName] || 0) + amt;
-          }
+        // Expense lines (Normal Debit, Reversal Credit)
+        if (name.includes('تكلفة') || name.includes('مشتريات') || l.chartAccountCode === '501') {
+          cogs += l.side === 'debit' ? amt : -amt;
+        } else if (name.includes('شحن') || l.chartAccountCode === '502') {
+          shippingCosts += l.side === 'debit' ? amt : -amt;
+        } else if (name.includes('مصروف') || l.chartAccountCode?.startsWith('5')) {
+          const signedAmt = l.side === 'debit' ? amt : -amt;
+          operatingExpenses += signedAmt;
+          const categoryName = (l.accountName || 'مصاريف عامة').replace('مصروفات - ', '').replace('مصاريف ', '');
+          expenseBreakdown[categoryName] = (expenseBreakdown[categoryName] || 0) + signedAmt;
         }
       });
     });
@@ -623,6 +659,18 @@ export const JournalView: React.FC = () => {
             قيد عكسي تسوية
           </span>
         );
+      case 'opening_balance':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+            رصيد افتتاحي {number ? `#${number}` : ''}
+          </span>
+        );
+      case 'receivable':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200">
+            مستحقات وذمم {number ? `#${number}` : ''}
+          </span>
+        );
       default:
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
@@ -682,6 +730,25 @@ export const JournalView: React.FC = () => {
           >
             <Plus className="w-4 h-4" />
             إضافة قيد يومية يدوي
+          </button>
+          <button
+            onClick={() => repairAllJournalEntries(false)}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition cursor-pointer"
+            title="تصحيح الأخطاء المحاسبية وإزالة القيود المكررة ومطابقة الأرصدة"
+          >
+            <RefreshCw className="w-4 h-4" />
+            تصحيح وفحص القيود تلقائياً
+          </button>
+          <button
+            onClick={() => setActiveTab('deleted_entries')}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition cursor-pointer ${
+              restorableEntries.length > 0
+                ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200'
+                : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+            }`}
+          >
+            <RotateCcw className="w-4 h-4" />
+            سلة المحذوفات واسترجاع القيود ({restorableEntries.length})
           </button>
           <button
             onClick={handleExportJournalExcel}
@@ -754,7 +821,19 @@ export const JournalView: React.FC = () => {
           }`}
         >
           <BookOpen className="w-4 h-4 text-amber-600" />
-          دفتر اليومية العامة ({journalEntries.length})
+          دفتر اليومية العامة ({activeJournalEntries.length})
+        </button>
+
+        <button
+          onClick={() => setActiveTab('deleted_entries')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer transition whitespace-nowrap ${
+            activeTab === 'deleted_entries'
+              ? 'bg-white text-rose-700 shadow-sm'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50'
+          }`}
+        >
+          <RotateCcw className="w-4 h-4 text-rose-600" />
+          سلة المحذوفات واسترجاع القيود ({restorableEntries.length})
         </button>
 
         <button
@@ -883,8 +962,22 @@ export const JournalView: React.FC = () => {
               <option value="order">فواتير مبيعات الطلبات</option>
               <option value="payment">سندات القبض والدفعات</option>
               <option value="expense">المصروفات التشغيلية</option>
+              <option value="opening_balance">الأرصدة الافتتاحية</option>
               <option value="manual">القيود اليدوية الحرة</option>
               <option value="reversal">القيود العكسية والتسويات</option>
+            </select>
+
+            {/* Status Filter */}
+            <select
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value as any)}
+              className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 font-medium"
+            >
+              <option value="active">القيود النشطة والمعتمدة</option>
+              <option value="posted">السارية في الأستاذ فقط</option>
+              <option value="reversed">القيود المعكوسة فقط ({reversedEntries.length})</option>
+              <option value="void">سلة المحذوفات فقط ({deletedEntries.length})</option>
+              <option value="ALL">عرض الكل (بما فيها المحذوفة)</option>
             </select>
 
             {/* Balance Status Filter */}
@@ -935,12 +1028,18 @@ export const JournalView: React.FC = () => {
                   .reduce((s, l) => s + (parseFloat(String(l.amount)) || 0), 0);
 
                 const isBalanced = Math.abs(totalDebit - totalCredit) < 0.01;
+                const isVoid = entry.status === 'void';
+                const isReversed = Boolean(!isVoid && (entry.isReversed || entry.status === 'reversed'));
 
                 return (
                   <div
                     key={entry.id}
                     className={`bg-white border rounded-2xl overflow-hidden shadow-xs transition hover:border-slate-300 ${
-                      entry.isReversed ? 'border-purple-200 bg-purple-50/20' : 'border-slate-200'
+                      isVoid
+                        ? 'border-rose-200 bg-rose-50/20 opacity-85'
+                        : isReversed
+                        ? 'border-purple-200 bg-purple-50/20'
+                        : 'border-slate-200'
                     }`}
                   >
                     {/* Header bar of entry */}
@@ -950,12 +1049,19 @@ export const JournalView: React.FC = () => {
                           {entry.entryNumber}
                         </span>
                         {getSourceBadge(entry.sourceType, entry.sourceNumber)}
-                        {entry.isReversed && (
-                          <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-[10px] font-bold">
+                        {isVoid && (
+                          <span className="bg-rose-100 text-rose-800 border border-rose-200 px-2 py-0.5 rounded text-[10px] font-bold">
+                            محذوف (في سلة المحذوفات)
+                          </span>
+                        )}
+                        {isReversed && (
+                          <span className="bg-purple-100 text-purple-800 border border-purple-200 px-2 py-0.5 rounded text-[10px] font-bold">
                             قيد ملغى بقيد عكسي
                           </span>
                         )}
-                        <h4 className="text-xs font-bold text-slate-900 mr-2">{entry.description}</h4>
+                        <h4 className={`text-xs font-bold mr-2 ${isVoid ? 'line-through text-slate-500' : 'text-slate-900'}`}>
+                          {entry.description}
+                        </h4>
                       </div>
 
                       <div className="flex items-center gap-3 text-xs">
@@ -982,32 +1088,55 @@ export const JournalView: React.FC = () => {
 
                         {/* Action buttons */}
                         <div className="flex items-center gap-1 mr-2 border-r border-slate-200 pr-2">
-                          <button
-                            onClick={() => setEditingEntry(entry)}
-                            title="تعديل القيد المحاسبي"
-                            className="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-white rounded-lg transition cursor-pointer"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          {!entry.isReversed && (
+                          {(isVoid || isReversed) && (
+                            <button
+                              onClick={() => restoreJournalEntry(entry.id)}
+                              title="استرجاع القيد وتفعيله في الدفتر المحاسبي"
+                              className="flex items-center gap-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold transition cursor-pointer shadow-2xs"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                              استرجاع القيد
+                            </button>
+                          )}
+                          {!isVoid && (
+                            <button
+                              onClick={() => setEditingEntry(entry)}
+                              title="تعديل وتصحيح القيد المحاسبي"
+                              className="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-white rounded-lg transition cursor-pointer"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          {!isVoid && !isReversed && entry.sourceType !== 'reversal' && (
                             <button
                               onClick={() => setReversingEntry(entry)}
-                              title="عكس القيد (Storno Reversal)"
+                              title="عكس القيد بقيد عكسي (Storno Reversal)"
                               className="p-1.5 text-slate-500 hover:text-purple-600 hover:bg-white rounded-lg transition cursor-pointer"
                             >
                               <RotateCcw className="w-3.5 h-3.5" />
                             </button>
                           )}
-                          <button
-                            onClick={() => {
-                              setDeletingEntry(entry);
-                              setDeleteCascadeOption(true);
-                            }}
-                            title="حذف القيد مع خيارات الحذف المتزامن"
-                            className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-white rounded-lg transition cursor-pointer"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {!isVoid ? (
+                            <button
+                              onClick={() => {
+                                setDeletingEntry(entry);
+                                setDeleteCascadeOption(false);
+                                setDeleteReasonInput('حذف القيد ونقله إلى سلة المحذوفات');
+                              }}
+                              title="حذف القيد ونقله إلى سلة المحذوفات (مع إمكانية الاسترجاع)"
+                              className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-white rounded-lg transition cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => permanentlyDeleteJournalEntry(entry.id)}
+                              title="حذف نهائي من سلة المحذوفات"
+                              className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1065,6 +1194,177 @@ export const JournalView: React.FC = () => {
                           </tr>
                         </tfoot>
                       </table>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* TAB 1.5: DELETED & REVERSED ENTRIES (سلة المحذوفات واسترجاع القيود) */}
+      {/* ============================================================== */}
+      {activeTab === 'deleted_entries' && (
+        <div className="space-y-4">
+          {/* Header Banner */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                <RotateCcw className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">سلة المحذوفات واسترجاع القيود المحاسبية</h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  جميع القيود التي تم حذفها أو عكسها محفوظة هنا بأمان، ويمكنك استرجاع أي قيد بضغطة زر ليعود سارياً في دفتر الأستاذ وميزان المراجعة، أو حذفه نهائياً.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {deletedEntries.length > 0 && (
+                <button
+                  onClick={restoreAllDeletedJournalEntries}
+                  className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  استرجاع جميع القيود المحذوفة ({deletedEntries.length})
+                </button>
+              )}
+              <button
+                onClick={() => repairAllJournalEntries(true)}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+              >
+                <RefreshCw className="w-4 h-4" />
+                استرجاع القيود الناقصة للعمليات وإصلاح الدفتر
+              </button>
+            </div>
+          </div>
+
+          {/* Summary KPI Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+              <span className="text-xs font-bold text-slate-500">إجمالي القيود القابلة للاسترجاع</span>
+              <div className="text-xl font-black text-slate-900 mt-1">{restorableEntries.length} قيد</div>
+              <span className="text-[11px] text-slate-400">محذوفة أو معكوسة</span>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-rose-200 bg-rose-50/20 shadow-xs">
+              <span className="text-xs font-bold text-rose-700">قيود في سلة المحذوفات (Void)</span>
+              <div className="text-xl font-black text-rose-800 mt-1">{deletedEntries.length} قيد</div>
+              <span className="text-[11px] text-rose-600/80">موقوفة الأثر المالي قابلة للاسترجاع الفوري</span>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-purple-200 bg-purple-50/20 shadow-xs">
+              <span className="text-xs font-bold text-purple-700">قيود معكوسة بقيد عكسي (Reversed)</span>
+              <div className="text-xl font-black text-purple-800 mt-1">{reversedEntries.length} قيد</div>
+              <span className="text-[11px] text-purple-600/80">يمكن إلغاء عكسها وإعادة تفعيلها</span>
+            </div>
+          </div>
+
+          {restorableEntries.length === 0 ? (
+            <div className="bg-white p-12 text-center rounded-2xl border border-slate-200">
+              <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
+              <h3 className="text-sm font-bold text-slate-800">سلة المحذوفات فارغة تماماً</h3>
+              <p className="text-xs text-slate-500 mt-1">
+                لا توجد أي قيود محذوفة أو معكوسة حالياً. جميع قيود النظام نشطة ومتوازنة.
+              </p>
+              <button
+                onClick={() => repairAllJournalEntries(true)}
+                className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                <RefreshCw className="w-4 h-4" />
+                فحص وتوليد أي قيود ناقصة للطلبات أو الدفعات
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3.5">
+              {restorableEntries.map(entry => {
+                const isVoid = entry.status === 'void';
+                const totalDebit = (entry.lines || [])
+                  .filter(l => l.side === 'debit')
+                  .reduce((s, l) => s + (parseFloat(String(l.amount)) || 0), 0);
+
+                return (
+                  <div
+                    key={entry.id}
+                    className={`bg-white border rounded-2xl overflow-hidden shadow-xs ${
+                      isVoid ? 'border-rose-200' : 'border-purple-200'
+                    }`}
+                  >
+                    <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono text-xs font-bold text-slate-800 bg-white border border-slate-200 px-2 py-0.5 rounded-md">
+                          {entry.entryNumber}
+                        </span>
+                        {getSourceBadge(entry.sourceType, entry.sourceNumber)}
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                            isVoid
+                              ? 'bg-rose-100 text-rose-800 border-rose-200'
+                              : 'bg-purple-100 text-purple-800 border-purple-200'
+                          }`}
+                        >
+                          {isVoid ? 'محذوف في سلة المحذوفات' : 'ملغى بقيد عكسي'}
+                        </span>
+                        <h4 className="text-xs font-bold text-slate-900 mr-2">{entry.description}</h4>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-slate-700 ml-2">
+                          المبلغ: {totalDebit.toLocaleString()} ريال
+                        </span>
+                        <button
+                          onClick={() => restoreJournalEntry(entry.id)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-2xs"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          استرجاع القيد وتفعيله
+                        </button>
+                        <button
+                          onClick={() => permanentlyDeleteJournalEntry(entry.id)}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          حذف نهائي
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-white space-y-2 text-xs">
+                      {(entry.deleteReason || entry.reversalReason) && (
+                        <div className="text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex items-center justify-between">
+                          <span>
+                            <strong className="text-slate-800">سبب الحذف / الإلغاء: </strong>
+                            {entry.deleteReason || entry.reversalReason}
+                          </span>
+                          {entry.deletedAt && (
+                            <span className="font-mono text-[11px] text-slate-400">
+                              تاريخ الحذف: {new Date(entry.deletedAt).toLocaleString('ar-YE')}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                        {(entry.lines || []).map((line, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between p-2 rounded-lg border border-slate-100 bg-slate-50/50"
+                          >
+                            <span className="font-bold text-slate-700">
+                              {line.side === 'debit' ? 'من حـ/ ' : 'إلى حـ/ '}
+                              {line.accountName}
+                            </span>
+                            <span
+                              className={`font-mono font-bold ${
+                                line.side === 'debit' ? 'text-blue-700' : 'text-emerald-700'
+                              }`}
+                            >
+                              {Number(line.amount || 0).toLocaleString()} ريال ({line.side === 'debit' ? 'مدين' : 'دائن'})
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 );
@@ -2384,11 +2684,11 @@ export const JournalView: React.FC = () => {
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-slate-200">
             <div className="flex items-center gap-3 text-rose-600">
               <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center">
-                <ShieldAlert className="w-6 h-6" />
+                <Trash2 className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900">تأكيد حذف القيد المحاسبي</h3>
-                <p className="text-xs text-slate-500">تحذير تكامل البيانات والحذف المتزامن (Cascading)</p>
+                <h3 className="text-base font-bold text-slate-900">حذف القيد المحاسبي ونقله لسلة المحذوفات</h3>
+                <p className="text-xs text-slate-500">إيقاف الأثر المالي للقيد فوراً مع إمكانية استرجاعه في أي وقت</p>
               </div>
             </div>
 
@@ -2407,7 +2707,18 @@ export const JournalView: React.FC = () => {
               </div>
             </div>
 
-            {deletingEntry.sourceType && deletingEntry.sourceType !== 'manual' && (
+            <div className="space-y-1.5 text-xs">
+              <label className="font-bold text-slate-700">سبب الحذف (يظهر في سجل الرقابة وسلة المحذوفات):</label>
+              <input
+                type="text"
+                value={deleteReasonInput}
+                onChange={e => setDeleteReasonInput(e.target.value)}
+                placeholder="مثال: قيد مكرر أو خطأ في الإدخال..."
+                className="w-full border border-slate-200 rounded-lg p-2.5 text-xs focus:outline-hidden focus:border-rose-500"
+              />
+            </div>
+
+            {deletingEntry.sourceType && deletingEntry.sourceType !== 'manual' && deletingEntry.sourceType !== 'reversal' && (
               <label className="flex items-start gap-2.5 p-3 rounded-xl border border-amber-200 bg-amber-50/50 cursor-pointer text-xs">
                 <input
                   type="checkbox"
@@ -2416,8 +2727,8 @@ export const JournalView: React.FC = () => {
                   className="mt-0.5 rounded text-amber-600 cursor-pointer"
                 />
                 <span className="text-slate-700">
-                  <strong className="block text-amber-900 font-bold mb-0.5">حذف متزامن للمستند الأصلي التابع:</strong>
-                  حذف السجل الأصلي (المصروف أو سند القبض أو الحركة النقدية) لمنع أي بيانات معلقة (No Orphan Entries) وإعادة احتساب الأرصدة تلقائياً.
+                  <strong className="block text-amber-900 font-bold mb-0.5">إلغاء المستند الأصلي المرتبط أيضاً (اختياري):</strong>
+                  عند التفعيل سيتم تحويل حالة المستند الأصلي (الطلب أو الدفعة أو المصروف) إلى ملغي، وعند استرجاع القيد لاحقاً يتم تفعيله تلقائياً.
                 </span>
               </label>
             )}
@@ -2431,12 +2742,15 @@ export const JournalView: React.FC = () => {
               </button>
               <button
                 onClick={() => {
-                  deleteJournalEntry(deletingEntry.id, { deleteSourceDocument: deleteCascadeOption });
+                  deleteJournalEntry(deletingEntry.id, {
+                    deleteSourceDocument: deleteCascadeOption,
+                    reason: deleteReasonInput
+                  });
                   setDeletingEntry(null);
                 }}
                 className="px-4 py-2 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition shadow-xs cursor-pointer"
               >
-                تأكيد الحذف المتزامن
+                نقل القيد إلى سلة المحذوفات
               </button>
             </div>
           </div>
@@ -2836,13 +3150,55 @@ const EditJournalEntryModal: React.FC<EditJournalEntryModalProps> = ({
   onSave
 }) => {
   const [description, setDescription] = useState(entry.description || '');
-  const [date, setDate] = useState(entry.createdAt.slice(0, 10));
-  const [lines, setLines] = useState<JournalLine[]>(entry.lines || []);
+  const [date, setDate] = useState((entry.createdAt || new Date().toISOString()).slice(0, 10));
+  const [lines, setLines] = useState<JournalLine[]>(
+    (entry.lines || []).map((l, idx) => ({
+      ...l,
+      id: l.id || entry.id * 10 + idx + 1
+    }))
+  );
 
-  const handleUpdateLineAmount = (idx: number, amt: number) => {
+  const handleUpdateLine = (idx: number, field: keyof JournalLine, value: any) => {
     setLines(prev =>
-      prev.map((l, i) => (i === idx ? { ...l, amount: amt } : l))
+      prev.map((l, i) => {
+        if (i !== idx) return l;
+        if (field === 'chartAccountId') {
+          const matched = chartAccounts.find(ca => ca.id === Number(value));
+          if (matched) {
+            return {
+              ...l,
+              chartAccountId: matched.id,
+              chartAccountCode: matched.code,
+              accountName: l.accountName?.includes('العميل:') ? l.accountName : matched.name
+            };
+          }
+        }
+        return { ...l, [field]: value };
+      })
     );
+  };
+
+  const handleAddLine = (side: 'debit' | 'credit') => {
+    const defaultAcc = chartAccounts.find(ca => (side === 'debit' ? ca.code === '101' : ca.code === '401')) || chartAccounts[0];
+    setLines(prev => [
+      ...prev,
+      {
+        id: Date.now() + Math.floor(Math.random() * 1000),
+        journalEntryId: entry.id,
+        accountId: null,
+        chartAccountId: defaultAcc?.id || 101,
+        chartAccountCode: defaultAcc?.code || '101',
+        accountName: defaultAcc?.name || 'الصندوق',
+        side,
+        amount: 0,
+        notes: ''
+      }
+    ]);
+  };
+
+  const handleRemoveLine = (idx: number) => {
+    if (lines.length <= 2) return;
+    setLines(prev => prev.filter((_, i) => i !== idx));
   };
 
   const totalDebit = lines
@@ -2853,7 +3209,59 @@ const EditJournalEntryModal: React.FC<EditJournalEntryModalProps> = ({
     .filter(l => l.side === 'credit')
     .reduce((s, l) => s + (parseFloat(String(l.amount)) || 0), 0);
 
-  const isBalanced = Math.abs(totalDebit - totalCredit) < 0.01;
+  const isBalanced = totalDebit > 0 && Math.abs(totalDebit - totalCredit) < 0.01;
+
+  const handleAutoBalance = () => {
+    const diff = totalDebit - totalCredit;
+    if (Math.abs(diff) < 0.01) return;
+    if (lines.length === 2 && lines[0].side !== lines[1].side) {
+      const targetAmt = Math.max(totalDebit, totalCredit);
+      setLines(prev => prev.map(l => ({ ...l, amount: targetAmt })));
+    } else if (diff > 0) {
+      // Need more credit
+      const lastCreditIdx = lines.map(l => l.side).lastIndexOf('credit');
+      if (lastCreditIdx >= 0) {
+        handleUpdateLine(lastCreditIdx, 'amount', Number(lines[lastCreditIdx].amount || 0) + diff);
+      } else {
+        const adjAcc = chartAccounts.find(ca => ca.code === '303') || chartAccounts[0];
+        setLines(prev => [
+          ...prev,
+          {
+            id: Date.now(),
+            journalEntryId: entry.id,
+            accountId: null,
+            chartAccountId: adjAcc?.id || 303,
+            chartAccountCode: adjAcc?.code || '303',
+            accountName: adjAcc?.name || 'تسويات محاسبية',
+            side: 'credit',
+            amount: diff
+          }
+        ]);
+      }
+    } else {
+      // Need more debit
+      const absDiff = Math.abs(diff);
+      const lastDebitIdx = lines.map(l => l.side).lastIndexOf('debit');
+      if (lastDebitIdx >= 0) {
+        handleUpdateLine(lastDebitIdx, 'amount', Number(lines[lastDebitIdx].amount || 0) + absDiff);
+      } else {
+        const adjAcc = chartAccounts.find(ca => ca.code === '303') || chartAccounts[0];
+        setLines(prev => [
+          ...prev,
+          {
+            id: Date.now(),
+            journalEntryId: entry.id,
+            accountId: null,
+            chartAccountId: adjAcc?.id || 303,
+            chartAccountCode: adjAcc?.code || '303',
+            accountName: adjAcc?.name || 'تسويات محاسبية',
+            side: 'debit',
+            amount: absDiff
+          }
+        ]);
+      }
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -2866,53 +3274,131 @@ const EditJournalEntryModal: React.FC<EditJournalEntryModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl max-w-3xl w-full p-6 space-y-4 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
             <Edit2 className="w-5 h-5 text-amber-600" />
-            <h3 className="text-base font-bold text-slate-900">تعديل القيد المحاسبي #{entry.entryNumber}</h3>
+            <div>
+              <h3 className="text-base font-bold text-slate-900">تعديل وتصحيح القيد المحاسبي #{entry.entryNumber}</h3>
+              <p className="text-[11px] text-slate-500">يمكنك تعديل البيان والتاريخ والحسابات والمبالغ وموازنة القيد مباشرة</p>
+            </div>
           </div>
           <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-          <div className="space-y-1">
-            <label className="font-bold text-slate-700">البيان والشرح:</label>
-            <input
-              type="text"
-              required
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              className="w-full border border-slate-200 rounded-lg p-2.5 text-xs focus:outline-hidden focus:border-amber-500"
-            />
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs flex-1 overflow-y-auto pr-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="sm:col-span-2 space-y-1">
+              <label className="font-bold text-slate-700">البيان والشرح:</label>
+              <input
+                type="text"
+                required
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                className="w-full border border-slate-200 rounded-lg p-2.5 text-xs focus:outline-hidden focus:border-amber-500"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700">تاريخ القيد:</label>
+              <input
+                type="date"
+                required
+                value={date}
+                onChange={e => setDate(e.target.value)}
+                className="w-full border border-slate-200 rounded-lg p-2.5 text-xs focus:outline-hidden focus:border-amber-500"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
-            <label className="font-bold text-slate-700">تعديل مبالغ الأطراف:</label>
+            <div className="flex items-center justify-between">
+              <label className="font-bold text-slate-700">أطراف القيد المحاسبي (الحسابات والمبالغ):</label>
+              <div className="flex items-center gap-1.5">
+                {!isBalanced && (
+                  <button
+                    type="button"
+                    onClick={handleAutoBalance}
+                    className="px-2.5 py-1 text-[11px] font-bold bg-amber-50 text-amber-700 rounded-lg border border-amber-200 hover:bg-amber-100 cursor-pointer"
+                  >
+                    موازنة تلقائية سريعة
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleAddLine('debit')}
+                  className="px-2.5 py-1 text-[11px] font-bold bg-blue-50 text-blue-700 rounded-lg border border-blue-200 hover:bg-blue-100 cursor-pointer"
+                >
+                  + طرف مدين
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAddLine('credit')}
+                  className="px-2.5 py-1 text-[11px] font-bold bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200 hover:bg-emerald-100 cursor-pointer"
+                >
+                  + طرف دائن
+                </button>
+              </div>
+            </div>
+
             <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden">
               {lines.map((l, idx) => (
-                <div key={idx} className="p-3 bg-slate-50/50 flex items-center justify-between gap-3">
-                  <span className="font-bold text-slate-800 flex-1 truncate">
-                    {l.side === 'debit' ? 'من حـ/' : 'إلى حـ/'} {l.accountName}
-                  </span>
-                  <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
-                    l.side === 'debit' ? 'bg-blue-50 text-blue-700' : 'bg-emerald-50 text-emerald-700'
-                  }`}>
-                    {l.side === 'debit' ? 'مدين' : 'دائن'}
-                  </span>
-                  <div className="w-32">
+                <div key={l.id || idx} className="p-3 bg-slate-50/50 flex flex-wrap items-center gap-2">
+                  <select
+                    value={l.side}
+                    onChange={e => handleUpdateLine(idx, 'side', e.target.value as 'debit' | 'credit')}
+                    className={`font-bold rounded-lg px-2 py-1.5 border text-xs cursor-pointer ${
+                      l.side === 'debit'
+                        ? 'bg-blue-50 text-blue-700 border-blue-200'
+                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    }`}
+                  >
+                    <option value="debit">من حـ/ (مدين)</option>
+                    <option value="credit">إلى حـ/ (دائن)</option>
+                  </select>
+
+                  <select
+                    value={l.chartAccountId || ''}
+                    onChange={e => handleUpdateLine(idx, 'chartAccountId', Number(e.target.value))}
+                    className="border border-slate-200 bg-white rounded-lg px-2 py-1.5 font-bold text-slate-800 max-w-[200px]"
+                  >
+                    {chartAccounts.map(ca => (
+                      <option key={ca.id} value={ca.id}>
+                        [{ca.code}] {ca.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  <input
+                    type="text"
+                    value={l.accountName || ''}
+                    onChange={e => handleUpdateLine(idx, 'accountName', e.target.value)}
+                    placeholder="اسم الحساب التفصيلي..."
+                    className="flex-1 min-w-[140px] border border-slate-200 bg-white rounded-lg px-2.5 py-1.5 font-bold text-slate-800"
+                  />
+
+                  <div className="w-28">
                     <input
                       type="number"
                       step="any"
                       min="0"
                       value={l.amount}
-                      onChange={e => handleUpdateLineAmount(idx, parseFloat(e.target.value) || 0)}
+                      onChange={e => handleUpdateLine(idx, 'amount', parseFloat(e.target.value) || 0)}
                       className="w-full border border-slate-200 bg-white rounded-lg p-1.5 font-mono font-bold text-left"
                     />
                   </div>
+
+                  {lines.length > 2 && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveLine(idx)}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -2920,10 +3406,10 @@ const EditJournalEntryModal: React.FC<EditJournalEntryModalProps> = ({
 
           {/* Balance Bar */}
           <div className="p-3 bg-slate-100 rounded-xl flex items-center justify-between font-mono">
-            <span>مدين: {totalDebit.toLocaleString()}</span>
-            <span>دائن: {totalCredit.toLocaleString()}</span>
+            <span>مدين: <strong className="text-blue-700">{totalDebit.toLocaleString()} ريال</strong></span>
+            <span>دائن: <strong className="text-emerald-700">{totalCredit.toLocaleString()} ريال</strong></span>
             <span className={`font-sans font-bold ${isBalanced ? 'text-emerald-700' : 'text-rose-700'}`}>
-              {isBalanced ? 'متوازن' : `غير متوازن (${Math.abs(totalDebit - totalCredit)})`}
+              {isBalanced ? 'متوازن 100%' : `غير متوازن (الفارق: ${Math.abs(totalDebit - totalCredit)} ريال)`}
             </span>
           </div>
 
@@ -2940,7 +3426,7 @@ const EditJournalEntryModal: React.FC<EditJournalEntryModalProps> = ({
               disabled={!isBalanced}
               className="px-5 py-2 font-bold bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white rounded-xl transition shadow-xs cursor-pointer"
             >
-              حفظ التعديلات
+              حفظ وتصحيح القيد
             </button>
           </div>
         </form>

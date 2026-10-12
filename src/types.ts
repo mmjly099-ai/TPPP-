@@ -131,6 +131,7 @@ export interface Payment {
   courierId?: number | null;
   courierName?: string | null;
   deliveryCollectionMethod?: 'cash_to_courier' | 'transfer_to_wallet' | 'unassigned' | null;
+  deliveryPaymentMethod?: 'cash_to_courier' | 'transfer_to_wallet' | 'unassigned' | string | null;
   deliveryFee?: number;
   statement?: string;
   notes?: string | null;
@@ -345,10 +346,14 @@ export interface JournalEntry {
   postedByName?: string;
   postedAt?: string;
   createdAt: string;
+  updatedAt?: string;
   isReversed?: boolean;
   reversedByEntryId?: number | null;
   reversesEntryId?: number | null;
   reversalReason?: string;
+  deletedAt?: string | null;
+  deleteReason?: string | null;
+  previousStatus?: JournalEntryStatus;
   lines: JournalLine[];
 }
 
