@@ -19,16 +19,17 @@
         console.error = function() {
           var args = Array.prototype.slice.call(arguments);
           var text = args.map(function(a) { return (a && a.stack) || (a && a.message) || String(a); }).join(' ');
-          if (text.indexOf('WebSocket closed without opened') !== -1 || text.indexOf('WebSocket closed') !== -1) {
+          if (text.indexOf('WebSocket') !== -1 || text.indexOf('@vite/client') !== -1) {
             return;
           }
           origConsoleError.apply(console, args);
         };
         window.addEventListener('error', function (event) {
-          var msg = event?.message || (event?.error && event?.error?.message) || '';
+          var msg = (event && event.message) || (event && event.error && event.error.message) || '';
+          var src = (event && event.filename) || '';
           if (
-            msg.indexOf('WebSocket closed') !== -1 ||
-            (event?.filename && event.filename.indexOf('@vite/client') !== -1)
+            msg.indexOf('WebSocket') !== -1 ||
+            src.indexOf('@vite/client') !== -1
           ) {
             event.stopImmediatePropagation();
             event.preventDefault();
@@ -36,9 +37,9 @@
           }
         }, true);
         window.addEventListener('unhandledrejection', function (event) {
-          var reason = event?.reason;
-          var msg = (typeof reason === 'string' ? reason : reason?.message) || '';
-          if (msg.indexOf('WebSocket closed') !== -1) {
+          var reason = event && event.reason;
+          var msg = (typeof reason === 'string' ? reason : (reason && reason.message) || (reason && reason.stack) || '') || '';
+          if (msg.indexOf('WebSocket') !== -1 || msg.indexOf('@vite/client') !== -1) {
             event.stopImmediatePropagation();
             event.preventDefault();
           }
