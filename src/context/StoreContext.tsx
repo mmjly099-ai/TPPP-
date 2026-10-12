@@ -40,6 +40,7 @@ import {
   IdempotencyRecord
 } from '../types';
 import { exportToZip } from '../utils/dataExporter';
+import { getOrCreateCurrentDevice } from '../utils/deviceTracker';
 import { INITIAL_DATA } from '../data/initialData';
 import { DEFAULT_CHART_OF_ACCOUNTS } from '../data/defaultChartOfAccounts';
 import {
@@ -524,7 +525,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const syncWithServer = async () => {
     try {
       setIsSyncing(true);
-      const res = await fetch('/api/sync/pull');
+      const dev = getOrCreateCurrentDevice();
+      const q = new URLSearchParams({
+        deviceId: dev.deviceId,
+        deviceName: dev.deviceName,
+        deviceType: dev.deviceType,
+        browser: dev.browser,
+        os: dev.os
+      }).toString();
+
+      const res = await fetch(`/api/sync/pull?${q}`);
       if (res.ok) {
         const json = await res.json();
         if (json.success && json.data && json.data.tables) {
@@ -561,10 +571,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const timer = setTimeout(async () => {
       try {
+        const dev = getOrCreateCurrentDevice();
         await fetch('/api/sync/push', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ data })
+          body: JSON.stringify({ data, device: dev })
         });
         setLastSyncTime(new Date().toLocaleTimeString('ar-YE'));
       } catch (e) {

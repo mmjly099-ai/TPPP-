@@ -20,6 +20,7 @@ import { CouriersView } from './components/CouriersView';
 import { DataImportView } from './components/import/DataImportView';
 import { InvoicesView } from './components/InvoicesView';
 import { WorkersView } from './components/WorkersView';
+import { SupabaseMonitorView } from './components/SupabaseMonitorView';
 import { SystemLockScreen } from './components/auth/SystemLockScreen';
 import { OfflineIndicator } from './components/common/OfflineIndicator';
 
@@ -37,6 +38,7 @@ import { NewShipmentModal } from './components/modals/NewShipmentModal';
 import { NewReceivableModal } from './components/modals/NewReceivableModal';
 import { ExportBackupModal } from './components/modals/ExportBackupModal';
 import { RecordAccountTransactionModal } from './components/modals/RecordAccountTransactionModal';
+import { SystemManualModal } from './components/modals/SystemManualModal';
 
 // Mobile Components
 import { MobileBottomNav } from './components/mobile/MobileBottomNav';
@@ -91,6 +93,7 @@ const MainApp: React.FC = () => {
   const [isNewShipmentOpen, setIsNewShipmentOpen] = useState(false);
   const [isNewReceivableOpen, setIsNewReceivableOpen] = useState(false);
   const [isExportBackupOpen, setIsExportBackupOpen] = useState(false);
+  const [isSystemManualOpen, setIsSystemManualOpen] = useState(false);
 
   // Contextual modal selections
   const [statementCustomer, setStatementCustomer] = useState<Customer | null>(null);
@@ -185,6 +188,7 @@ const MainApp: React.FC = () => {
         onOpenNewExpense={() => setIsNewExpenseOpen(true)}
         onOpenBackup={() => setIsExportBackupOpen(true)}
         onOpenAssistant={() => setActiveTab('assistant')}
+        onOpenSystemManual={() => setIsSystemManualOpen(true)}
         onNavigate={setActiveTab}
         onLock={handleLogout}
       />
@@ -285,6 +289,8 @@ const MainApp: React.FC = () => {
           )}
 
           {activeTab === 'data-import' && <DataImportView />}
+
+          {activeTab === 'supabase-monitor' && <SupabaseMonitorView />}
 
           {activeTab === 'settings' && <SettingsView />}
         </div>
@@ -395,6 +401,13 @@ const MainApp: React.FC = () => {
         onClose={() => setRecordModalConfig(prev => ({ ...prev, isOpen: false }))}
         initialType={recordModalConfig.type}
         initialAccountId={recordModalConfig.accountId}
+      />
+
+      {/* Comprehensive System Manual & PDF Modal */}
+      <SystemManualModal
+        isOpen={isSystemManualOpen}
+        onClose={() => setIsSystemManualOpen(false)}
+        onNavigateToTab={setActiveTab}
       />
 
       {/* Mobile Sticky Bottom Navigation Bar */}

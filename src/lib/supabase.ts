@@ -20,13 +20,49 @@ const getEnvVar = (viteKey: string, standardKey: string): string => {
 export const SUPABASE_URL = getEnvVar('VITE_SUPABASE_URL', 'SUPABASE_URL');
 export const SUPABASE_ANON_KEY = getEnvVar('VITE_SUPABASE_ANON_KEY', 'SUPABASE_ANON_KEY');
 
+let runtimeUrl: string | null = null;
+let runtimeAnonKey: string | null = null;
+try {
+  if (typeof localStorage !== 'undefined') {
+    runtimeUrl = localStorage.getItem('topstore_supabase_url') || null;
+    runtimeAnonKey = localStorage.getItem('topstore_supabase_anon_key') || null;
+  }
+} catch (e) {
+  // ignore
+}
+
+export function setRuntimeSupabaseConfig(url: string, anonKey: string) {
+  runtimeUrl = url.trim();
+  runtimeAnonKey = anonKey.trim();
+  try {
+    if (url) localStorage.setItem('topstore_supabase_url', runtimeUrl);
+    else localStorage.removeItem('topstore_supabase_url');
+
+    if (anonKey) localStorage.setItem('topstore_supabase_anon_key', runtimeAnonKey);
+    else localStorage.removeItem('topstore_supabase_anon_key');
+  } catch (e) {
+    // ignore
+  }
+  supabaseClientInstance = null; // reset client to reinitialize
+}
+
+export function getActiveSupabaseConfig(): { url: string; anonKey: string; source: 'env' | 'custom' | 'none' } {
+  const url = runtimeUrl || SUPABASE_URL || '';
+  const key = runtimeAnonKey || SUPABASE_ANON_KEY || '';
+  let source: 'env' | 'custom' | 'none' = 'none';
+  if (runtimeUrl && runtimeAnonKey) source = 'custom';
+  else if (SUPABASE_URL && SUPABASE_ANON_KEY) source = 'env';
+  return { url, anonKey: key, source };
+}
+
 let supabaseClientInstance: SupabaseClient | null = null;
 
 /**
  * Checks if Supabase connection credentials are configured.
  */
 export function isSupabaseConfigured(): boolean {
-  return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL.startsWith('http'));
+  const { url, anonKey } = getActiveSupabaseConfig();
+  return Boolean(url && anonKey && url.startsWith('http'));
 }
 
 /**
@@ -38,12 +74,13 @@ export function initSupabase(): SupabaseClient | null {
     return supabaseClientInstance;
   }
 
-  if (!isSupabaseConfigured()) {
+  const { url, anonKey } = getActiveSupabaseConfig();
+  if (!url || !anonKey || !url.startsWith('http')) {
     return null;
   }
 
   try {
-    supabaseClientInstance = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    supabaseClientInstance = createClient(url, anonKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,

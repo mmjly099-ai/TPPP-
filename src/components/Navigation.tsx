@@ -20,7 +20,8 @@ import {
   UploadCloud,
   FileText,
   CalendarDays,
-  Bike
+  Bike,
+  Activity
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 
@@ -42,6 +43,7 @@ export type NavTab =
   | 'receivables'
   | 'assistant'
   | 'data-import'
+  | 'supabase-monitor'
   | 'settings';
 
 interface NavigationProps {
@@ -212,6 +214,13 @@ export const Navigation: React.FC<NavigationProps> = ({
       description: 'استيراد وترحيل ملفات Excel و CSV و JSON مع فحص التكرار',
       icon: UploadCloud,
       color: 'indigo'
+    },
+    {
+      id: 'supabase-monitor',
+      label: 'مراقبة ومزامنة Supabase',
+      description: 'حالة اتصال قاعدة بيانات Supabase، تتبع آخر مزامنة بين اللابتوب والهاتف ومنع تأخير البيانات',
+      icon: Activity,
+      color: 'emerald'
     },
     {
       id: 'settings',

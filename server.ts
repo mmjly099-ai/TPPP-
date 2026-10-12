@@ -58,12 +58,54 @@ async function startServer() {
     return res.status(401).json({ success: false, message: 'كلمة المرور غير صحيحة' });
   });
 
+  const DEVICES_FILE = path.resolve(DATA_DIR, 'connected_devices.json');
+  let deviceRecords: Record<string, any> = {};
+
+  try {
+    if (fs.existsSync(DEVICES_FILE)) {
+      deviceRecords = JSON.parse(fs.readFileSync(DEVICES_FILE, 'utf-8'));
+    }
+  } catch (e) {
+    console.warn('Could not read connected_devices.json', e);
+  }
+
   // Pull synced data
   app.get('/api/sync/pull', (req, res) => {
     try {
       if (!serverStore && fs.existsSync(SYNC_FILE)) {
         serverStore = JSON.parse(fs.readFileSync(SYNC_FILE, 'utf-8'));
       }
+
+      // Record device heartbeat if headers/query present
+      const deviceId = req.query.deviceId as string;
+      const deviceName = req.query.deviceName as string;
+      const deviceType = req.query.deviceType as string;
+      const browser = req.query.browser as string;
+      const os = req.query.os as string;
+
+      if (deviceId) {
+        deviceRecords[deviceId] = {
+          deviceId,
+          deviceName: deviceName || deviceRecords[deviceId]?.deviceName || 'جهاز متصل',
+          deviceType: deviceType || deviceRecords[deviceId]?.deviceType || 'desktop',
+          browser: browser || deviceRecords[deviceId]?.browser || 'متصفح',
+          os: os || deviceRecords[deviceId]?.os || 'غير محدد',
+          lastSyncAt: new Date().toISOString(),
+          lastAction: 'pull',
+          recordsCount: serverStore?.tables ? {
+            customers: serverStore.tables.customers?.length || 0,
+            orders: serverStore.tables.orders?.length || 0,
+            expenses: serverStore.tables.expenses?.length || 0,
+            journalEntries: serverStore.tables.journalEntries?.length || 0,
+          } : undefined
+        };
+        try {
+          fs.writeFileSync(DEVICES_FILE, JSON.stringify(deviceRecords, null, 2), 'utf-8');
+        } catch (e) {
+          // ignore
+        }
+      }
+
       res.json({
         success: true,
         data: serverStore,
@@ -77,14 +119,53 @@ async function startServer() {
   // Push synced data
   app.post('/api/sync/push', (req, res) => {
     try {
-      const { data } = req.body || {};
+      const { data, device } = req.body || {};
       if (data && data.tables) {
         serverStore = data;
         fs.writeFileSync(SYNC_FILE, JSON.stringify(data, null, 2), 'utf-8');
       }
+
+      if (device && device.deviceId) {
+        deviceRecords[device.deviceId] = {
+          ...device,
+          lastSyncAt: new Date().toISOString(),
+          lastAction: 'push',
+          recordsCount: data?.tables ? {
+            customers: data.tables.customers?.length || 0,
+            orders: data.tables.orders?.length || 0,
+            expenses: data.tables.expenses?.length || 0,
+            journalEntries: data.tables.journalEntries?.length || 0,
+          } : undefined
+        };
+        try {
+          fs.writeFileSync(DEVICES_FILE, JSON.stringify(deviceRecords, null, 2), 'utf-8');
+        } catch (e) {
+          // ignore
+        }
+      }
+
       res.json({
         success: true,
         timestamp: Date.now()
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Telemetry endpoint: list all known active syncing devices
+  app.get('/api/sync/devices', (req, res) => {
+    try {
+      if (fs.existsSync(DEVICES_FILE)) {
+        deviceRecords = JSON.parse(fs.readFileSync(DEVICES_FILE, 'utf-8'));
+      }
+      const list = Object.values(deviceRecords).sort((a: any, b: any) => {
+        return new Date(b.lastSyncAt).getTime() - new Date(a.lastSyncAt).getTime();
+      });
+      res.json({
+        success: true,
+        devices: list,
+        serverTime: new Date().toISOString()
       });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
