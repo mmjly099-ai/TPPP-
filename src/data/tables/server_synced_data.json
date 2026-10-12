@@ -9582,7 +9582,9 @@
             "exchangeRate": 1,
             "baseAmount": 3200
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1791148181353,
@@ -10525,7 +10527,9 @@
             "exchangeRate": 1,
             "baseAmount": 1700
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1791064117816,
@@ -10658,7 +10662,9 @@
             "exchangeRate": 1,
             "baseAmount": 1300
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1790995867320,
@@ -12456,7 +12462,9 @@
             "exchangeRate": 1,
             "baseAmount": 18200
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 3790787631068,
@@ -12499,7 +12507,9 @@
             "exchangeRate": 1,
             "baseAmount": 42600
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 3790787420527,
@@ -12542,7 +12552,9 @@
             "exchangeRate": 1,
             "baseAmount": 53700
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1790775727151,
@@ -21810,7 +21822,9 @@
             "exchangeRate": 1,
             "baseAmount": 38800
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1000000330001,
@@ -21853,7 +21867,9 @@
             "exchangeRate": 1,
             "baseAmount": 11200
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1000000390002,
@@ -21896,7 +21912,9 @@
             "exchangeRate": 1,
             "baseAmount": 1200
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1000000510001,
@@ -21939,7 +21957,9 @@
             "exchangeRate": 1,
             "baseAmount": 150
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1000000510002,
@@ -21982,7 +22002,9 @@
             "exchangeRate": 1,
             "baseAmount": 9200
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1000000540003,
@@ -22025,7 +22047,9 @@
             "exchangeRate": 1,
             "baseAmount": 2500
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1000000540004,
@@ -22068,7 +22092,9 @@
             "exchangeRate": 1,
             "baseAmount": 3300
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1000000570001,
@@ -22111,7 +22137,9 @@
             "exchangeRate": 1,
             "baseAmount": 63100
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1000000600002,
@@ -22154,7 +22182,9 @@
             "exchangeRate": 1,
             "baseAmount": 7000
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1000000630001,
@@ -22197,7 +22227,9 @@
             "exchangeRate": 1,
             "baseAmount": 2200
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1000000630002,
@@ -22240,7 +22272,9 @@
             "exchangeRate": 1,
             "baseAmount": 16900
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       }
     ],
     "journalLines": [
