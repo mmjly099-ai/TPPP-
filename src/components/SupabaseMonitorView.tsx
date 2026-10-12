@@ -34,7 +34,18 @@ import {
 import { getOrCreateCurrentDevice, DeviceInfo, DeviceSyncRecord } from '../utils/deviceTracker';
 
 export const SupabaseMonitorView: React.FC = () => {
-  const { customers, orders, expenses, journalEntries, accounts, lastSyncTime, syncWithServer, isSyncing } = useStore();
+  const {
+    customers,
+    orders,
+    expenses,
+    journalEntries,
+    accounts,
+    lastSyncTime,
+    syncWithServer,
+    isSyncing,
+    realtimeStatus,
+    lastRealtimeEvent
+  } = useStore();
 
   const [currentDevice, setCurrentDevice] = useState<DeviceInfo>(() => getOrCreateCurrentDevice());
   const [activeDevices, setActiveDevices] = useState<DeviceSyncRecord[]>([]);
@@ -209,15 +220,36 @@ export const SupabaseMonitorView: React.FC = () => {
               <Activity className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 flex-wrap">
                 <span>وحدة مراقبة المزامنة وسيرفر Supabase</span>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  مباشر Realtime
+                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+                  realtimeStatus === 'connected'
+                    ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                    : realtimeStatus === 'connecting'
+                    ? 'bg-amber-100 text-amber-800 border-amber-300'
+                    : 'bg-slate-100 text-slate-700 border-slate-300'
+                }`}>
+                  <span className={`w-2 h-2 rounded-full ${
+                    realtimeStatus === 'connected'
+                      ? 'bg-emerald-500 animate-pulse'
+                      : realtimeStatus === 'connecting'
+                      ? 'bg-amber-500 animate-ping'
+                      : 'bg-slate-400'
+                  }`}></span>
+                  {realtimeStatus === 'connected'
+                    ? 'اشتراك فوري نشط (Realtime Active)'
+                    : realtimeStatus === 'connecting'
+                    ? 'جارٍ الاتصال بالقناة الفورية...'
+                    : 'اشتراك Realtime غير متصل'}
                 </span>
+                {lastRealtimeEvent && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono bg-blue-50 text-blue-700 border border-blue-200">
+                    آخر إشعار: {lastRealtimeEvent.table} ({lastRealtimeEvent.eventType}) في {lastRealtimeEvent.time}
+                  </span>
+                )}
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                فحص اتصال السحابة، تتبع توقيت آخر مزامنة لكل جهاز (لابتوب / جوال)، وضمان تطابق البيانات بدون تأخير
+                اشتراك فوري Realtime بقاعدة بيانات Supabase، تتبع توقيت آخر مزامنة لكل جهاز (لابتوب / جوال)، وتزامن تلقائي بدون أي تأخير
               </p>
             </div>
           </div>

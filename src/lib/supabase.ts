@@ -261,6 +261,69 @@ export async function migrateLocalDataToSupabase(data: TopStoreBackup): Promise<
 }
 
 /**
+ * Setup Realtime channel subscription for tables in Supabase.
+ * Listens for INSERT, UPDATE, DELETE on given tables and executes callback with event data.
+ */
+export function subscribeToSupabaseRealtime(
+  tables: string[],
+  onTableChange: (payload: {
+    table: string;
+    eventType: 'INSERT' | 'UPDATE' | 'DELETE' | '*';
+    newRecord?: any;
+    oldRecord?: any;
+  }) => void,
+  onStatusChange?: (status: 'SUBSCRIBED' | 'TIMED_OUT' | 'CLOSED' | 'CHANNEL_ERROR') => void
+) {
+  const client = initSupabase();
+  if (!client) {
+    if (onStatusChange) onStatusChange('CLOSED');
+    return null;
+  }
+
+  const channelName = `realtime-sync-${Date.now()}`;
+  let channel = client.channel(channelName);
+
+  for (const table of tables) {
+    channel = channel.on(
+      'postgres_changes' as any,
+      {
+        event: '*',
+        schema: 'public',
+        table: table
+      },
+      (payload: any) => {
+        onTableChange({
+          table: payload.table || table,
+          eventType: payload.eventType,
+          newRecord: payload.new,
+          oldRecord: payload.old
+        });
+      }
+    );
+  }
+
+  channel.subscribe((status: string) => {
+    if (onStatusChange) {
+      if (status === 'SUBSCRIBED') onStatusChange('SUBSCRIBED');
+      else if (status === 'TIMED_OUT') onStatusChange('TIMED_OUT');
+      else if (status === 'CLOSED') onStatusChange('CLOSED');
+      else if (status === 'CHANNEL_ERROR') onStatusChange('CHANNEL_ERROR');
+    }
+  });
+
+  return {
+    channel,
+    unsubscribe: () => {
+      try {
+        client.removeChannel(channel);
+      } catch (e) {
+        console.warn('Error removing Supabase realtime channel:', e);
+      }
+    }
+  };
+}
+
+/**
  * Returns default Supabase client instance or null.
  */
 export const supabase = initSupabase();

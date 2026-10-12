@@ -42,6 +42,7 @@ import {
 import { exportToZip } from '../utils/dataExporter';
 import { getOrCreateCurrentDevice } from '../utils/deviceTracker';
 import { INITIAL_DATA } from '../data/initialData';
+import { subscribeToSupabaseRealtime, isSupabaseConfigured } from '../lib/supabase';
 import { DEFAULT_CHART_OF_ACCOUNTS } from '../data/defaultChartOfAccounts';
 import {
   roundCurrency,
@@ -387,6 +388,8 @@ interface StoreContextType {
   isSyncing: boolean;
   lastSyncTime: string | null;
   syncWithServer: () => Promise<void>;
+  realtimeStatus: 'connected' | 'connecting' | 'disconnected' | 'offline';
+  lastRealtimeEvent: { table: string; eventType: string; time: string } | null;
 
   // Marketing & Batches
   addMarketingCampaign: (campaign: Omit<MarketingCampaign, 'id' | 'campaignNumber' | 'actualSpend' | 'createdAt'>) => void;
@@ -520,6 +523,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isSyncing, setIsSyncing] = useState(false);
   const [hasInitializedFromServer, setHasInitializedFromServer] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
+  const [realtimeStatus, setRealtimeStatus] = useState<'connected' | 'connecting' | 'disconnected' | 'offline'>('disconnected');
+  const [lastRealtimeEvent, setLastRealtimeEvent] = useState<{ table: string; eventType: string; time: string } | null>(null);
 
   // Sync pull from server
   const syncWithServer = async () => {
@@ -585,6 +590,49 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     return () => clearTimeout(timer);
   }, [data, hasInitializedFromServer]);
+
+  // Realtime subscription setup to keep laptop and mobile in instant lockstep
+  useEffect(() => {
+    if (!isSupabaseConfigured()) {
+      setRealtimeStatus('offline');
+      return;
+    }
+
+    setRealtimeStatus('connecting');
+
+    // Subscribe to primary core tables
+    const coreTables = ['customers', 'orders', 'journal_entries', 'journal_lines', 'payments', 'expenses', 'shipments'];
+
+    const sub = subscribeToSupabaseRealtime(
+      coreTables,
+      (payload) => {
+        // Whenever any change occurs on Supabase from another device (Laptop/Phone)
+        setLastRealtimeEvent({
+          table: payload.table,
+          eventType: payload.eventType,
+          time: new Date().toLocaleTimeString('ar-YE')
+        });
+
+        // Trigger an immediate fast sync to synchronize state seamlessly across devices
+        syncWithServer();
+      },
+      (status) => {
+        if (status === 'SUBSCRIBED') {
+          setRealtimeStatus('connected');
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          setRealtimeStatus('disconnected');
+        } else if (status === 'CLOSED') {
+          setRealtimeStatus('offline');
+        }
+      }
+    );
+
+    return () => {
+      if (sub) {
+        sub.unsubscribe();
+      }
+    };
+  }, []);
 
   // Initial pull and periodic 15-second heartbeat sync for cross-device/mobile sync
   useEffect(() => {
@@ -6033,6 +6081,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         isSyncing,
         lastSyncTime,
         syncWithServer,
+        realtimeStatus,
+        lastRealtimeEvent,
         chartAccounts,
         fiscalPeriods,
         fiscalYears,
