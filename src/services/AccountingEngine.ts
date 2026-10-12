@@ -324,10 +324,13 @@ export function isEntryActiveInLedger(entry: JournalEntry, allEntries: JournalEn
     const targetId = entry.reversesEntryId ?? (typeof entry.sourceId === 'number' ? entry.sourceId : Number(entry.sourceId));
     if (targetId) {
       const targetEntry = allEntries.find(e => Number(e.id) === Number(targetId));
-      // If the original entry is already excluded (void or reversed), do not apply the reversal entry a second time
-      if (targetEntry && (targetEntry.status === 'void' || targetEntry.status === 'reversed' || targetEntry.isReversed)) {
+      // If the target entry does not exist (orphaned reversal), or is already excluded (void or reversed), do not apply the reversal entry
+      if (!targetEntry || targetEntry.status === 'void' || targetEntry.status === 'reversed' || targetEntry.isReversed) {
         return false;
       }
+    } else {
+      // Reversal entry with no valid target is an orphan and should not affect active balances
+      return false;
     }
   }
 

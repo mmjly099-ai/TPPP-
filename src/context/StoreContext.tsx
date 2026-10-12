@@ -180,10 +180,15 @@ interface StoreContextType {
     sourceId?: number | string | null;
     sourceNumber?: string | null;
   }) => JournalEntry;
-  updateJournalEntry: (id: number, data: { description?: string; lines?: JournalLine[]; date?: string; sourceNumber?: string }) => void;
+  updateJournalEntry: (
+    id: number,
+    data: { description?: string; lines?: JournalLine[]; date?: string; sourceNumber?: string },
+    options?: { syncSourceDocument?: boolean }
+  ) => void;
   deleteJournalEntry: (id: number, cascadeOptions?: { deleteSourceDocument?: boolean; reason?: string }) => void;
   restoreJournalEntry: (id: number) => void;
   permanentlyDeleteJournalEntry: (id: number) => void;
+  emptyTrashJournalEntries: () => number;
   restoreAllDeletedJournalEntries: () => number;
   repairAllJournalEntries: () => number;
   reverseJournalEntry: (id: number, reason?: string) => JournalEntry;
@@ -1208,6 +1213,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       const customer = prev.tables.customers.find(c => c.id === order.customerId);
 
+      const origOrderJe = prev.tables.journalEntries.find(
+        j => j.sourceType === 'order' && Number(j.sourceId) === Number(orderId)
+      );
+
       // Issue balancing reversal journal entry to reverse the sales recognition and customer receivable
       const revJeId = Date.now();
       const revEntryNumber = `JE-REV-${Date.now().toString().slice(-6)}`;
@@ -1218,6 +1227,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         sourceId: orderId,
         sourceNumber: String(order.orderNumber),
         status: 'posted',
+        reversesEntryId: origOrderJe ? origOrderJe.id : null,
+        reversalReason: `إلغاء الطلب #${order.orderNumber}`,
         description: `قيد عكسي لإلغاء مبيعات وفاتورة الطلب #${order.orderNumber} - ${customer?.name || order.customerName}`,
         createdAt: new Date().toISOString(),
         postedAt: new Date().toISOString(),
@@ -1241,6 +1252,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         ]
       };
 
+      const updatedJournals = prev.tables.journalEntries.map(j => {
+        if (origOrderJe && j.id === origOrderJe.id) {
+          return {
+            ...j,
+            status: 'reversed' as const,
+            isReversed: true,
+            reversedByEntryId: revJeId,
+            reversalReason: `إلغاء الطلب #${order.orderNumber}`
+          };
+        }
+        return j;
+      });
+      const allJournals = [reversalJe, ...updatedJournals];
+
       const auditLog: AuditLog = {
         id: Date.now(),
         createdAt: new Date().toISOString(),
@@ -1259,7 +1284,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         tables: {
           ...prev.tables,
           orders: prev.tables.orders.map(o => o.id === orderId ? { ...o, status: 'cancelled' } : o),
-          journalEntries: [reversalJe, ...prev.tables.journalEntries],
+          journalEntries: allJournals,
+          journalLines: allJournals.flatMap(e => e.lines || []),
           auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
         }
       };
@@ -1750,19 +1776,35 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         });
       }
 
+      const origPaymentJe = prev.tables.journalEntries.find(
+        j => j.sourceType === 'payment' && Number(j.sourceId) === Number(paymentId)
+      );
+
       // Reversing journal entry (strictly balanced)
       const jeId = Date.now();
+      const custChart = resolveChartAccount(`حـ/ العميل: ${customer?.name || 'العميل'}`, 'debit');
+      const accChart = resolveChartAccount(acc?.name || 'الحساب المستلم', 'credit', paymentToCancel.accountId);
+
       const reversalJe: JournalEntry = {
         id: jeId,
         entryNumber: `JE-REV-${Date.now().toString().slice(-6)}`,
+        sourceType: 'reversal',
+        sourceId: paymentId,
+        sourceNumber: paymentToCancel.receiptNumber || paymentToCancel.paymentNumber,
+        status: 'posted',
+        reversesEntryId: origPaymentJe ? origPaymentJe.id : null,
+        reversalReason: reason || 'إلغاء معتمد لسند القبض',
         description: `إلغاء سند القبض #${paymentToCancel.receiptNumber || paymentToCancel.paymentNumber} - ${reason || 'إلغاء معتمد'}`,
         createdAt: new Date().toISOString(),
+        postedAt: new Date().toISOString(),
         lines: [
           {
             id: jeId + 1,
             journalEntryId: jeId,
             accountId: null,
             accountName: `حـ/ العميل: ${customer?.name || 'العميل'}`,
+            chartAccountId: custChart.id,
+            chartAccountCode: custChart.code,
             side: 'debit', // مدين: إعادة إثبات دين العميل
             amount: paymentToCancel.amount
           },
@@ -1771,11 +1813,40 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             journalEntryId: jeId,
             accountId: paymentToCancel.accountId,
             accountName: acc?.name || 'الحساب المستلم',
+            chartAccountId: accChart.id,
+            chartAccountCode: accChart.code,
             side: 'credit', // دائن: خصم القيمة من المحفظة/الصندوق
             amount: paymentToCancel.amount
           }
         ]
       };
+
+      // Create reversing financial transaction to deduct funds from the account
+      const revTrx: FinancialTransaction = {
+        id: jeId + 3,
+        transactionNumber: `TRX-REV-${Date.now().toString().slice(-6)}`,
+        transactionDate: new Date().toISOString(),
+        accountId: paymentToCancel.accountId,
+        type: 'withdrawal',
+        amount: paymentToCancel.amount,
+        description: `خصم وعكس لإلغاء سند القبض #${paymentToCancel.receiptNumber || paymentToCancel.paymentNumber}`,
+        paymentId: paymentId,
+        createdAt: new Date().toISOString()
+      };
+
+      const updatedJournals = prev.tables.journalEntries.map(j => {
+        if (origPaymentJe && j.id === origPaymentJe.id) {
+          return {
+            ...j,
+            status: 'reversed' as const,
+            isReversed: true,
+            reversedByEntryId: jeId,
+            reversalReason: reason || 'إلغاء معتمد لسند القبض'
+          };
+        }
+        return j;
+      });
+      const allJournals = [reversalJe, ...updatedJournals];
 
       const auditLog: AuditLog = {
         id: Date.now() + 1,
@@ -1798,7 +1869,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           payments: prev.tables.payments.map(p =>
             p.id === paymentId ? { ...p, status: 'cancelled', updatedAt: new Date().toISOString() } : p
           ),
-          journalEntries: [reversalJe, ...prev.tables.journalEntries],
+          financialTransactions: [revTrx, ...(prev.tables.financialTransactions || [])],
+          journalEntries: allJournals,
+          journalLines: allJournals.flatMap(e => e.lines || []),
           auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
         }
       };
@@ -2147,9 +2220,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       const acc = prev.tables.accounts.find(a => a.id === exp.accountId);
 
+      const origExpJe = prev.tables.journalEntries.find(
+        j => j.sourceType === 'expense' && Number(j.sourceId) === Number(id)
+      );
+
       // Issue balancing reversal journal entry to restore funds and reverse the expense
       const revJeId = Date.now();
       const revEntryNumber = `JE-REV-${Date.now().toString().slice(-6)}`;
+      const accChart = resolveChartAccount(acc?.name || 'المحفظة/الصندوق', 'debit', exp.accountId);
+      const expChart = resolveChartAccount(`حـ/ عكس مصروفات (${exp.category})`, 'credit');
+
       const reversalJe: JournalEntry = {
         id: revJeId,
         entryNumber: revEntryNumber,
@@ -2157,6 +2237,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         sourceId: id,
         sourceNumber: exp.expenseNumber,
         status: 'posted',
+        reversesEntryId: origExpJe ? origExpJe.id : null,
+        reversalReason: `إلغاء المصروف #${exp.expenseNumber}`,
         description: `قيد عكسي لإلغاء المصروف #${exp.expenseNumber} (${exp.category}) واسترجاع المبلغ للرصيد`,
         createdAt: new Date().toISOString(),
         postedAt: new Date().toISOString(),
@@ -2166,6 +2248,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             journalEntryId: revJeId,
             accountId: exp.accountId,
             accountName: acc?.name || 'المحفظة/الصندوق',
+            chartAccountId: accChart.id,
+            chartAccountCode: accChart.code,
             side: 'debit', // استعادة المبلغ لحساب الدفع
             amount: exp.amount
           },
@@ -2174,6 +2258,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             journalEntryId: revJeId,
             accountId: null,
             accountName: `حـ/ عكس مصروفات (${exp.category})`,
+            chartAccountId: expChart.id,
+            chartAccountCode: expChart.code,
             side: 'credit', // تصفية وعكس المصروف
             amount: exp.amount
           }
@@ -2189,8 +2275,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         type: 'deposit',
         amount: exp.amount,
         description: `استرجاع مالي لإلغاء المصروف #${exp.expenseNumber}`,
+        expenseId: id,
         createdAt: new Date().toISOString()
       };
+
+      const updatedJournals = prev.tables.journalEntries.map(j => {
+        if (origExpJe && j.id === origExpJe.id) {
+          return {
+            ...j,
+            status: 'reversed' as const,
+            isReversed: true,
+            reversedByEntryId: revJeId,
+            reversalReason: `إلغاء المصروف #${exp.expenseNumber}`
+          };
+        }
+        return j;
+      });
+      const allJournals = [reversalJe, ...updatedJournals];
 
       // Update marketing campaign actual spend if attached
       let updatedCampaigns = prev.tables.marketingCampaigns || [];
@@ -2224,7 +2325,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           ...prev.tables,
           expenses: prev.tables.expenses.map(e => e.id === id ? { ...e, status: 'cancelled' } : e),
           financialTransactions: [revTrx, ...prev.tables.financialTransactions],
-          journalEntries: [reversalJe, ...prev.tables.journalEntries],
+          journalEntries: allJournals,
+          journalLines: allJournals.flatMap(e => e.lines || []),
           marketingCampaigns: updatedCampaigns,
           auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
         }
@@ -2292,11 +2394,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         newValue: JSON.stringify({ entryNumber, linesCount: formattedLines.length })
       };
 
+      const nextEntries = [newEntry, ...prev.tables.journalEntries];
       return {
         ...prev,
         tables: {
           ...prev.tables,
-          journalEntries: [newEntry, ...prev.tables.journalEntries],
+          journalEntries: nextEntries,
+          journalLines: nextEntries.flatMap(e => e.lines || []),
           auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
         }
       };
@@ -2308,14 +2412,31 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const updateJournalEntry = (
     id: number,
-    updateData: { description?: string; lines?: JournalLine[]; date?: string; sourceNumber?: string }
+    updateData: { description?: string; lines?: JournalLine[]; date?: string; sourceNumber?: string },
+    options?: { syncSourceDocument?: boolean }
   ) => {
     const existing = data.tables.journalEntries.find(j => j.id === id);
     if (!existing) return;
 
+    // Check fiscal period on existing entry and new date
+    const checkTargetDate = updateData.date ? new Date(updateData.date).toISOString() : existing.createdAt;
+    const periodCheck = assertFiscalPeriodOpen(checkTargetDate, fiscalPeriods);
+    if (!periodCheck.allowed) {
+      showNotification(periodCheck.reason || 'الفترة المالية مقفلة. لا يمكن تعديل قيد فيها.', 'error');
+      return;
+    }
+
     // Validate double-entry balance if lines are updated
     let formattedLines = existing.lines || [];
+    let netPrimaryAmount = 0;
     if (updateData.lines && updateData.lines.length >= 2) {
+      // Check for zero or negative amounts
+      const hasInvalidAmount = updateData.lines.some(l => (parseFloat(String(l.amount)) || 0) <= 0);
+      if (hasInvalidAmount) {
+        showNotification('خطأ محاسبي: يجب أن تكون جميع مبالغ أطراف القيد أكبر من الصفر.', 'error');
+        return;
+      }
+
       formattedLines = updateData.lines.map((l, idx) => {
         const amt = roundCurrency(parseFloat(String(l.amount)) || 0);
         const resolved = resolveChartAccount(l.accountName || '', l.side || 'debit', l.accountId);
@@ -2340,10 +2461,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         .filter(l => l.side === 'credit')
         .reduce((s, l) => roundCurrency(s + (Number(l.amount) || 0)), 0);
 
-      if (Math.abs(totalDebit - totalCredit) > 0.01) {
-        showNotification('خطأ محاسبي: القيد غير متوازن! يجب أن يتساوى إجمالي المدين مع إجمالي الدائن قبل الحفظ.', 'error');
+      if (totalDebit <= 0 || Math.abs(totalDebit - totalCredit) > 0.01) {
+        showNotification('خطأ محاسبي: القيد غير متوازن! يجب أن يتساوى إجمالي المدين مع إجمالي الدائن تماماً ومجموعهما أكبر من الصفر.', 'error');
         return;
       }
+
+      netPrimaryAmount = totalDebit;
     }
 
     setData(prev => {
@@ -2366,6 +2489,79 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       const syncedLines = updatedEntries.flatMap(e => e.lines || []);
 
+      // Synchronize linked operational source document if requested (default: true)
+      let updatedOrders = prev.tables.orders;
+      let updatedPayments = prev.tables.payments;
+      let updatedExpenses = prev.tables.expenses;
+      let updatedCustomers = prev.tables.customers;
+      let updatedTrx = prev.tables.financialTransactions || [];
+
+      const shouldSyncSource = options?.syncSourceDocument !== false;
+
+      if (shouldSyncSource && entryToUpdate.sourceId != null && netPrimaryAmount > 0) {
+        const srcId = Number(entryToUpdate.sourceId);
+
+        if (entryToUpdate.sourceType === 'order') {
+          updatedOrders = prev.tables.orders.map(o => {
+            if (o.id === srcId) {
+              const totalAmount = netPrimaryAmount;
+              const remainingAmount = Math.max(0, totalAmount - (o.paidAmount || 0));
+              return { ...o, totalAmount, remainingAmount };
+            }
+            return o;
+          });
+        } else if (entryToUpdate.sourceType === 'payment') {
+          updatedPayments = prev.tables.payments.map(p => {
+            if (p.id === srcId) {
+              return { ...p, amount: netPrimaryAmount };
+            }
+            return p;
+          });
+          // Update linked financial transaction
+          updatedTrx = updatedTrx.map(t => {
+            if (t.paymentId === srcId) {
+              return { ...t, amount: netPrimaryAmount };
+            }
+            return t;
+          });
+          // Recalculate linked order if exists
+          const linkedPayment = prev.tables.payments.find(p => p.id === srcId);
+          if (linkedPayment?.orderId) {
+            updatedOrders = updatedOrders.map(o => {
+              if (o.id === linkedPayment.orderId) {
+                const otherPaymentsSum = prev.tables.payments
+                  .filter(p => p.orderId === o.id && p.id !== srcId && p.status !== 'cancelled')
+                  .reduce((s, p) => s + (p.amount || 0), 0);
+                const newPaid = otherPaymentsSum + netPrimaryAmount;
+                const newRem = Math.max(0, (o.totalAmount || 0) - newPaid);
+                return { ...o, paidAmount: newPaid, remainingAmount: newRem };
+              }
+              return o;
+            });
+          }
+        } else if (entryToUpdate.sourceType === 'expense') {
+          updatedExpenses = prev.tables.expenses.map(e => {
+            if (e.id === srcId) {
+              return { ...e, amount: netPrimaryAmount };
+            }
+            return e;
+          });
+          updatedTrx = updatedTrx.map(t => {
+            if (t.expenseId === srcId) {
+              return { ...t, amount: netPrimaryAmount };
+            }
+            return t;
+          });
+        } else if (entryToUpdate.sourceType === 'opening_balance') {
+          updatedCustomers = prev.tables.customers.map(c => {
+            if (c.id === srcId) {
+              return { ...c, openingBalance: netPrimaryAmount };
+            }
+            return c;
+          });
+        }
+      }
+
       const auditLog: AuditLog = {
         id: Date.now(),
         createdAt: new Date().toISOString(),
@@ -2382,6 +2578,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         ...prev,
         tables: {
           ...prev.tables,
+          customers: updatedCustomers,
+          orders: updatedOrders,
+          payments: updatedPayments,
+          expenses: updatedExpenses,
+          financialTransactions: updatedTrx,
           journalEntries: updatedEntries,
           journalLines: syncedLines,
           auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
@@ -2389,12 +2590,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       };
     });
 
-    showNotification(`تم حفظ التعديلات وتصحيح القيد المحاسبي #${existing.entryNumber} بنجاح`, 'success');
+    showNotification(`تم حفظ التعديلات وتصحيح القيد المحاسبي #${existing.entryNumber} بنجاح ومزامنة الدفاتر`, 'success');
   };
 
   const deleteJournalEntry = (id: number, cascadeOptions?: { deleteSourceDocument?: boolean; reason?: string }) => {
     const entry = data.tables.journalEntries.find(j => j.id === id);
     if (!entry) return;
+
+    // Check fiscal period
+    const periodCheck = assertFiscalPeriodOpen(entry.createdAt, fiscalPeriods);
+    if (!periodCheck.allowed) {
+      showNotification(periodCheck.reason || 'الفترة المالية مقفلة. لا يمكن حذف قيد فيها.', 'error');
+      return;
+    }
 
     const now = new Date().toISOString();
     const deleteReason = cascadeOptions?.reason || 'حذف القيد ونقله إلى سلة المحذوفات';
@@ -2438,17 +2646,52 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       let updatedOrders = prev.tables.orders;
       let updatedPayments = prev.tables.payments;
       let updatedExpenses = prev.tables.expenses;
+      let updatedTrx = prev.tables.financialTransactions || [];
 
       if (cascadeOptions?.deleteSourceDocument && entry.sourceId != null) {
         const srcId = Number(entry.sourceId);
         if (entry.sourceType === 'order') {
           updatedOrders = prev.tables.orders.map(o => (o.id === srcId ? { ...o, status: 'cancelled' as const } : o));
         } else if (entry.sourceType === 'payment') {
+          const pmt = prev.tables.payments.find(p => p.id === srcId);
           updatedPayments = prev.tables.payments.map(p => (p.id === srcId ? { ...p, status: 'cancelled' as const } : p));
+          if (pmt) {
+            // Deduct payment amount from account balance via withdrawal transaction
+            const revTrx: FinancialTransaction = {
+              id: Date.now() + 5,
+              transactionNumber: `TRX-DEL-PAY-${Date.now().toString().slice(-5)}`,
+              transactionDate: now,
+              accountId: pmt.accountId,
+              type: 'withdrawal',
+              amount: pmt.amount,
+              description: `خصم لإلغاء وحذف سند القبض #${pmt.receiptNumber || pmt.paymentNumber}`,
+              paymentId: srcId,
+              createdAt: now
+            };
+            updatedTrx = [revTrx, ...updatedTrx];
+          }
         } else if (entry.sourceType === 'expense') {
+          const exp = prev.tables.expenses.find(e => e.id === srcId);
           updatedExpenses = prev.tables.expenses.map(e => (e.id === srcId ? { ...e, status: 'cancelled' as const } : e));
+          if (exp) {
+            // Restore funds to account balance via deposit transaction
+            const revTrx: FinancialTransaction = {
+              id: Date.now() + 6,
+              transactionNumber: `TRX-DEL-EXP-${Date.now().toString().slice(-5)}`,
+              transactionDate: now,
+              accountId: exp.accountId,
+              type: 'deposit',
+              amount: exp.amount,
+              description: `استرجاع رصيد لإلغاء وحذف المصروف #${exp.expenseNumber}`,
+              expenseId: srcId,
+              createdAt: now
+            };
+            updatedTrx = [revTrx, ...updatedTrx];
+          }
         }
       }
+
+      const syncedLines = updatedEntries.flatMap(e => e.lines || []);
 
       const auditLog: AuditLog = {
         id: Date.now(),
@@ -2457,7 +2700,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         performedBy: 'المحاسب المعتمد',
         entityType: 'journalEntry',
         entityId: id,
-        description: `نقل القيد المحاسبي #${entry.entryNumber} إلى سلة المحذوفات (${deleteReason}) مع إمكانية الاسترجاع`
+        description: `نقل القيد المحاسبي #${entry.entryNumber} إلى سلة المحذوفات (${deleteReason}) مع إيقاف أثره المالي`
       };
 
       return {
@@ -2467,14 +2710,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           orders: updatedOrders,
           payments: updatedPayments,
           expenses: updatedExpenses,
+          financialTransactions: updatedTrx,
           journalEntries: updatedEntries,
+          journalLines: syncedLines,
           auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
         }
       };
     });
 
     showNotification(
-      `تم حذف القيد #${entry.entryNumber} ونقله إلى سلة المحذوفات. يمكنك استرجاعه في أي وقت من تبويب (سلة المحذوفات واسترجاع القيود).`,
+      `تم حذف القيد #${entry.entryNumber} ونقله إلى سلة المحذوفات وإيقاف أثره المالي. يمكنك استرجاعه في أي وقت.`,
       'warning'
     );
   };
@@ -2585,7 +2830,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setData(prev => {
       const remainingEntries = prev.tables.journalEntries
-        .filter(j => j.id !== id && Number(j.reversedByEntryId) !== Number(id))
+        .filter(j => {
+          if (j.id === id) return false;
+          if (Number(j.reversesEntryId) === Number(id)) return false;
+          if (j.sourceType === 'reversal' && Number(j.sourceId) === Number(id)) return false;
+          if (Number(j.reversedByEntryId) === Number(id)) return false;
+          return true;
+        })
         .map(j => {
           if (targetReversesId && Number(j.id) === Number(targetReversesId)) {
             return {
@@ -2608,7 +2859,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         performedBy: 'مدير النظام',
         entityType: 'journalEntry',
         entityId: id,
-        description: `حذف نهائي للقيد #${entry.entryNumber} من سلة المحذوفات`
+        description: `حذف نهائي كامل للقيد #${entry.entryNumber} وجميع أطرافه المحاسبية`
       };
 
       return {
@@ -2622,7 +2873,63 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       };
     });
 
-    showNotification(`تم الحذف النهائي للقيد #${entry.entryNumber} من سلة المحذوفات`, 'success');
+    showNotification(`تم الحذف النهائي للقيد #${entry.entryNumber} من النظام وسلة المحذوفات تماماً`, 'success');
+  };
+
+  const emptyTrashJournalEntries = (): number => {
+    const voidEntries = data.tables.journalEntries.filter(j => j.status === 'void');
+    if (voidEntries.length === 0) {
+      showNotification('سلة المحذوفات فارغة بالفعل.', 'warning');
+      return 0;
+    }
+    const count = voidEntries.length;
+    const voidIds = new Set(voidEntries.map(j => Number(j.id)));
+
+    setData(prev => {
+      const remainingEntries = prev.tables.journalEntries
+        .filter(j => {
+          if (j.status === 'void') return false;
+          if (j.reversesEntryId && voidIds.has(Number(j.reversesEntryId))) return false;
+          if (j.sourceType === 'reversal' && j.sourceId && voidIds.has(Number(j.sourceId))) return false;
+          return true;
+        })
+        .map(j => {
+          if (j.reversedByEntryId && voidIds.has(Number(j.reversedByEntryId))) {
+            return {
+              ...j,
+              status: 'posted' as const,
+              isReversed: false,
+              reversedByEntryId: null,
+              reversalReason: undefined
+            };
+          }
+          return j;
+        });
+
+      const syncedLines = remainingEntries.flatMap(e => e.lines || []);
+      const auditLog: AuditLog = {
+        id: Date.now(),
+        createdAt: new Date().toISOString(),
+        action: 'إفراغ سلة المحذوفات نهائياً',
+        performedBy: 'مدير النظام',
+        entityType: 'journalEntry',
+        entityId: 0,
+        description: `إفراغ سلة المحذوفات بالكامل وحذف عدد ${count} قيد محاسبي نهائياً`
+      };
+
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          journalEntries: remainingEntries,
+          journalLines: syncedLines,
+          auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
+        }
+      };
+    });
+
+    showNotification(`تم إفراغ سلة المحذوفات وحذف جميع القيود (${count} قيد) نهائياً بنجاح.`, 'success');
+    return count;
   };
 
   const restoreAllDeletedJournalEntries = (): number => {
@@ -2785,11 +3092,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         description: `إصدار قيد عكسي #${revEntryNumber} لإلغاء القيد #${entry.entryNumber}`
       };
 
+      const allJournals = [reversalEntry, ...updatedEntries];
       return {
         ...prev,
         tables: {
           ...prev.tables,
-          journalEntries: [reversalEntry, ...updatedEntries],
+          journalEntries: allJournals,
+          journalLines: allJournals.flatMap(e => e.lines || []),
           auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
         }
       };
@@ -5746,6 +6055,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         deleteJournalEntry,
         restoreJournalEntry,
         permanentlyDeleteJournalEntry,
+        emptyTrashJournalEntries,
         restoreAllDeletedJournalEntries,
         repairAllJournalEntries,
         reverseJournalEntry,

@@ -60,6 +60,7 @@ export const JournalView: React.FC = () => {
     deleteJournalEntry,
     restoreJournalEntry,
     permanentlyDeleteJournalEntry,
+    emptyTrashJournalEntries,
     restoreAllDeletedJournalEntries,
     repairAllJournalEntries,
     reverseJournalEntry,
@@ -101,6 +102,8 @@ export const JournalView: React.FC = () => {
   const [deletingEntry, setDeletingEntry] = useState<JournalEntry | null>(null);
   const [deleteCascadeOption, setDeleteCascadeOption] = useState(false);
   const [deleteReasonInput, setDeleteReasonInput] = useState('حذف القيد ونقله إلى سلة المحذوفات');
+  const [permanentDeletingEntry, setPermanentDeletingEntry] = useState<JournalEntry | null>(null);
+  const [isConfirmEmptyTrashOpen, setIsConfirmEmptyTrashOpen] = useState(false);
   const [reversingEntry, setReversingEntry] = useState<JournalEntry | null>(null);
   const [reversalReason, setReversalReason] = useState('إلغاء وتسوية القيد بالكامل');
 
@@ -209,7 +212,7 @@ export const JournalView: React.FC = () => {
       // Status filter
       if (statusFilter === 'active' && entry.status === 'void') return false;
       if (statusFilter === 'posted' && !isEntryActiveInLedger(entry, journalEntries)) return false;
-      if (statusFilter === 'reversed' && !(entry.status !== 'void' && (entry.isReversed || entry.status === 'reversed'))) return false;
+      if (statusFilter === 'reversed' && !(entry.status !== 'void' && (entry.isReversed || entry.status === 'reversed' || entry.sourceType === 'reversal' || entry.reversesEntryId != null))) return false;
       if (statusFilter === 'void' && entry.status !== 'void') return false;
 
       const desc = entry.description?.toLowerCase() || '';
@@ -1120,7 +1123,7 @@ export const JournalView: React.FC = () => {
                             <button
                               onClick={() => {
                                 setDeletingEntry(entry);
-                                setDeleteCascadeOption(false);
+                                setDeleteCascadeOption(Boolean(entry.sourceType && entry.sourceType !== 'manual' && entry.sourceType !== 'reversal'));
                                 setDeleteReasonInput('حذف القيد ونقله إلى سلة المحذوفات');
                               }}
                               title="حذف القيد ونقله إلى سلة المحذوفات (مع إمكانية الاسترجاع)"
@@ -1130,7 +1133,7 @@ export const JournalView: React.FC = () => {
                             </button>
                           ) : (
                             <button
-                              onClick={() => permanentlyDeleteJournalEntry(entry.id)}
+                              onClick={() => setPermanentDeletingEntry(entry)}
                               title="حذف نهائي من سلة المحذوفات"
                               className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition cursor-pointer"
                             >
@@ -1224,13 +1227,22 @@ export const JournalView: React.FC = () => {
 
             <div className="flex flex-wrap items-center gap-2">
               {deletedEntries.length > 0 && (
-                <button
-                  onClick={restoreAllDeletedJournalEntries}
-                  className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  استرجاع جميع القيود المحذوفة ({deletedEntries.length})
-                </button>
+                <>
+                  <button
+                    onClick={restoreAllDeletedJournalEntries}
+                    className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    استرجاع جميع القيود المحذوفة ({deletedEntries.length})
+                  </button>
+                  <button
+                    onClick={() => setIsConfirmEmptyTrashOpen(true)}
+                    className="flex items-center gap-1.5 px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    إفراغ سلة المحذوفات بالكامل ({deletedEntries.length})
+                  </button>
+                </>
               )}
               <button
                 onClick={() => repairAllJournalEntries(true)}
@@ -1321,7 +1333,7 @@ export const JournalView: React.FC = () => {
                           استرجاع القيد وتفعيله
                         </button>
                         <button
-                          onClick={() => permanentlyDeleteJournalEntry(entry.id)}
+                          onClick={() => setPermanentDeletingEntry(entry)}
                           className="flex items-center gap-1 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -2669,8 +2681,8 @@ export const JournalView: React.FC = () => {
           entry={editingEntry}
           chartAccounts={chartAccounts}
           onClose={() => setEditingEntry(null)}
-          onSave={(id, data) => {
-            updateJournalEntry(id, data);
+          onSave={(id, data, options) => {
+            updateJournalEntry(id, data, options);
             setEditingEntry(null);
           }}
         />
@@ -2727,8 +2739,8 @@ export const JournalView: React.FC = () => {
                   className="mt-0.5 rounded text-amber-600 cursor-pointer"
                 />
                 <span className="text-slate-700">
-                  <strong className="block text-amber-900 font-bold mb-0.5">إلغاء المستند الأصلي المرتبط أيضاً (اختياري):</strong>
-                  عند التفعيل سيتم تحويل حالة المستند الأصلي (الطلب أو الدفعة أو المصروف) إلى ملغي، وعند استرجاع القيد لاحقاً يتم تفعيله تلقائياً.
+                  <strong className="block text-amber-900 font-bold mb-0.5">إلغاء المستند الأصلي المرتبط أيضاً (موصى به):</strong>
+                  عند التفعيل سيتم إلغاء المستند الأصلي (الطلب أو الدفعة أو المصروف) متزامناً مع حذف القيد لحماية تطابق أرصدة العملاء بنسبة 100%، وعند استرجاع القيد لاحقاً يتم تفعيله تلقائياً.
                 </span>
               </label>
             )}
@@ -2751,6 +2763,102 @@ export const JournalView: React.FC = () => {
                 className="px-4 py-2 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition shadow-xs cursor-pointer"
               >
                 نقل القيد إلى سلة المحذوفات
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* MODAL 3B: PERMANENT DELETE CONFIRMATION                         */}
+      {/* ============================================================== */}
+      {permanentDeletingEntry && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-rose-200">
+            <div className="flex items-center gap-3 text-rose-600">
+              <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center">
+                <Trash2 className="w-6 h-6 text-rose-600" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">تأكيد الحذف النهائي للقيد</h3>
+                <p className="text-xs text-rose-600 font-bold">تحذير: هذا الإجراء نهائي ولا يمكن التراجع عنه!</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 p-3.5 rounded-xl text-xs space-y-1.5 border border-slate-200">
+              <div className="flex justify-between font-mono font-bold text-slate-800">
+                <span>رقم القيد:</span>
+                <span className="text-rose-600">{permanentDeletingEntry.entryNumber}</span>
+              </div>
+              <div className="text-slate-600">
+                <strong>البيان: </strong>{permanentDeletingEntry.description}
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              سيتم شطب هذا القيد وجميع سطوره المحاسبية نهائياً من قاعدة البيانات وسلة المحذوفات.
+            </p>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setPermanentDeletingEntry(null)}
+                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+              >
+                إلغاء
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  permanentlyDeleteJournalEntry(permanentDeletingEntry.id);
+                  setPermanentDeletingEntry(null);
+                }}
+                className="px-4 py-2 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition shadow-xs cursor-pointer"
+              >
+                نعم، احذف القيد نهائياً
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* MODAL 3C: EMPTY TRASH CONFIRMATION                              */}
+      {/* ============================================================== */}
+      {isConfirmEmptyTrashOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-rose-200">
+            <div className="flex items-center gap-3 text-rose-600">
+              <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center">
+                <Trash2 className="w-6 h-6 text-rose-600" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">إفراغ سلة المحذوفات بالكامل</h3>
+                <p className="text-xs text-rose-600 font-bold">شطب جميع القيود المحذوفة نهائياً</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              هل أنت متأكد من رغبتك في شطب جميع القيود الموجودة في سلة المحذوفات (عدد <strong>{deletedEntries.length}</strong> قيد) نهائياً؟ لن تتمكن من استرجاعها بعد ذلك.
+            </p>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setIsConfirmEmptyTrashOpen(false)}
+                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+              >
+                إلغاء
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  emptyTrashJournalEntries();
+                  setIsConfirmEmptyTrashOpen(false);
+                }}
+                className="px-4 py-2 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition shadow-xs cursor-pointer"
+              >
+                تأكيد إفراغ سلة المحذوفات
               </button>
             </div>
           </div>
@@ -3140,7 +3248,11 @@ interface EditJournalEntryModalProps {
   entry: JournalEntry;
   chartAccounts: ChartAccount[];
   onClose: () => void;
-  onSave: (id: number, data: { description: string; lines: JournalLine[]; date: string }) => void;
+  onSave: (
+    id: number,
+    data: { description: string; lines: JournalLine[]; date: string },
+    options?: { syncSourceDocument?: boolean }
+  ) => void;
 }
 
 const EditJournalEntryModal: React.FC<EditJournalEntryModalProps> = ({
@@ -3151,6 +3263,7 @@ const EditJournalEntryModal: React.FC<EditJournalEntryModalProps> = ({
 }) => {
   const [description, setDescription] = useState(entry.description || '');
   const [date, setDate] = useState((entry.createdAt || new Date().toISOString()).slice(0, 10));
+  const [syncSourceDocument, setSyncSourceDocument] = useState(true);
   const [lines, setLines] = useState<JournalLine[]>(
     (entry.lines || []).map((l, idx) => ({
       ...l,
@@ -3266,11 +3379,16 @@ const EditJournalEntryModal: React.FC<EditJournalEntryModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isBalanced) return;
+    const hasZeroOrNegative = lines.some(l => (parseFloat(String(l.amount)) || 0) <= 0);
+    if (hasZeroOrNegative) {
+      alert('يجب أن تكون مبالغ جميع أطراف القيد أكبر من الصفر.');
+      return;
+    }
     onSave(entry.id, {
       description,
       date,
       lines
-    });
+    }, { syncSourceDocument });
   };
 
   return (
@@ -3312,6 +3430,27 @@ const EditJournalEntryModal: React.FC<EditJournalEntryModalProps> = ({
               />
             </div>
           </div>
+
+          {entry.sourceType && entry.sourceType !== 'manual' && entry.sourceType !== 'reversal' && (
+            <div className="bg-blue-50/70 p-3 rounded-xl border border-blue-200 space-y-1.5">
+              <div className="flex items-center justify-between text-[11px] font-bold text-blue-900">
+                <span>
+                  📌 مستند مرتبط: {entry.sourceType === 'order' ? 'طلب مبيعات' : entry.sourceType === 'payment' ? 'سند قبض' : entry.sourceType === 'expense' ? 'سند صرف' : entry.sourceType === 'opening_balance' ? 'رصيد افتتاحي' : entry.sourceType} {entry.sourceNumber ? `(${entry.sourceNumber})` : ''}
+                </span>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer text-xs">
+                <input
+                  type="checkbox"
+                  checked={syncSourceDocument}
+                  onChange={e => setSyncSourceDocument(e.target.checked)}
+                  className="rounded text-blue-600 cursor-pointer"
+                />
+                <span className="text-blue-900 font-bold">
+                  مزامنة قيمة المستند الأصلي المرتبط تلقائياً لحفظ تطابق الأستاذ العام مع حسابات العملاء 100%
+                </span>
+              </label>
+            </div>
+          )}
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
