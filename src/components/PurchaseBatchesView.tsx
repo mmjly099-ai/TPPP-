@@ -22,10 +22,12 @@ import {
   User,
   Hash,
   Share2,
-  Printer
+  Printer,
+  Edit2,
+  ShieldAlert
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
-import { PurchaseBatch, Order } from '../types';
+import { PurchaseBatch, Order, Account } from '../types';
 
 export const PurchaseBatchesView: React.FC = () => {
   const {
@@ -33,12 +35,15 @@ export const PurchaseBatchesView: React.FC = () => {
     orders,
     accounts,
     addPurchaseBatch,
+    updatePurchaseBatch,
     cancelPurchaseBatch,
     deletePurchaseBatch
   } = useStore();
 
   const [isNewBatchOpen, setIsNewBatchOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState<PurchaseBatch | null>(null);
+  const [editingBatch, setEditingBatch] = useState<PurchaseBatch | null>(null);
+  const [deletingBatch, setDeletingBatch] = useState<PurchaseBatch | null>(null);
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -432,23 +437,34 @@ export const PurchaseBatchesView: React.FC = () => {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       <button
                         onClick={() => setSelectedBatch(batch)}
-                        className="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition cursor-pointer flex items-center gap-1"
+                        className="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition cursor-pointer flex items-center gap-1"
+                        title="عرض تفاصيل الدفعة والطلبات"
                       >
                         <FileText className="w-3.5 h-3.5" />
-                        <span>تفاصيل الدفعة</span>
+                        <span>التفاصيل</span>
+                      </button>
+
+                      <button
+                        onClick={() => setEditingBatch(batch)}
+                        className="px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold transition cursor-pointer flex items-center gap-1 border border-amber-200"
+                        title="تعديل بيانات عملية الشراء"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                        <span>تعديل</span>
                       </button>
 
                       {!isCancelled && (
                         <button
                           onClick={() => {
-                            if (confirm(`هل أنت متأكد من إلغاء دفعة الشراء ${batch.batchNumber}؟ سيتم إعادة الطلبات لحالة قيد التنفيذ.`)) {
+                            if (confirm(`هل أنت متأكد من إلغاء دفعة الشراء ${batch.batchNumber}؟ سيتم استرجاع الرصيد وإعادة الطلبات لحالة قيد التنفيذ.`)) {
                               cancelPurchaseBatch(batch.id);
                             }
                           }}
-                          className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition cursor-pointer flex items-center gap-1"
+                          className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition cursor-pointer flex items-center gap-1"
+                          title="إلغاء دفعة الشراء"
                         >
                           <Ban className="w-3.5 h-3.5" />
                           <span>إلغاء</span>
@@ -456,13 +472,9 @@ export const PurchaseBatchesView: React.FC = () => {
                       )}
 
                       <button
-                        onClick={() => {
-                          if (confirm(`هل أنت متأكد من حذف دفعة الشراء ${batch.batchNumber} نهائياً؟`)) {
-                            deletePurchaseBatch(batch.id);
-                          }
-                        }}
+                        onClick={() => setDeletingBatch(batch)}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
-                        title="حذف الدفعة"
+                        title="حذف عملية الشراء نهائياً"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -574,7 +586,32 @@ export const PurchaseBatchesView: React.FC = () => {
               </div>
             )}
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 text-xs">
+            <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100 text-xs">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const b = selectedBatch;
+                    setSelectedBatch(null);
+                    setEditingBatch(b);
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black transition cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                  <span>تعديل هذه الدفعة</span>
+                </button>
+                <button
+                  onClick={() => {
+                    const b = selectedBatch;
+                    setSelectedBatch(null);
+                    setDeletingBatch(b);
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>حذف</span>
+                </button>
+              </div>
+
               <button
                 onClick={() => setSelectedBatch(null)}
                 className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition cursor-pointer"
@@ -586,262 +623,524 @@ export const PurchaseBatchesView: React.FC = () => {
         </div>
       )}
 
-      {/* Modal: Register Collective Purchase Batch */}
-      {isNewBatchOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 overflow-y-auto backdrop-blur-xs">
-          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 my-8" dir="rtl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <PackageCheck className="w-5 h-5 text-indigo-600" />
-                <h3 className="font-bold text-base text-slate-900">تسجيل دفعة شراء جماعية جديدة</h3>
-              </div>
-              <button onClick={() => setIsNewBatchOpen(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">✕</button>
-            </div>
-
-            <form onSubmit={handleSubmitBatch} className="space-y-4 text-xs">
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">مصدر الشراء / المنصة *</label>
-                  <select
-                    value={source}
-                    onChange={e => setSource(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500"
-                  >
-                    <option value="SHEIN">شي إن (SHEIN)</option>
-                    <option value="AliExpress">علي إكسبرس (AliExpress)</option>
-                    <option value="Alibaba">علي بابا (Alibaba)</option>
-                    <option value="Zara">زارا (Zara)</option>
-                    <option value="Amazon">أمازون (Amazon)</option>
-                    <option value="Other">موقع آخر</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">رقم طلب المورد (Supplier Order No)</label>
-                  <input
-                    type="text"
-                    placeholder="مثال: SHEIN-YE-981423"
-                    value={supplierOrderNumber}
-                    onChange={e => setSupplierOrderNumber(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500 font-mono"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">حساب الدفع / البطاقة البنكية *</label>
-                <select
-                  required
-                  value={accountId}
-                  onChange={e => setAccountId(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500"
-                >
-                  <option value="">اختر الحساب المسحوب منه المبلغ</option>
-                  {accounts.filter(a => a.status === 'active').map(a => (
-                    <option key={a.id} value={a.id}>
-                      {a.name} ({a.type})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">تكلفة البضاعة الصافية (YER) *</label>
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    placeholder="مثال: 120000"
-                    value={purchaseCost}
-                    onChange={e => setPurchaseCost(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500 font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">رسوم الشراء وفروق العملة (YER)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="مثال: 3000"
-                    value={purchaseFees}
-                    onChange={e => setPurchaseFees(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500 font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">عمولات التحويل البنكي (YER)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="مثال: 1500"
-                    value={transferFees}
-                    onChange={e => setTransferFees(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500 font-mono"
-                  />
-                </div>
-              </div>
-
-              {/* Total Calculation Note */}
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between text-xs">
-                <span className="text-amber-900 font-medium">الإجمالي الكلي المسحوب من الحساب البنكي:</span>
-                <span className="font-black font-mono text-amber-950 text-sm">
-                  {((Number(purchaseCost) || 0) + (Number(purchaseFees) || 0) + (Number(transferFees) || 0)).toLocaleString()} YER
-                </span>
-              </div>
-
-              {/* Selected Orders Total & Auto Cost Calculation */}
-              {selectedOrderIds.length > 0 && (
-                <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl space-y-2 text-xs">
-                  <div className="flex items-center justify-between font-bold text-indigo-900">
-                    <span>إجمالي مبيعات الطلبات المحددة ({selectedOrderIds.length} طلبات):</span>
-                    <span className="font-mono text-sm">{selectedOrdersTotal.toLocaleString()} YER</span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-indigo-200/60 text-[11px]">
-                    <span className="text-slate-600 font-bold">حساب تكلفة الشراء تلقائياً:</span>
-                    <button
-                      type="button"
-                      onClick={() => setPurchaseCost(String(selectedOrdersTotal))}
-                      className="px-2 py-0.5 rounded-lg bg-white hover:bg-indigo-100 border border-indigo-300 text-indigo-800 font-bold cursor-pointer transition shadow-2xs"
-                    >
-                      كامل القيمة ({selectedOrdersTotal.toLocaleString()})
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPurchaseCost(String(Math.round(selectedOrdersTotal * 0.85)))}
-                      className="px-2 py-0.5 rounded-lg bg-white hover:bg-indigo-100 border border-indigo-300 text-indigo-800 font-bold cursor-pointer transition shadow-2xs"
-                    >
-                      خصم 15% شي إن ({Math.round(selectedOrdersTotal * 0.85).toLocaleString()})
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPurchaseCost(String(Math.round(selectedOrdersTotal * 0.80)))}
-                      className="px-2 py-0.5 rounded-lg bg-white hover:bg-indigo-100 border border-indigo-300 text-indigo-800 font-bold cursor-pointer transition shadow-2xs"
-                    >
-                      خصم 20% ({Math.round(selectedOrdersTotal * 0.80).toLocaleString()})
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Order Selection Controls */}
-              <div>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                  <label className="font-bold text-slate-800">
-                    حدد الطلبيات التي تم شراؤها ضمن هذه الدفعة * ({selectedOrderIds.length} محددة)
-                  </label>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setOrderFilterMode(prev => prev === 'pending' ? 'all' : 'pending')}
-                      className="text-[11px] text-indigo-700 hover:text-indigo-900 font-bold bg-indigo-50 px-2 py-0.5 rounded cursor-pointer"
-                    >
-                      {orderFilterMode === 'pending' ? 'عرض كافة الطلبات النشطة' : 'فقط الطلبات المعلقة وغير المشتراة'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSelectAllOrders}
-                      className="text-[11px] text-amber-800 hover:text-amber-950 font-bold bg-amber-100 px-2 py-0.5 rounded cursor-pointer"
-                    >
-                      {selectedOrderIds.length === filteredEligibleOrders.length && filteredEligibleOrders.length > 0 ? 'إلغاء تحديد الكل' : 'تحديد الكل'}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Search input for modal orders */}
-                <div className="mb-2">
-                  <input
-                    type="text"
-                    value={orderModalSearch}
-                    onChange={e => setOrderModalSearch(e.target.value)}
-                    placeholder="ابحث برقم الطلب أو اسم العميل لاختياره..."
-                    className="w-full p-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-
-                {filteredEligibleOrders.length === 0 ? (
-                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center text-slate-400">
-                    لا توجد طلبات تطابق البحث حالياً.
-                  </div>
-                ) : (
-                  <div className="max-h-48 overflow-y-auto border border-slate-200 rounded-xl divide-y divide-slate-100">
-                    {filteredEligibleOrders.map(o => {
-                      const isChecked = selectedOrderIds.includes(o.id);
-                      return (
-                        <div
-                          key={o.id}
-                          onClick={() => handleToggleOrder(o.id)}
-                          className={`p-2.5 flex items-center justify-between cursor-pointer transition-colors ${
-                            isChecked ? 'bg-amber-50/70' : 'hover:bg-slate-50'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={() => handleToggleOrder(o.id)}
-                              className="rounded text-amber-600"
-                            />
-                            <div>
-                              <div className="font-bold text-slate-900">{o.orderNumber} • {o.customerName}</div>
-                              <div className="text-[11px] text-slate-400">
-                                {o.itemsDescription || 'طلبية ملابس ومنتجات'}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="text-left font-mono font-bold text-slate-800">
-                            {(o.totalAmount || 0).toLocaleString()} YER
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">ملاحظات حول الدفعة</label>
-                <textarea
-                  rows={2}
-                  placeholder="أي ملاحظات حول كرتون الشحن أو رابط الدفعة"
-                  value={notes}
-                  onChange={e => setNotes(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500"
-                />
-              </div>
-
-              {formError && (
-                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-bold">
-                  {formError}
-                </div>
-              )}
-
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setIsNewBatchOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold cursor-pointer"
-                >
-                  إلغاء
-                </button>
-                <button
-                  type="submit"
-                  disabled={selectedOrderIds.length === 0 || !purchaseCost}
-                  className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black cursor-pointer shadow-xs disabled:opacity-50"
-                >
-                  تأكيد الشراء وقيد اليومية
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {/* Modal: Edit Purchase Batch */}
+      {editingBatch && (
+        <EditPurchaseBatchModal
+          batch={editingBatch}
+          orders={orders}
+          accounts={accounts}
+          onClose={() => setEditingBatch(null)}
+          onSave={updatedData => {
+            updatePurchaseBatch(editingBatch.id, updatedData);
+            setEditingBatch(null);
+          }}
+        />
       )}
 
+      {/* Modal: Cascading Delete Purchase Batch Confirmation */}
+      {deletingBatch && (
+        <DeletePurchaseBatchModal
+          batch={deletingBatch}
+          orders={orders}
+          onClose={() => setDeletingBatch(null)}
+          onConfirm={() => {
+            deletePurchaseBatch(deletingBatch.id);
+            setDeletingBatch(null);
+          }}
+        />
+      )}
+
+    </div>
+  );
+};
+
+// =====================================================================
+// SUB-COMPONENT: EDIT PURCHASE BATCH MODAL
+// =====================================================================
+interface EditPurchaseBatchModalProps {
+  batch: PurchaseBatch;
+  orders: Order[];
+  accounts: Account[];
+  onClose: () => void;
+  onSave: (updatedData: {
+    source: string;
+    supplierOrderNumber?: string | null;
+    purchaseDate: string;
+    accountId: number;
+    purchaseCost: number;
+    purchaseFees: number;
+    transferFees: number;
+    orderIds: number[];
+    notes?: string | null;
+  }) => void;
+}
+
+const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
+  batch,
+  orders,
+  accounts,
+  onClose,
+  onSave
+}) => {
+  const [source, setSource] = useState(batch.source || 'SHEIN');
+  const [supplierOrderNumber, setSupplierOrderNumber] = useState(batch.supplierOrderNumber || '');
+  const [purchaseDate, setPurchaseDate] = useState(batch.purchaseDate || new Date().toISOString().split('T')[0]);
+  const [accountId, setAccountId] = useState<string>(String(batch.accountId || ''));
+  const [purchaseCost, setPurchaseCost] = useState<string>(String(batch.purchaseCost || ''));
+  const [purchaseFees, setPurchaseFees] = useState<string>(String(batch.purchaseFees || '0'));
+  const [transferFees, setTransferFees] = useState<string>(String(batch.transferFees || '0'));
+  const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>(batch.orderIds || []);
+  const [orderModalSearch, setOrderModalSearch] = useState('');
+  const [orderFilterMode, setOrderFilterMode] = useState<'all' | 'pending'>('all');
+  const [notes, setNotes] = useState(batch.notes || '');
+  const [formError, setFormError] = useState('');
+
+  // Eligible orders: include current batch's orders PLUS pending/unpurchased orders
+  const eligibleOrders = useMemo(() => {
+    const currentBatchOrders = batch.orderIds || [];
+    return orders.filter(o => {
+      if (o.status === 'cancelled') return false;
+      // If already in this batch, always eligible
+      if (currentBatchOrders.includes(o.id) || o.purchaseBatchId === batch.id) return true;
+      // Otherwise eligible if pending or not assigned to another batch
+      if (orderFilterMode === 'pending') {
+        return (o.status === 'pending' || !o.purchaseBatchId) && o.status !== 'delivered';
+      }
+      return !o.purchaseBatchId || o.purchaseBatchId === batch.id;
+    });
+  }, [orders, batch, orderFilterMode]);
+
+  const filteredEligibleOrders = useMemo(() => {
+    if (!orderModalSearch.trim()) return eligibleOrders;
+    const q = orderModalSearch.toLowerCase().trim();
+    return eligibleOrders.filter(o =>
+      String(o.orderNumber).toLowerCase().includes(q) ||
+      (o.customerName || '').toLowerCase().includes(q) ||
+      (o.itemsDescription || '').toLowerCase().includes(q)
+    );
+  }, [eligibleOrders, orderModalSearch]);
+
+  const selectedOrdersTotal = useMemo(() => {
+    return orders
+      .filter(o => selectedOrderIds.includes(o.id))
+      .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+  }, [orders, selectedOrderIds]);
+
+  const handleToggleOrder = (orderId: number) => {
+    setSelectedOrderIds(prev =>
+      prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]
+    );
+  };
+
+  const handleSelectAllOrders = () => {
+    if (selectedOrderIds.length === filteredEligibleOrders.length) {
+      setSelectedOrderIds([]);
+    } else {
+      setSelectedOrderIds(filteredEligibleOrders.map(o => o.id));
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!accountId) {
+      setFormError('يرجى اختيار حساب الدفع أو البطاقة البنكية');
+      return;
+    }
+    if (!purchaseCost || Number(purchaseCost) <= 0) {
+      setFormError('يرجى إدخال تكلفة الشراء الصافية');
+      return;
+    }
+    if (selectedOrderIds.length === 0) {
+      setFormError('يرجى تحديد طلبية واحدة على الأقل لتضمينها في هذه الدفعة');
+      return;
+    }
+
+    onSave({
+      source,
+      supplierOrderNumber: supplierOrderNumber.trim() || null,
+      purchaseDate,
+      accountId: Number(accountId),
+      purchaseCost: Number(purchaseCost) || 0,
+      purchaseFees: Number(purchaseFees) || 0,
+      transferFees: Number(transferFees) || 0,
+      orderIds: selectedOrderIds,
+      notes: notes.trim() || null
+    });
+  };
+
+  const totalCalculated = (Number(purchaseCost) || 0) + (Number(purchaseFees) || 0) + (Number(transferFees) || 0);
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 overflow-y-auto backdrop-blur-xs" dir="rtl">
+      <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 my-8">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+              <Edit2 className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-base text-slate-900">
+                تعديل دفعة الشراء {batch.batchNumber}
+              </h3>
+              <p className="text-xs text-slate-500">
+                تعديل التكلفة والمصدر والطلبيات وتحديث القيود المالية تلقائياً
+              </p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">مصدر الشراء / المنصة *</label>
+              <select
+                value={source}
+                onChange={e => setSource(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500"
+              >
+                <option value="SHEIN">شي إن (SHEIN)</option>
+                <option value="AliExpress">علي إكسبرس (AliExpress)</option>
+                <option value="Alibaba">علي بابا (Alibaba)</option>
+                <option value="Zara">زارا (Zara)</option>
+                <option value="Amazon">أمازون (Amazon)</option>
+                <option value="Other">موقع آخر</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">رقم طلب المورد (Supplier Order No)</label>
+              <input
+                type="text"
+                placeholder="مثال: SHEIN-YE-981423"
+                value={supplierOrderNumber}
+                onChange={e => setSupplierOrderNumber(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500 font-mono"
+              />
+            </div>
+
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">تاريخ الشراء *</label>
+              <input
+                type="date"
+                required
+                value={purchaseDate}
+                onChange={e => setPurchaseDate(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500 font-mono"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="font-bold text-slate-700 block mb-1">حساب الدفع / البطاقة البنكية *</label>
+            <select
+              required
+              value={accountId}
+              onChange={e => setAccountId(e.target.value)}
+              className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500"
+            >
+              <option value="">اختر الحساب المسحوب منه المبلغ</option>
+              {accounts.filter(a => a.status === 'active').map(a => (
+                <option key={a.id} value={a.id}>
+                  {a.name} ({a.type})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">تكلفة البضاعة الصافية (YER) *</label>
+              <input
+                type="number"
+                required
+                min="1"
+                placeholder="مثال: 120000"
+                value={purchaseCost}
+                onChange={e => setPurchaseCost(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500 font-mono font-bold"
+              />
+            </div>
+
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">رسوم الشراء وفروق العملة (YER)</label>
+              <input
+                type="number"
+                min="0"
+                placeholder="مثال: 3000"
+                value={purchaseFees}
+                onChange={e => setPurchaseFees(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500 font-mono"
+              />
+            </div>
+
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">عمولات التحويل البنكي (YER)</label>
+              <input
+                type="number"
+                min="0"
+                placeholder="مثال: 1500"
+                value={transferFees}
+                onChange={e => setTransferFees(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500 font-mono"
+              />
+            </div>
+          </div>
+
+          {/* Dynamic Summary Note */}
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between text-xs">
+            <span className="text-amber-900 font-medium">الإجمالي الكلي الجديد المسحوب من الحساب البنكي:</span>
+            <span className="font-black font-mono text-amber-950 text-sm">
+              {totalCalculated.toLocaleString()} YER
+            </span>
+          </div>
+
+          {/* Quick Auto Cost Helpers */}
+          {selectedOrderIds.length > 0 && (
+            <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl space-y-2 text-xs">
+              <div className="flex items-center justify-between font-bold text-indigo-900">
+                <span>إجمالي مبيعات الطلبات المحددة ({selectedOrderIds.length} طلبات):</span>
+                <span className="font-mono text-sm">{selectedOrdersTotal.toLocaleString()} YER</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-indigo-200/60 text-[11px]">
+                <span className="text-slate-600 font-bold">حساب تكلفة الشراء تلقائياً:</span>
+                <button
+                  type="button"
+                  onClick={() => setPurchaseCost(String(selectedOrdersTotal))}
+                  className="px-2 py-0.5 rounded-lg bg-white hover:bg-indigo-100 border border-indigo-300 text-indigo-800 font-bold cursor-pointer transition shadow-2xs"
+                >
+                  كامل القيمة ({selectedOrdersTotal.toLocaleString()})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPurchaseCost(String(Math.round(selectedOrdersTotal * 0.85)))}
+                  className="px-2 py-0.5 rounded-lg bg-white hover:bg-indigo-100 border border-indigo-300 text-indigo-800 font-bold cursor-pointer transition shadow-2xs"
+                >
+                  خصم 15% شي إن ({Math.round(selectedOrdersTotal * 0.85).toLocaleString()})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPurchaseCost(String(Math.round(selectedOrdersTotal * 0.80)))}
+                  className="px-2 py-0.5 rounded-lg bg-white hover:bg-indigo-100 border border-indigo-300 text-indigo-800 font-bold cursor-pointer transition shadow-2xs"
+                >
+                  خصم 20% ({Math.round(selectedOrdersTotal * 0.80).toLocaleString()})
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Order Selection Controls */}
+          <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+              <label className="font-bold text-slate-800">
+                الطلبيات المشمولة في هذه الدفعة * ({selectedOrderIds.length} محددة)
+              </label>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setOrderFilterMode(prev => prev === 'pending' ? 'all' : 'pending')}
+                  className="text-[11px] text-indigo-700 hover:text-indigo-900 font-bold bg-indigo-50 px-2 py-0.5 rounded cursor-pointer"
+                >
+                  {orderFilterMode === 'pending' ? 'عرض طلبات الدفعة والمعلقة' : 'فقط الطلبات المعلقة'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSelectAllOrders}
+                  className="text-[11px] text-amber-800 hover:text-amber-950 font-bold bg-amber-100 px-2 py-0.5 rounded cursor-pointer"
+                >
+                  {selectedOrderIds.length === filteredEligibleOrders.length && filteredEligibleOrders.length > 0 ? 'إلغاء تحديد الكل' : 'تحديد الكل'}
+                </button>
+              </div>
+            </div>
+
+            {/* Search input for modal orders */}
+            <div className="mb-2">
+              <input
+                type="text"
+                value={orderModalSearch}
+                onChange={e => setOrderModalSearch(e.target.value)}
+                placeholder="ابحث برقم الطلب أو اسم العميل لاختياره أو استبعاده..."
+                className="w-full p-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-amber-500"
+              />
+            </div>
+
+            {filteredEligibleOrders.length === 0 ? (
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center text-slate-400">
+                لا توجد طلبات تطابق معايير البحث.
+              </div>
+            ) : (
+              <div className="max-h-48 overflow-y-auto border border-slate-200 rounded-xl divide-y divide-slate-100">
+                {filteredEligibleOrders.map(o => {
+                  const isChecked = selectedOrderIds.includes(o.id);
+                  return (
+                    <div
+                      key={o.id}
+                      onClick={() => handleToggleOrder(o.id)}
+                      className={`p-2.5 flex items-center justify-between cursor-pointer transition-colors ${
+                        isChecked ? 'bg-amber-50/70' : 'hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => handleToggleOrder(o.id)}
+                          className="rounded text-amber-600"
+                        />
+                        <div>
+                          <div className="font-bold text-slate-900">{o.orderNumber} • {o.customerName}</div>
+                          <div className="text-[11px] text-slate-400">
+                            {o.itemsDescription || 'طلبية ملابس ومنتجات'}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="text-left font-mono font-bold text-slate-800">
+                        {(o.totalAmount || 0).toLocaleString()} YER
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="font-bold text-slate-700 block mb-1">ملاحظات حول الدفعة</label>
+            <textarea
+              rows={2}
+              placeholder="أي ملاحظات حول كرتون الشحن أو رابط الدفعة"
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500"
+            />
+          </div>
+
+          {formError && (
+            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-bold">
+              {formError}
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold cursor-pointer"
+            >
+              إلغاء
+            </button>
+            <button
+              type="submit"
+              disabled={selectedOrderIds.length === 0 || !purchaseCost}
+              className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black cursor-pointer shadow-xs disabled:opacity-50"
+            >
+              حفظ التعديلات وتحديث القيود
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// =====================================================================
+// SUB-COMPONENT: DELETE PURCHASE BATCH MODAL (Cascading Deletion)
+// =====================================================================
+interface DeletePurchaseBatchModalProps {
+  batch: PurchaseBatch;
+  orders: Order[];
+  onClose: () => void;
+  onConfirm: () => void;
+}
+
+const DeletePurchaseBatchModal: React.FC<DeletePurchaseBatchModalProps> = ({
+  batch,
+  orders,
+  onClose,
+  onConfirm
+}) => {
+  const batchOrders = orders.filter(o => (batch.orderIds || []).includes(o.id));
+
+  return (
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4" dir="rtl">
+      <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-slate-200">
+        <div className="flex items-center gap-3 text-rose-600">
+          <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center shrink-0">
+            <ShieldAlert className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-slate-900">حذف عملية الشراء والترابط المحاسبي</h3>
+            <p className="text-xs text-slate-500">حذف متزامن ذكي (Cascading Deletion)</p>
+          </div>
+        </div>
+
+        <div className="bg-slate-50 p-4 rounded-xl space-y-2 text-xs border border-slate-200">
+          <div className="flex justify-between font-bold text-slate-800">
+            <span>رقم دفعة الشراء:</span>
+            <span className="font-mono text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+              {batch.batchNumber}
+            </span>
+          </div>
+          <div className="flex justify-between text-slate-700">
+            <span>مصدر الشراء:</span>
+            <span className="font-bold text-slate-900">{batch.source}</span>
+          </div>
+          {batch.supplierOrderNumber && (
+            <div className="flex justify-between text-slate-700">
+              <span>رقم طلب المورد:</span>
+              <span className="font-mono text-slate-900">{batch.supplierOrderNumber}</span>
+            </div>
+          )}
+          <div className="flex justify-between text-slate-700">
+            <span>الحساب المسحوب منه:</span>
+            <span className="font-bold text-slate-900">{batch.accountName}</span>
+          </div>
+          <div className="flex justify-between font-bold text-slate-900 pt-1 border-t border-slate-200">
+            <span>إجمالي المبلغ المسحوب:</span>
+            <span className="font-mono text-rose-600 text-sm">
+              {(Number(batch.totalCost) || 0).toLocaleString()} YER
+            </span>
+          </div>
+        </div>
+
+        <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-1.5">
+          <span className="font-bold block">⚠️ سيقوم النظام تلقائياً وبشكل فوري بما يلي:</span>
+          <ul className="list-disc list-inside space-y-1 text-slate-700 pr-1">
+            <li>
+              إعادة جميع الطلبيات المشمولة ({batchOrders.length} طلبات) إلى حالة <strong className="text-amber-800">قيد التنفيذ</strong> وفك ارتباطها بالدفعة.
+            </li>
+            <li>
+              إلغاء حركة السحب المالي لحساب <strong className="text-slate-900">{batch.accountName}</strong> واسترجاع رصيده.
+            </li>
+            <li>
+              إلغاء وحذف قيد اليومية المحاسبي المزدوج التابع للدفعة للحفاظ على سلامة وتوازن الدفاتر المحاسبية.
+            </li>
+          </ul>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 text-xs">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+          >
+            إلغاء
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="px-4 py-2 font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition shadow-xs cursor-pointer flex items-center gap-1.5"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span>تأكيد الحذف التام</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

@@ -416,6 +416,8 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, onClose, onSave 
   const [shippingFee, setShippingFee] = useState<number>(order.shippingFee || 0);
   const [discount, setDiscount] = useState<number>(order.discount || 0);
   const [deliveryFee, setDeliveryFee] = useState<number>(order.deliveryFee || 0);
+  const [purchaseCost, setPurchaseCost] = useState<number>(order.purchaseCost || 0);
+  const [status, setStatus] = useState<Order['status']>(order.status || 'pending');
   const [site, setSite] = useState(order.site || 'SHEIN');
   const [notes, setNotes] = useState(order.notes || '');
 
@@ -431,6 +433,8 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, onClose, onSave 
       shippingFee,
       discount,
       deliveryFee,
+      purchaseCost: Number(purchaseCost) || 0,
+      status,
       site,
       notes,
       totalAmount: computedTotal,
@@ -508,6 +512,38 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, onClose, onSave 
                 onChange={e => setDeliveryFee(parseFloat(e.target.value) || 0)}
                 className="w-full border border-slate-200 rounded-lg p-2 font-mono font-bold"
               />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700">حالة الطلب:</label>
+              <select
+                value={status}
+                onChange={e => setStatus(e.target.value as Order['status'])}
+                className="w-full border border-slate-200 rounded-lg p-2 font-bold bg-white"
+              >
+                <option value="pending">قيد المعالجة (Pending)</option>
+                <option value="purchased">تم الشراء (Purchased)</option>
+                <option value="shipped">في الشحن (Shipped)</option>
+                <option value="delivered">تم التسليم (Delivered)</option>
+                <option value="cancelled">ملغي (Cancelled)</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700">تكلفة الشراء الفعلية (YER):</label>
+              <input
+                type="number"
+                min="0"
+                placeholder="تكلفة الشراء من المنصة"
+                value={purchaseCost}
+                onChange={e => setPurchaseCost(parseFloat(e.target.value) || 0)}
+                className="w-full border border-slate-200 rounded-lg p-2 font-mono font-bold bg-white"
+              />
+              <span className="text-[10px] text-slate-400 block">
+                {order.purchaseBatchId ? `مرتبط بدفعة شراء #${order.purchaseBatchId}` : 'شراء فردي أو تعديل يدوي'}
+              </span>
             </div>
           </div>
 

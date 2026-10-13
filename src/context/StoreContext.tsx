@@ -418,6 +418,17 @@ interface StoreContextType {
     orderIds: number[];
     notes?: string;
   }) => void;
+  updatePurchaseBatch: (id: number, batch: {
+    source?: string;
+    supplierOrderNumber?: string | null;
+    purchaseDate?: string;
+    accountId?: number;
+    purchaseCost?: number;
+    purchaseFees?: number;
+    transferFees?: number;
+    orderIds?: number[];
+    notes?: string | null;
+  }) => void;
   cancelPurchaseBatch: (id: number) => void;
   deletePurchaseBatch: (id: number) => void;
 
@@ -5812,32 +5823,223 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     showNotification(`تم تسجيل دفعة الشراء الجماعية #${batchNumber} بنجاح وقيد حركاتها المالية`, 'success');
   };
 
+  const updatePurchaseBatch = (id: number, batchData: {
+    source?: string;
+    supplierOrderNumber?: string | null;
+    purchaseDate?: string;
+    accountId?: number;
+    purchaseCost?: number;
+    purchaseFees?: number;
+    transferFees?: number;
+    orderIds?: number[];
+    notes?: string | null;
+  }) => {
+    setData(prev => {
+      const existing = (prev.tables.purchaseBatches || []).find(b => b.id === id);
+      if (!existing) return prev;
+
+      const newSource = batchData.source !== undefined ? batchData.source : existing.source;
+      const newSupplierOrderNumber = batchData.supplierOrderNumber !== undefined ? batchData.supplierOrderNumber : existing.supplierOrderNumber;
+      const newPurchaseDate = batchData.purchaseDate || existing.purchaseDate;
+      const newAccountId = batchData.accountId !== undefined ? Number(batchData.accountId) : existing.accountId;
+      const acc = accounts.find(a => a.id === newAccountId);
+      const newPurchaseCost = batchData.purchaseCost !== undefined ? Number(batchData.purchaseCost) : Number(existing.purchaseCost || 0);
+      const newPurchaseFees = batchData.purchaseFees !== undefined ? Number(batchData.purchaseFees) : Number(existing.purchaseFees || 0);
+      const newTransferFees = batchData.transferFees !== undefined ? Number(batchData.transferFees) : Number(existing.transferFees || 0);
+      const newTotalCost = newPurchaseCost + newPurchaseFees + newTransferFees;
+      const newOrderIds = batchData.orderIds !== undefined ? batchData.orderIds : (existing.orderIds || []);
+      const newNotes = batchData.notes !== undefined ? batchData.notes : existing.notes;
+
+      const updatedBatch: PurchaseBatch = {
+        ...existing,
+        source: newSource,
+        supplierOrderNumber: newSupplierOrderNumber || null,
+        purchaseDate: newPurchaseDate,
+        accountId: newAccountId,
+        accountName: acc?.name || existing.accountName || 'البنك / البطاقة',
+        purchaseCost: newPurchaseCost,
+        purchaseFees: newPurchaseFees,
+        transferFees: newTransferFees,
+        totalCost: newTotalCost,
+        orderIds: newOrderIds,
+        notes: newNotes || null
+      };
+
+      // 1. Update orders
+      const previousOrderIds = existing.orderIds || [];
+      const perOrderCost = newOrderIds.length > 0 ? Math.round(newPurchaseCost / newOrderIds.length) : 0;
+
+      const updatedOrders = prev.tables.orders.map(o => {
+        // If order was in batch but now removed
+        if (previousOrderIds.includes(o.id) && !newOrderIds.includes(o.id)) {
+          return {
+            ...o,
+            purchaseBatchId: null,
+            purchaseCost: 0,
+            status: o.status === 'purchased' ? ('pending' as const) : o.status
+          };
+        }
+        // If order is in new batch
+        if (newOrderIds.includes(o.id)) {
+          return {
+            ...o,
+            status: o.status === 'pending' ? ('purchased' as const) : o.status,
+            purchaseBatchId: id,
+            purchaseCost: perOrderCost
+          };
+        }
+        return o;
+      });
+
+      // 2. Update financial transaction
+      const updatedTransactions = prev.tables.financialTransactions.map(t => {
+        const isLinked = t.id === id + 1 ||
+                         (existing.batchNumber && t.description?.includes(existing.batchNumber));
+        if (isLinked) {
+          return {
+            ...t,
+            accountId: newAccountId,
+            amount: newTotalCost,
+            description: `شراء جماعي لطلبات ${newSource} (دفعة ${existing.batchNumber})`,
+            transactionDate: newPurchaseDate
+          };
+        }
+        return t;
+      });
+
+      // 3. Update journal entry
+      const updatedJournalEntries = prev.tables.journalEntries.map(je => {
+        const isLinked = je.id === id + 2 ||
+                         (existing.batchNumber && je.description?.includes(existing.batchNumber));
+        if (isLinked) {
+          return {
+            ...je,
+            description: `شراء بضاعة طلبات من ${newSource} - دفعة ${existing.batchNumber}`,
+            lines: [
+              {
+                id: je.id + 1,
+                journalEntryId: je.id,
+                accountId: null,
+                accountName: `مشتريات بضائع - ${newSource}`,
+                side: 'debit' as const,
+                amount: newPurchaseCost
+              },
+              ...(newPurchaseFees + newTransferFees > 0 ? [{
+                id: je.id + 2,
+                journalEntryId: je.id,
+                accountId: null,
+                accountName: 'رسوم وعمولات شراء وتحويل بنكي',
+                side: 'debit' as const,
+                amount: newPurchaseFees + newTransferFees
+              }] : []),
+              {
+                id: je.id + 3,
+                journalEntryId: je.id,
+                accountId: newAccountId,
+                accountName: acc?.name || 'البطاقة / الحساب',
+                side: 'credit' as const,
+                amount: newTotalCost
+              }
+            ]
+          };
+        }
+        return je;
+      });
+
+      const newAuditLog: AuditLog = {
+        id: Date.now() + 10,
+        action: 'تعديل دفعة شراء',
+        entityType: 'purchase_batch',
+        entityId: id,
+        description: `تعديل بيانات دفعة الشراء ${existing.batchNumber} وتحديث القيود والحركات المالية المترتبة`,
+        oldValue: `${existing.totalCost} ريال`,
+        newValue: `${newTotalCost} ريال`,
+        createdAt: new Date().toISOString()
+      };
+
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          purchaseBatches: prev.tables.purchaseBatches.map(b => b.id === id ? updatedBatch : b),
+          orders: updatedOrders,
+          financialTransactions: updatedTransactions,
+          journalEntries: updatedJournalEntries,
+          journalLines: updatedJournalEntries.flatMap(j => j.lines || []),
+          auditLogs: [newAuditLog, ...(prev.tables.auditLogs || [])]
+        }
+      };
+    });
+    showNotification(`تم تعديل دفعة الشراء #${batchData.supplierOrderNumber || id} وتحديث قيودها وحركاتها المالية بنجاح`, 'success');
+  };
+
   const cancelPurchaseBatch = (id: number) => {
     setData(prev => {
       const target = (prev.tables.purchaseBatches || []).find(b => b.id === id);
-      const batchOrderIds = target?.orderIds || [];
+      if (!target) return prev;
+      const batchOrderIds = target.orderIds || [];
 
       const updatedOrders = prev.tables.orders.map(o => {
         if (batchOrderIds.includes(o.id) || o.purchaseBatchId === id) {
           return {
             ...o,
             purchaseBatchId: null,
+            purchaseCost: 0,
             status: o.status === 'purchased' ? ('pending' as const) : o.status
           };
         }
         return o;
       });
 
+      // Reverse financial transaction into account
+      const revTrxId = Date.now();
+      const revTrx: FinancialTransaction = {
+        id: revTrxId,
+        transactionNumber: `TRX-REV-PB-${Date.now().toString().slice(-6)}`,
+        transactionDate: new Date().toISOString(),
+        accountId: target.accountId,
+        type: 'deposit',
+        amount: target.totalCost,
+        description: `استرجاع مالي لإلغاء دفعة الشراء ${target.batchNumber}`,
+        createdAt: new Date().toISOString()
+      };
+
+      // Void or reverse journal entry
+      const updatedJournals = prev.tables.journalEntries.map(je => {
+        if (je.id === id + 2 || (target.batchNumber && je.description?.includes(target.batchNumber))) {
+          return {
+            ...je,
+            status: 'reversed' as const,
+            isReversed: true,
+            reversalReason: `إلغاء دفعة الشراء ${target.batchNumber}`
+          };
+        }
+        return je;
+      });
+
+      const auditLog: AuditLog = {
+        id: Date.now(),
+        action: 'إلغاء دفعة شراء',
+        entityType: 'purchase_batch',
+        entityId: id,
+        description: `إلغاء دفعة الشراء ${target.batchNumber} واسترجاع ${target.totalCost} ريال للحساب وإعادة الطلبات لقيد التنفيذ`,
+        createdAt: new Date().toISOString()
+      };
+
       return {
         ...prev,
         tables: {
           ...prev.tables,
           orders: updatedOrders,
-          purchaseBatches: (prev.tables.purchaseBatches || []).map(b => b.id === id ? { ...b, status: 'cancelled' as const } : b)
+          purchaseBatches: (prev.tables.purchaseBatches || []).map(b => b.id === id ? { ...b, status: 'cancelled' as const } : b),
+          financialTransactions: [revTrx, ...prev.tables.financialTransactions],
+          journalEntries: updatedJournals,
+          journalLines: updatedJournals.flatMap(j => j.lines || []),
+          auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
         }
       };
     });
-    showNotification('تم إلغاء دفعة الشراء الجماعية وإرجاع الطلبات لحالة قيد التنفيذ', 'warning');
+    showNotification('تم إلغاء دفعة الشراء الجماعية واسترجاع رصيدها وإرجاع الطلبات لحالة قيد التنفيذ', 'warning');
   };
 
   const deletePurchaseBatch = (id: number) => {
@@ -5850,22 +6052,50 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           return {
             ...o,
             purchaseBatchId: null,
+            purchaseCost: 0,
             status: o.status === 'purchased' ? ('pending' as const) : o.status
           };
         }
         return o;
       });
 
+      // Remove financial transaction linked to this batch
+      const updatedTransactions = prev.tables.financialTransactions.filter(t => {
+        if (t.id === id + 1) return false;
+        if (target && t.description && t.description.includes(target.batchNumber)) return false;
+        return true;
+      });
+
+      // Remove or void journal entry linked to this batch
+      const updatedJournalEntries = prev.tables.journalEntries.filter(je => {
+        if (je.id === id + 2) return false;
+        if (target && (je.description?.includes(target.batchNumber) || je.entryNumber?.includes(String(id)))) return false;
+        return true;
+      });
+
+      const newAuditLog: AuditLog = {
+        id: Date.now(),
+        action: 'حذف دفعة شراء',
+        entityType: 'purchase_batch',
+        entityId: id,
+        description: `حذف دفعة الشراء #${target?.batchNumber || id} بمبلغ ${target?.totalCost || 0} ريال وإلغاء حركاتها وقيودها المحاسبية وإعادة الطلبات لحالة قيد التنفيذ`,
+        createdAt: new Date().toISOString()
+      };
+
       return {
         ...prev,
         tables: {
           ...prev.tables,
           orders: updatedOrders,
-          purchaseBatches: (prev.tables.purchaseBatches || []).filter(b => b.id !== id)
+          purchaseBatches: (prev.tables.purchaseBatches || []).filter(b => b.id !== id),
+          financialTransactions: updatedTransactions,
+          journalEntries: updatedJournalEntries,
+          journalLines: updatedJournalEntries.flatMap(je => je.lines || []),
+          auditLogs: [newAuditLog, ...(prev.tables.auditLogs || [])]
         }
       };
     });
-    showNotification('تم حذف دفعة الشراء الجماعية بنجاح', 'success');
+    showNotification('تم حذف عملية الشراء وإلغاء أثرها المالي وقيودها وإعادة الطلبات لقيد التنفيذ بنجاح', 'success');
   };
 
   const updateSetting = (key: string, value: string) => {
@@ -6182,6 +6412,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         addReferral,
         updateReferralStatus,
         addPurchaseBatch,
+        updatePurchaseBatch,
         cancelPurchaseBatch,
         deletePurchaseBatch,
         addAuditLog,
