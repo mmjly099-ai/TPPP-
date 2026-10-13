@@ -230,7 +230,12 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                         {order.itemsCount} قطع
                       </td>
                       <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
-                        {order.totalAmount.toLocaleString()} ريال
+                        <div>{order.totalAmount.toLocaleString()} ريال</div>
+                        {order.purchaseCost && Number(order.purchaseCost) > 0 ? (
+                          <div className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 inline-flex items-center gap-0.5 mt-0.5" title={`تكلفة الشراء: ${Number(order.purchaseCost).toLocaleString()} ريال`}>
+                            <span>ربح: +{(order.totalAmount - Number(order.purchaseCost)).toLocaleString()} ريال</span>
+                          </div>
+                        ) : null}
                       </td>
                       <td className="py-3.5 px-4 font-mono font-bold text-emerald-600">
                         {order.paidAmount.toLocaleString()} ريال

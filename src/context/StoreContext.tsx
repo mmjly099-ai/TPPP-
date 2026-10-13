@@ -6059,6 +6059,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const count = batchData.orderIds.length;
     const perOrderCost = count > 0 ? Math.round(batchData.purchaseCost / count) : 0;
 
+    const batchOrdersSellingTotal = orders
+      .filter(o => batchData.orderIds.includes(o.id))
+      .reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
+    const batchNetProfit = batchOrdersSellingTotal - totalCost;
+    const batchMargin = batchOrdersSellingTotal > 0 ? (batchNetProfit / batchOrdersSellingTotal) * 100 : 0;
+
     setData(prev => {
       const updatedOrders = prev.tables.orders.map(o => {
         if (batchData.orderIds.includes(o.id)) {
@@ -6077,7 +6083,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         action: 'شراء جماعي',
         entityType: 'purchase_batch',
         entityId: batchId,
-        description: `تسجيل دفعة شراء جماعية ${batchNumber} من ${batchData.source} لعدد ${count} طلبات بمبلغ إجمالي ${totalCost} ريال`,
+        description: `تسجيل دفعة شراء جماعية ${batchNumber} من ${batchData.source} لعدد ${count} طلبات بمبلغ ${totalCost} ريال (صافي ربح: ${batchNetProfit.toLocaleString()} ريال)`,
         createdAt: new Date().toISOString()
       };
 
@@ -6093,7 +6099,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
       };
     });
-    showNotification(`تم تسجيل دفعة الشراء الجماعية #${batchNumber} بنجاح وقيد حركاتها المالية`, 'success');
+    showNotification(
+      `تم تسجيل دفعة الشراء #${batchNumber} بنجاح! صافي الربح: ${batchNetProfit >= 0 ? '+' : ''}${batchNetProfit.toLocaleString()} ريال (${batchMargin.toFixed(1)}%)`,
+      'success'
+    );
   };
 
   const updatePurchaseBatch = (id: number, batchData: {

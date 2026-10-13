@@ -24,7 +24,13 @@ import {
   Share2,
   Printer,
   Edit2,
-  ShieldAlert
+  ShieldAlert,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Wallet,
+  Percent,
+  Sparkles
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { PurchaseBatch, Order, Account } from '../types';
@@ -44,66 +50,49 @@ export const PurchaseBatchesView: React.FC = () => {
   const [selectedBatch, setSelectedBatch] = useState<PurchaseBatch | null>(null);
   const [editingBatch, setEditingBatch] = useState<PurchaseBatch | null>(null);
   const [deletingBatch, setDeletingBatch] = useState<PurchaseBatch | null>(null);
+  const [completedBatchSummary, setCompletedBatchSummary] = useState<{
+    source: string;
+    ordersCount: number;
+    ordersSellingTotal: number;
+    purchaseCost: number;
+    fees: number;
+    totalCost: number;
+    netProfit: number;
+    margin: number;
+  } | null>(null);
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [sourceFilter, setSourceFilter] = useState<'all' | 'SHEIN' | 'AliExpress' | 'Other'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'cancelled'>('all');
 
-  // Form State
-  const [source, setSource] = useState('SHEIN');
-  const [supplierOrderNumber, setSupplierOrderNumber] = useState('');
-  const [accountId, setAccountId] = useState<string>('');
-  const [purchaseCost, setPurchaseCost] = useState('');
-  const [purchaseFees, setPurchaseFees] = useState('0');
-  const [transferFees, setTransferFees] = useState('0');
-  const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
-  const [orderFilterMode, setOrderFilterMode] = useState<'pending' | 'all'>('pending');
-  const [orderModalSearch, setOrderModalSearch] = useState('');
-  const [notes, setNotes] = useState('');
-  const [formError, setFormError] = useState('');
-
-  // Eligible orders for purchasing
-  const eligibleOrders = useMemo(() => {
-    return orders.filter(o => {
-      if (o.status === 'cancelled') return false;
-      if (orderFilterMode === 'pending') {
-        return (o.status === 'pending' || !o.purchaseBatchId) && o.status !== 'delivered';
-      }
-      return true;
-    });
-  }, [orders, orderFilterMode]);
-
-  const selectedOrdersTotal = useMemo(() => {
-    return orders
-      .filter(o => selectedOrderIds.includes(o.id))
-      .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-  }, [orders, selectedOrderIds]);
-
-  const filteredEligibleOrders = useMemo(() => {
-    if (!orderModalSearch.trim()) return eligibleOrders;
-    const q = orderModalSearch.toLowerCase().trim();
-    return eligibleOrders.filter(o =>
-      String(o.orderNumber).toLowerCase().includes(q) ||
-      (o.customerName || '').toLowerCase().includes(q) ||
-      (o.itemsDescription || '').toLowerCase().includes(q)
-    );
-  }, [eligibleOrders, orderModalSearch]);
-
-  // Overall Statistics
+  // Overall Statistics including Profit Calculation
   const stats = useMemo(() => {
     const activeBatches = purchaseBatches.filter(b => b.status !== 'cancelled');
     const totalSpent = activeBatches.reduce((sum, b) => sum + (Number(b.totalCost) || 0), 0);
     const totalFees = activeBatches.reduce((sum, b) => sum + ((Number(b.purchaseFees) || 0) + (Number(b.transferFees) || 0)), 0);
     const totalOrdersCovered = activeBatches.reduce((sum, b) => sum + ((b.orderIds || []).length), 0);
 
+    const totalOrdersSelling = activeBatches.reduce((sum, b) => {
+      const bOrderIds = b.orderIds || [];
+      return sum + orders
+        .filter(o => bOrderIds.includes(o.id))
+        .reduce((oSum, o) => oSum + (Number(o.totalAmount) || 0), 0);
+    }, 0);
+
+    const totalNetProfit = totalOrdersSelling - totalSpent;
+    const profitMargin = totalOrdersSelling > 0 ? (totalNetProfit / totalOrdersSelling) * 100 : 0;
+
     return {
       batchesCount: activeBatches.length,
       totalSpent,
       totalFees,
-      totalOrdersCovered
+      totalOrdersCovered,
+      totalOrdersSelling,
+      totalNetProfit,
+      profitMargin
     };
-  }, [purchaseBatches]);
+  }, [purchaseBatches, orders]);
 
   // Filtered Batches List
   const filteredBatches = useMemo(() => {
@@ -142,66 +131,8 @@ export const PurchaseBatchesView: React.FC = () => {
     });
   }, [purchaseBatches, sourceFilter, statusFilter, searchQuery]);
 
-  const handleToggleOrder = (orderId: number) => {
-    setSelectedOrderIds(prev =>
-      prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]
-    );
-  };
-
-  const handleSelectAllOrders = () => {
-    if (selectedOrderIds.length === filteredEligibleOrders.length) {
-      setSelectedOrderIds([]);
-    } else {
-      setSelectedOrderIds(filteredEligibleOrders.map(o => o.id));
-    }
-  };
-
   const handleOpenNewBatch = () => {
-    if (accounts.length > 0 && !accountId) {
-      const defaultAcc = accounts.find(a => a.type === 'بطاقة' || a.name.includes('فيزا') || a.name.includes('كريمي')) || accounts[0];
-      setAccountId(String(defaultAcc.id));
-    }
-    setFormError('');
     setIsNewBatchOpen(true);
-  };
-
-  const handleSubmitBatch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!accountId) {
-      setFormError('يرجى اختيار حساب الدفع أو البطاقة البنكية');
-      return;
-    }
-    if (!purchaseCost || Number(purchaseCost) <= 0) {
-      setFormError('يرجى إدخال تكلفة الشراء الإجمالية');
-      return;
-    }
-    if (selectedOrderIds.length === 0) {
-      setFormError('يرجى تحديد طلبية واحدة على الأقل لتضمينها في هذه الدفعة');
-      return;
-    }
-    setFormError('');
-
-    addPurchaseBatch({
-      source,
-      supplierOrderNumber: supplierOrderNumber.trim() || undefined,
-      accountId: Number(accountId),
-      purchaseCost: Number(purchaseCost) || 0,
-      purchaseFees: Number(purchaseFees) || 0,
-      transferFees: Number(transferFees) || 0,
-      orderIds: selectedOrderIds,
-      notes: notes.trim() || undefined
-    });
-
-    setIsNewBatchOpen(false);
-    // Reset form
-    setSource('SHEIN');
-    setSupplierOrderNumber('');
-    setAccountId('');
-    setPurchaseCost('');
-    setPurchaseFees('0');
-    setTransferFees('0');
-    setSelectedOrderIds([]);
-    setNotes('');
   };
 
   return (
@@ -217,7 +148,7 @@ export const PurchaseBatchesView: React.FC = () => {
             </div>
             <h1 className="text-2xl sm:text-3xl font-black">دفعات الشراء المجمعة (شي إن / علي إكسبرس)</h1>
             <p className="text-sm text-slate-300 mt-1 max-w-2xl">
-              تجميع طلبيات العملاء وشرائها بحساب بنكي أو بطاقة واحدة، مع تسجيل قيود المشتريات والعمولات وتوزيع التكلفة على الطلبات تلقائياً.
+              تجميع طلبيات العملاء وشرائها بحساب بنكي أو بطاقة واحدة، مع احتساب صافي الأرباح تلقائياً وتسجيل القيود وعمولات الشراء وتوزيع التكلفة على الطلبات.
             </p>
           </div>
 
@@ -231,39 +162,52 @@ export const PurchaseBatchesView: React.FC = () => {
         </div>
       </div>
 
-      {/* KPI Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+      {/* KPI Stats with Profit Metric */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-          <span className="text-xs text-slate-500 font-bold block mb-1">دفعات الشراء النشطة</span>
+          <span className="text-xs text-slate-500 font-bold block mb-1">دفعات الشراء</span>
           <div className="text-2xl font-black text-slate-900 font-mono">
             {stats.batchesCount}
           </div>
-          <span className="text-[11px] text-slate-400">دفعات شراء مجمعة</span>
+          <span className="text-[11px] text-slate-400">دفعة شراء نشطة</span>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-          <span className="text-xs text-slate-500 font-bold block mb-1">الطلبات المشمولة بالشراء</span>
+          <span className="text-xs text-slate-500 font-bold block mb-1">الطلبات المشمولة</span>
           <div className="text-2xl font-black text-indigo-700 font-mono">
             {stats.totalOrdersCovered}
           </div>
-          <span className="text-[11px] text-slate-400">طلب تم شراؤه من المورد</span>
+          <span className="text-[11px] text-slate-400">طلب تم شراؤه</span>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-          <span className="text-xs text-slate-500 font-bold block mb-1">إجمالي تكلفة المشتريات</span>
-          <div className="text-xl sm:text-2xl font-black text-emerald-700 font-mono">
-            {stats.totalSpent.toLocaleString()} <span className="text-xs font-normal text-slate-500">YER</span>
+          <span className="text-xs text-slate-500 font-bold block mb-1">مبيعات الطلبيات</span>
+          <div className="text-lg sm:text-xl font-black text-slate-900 font-mono">
+            {stats.totalOrdersSelling.toLocaleString()} <span className="text-[10px] font-normal text-slate-500">YER</span>
           </div>
-          <span className="text-[11px] text-slate-400">مدفوع عبر البطاقات والمحافظ</span>
+          <span className="text-[11px] text-slate-400">قيمة البيع للعملاء</span>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-          <span className="text-xs text-slate-500 font-bold block mb-1">رسوم الشراء وفروق الصرف</span>
-          <div className="text-xl sm:text-2xl font-black text-amber-800 font-mono">
-            {stats.totalFees.toLocaleString()} <span className="text-xs font-normal text-slate-500">YER</span>
+          <span className="text-xs text-slate-500 font-bold block mb-1">تكلفة الشراء والرسوم</span>
+          <div className="text-lg sm:text-xl font-black text-slate-700 font-mono">
+            {stats.totalSpent.toLocaleString()} <span className="text-[10px] font-normal text-slate-500">YER</span>
           </div>
-          <span className="text-[11px] text-slate-400">عمولات مصرفية مسجلة</span>
+          <span className="text-[11px] text-slate-400">رسوم: {stats.totalFees.toLocaleString()} YER</span>
+        </div>
+
+        <div className="bg-gradient-to-br from-emerald-50 to-teal-50/50 p-4 rounded-2xl border border-emerald-200 shadow-xs col-span-2 sm:col-span-1">
+          <span className="text-xs text-emerald-800 font-bold flex items-center gap-1 mb-1">
+            <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
+            صافي أرباح المشتريات
+          </span>
+          <div className="text-lg sm:text-xl font-black text-emerald-700 font-mono">
+            {stats.totalNetProfit >= 0 ? '+' : ''}{stats.totalNetProfit.toLocaleString()} <span className="text-[10px] font-normal text-emerald-600">YER</span>
+          </div>
+          <span className="text-[11px] font-bold text-emerald-800">
+            هامش ربح {stats.profitMargin.toFixed(1)}%
+          </span>
         </div>
 
       </div>
@@ -355,6 +299,11 @@ export const PurchaseBatchesView: React.FC = () => {
               const orderIdList = batch.orderIds || [];
               const batchOrders = orders.filter(o => orderIdList.includes(o.id));
               const isCancelled = batch.status === 'cancelled';
+              const batchOrdersSellingTotal = batchOrders.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
+              const batchTotalCost = Number(batch.totalCost) || 0;
+              const batchNetProfit = batchOrdersSellingTotal - batchTotalCost;
+              const batchMargin = batchOrdersSellingTotal > 0 ? (batchNetProfit / batchOrdersSellingTotal) * 100 : 0;
+              const avgProfitPerOrder = batchOrders.length > 0 ? Math.round(batchNetProfit / batchOrders.length) : 0;
 
               return (
                 <div
@@ -394,6 +343,70 @@ export const PurchaseBatchesView: React.FC = () => {
                       </div>
                       <div className="text-[11px] text-slate-500">
                         تكلفة البضاعة: {(batch.purchaseCost || 0).toLocaleString()} + رسوم: {((batch.purchaseFees || 0) + (batch.transferFees || 0)).toLocaleString()} YER
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Real-time Batch Profit Breakdown Ribbon */}
+                  <div className={`p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                    isCancelled
+                      ? 'bg-slate-100/70 border-slate-200 text-slate-500'
+                      : batchNetProfit >= 0
+                        ? 'bg-gradient-to-l from-emerald-50 via-teal-50/20 to-white border-emerald-200 shadow-2xs'
+                        : 'bg-gradient-to-l from-rose-50 via-red-50/20 to-white border-rose-200 shadow-2xs'
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                        isCancelled
+                          ? 'bg-slate-200 text-slate-600'
+                          : batchNetProfit >= 0
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'bg-rose-100 text-rose-700'
+                      }`}>
+                        <TrendingUp className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="text-[11px] text-slate-500 font-bold flex items-center gap-1.5">
+                          <span>صافي ربح هذه العملية:</span>
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            (قيمة الطلبيات: {batchOrdersSellingTotal.toLocaleString()} - التكلفة: {batchTotalCost.toLocaleString()})
+                          </span>
+                        </div>
+                        <div className="flex items-baseline gap-2 mt-0.5">
+                          <span className={`font-mono font-black text-base ${
+                            isCancelled
+                              ? 'text-slate-600 line-through'
+                              : batchNetProfit >= 0
+                                ? 'text-emerald-700'
+                                : 'text-rose-700'
+                          }`}>
+                            {batchNetProfit >= 0 ? '+' : ''}{batchNetProfit.toLocaleString()} YER
+                          </span>
+                          {!isCancelled && (
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              batchNetProfit >= 0
+                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                : 'bg-rose-100 text-rose-800 border border-rose-200'
+                            }`}>
+                              هامش {batchMargin.toFixed(1)}%
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 sm:border-r sm:border-slate-200/80 sm:pr-3 text-xs">
+                      <div>
+                        <span className="text-[10px] text-slate-400 block">متوسط ربح الطلب:</span>
+                        <span className={`font-mono font-bold text-xs ${batchNetProfit >= 0 ? 'text-indigo-700' : 'text-rose-600'}`}>
+                          ~{avgProfitPerOrder.toLocaleString()} YER
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] text-slate-400 block">إجمالي مبيعات الطلبيات:</span>
+                        <span className="font-mono font-bold text-slate-900 text-xs">
+                          {batchOrdersSellingTotal.toLocaleString()} YER
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -514,70 +527,137 @@ export const PurchaseBatchesView: React.FC = () => {
               </button>
             </div>
 
-            {/* Financial Summary */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                <span className="text-slate-500 block mb-1">تكلفة البضاعة الصافية</span>
-                <span className="font-mono font-black text-slate-900 text-sm">
-                  {(selectedBatch.purchaseCost || 0).toLocaleString()} YER
-                </span>
-              </div>
+            {/* Financial & Profit Summary */}
+            {(() => {
+              const selBatchOrders = orders.filter(o => (selectedBatch.orderIds || []).includes(o.id));
+              const selBatchOrdersSelling = selBatchOrders.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
+              const selBatchTotalCost = Number(selectedBatch.totalCost) || 0;
+              const selBatchNetProfit = selBatchOrdersSelling - selBatchTotalCost;
+              const selBatchMargin = selBatchOrdersSelling > 0 ? (selBatchNetProfit / selBatchOrdersSelling) * 100 : 0;
+              const selBatchPerOrderCost = selBatchOrders.length > 0 ? Math.round(selBatchTotalCost / selBatchOrders.length) : 0;
 
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                <span className="text-slate-500 block mb-1">الرسوم والعمولات المصرفية</span>
-                <span className="font-mono font-black text-amber-800 text-sm">
-                  {((selectedBatch.purchaseFees || 0) + (selectedBatch.transferFees || 0)).toLocaleString()} YER
-                </span>
-              </div>
+              return (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                      <span className="text-slate-500 block mb-1">مبيعات الطلبيات</span>
+                      <span className="font-mono font-black text-slate-900 text-sm">
+                        {selBatchOrdersSelling.toLocaleString()} YER
+                      </span>
+                    </div>
 
-              <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 col-span-2 sm:col-span-1">
-                <span className="text-amber-900 block mb-1 font-bold">إجمالي المبلغ المسحوب</span>
-                <span className="font-mono font-black text-amber-950 text-sm">
-                  {(selectedBatch.totalCost || 0).toLocaleString()} YER
-                </span>
-              </div>
-            </div>
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                      <span className="text-slate-500 block mb-1">تكلفة البضاعة الصافية</span>
+                      <span className="font-mono font-black text-slate-900 text-sm">
+                        {(selectedBatch.purchaseCost || 0).toLocaleString()} YER
+                      </span>
+                    </div>
 
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <span className="text-slate-500">الحساب المسحوب منه: </span>
-                <span className="font-bold text-slate-900">{selectedBatch.accountName}</span>
-              </div>
-              {selectedBatch.supplierOrderNumber && (
-                <div>
-                  <span className="text-slate-500">رقم طلب المورد: </span>
-                  <span className="font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
-                    {selectedBatch.supplierOrderNumber}
-                  </span>
-                </div>
-              )}
-            </div>
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                      <span className="text-slate-500 block mb-1">الرسوم والعمولات</span>
+                      <span className="font-mono font-black text-amber-800 text-sm">
+                        {((selectedBatch.purchaseFees || 0) + (selectedBatch.transferFees || 0)).toLocaleString()} YER
+                      </span>
+                    </div>
 
-            {/* Orders Included */}
-            <div>
-              <h4 className="font-bold text-xs text-slate-700 mb-2">
-                الطلبيات المشمولة في هذه الدفعة ({(selectedBatch.orderIds || []).length} طلبات):
-              </h4>
-              <div className="max-h-56 overflow-y-auto border border-slate-200 rounded-xl divide-y divide-slate-100 text-xs">
-                {orders
-                  .filter(o => (selectedBatch.orderIds || []).includes(o.id))
-                  .map(ord => (
-                    <div key={ord.id} className="p-3 flex items-center justify-between hover:bg-slate-50">
-                      <div>
-                        <div className="font-bold text-slate-900">
-                          {ord.orderNumber} • {ord.customerName}
-                        </div>
-                        <div className="text-[11px] text-slate-400 mt-0.5">
-                          {ord.itemsDescription || 'طلبية ملابس ومنتجات'}
-                        </div>
+                    <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
+                      <span className="text-amber-900 block mb-1 font-bold">إجمالي المبلغ المسحوب</span>
+                      <span className="font-mono font-black text-amber-950 text-sm">
+                        {selBatchTotalCost.toLocaleString()} YER
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Net Profit Card */}
+                  <div className={`p-3.5 rounded-xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                    selBatchNetProfit >= 0
+                      ? 'bg-gradient-to-l from-emerald-50 via-teal-50/20 to-white border-emerald-300'
+                      : 'bg-gradient-to-l from-rose-50 via-red-50/20 to-white border-rose-300'
+                  }`}>
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold ${
+                        selBatchNetProfit >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                      }`}>
+                        <TrendingUp className="w-5 h-5" />
                       </div>
-                      <div className="text-left font-mono font-bold text-emerald-700">
-                        {(ord.totalAmount || 0).toLocaleString()} YER
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-bold block">
+                          صافي ربح هذه العملية بالكامل:
+                        </span>
+                        <div className="flex items-baseline gap-2 mt-0.5">
+                          <span className={`font-mono font-black text-base ${
+                            selBatchNetProfit >= 0 ? 'text-emerald-700' : 'text-rose-700'
+                          }`}>
+                            {selBatchNetProfit >= 0 ? '+' : ''}{selBatchNetProfit.toLocaleString()} YER
+                          </span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            selBatchNetProfit >= 0 ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-rose-100 text-rose-800 border border-rose-200'
+                          }`}>
+                            هامش {selBatchMargin.toFixed(1)}%
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  ))}
-              </div>
-            </div>
+
+                    <div className="text-left font-mono">
+                      <span className="text-[10px] text-slate-400 block">متوسط ربح الطلب الواحد:</span>
+                      <span className={`text-xs font-bold ${selBatchNetProfit >= 0 ? 'text-indigo-700' : 'text-rose-600'}`}>
+                        ~{Math.round(selBatchNetProfit / (selBatchOrders.length || 1)).toLocaleString()} YER
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <span className="text-slate-500">الحساب المسحوب منه: </span>
+                      <span className="font-bold text-slate-900">{selectedBatch.accountName}</span>
+                    </div>
+                    {selectedBatch.supplierOrderNumber && (
+                      <div>
+                        <span className="text-slate-500">رقم طلب المورد: </span>
+                        <span className="font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                          {selectedBatch.supplierOrderNumber}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Orders Included with individual profit breakdown */}
+                  <div>
+                    <h4 className="font-bold text-xs text-slate-700 mb-2">
+                      الطلبيات المشمولة في هذه الدفعة ({selBatchOrders.length} طلبات):
+                    </h4>
+                    <div className="max-h-56 overflow-y-auto border border-slate-200 rounded-xl divide-y divide-slate-100 text-xs">
+                      {selBatchOrders.map(ord => {
+                        const ordSelling = Number(ord.totalAmount) || 0;
+                        const ordProfit = ordSelling - selBatchPerOrderCost;
+
+                        return (
+                          <div key={ord.id} className="p-3 flex items-center justify-between hover:bg-slate-50 gap-2">
+                            <div>
+                              <div className="font-bold text-slate-900">
+                                {ord.orderNumber} • {ord.customerName}
+                              </div>
+                              <div className="text-[11px] text-slate-400 mt-0.5">
+                                {ord.itemsDescription || 'طلبية ملابس ومنتجات'}
+                              </div>
+                            </div>
+                            <div className="text-left font-mono shrink-0">
+                              <div className="font-bold text-slate-900">
+                                {ordSelling.toLocaleString()} <span className="text-[10px] text-slate-400 font-sans">بيع</span>
+                              </div>
+                              <div className={`text-[11px] font-bold ${ordProfit >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
+                                {ordProfit >= 0 ? '+' : ''}{ordProfit.toLocaleString()} YER ربح
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {selectedBatch.notes && (
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
@@ -623,6 +703,115 @@ export const PurchaseBatchesView: React.FC = () => {
         </div>
       )}
 
+      {/* Modal: New Purchase Batch (تسجيل دفعة شراء جديدة) */}
+      {isNewBatchOpen && (
+        <NewPurchaseBatchModal
+          orders={orders}
+          accounts={accounts}
+          onClose={() => setIsNewBatchOpen(false)}
+          onSubmit={batchData => {
+            const selectedOrders = orders.filter(o => batchData.orderIds.includes(o.id));
+            const selling = selectedOrders.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
+            const totalSpent = (batchData.purchaseCost || 0) + (batchData.purchaseFees || 0) + (batchData.transferFees || 0);
+            const profit = selling - totalSpent;
+            const margin = selling > 0 ? (profit / selling) * 100 : 0;
+
+            addPurchaseBatch(batchData);
+            setIsNewBatchOpen(false);
+
+            setCompletedBatchSummary({
+              source: batchData.source,
+              ordersCount: batchData.orderIds.length,
+              ordersSellingTotal: selling,
+              purchaseCost: batchData.purchaseCost,
+              fees: (batchData.purchaseFees || 0) + (batchData.transferFees || 0),
+              totalCost: totalSpent,
+              netProfit: profit,
+              margin
+            });
+          }}
+        />
+      )}
+
+      {/* Modal: Post-Purchase Profit Summary Dialog (ملخص ربح العملية الفوري) */}
+      {completedBatchSummary && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-xs" dir="rtl">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-center space-y-4">
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto ${
+              completedBatchSummary.netProfit >= 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'
+            }`}>
+              <TrendingUp className="w-8 h-8" />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-black text-slate-900">
+                تم تسجيل عملية الشراء بنجاح!
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                ملخص أرباح العملية المجمعة من {completedBatchSummary.source}
+              </p>
+            </div>
+
+            {/* Big Profit Highlight */}
+            <div className={`p-4 rounded-xl border ${
+              completedBatchSummary.netProfit >= 0
+                ? 'bg-gradient-to-br from-emerald-50 via-teal-50/40 to-white border-emerald-300'
+                : 'bg-gradient-to-br from-rose-50 via-red-50/40 to-white border-rose-300'
+            }`}>
+              <span className="text-xs text-slate-500 font-bold block mb-1">صافي الربح المحقق من هذه العملية:</span>
+              <div className={`text-2xl sm:text-3xl font-black font-mono ${
+                completedBatchSummary.netProfit >= 0 ? 'text-emerald-700' : 'text-rose-700'
+              }`}>
+                {completedBatchSummary.netProfit >= 0 ? '+' : ''}{completedBatchSummary.netProfit.toLocaleString()} YER
+              </div>
+              <div className="flex items-center justify-center gap-2 mt-2">
+                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                  completedBatchSummary.netProfit >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                }`}>
+                  هامش ربح {completedBatchSummary.margin.toFixed(1)}%
+                </span>
+                <span className="text-[11px] text-slate-500 font-bold">
+                  ({completedBatchSummary.ordersCount} طلبات مشمولة)
+                </span>
+              </div>
+            </div>
+
+            {/* Financial Breakdown Table */}
+            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-xs space-y-2 text-right">
+              <div className="flex justify-between text-slate-700">
+                <span>إجمالي مبيعات الطلبات للعملاء:</span>
+                <strong className="font-mono text-slate-900">{completedBatchSummary.ordersSellingTotal.toLocaleString()} YER</strong>
+              </div>
+              <div className="flex justify-between text-slate-700">
+                <span>تكلفة الشراء الصافية بالموقع:</span>
+                <strong className="font-mono text-slate-900">{completedBatchSummary.purchaseCost.toLocaleString()} YER</strong>
+              </div>
+              <div className="flex justify-between text-slate-700">
+                <span>رسوم وعمولات الصرف والتحويل:</span>
+                <strong className="font-mono text-amber-800">{completedBatchSummary.fees.toLocaleString()} YER</strong>
+              </div>
+              <div className="flex justify-between text-slate-900 font-bold pt-2 border-t border-slate-200">
+                <span>إجمالي المبلغ المسحوب:</span>
+                <strong className="font-mono text-slate-900">{completedBatchSummary.totalCost.toLocaleString()} YER</strong>
+              </div>
+              <div className="flex justify-between text-indigo-700 font-bold pt-1">
+                <span>متوسط ربح الطلب الواحد:</span>
+                <strong className="font-mono">
+                  ~{completedBatchSummary.ordersCount > 0 ? Math.round(completedBatchSummary.netProfit / completedBatchSummary.ordersCount).toLocaleString() : 0} YER
+                </strong>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setCompletedBatchSummary(null)}
+              className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition cursor-pointer shadow-xs"
+            >
+              تم ومتابعة دفعات الشراء
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Modal: Edit Purchase Batch */}
       {editingBatch && (
         <EditPurchaseBatchModal
@@ -650,6 +839,464 @@ export const PurchaseBatchesView: React.FC = () => {
         />
       )}
 
+    </div>
+  );
+};
+
+// =====================================================================
+// SUB-COMPONENT: NEW PURCHASE BATCH MODAL (تسجيل دفعة شراء جماعية جديدة)
+// =====================================================================
+interface NewPurchaseBatchModalProps {
+  orders: Order[];
+  accounts: Account[];
+  onClose: () => void;
+  onSubmit: (batchData: {
+    source: string;
+    supplierOrderNumber?: string;
+    accountId: number;
+    purchaseCost: number;
+    purchaseFees: number;
+    transferFees: number;
+    orderIds: number[];
+    notes?: string;
+  }) => void;
+}
+
+const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
+  orders,
+  accounts,
+  onClose,
+  onSubmit
+}) => {
+  const [source, setSource] = useState('SHEIN');
+  const [supplierOrderNumber, setSupplierOrderNumber] = useState('');
+  const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split('T')[0]);
+  const defaultAccId = accounts.find(a => a.type === 'بطاقة' || a.name.includes('فيزا') || a.name.includes('كريمي'))?.id || accounts[0]?.id || '';
+  const [accountId, setAccountId] = useState<string>(String(defaultAccId));
+  const [purchaseCost, setPurchaseCost] = useState('');
+  const [purchaseFees, setPurchaseFees] = useState('0');
+  const [transferFees, setTransferFees] = useState('0');
+  const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
+  const [orderFilterMode, setOrderFilterMode] = useState<'pending' | 'all'>('pending');
+  const [orderModalSearch, setOrderModalSearch] = useState('');
+  const [notes, setNotes] = useState('');
+  const [formError, setFormError] = useState('');
+
+  // Eligible orders for purchasing
+  const eligibleOrders = useMemo(() => {
+    return orders.filter(o => {
+      if (o.status === 'cancelled') return false;
+      if (orderFilterMode === 'pending') {
+        return (o.status === 'pending' || !o.purchaseBatchId) && o.status !== 'delivered';
+      }
+      return true;
+    });
+  }, [orders, orderFilterMode]);
+
+  const filteredEligibleOrders = useMemo(() => {
+    if (!orderModalSearch.trim()) return eligibleOrders;
+    const q = orderModalSearch.toLowerCase().trim();
+    return eligibleOrders.filter(o =>
+      String(o.orderNumber).toLowerCase().includes(q) ||
+      (o.customerName || '').toLowerCase().includes(q) ||
+      (o.itemsDescription || '').toLowerCase().includes(q)
+    );
+  }, [eligibleOrders, orderModalSearch]);
+
+  const selectedOrdersTotal = useMemo(() => {
+    return orders
+      .filter(o => selectedOrderIds.includes(o.id))
+      .reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
+  }, [orders, selectedOrderIds]);
+
+  const totalCalculated = (Number(purchaseCost) || 0) + (Number(purchaseFees) || 0) + (Number(transferFees) || 0);
+  const netProfit = selectedOrdersTotal - totalCalculated;
+  const margin = selectedOrdersTotal > 0 ? (netProfit / selectedOrdersTotal) * 100 : 0;
+  const avgProfitPerOrder = selectedOrderIds.length > 0 ? Math.round(netProfit / selectedOrderIds.length) : 0;
+
+  const handleToggleOrder = (orderId: number) => {
+    setSelectedOrderIds(prev =>
+      prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]
+    );
+  };
+
+  const handleSelectAllOrders = () => {
+    if (selectedOrderIds.length === filteredEligibleOrders.length && filteredEligibleOrders.length > 0) {
+      setSelectedOrderIds([]);
+    } else {
+      setSelectedOrderIds(filteredEligibleOrders.map(o => o.id));
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!accountId) {
+      setFormError('يرجى اختيار حساب الدفع أو البطاقة البنكية المسحوب منها');
+      return;
+    }
+    if (!purchaseCost || Number(purchaseCost) <= 0) {
+      setFormError('يرجى إدخال تكلفة الشراء الصافية');
+      return;
+    }
+    if (selectedOrderIds.length === 0) {
+      setFormError('يرجى تحديد طلبية واحدة على الأقل لتضمينها في هذه الدفعة');
+      return;
+    }
+
+    onSubmit({
+      source,
+      supplierOrderNumber: supplierOrderNumber.trim() || undefined,
+      accountId: Number(accountId),
+      purchaseCost: Number(purchaseCost) || 0,
+      purchaseFees: Number(purchaseFees) || 0,
+      transferFees: Number(transferFees) || 0,
+      orderIds: selectedOrderIds,
+      notes: notes.trim() || undefined
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 overflow-y-auto backdrop-blur-xs" dir="rtl">
+      <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 my-8 max-h-[92vh] overflow-y-auto">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-900 flex items-center justify-center font-bold">
+              <PackageCheck className="w-5 h-5 text-amber-800" />
+            </div>
+            <div>
+              <h3 className="font-bold text-base text-slate-900">
+                تسجيل دفعة شراء جماعية جديدة
+              </h3>
+              <p className="text-xs text-slate-500">
+                تجميع طلبيات العملاء وشراء البضاعة مع احتساب صافي الأرباح اللحظية وقيد العمليات
+              </p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">مصدر الشراء / المنصة *</label>
+              <select
+                value={source}
+                onChange={e => setSource(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500"
+              >
+                <option value="SHEIN">شي إن (SHEIN)</option>
+                <option value="AliExpress">علي إكسبرس (AliExpress)</option>
+                <option value="Alibaba">علي بابا (Alibaba)</option>
+                <option value="Zara">زارا (Zara)</option>
+                <option value="Amazon">أمازون (Amazon)</option>
+                <option value="Other">موقع آخر</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">رقم طلب المورد (اختياري)</label>
+              <input
+                type="text"
+                placeholder="مثال: SHEIN-YE-981423"
+                value={supplierOrderNumber}
+                onChange={e => setSupplierOrderNumber(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500 font-mono"
+              />
+            </div>
+
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">تاريخ الشراء *</label>
+              <input
+                type="date"
+                required
+                value={purchaseDate}
+                onChange={e => setPurchaseDate(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500 font-mono"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="font-bold text-slate-700 block mb-1">حساب الدفع / البطاقة البنكية *</label>
+            <select
+              required
+              value={accountId}
+              onChange={e => setAccountId(e.target.value)}
+              className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500"
+            >
+              <option value="">اختر الحساب أو المحفظة المسحوب منها</option>
+              {accounts.filter(a => a.status === 'active').map(a => (
+                <option key={a.id} value={a.id}>
+                  {a.name} ({a.type})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">تكلفة الشراء الصافية (YER) *</label>
+              <input
+                type="number"
+                required
+                min="1"
+                placeholder="مثال: 120000"
+                value={purchaseCost}
+                onChange={e => setPurchaseCost(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500 font-mono font-bold"
+              />
+            </div>
+
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">رسوم الشراء وفروق الصرف (YER)</label>
+              <input
+                type="number"
+                min="0"
+                placeholder="0"
+                value={purchaseFees}
+                onChange={e => setPurchaseFees(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500 font-mono"
+              />
+            </div>
+
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">عمولات التحويل البنكي (YER)</label>
+              <input
+                type="number"
+                min="0"
+                placeholder="0"
+                value={transferFees}
+                onChange={e => setTransferFees(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500 font-mono"
+              />
+            </div>
+          </div>
+
+          {/* REAL-TIME PROFIT CALCULATION PANEL */}
+          <div className={`p-4 rounded-xl border space-y-2.5 text-xs ${
+            netProfit >= 0
+              ? 'bg-gradient-to-l from-emerald-50 via-teal-50/20 to-white border-emerald-300 shadow-2xs'
+              : 'bg-gradient-to-l from-rose-50 via-red-50/20 to-white border-rose-300 shadow-2xs'
+          }`}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold shrink-0 ${
+                  netProfit >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                }`}>
+                  <TrendingUp className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-[11px] text-slate-500 font-bold block">
+                    صافي ربح هذه العملية المتوقع:
+                  </span>
+                  <div className="flex items-baseline gap-2 mt-0.5">
+                    <span className={`font-mono font-black text-base sm:text-lg ${
+                      netProfit >= 0 ? 'text-emerald-700' : 'text-rose-700'
+                    }`}>
+                      {netProfit >= 0 ? '+' : ''}{netProfit.toLocaleString()} YER
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      netProfit >= 0
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                        : 'bg-rose-100 text-rose-800 border border-rose-200'
+                    }`}>
+                      هامش {margin.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 text-xs font-mono">
+                <div>
+                  <span className="text-[10px] text-slate-400 block">إجمالي المسحوب:</span>
+                  <span className="font-bold text-slate-800">{totalCalculated.toLocaleString()} YER</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 block">متوسط ربح الطلب:</span>
+                  <span className={`font-bold ${netProfit >= 0 ? 'text-indigo-700' : 'text-rose-600'}`}>
+                    ~{avgProfitPerOrder.toLocaleString()} YER
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Visual Formula breakdown */}
+            <div className="text-[11px] text-slate-600 bg-white/90 p-2.5 rounded-lg border border-slate-200/80 flex flex-wrap items-center justify-between gap-1 font-mono">
+              <span>(مبيعات الطلبات: {selectedOrdersTotal.toLocaleString()} YER)</span>
+              <span className="text-slate-400">-</span>
+              <span>(تكلفة الشراء: {Number(purchaseCost || 0).toLocaleString()} YER)</span>
+              <span className="text-slate-400">-</span>
+              <span>(العمولات: {((Number(purchaseFees) || 0) + (Number(transferFees) || 0)).toLocaleString()} YER)</span>
+              <span className="text-slate-400">=</span>
+              <span className={`font-black ${netProfit >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                صافي الربح: {netProfit >= 0 ? '+' : ''}{netProfit.toLocaleString()} YER
+              </span>
+            </div>
+          </div>
+
+          {/* Quick Auto Cost Helpers */}
+          {selectedOrderIds.length > 0 && (
+            <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl space-y-2 text-xs">
+              <div className="flex items-center justify-between font-bold text-indigo-900">
+                <span>إجمالي مبيعات الطلبات المحددة ({selectedOrderIds.length} طلبات):</span>
+                <span className="font-mono text-sm">{selectedOrdersTotal.toLocaleString()} YER</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-indigo-200/60 text-[11px]">
+                <span className="text-slate-600 font-bold">تسعير تلقائي بحسب خصم شي إن:</span>
+                <button
+                  type="button"
+                  onClick={() => setPurchaseCost(String(selectedOrdersTotal))}
+                  className="px-2 py-0.5 rounded-lg bg-white hover:bg-indigo-100 border border-indigo-300 text-indigo-800 font-bold cursor-pointer transition shadow-2xs"
+                >
+                  كامل القيمة ({selectedOrdersTotal.toLocaleString()})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPurchaseCost(String(Math.round(selectedOrdersTotal * 0.85)))}
+                  className="px-2 py-0.5 rounded-lg bg-white hover:bg-indigo-100 border border-indigo-300 text-indigo-800 font-bold cursor-pointer transition shadow-2xs"
+                >
+                  خصم 15% شي إن ({Math.round(selectedOrdersTotal * 0.85).toLocaleString()})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPurchaseCost(String(Math.round(selectedOrdersTotal * 0.80)))}
+                  className="px-2 py-0.5 rounded-lg bg-white hover:bg-indigo-100 border border-indigo-300 text-indigo-800 font-bold cursor-pointer transition shadow-2xs"
+                >
+                  خصم 20% ({Math.round(selectedOrdersTotal * 0.80).toLocaleString()})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPurchaseCost(String(Math.round(selectedOrdersTotal * 0.75)))}
+                  className="px-2 py-0.5 rounded-lg bg-white hover:bg-indigo-100 border border-indigo-300 text-indigo-800 font-bold cursor-pointer transition shadow-2xs"
+                >
+                  خصم 25% ({Math.round(selectedOrdersTotal * 0.75).toLocaleString()})
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Order Selection Controls */}
+          <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+              <label className="font-bold text-slate-800">
+                الطلبيات المشمولة في هذه الدفعة * ({selectedOrderIds.length} محددة)
+              </label>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setOrderFilterMode(prev => prev === 'pending' ? 'all' : 'pending')}
+                  className="text-[11px] text-indigo-700 hover:text-indigo-900 font-bold bg-indigo-50 px-2 py-0.5 rounded cursor-pointer"
+                >
+                  {orderFilterMode === 'pending' ? 'عرض كل الطلبات' : 'فقط الطلبات المعلقة'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSelectAllOrders}
+                  className="text-[11px] text-amber-800 hover:text-amber-950 font-bold bg-amber-100 px-2 py-0.5 rounded cursor-pointer"
+                >
+                  {selectedOrderIds.length === filteredEligibleOrders.length && filteredEligibleOrders.length > 0 ? 'إلغاء تحديد الكل' : 'تحديد الكل'}
+                </button>
+              </div>
+            </div>
+
+            {/* Search input for modal orders */}
+            <div className="mb-2">
+              <input
+                type="text"
+                value={orderModalSearch}
+                onChange={e => setOrderModalSearch(e.target.value)}
+                placeholder="ابحث برقم الطلب أو اسم العميل لاختياره..."
+                className="w-full p-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-amber-500"
+              />
+            </div>
+
+            {filteredEligibleOrders.length === 0 ? (
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center text-slate-400">
+                لا توجد طلبات معلقة بانتظار الشراء حالياً.
+              </div>
+            ) : (
+              <div className="max-h-48 overflow-y-auto border border-slate-200 rounded-xl divide-y divide-slate-100">
+                {filteredEligibleOrders.map(o => {
+                  const isChecked = selectedOrderIds.includes(o.id);
+                  return (
+                    <div
+                      key={o.id}
+                      onClick={() => handleToggleOrder(o.id)}
+                      className={`p-2.5 flex items-center justify-between cursor-pointer transition-colors ${
+                        isChecked ? 'bg-amber-50/70' : 'hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => handleToggleOrder(o.id)}
+                          className="rounded text-amber-600 cursor-pointer"
+                        />
+                        <div>
+                          <div className="font-bold text-slate-900">{o.orderNumber} • {o.customerName}</div>
+                          <div className="text-[11px] text-slate-400">
+                            {o.itemsDescription || 'طلبية ملابس ومنتجات'}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="text-left font-mono font-bold text-slate-800">
+                        {(o.totalAmount || 0).toLocaleString()} YER
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="font-bold text-slate-700 block mb-1">ملاحظات حول الدفعة</label>
+            <textarea
+              rows={2}
+              placeholder="أي ملاحظات حول كرتون الشحن أو رابط الدفعة"
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500"
+            />
+          </div>
+
+          {formError && (
+            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-bold">
+              {formError}
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold cursor-pointer"
+            >
+              إلغاء
+            </button>
+            <button
+              type="submit"
+              disabled={selectedOrderIds.length === 0 || !purchaseCost}
+              className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black cursor-pointer shadow-xs disabled:opacity-50 flex items-center gap-2"
+            >
+              <span>تسجيل الدفعة</span>
+              {netProfit !== 0 && (
+                <span className={`text-[11px] px-2 py-0.5 rounded-md ${
+                  netProfit > 0 ? 'bg-emerald-900 text-emerald-100' : 'bg-rose-900 text-rose-100'
+                }`}>
+                  ربح {netProfit > 0 ? '+' : ''}{netProfit.toLocaleString()} YER
+                </span>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
@@ -890,13 +1537,74 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
             </div>
           </div>
 
-          {/* Dynamic Summary Note */}
-          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between text-xs">
-            <span className="text-amber-900 font-medium">الإجمالي الكلي الجديد المسحوب من الحساب البنكي:</span>
-            <span className="font-black font-mono text-amber-950 text-sm">
-              {totalCalculated.toLocaleString()} YER
-            </span>
-          </div>
+          {/* Real-time Profit Calculation Card in Edit Modal */}
+          {(() => {
+            const netProfit = selectedOrdersTotal - totalCalculated;
+            const margin = selectedOrdersTotal > 0 ? (netProfit / selectedOrdersTotal) * 100 : 0;
+            const avgProfit = selectedOrderIds.length > 0 ? Math.round(netProfit / selectedOrderIds.length) : 0;
+
+            return (
+              <div className={`p-3.5 rounded-xl border space-y-2 text-xs ${
+                netProfit >= 0
+                  ? 'bg-gradient-to-l from-emerald-50 via-teal-50/20 to-white border-emerald-300 shadow-2xs'
+                  : 'bg-gradient-to-l from-rose-50 via-red-50/20 to-white border-rose-300 shadow-2xs'
+              }`}>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold shrink-0 ${
+                      netProfit >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                    }`}>
+                      <TrendingUp className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="text-[11px] text-slate-500 font-bold block">
+                        صافي أرباح هذه العملية بعد التعديل:
+                      </span>
+                      <div className="flex items-baseline gap-2 mt-0.5">
+                        <span className={`font-mono font-black text-base sm:text-lg ${
+                          netProfit >= 0 ? 'text-emerald-700' : 'text-rose-700'
+                        }`}>
+                          {netProfit >= 0 ? '+' : ''}{netProfit.toLocaleString()} YER
+                        </span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          netProfit >= 0
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                            : 'bg-rose-100 text-rose-800 border border-rose-200'
+                        }`}>
+                          هامش {margin.toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 text-xs font-mono">
+                    <div>
+                      <span className="text-[10px] text-slate-400 block">المسحوب الكلي:</span>
+                      <span className="font-bold text-slate-800">{totalCalculated.toLocaleString()} YER</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 block">متوسط ربح الطلب:</span>
+                      <span className={`font-bold ${netProfit >= 0 ? 'text-indigo-700' : 'text-rose-600'}`}>
+                        ~{avgProfit.toLocaleString()} YER
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-[11px] text-slate-600 bg-white/90 p-2.5 rounded-lg border border-slate-200/80 flex flex-wrap items-center justify-between gap-1 font-mono">
+                  <span>(مبيعات الطلبات: {selectedOrdersTotal.toLocaleString()} YER)</span>
+                  <span className="text-slate-400">-</span>
+                  <span>(تكلفة الشراء: {Number(purchaseCost || 0).toLocaleString()} YER)</span>
+                  <span className="text-slate-400">-</span>
+                  <span>(العمولات: {((Number(purchaseFees) || 0) + (Number(transferFees) || 0)).toLocaleString()} YER)</span>
+                  <span className="text-slate-400">=</span>
+                  <span className={`font-black ${netProfit >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                    صافي الربح: {netProfit >= 0 ? '+' : ''}{netProfit.toLocaleString()} YER
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Quick Auto Cost Helpers */}
           {selectedOrderIds.length > 0 && (
@@ -927,6 +1635,13 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
                   className="px-2 py-0.5 rounded-lg bg-white hover:bg-indigo-100 border border-indigo-300 text-indigo-800 font-bold cursor-pointer transition shadow-2xs"
                 >
                   خصم 20% ({Math.round(selectedOrdersTotal * 0.80).toLocaleString()})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPurchaseCost(String(Math.round(selectedOrdersTotal * 0.75)))}
+                  className="px-2 py-0.5 rounded-lg bg-white hover:bg-indigo-100 border border-indigo-300 text-indigo-800 font-bold cursor-pointer transition shadow-2xs"
+                >
+                  خصم 25% ({Math.round(selectedOrdersTotal * 0.75).toLocaleString()})
                 </button>
               </div>
             </div>
