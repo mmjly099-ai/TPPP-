@@ -193,7 +193,11 @@ interface StoreContextType {
   emptyTrashJournalEntries: () => number;
   restoreAllDeletedJournalEntries: () => number;
   repairAllJournalEntries: () => number;
-  reverseJournalEntry: (id: number, reason?: string) => JournalEntry;
+  reverseJournalEntry: (
+    id: number,
+    reason?: string,
+    options?: { reverseLinkedOperation?: boolean; refundToWallet?: boolean }
+  ) => JournalEntry;
   getCustomerReconciliationReport: () => CustomerReconciliationReport;
   runIntegrityAudit: () => ReturnType<typeof runDataIntegrityTests>;
   
@@ -2716,6 +2720,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       let updatedOrders = prev.tables.orders;
       let updatedPayments = prev.tables.payments;
       let updatedExpenses = prev.tables.expenses;
+      let updatedPurchaseBatches = prev.tables.purchaseBatches || [];
       let updatedTrx = prev.tables.financialTransactions || [];
 
       if (cascadeOptions?.deleteSourceDocument && entry.sourceId != null) {
@@ -2758,6 +2763,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             };
             updatedTrx = [revTrx, ...updatedTrx];
           }
+        } else if (entry.sourceType === 'purchase_batch') {
+          const batch = updatedPurchaseBatches.find(b => b.id === srcId);
+          if (batch) {
+            updatedPurchaseBatches = updatedPurchaseBatches.map(b => (b.id === srcId ? { ...b, status: 'cancelled' as const } : b));
+            const totalCost = (Number(batch.purchaseCost) || 0) + (Number(batch.purchaseFees) || 0) + (Number(batch.transferFees) || 0);
+            const revTrx: FinancialTransaction = {
+              id: Date.now() + 7,
+              transactionNumber: `TRX-DEL-PB-${Date.now().toString().slice(-5)}`,
+              transactionDate: now,
+              accountId: batch.accountId,
+              type: 'deposit',
+              amount: totalCost,
+              description: `استرجاع رصيد لإلغاء وحذف دفعة الشراء #${batch.batchNumber}`,
+              createdAt: now
+            };
+            updatedTrx = [revTrx, ...updatedTrx];
+            if (batch.orderIds?.length) {
+              updatedOrders = updatedOrders.map(o => batch.orderIds!.includes(o.id) ? { ...o, purchaseBatchId: null, status: o.status === 'purchased' ? ('pending' as const) : o.status } : o);
+            }
+          }
         }
       }
 
@@ -2780,6 +2805,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           orders: updatedOrders,
           payments: updatedPayments,
           expenses: updatedExpenses,
+          purchaseBatches: updatedPurchaseBatches,
           financialTransactions: updatedTrx,
           journalEntries: updatedEntries,
           journalLines: syncedLines,
@@ -2846,6 +2872,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       let updatedOrders = prev.tables.orders;
       let updatedPayments = prev.tables.payments;
       let updatedExpenses = prev.tables.expenses;
+      let updatedPurchaseBatches = prev.tables.purchaseBatches || [];
+      let updatedTrx = prev.tables.financialTransactions || [];
+
+      // Clean up reversal transactions added for this entry
+      if (isCurrentlyReversed) {
+        updatedTrx = updatedTrx.filter(t => {
+          if (t.description?.includes(target.entryNumber)) return false;
+          if (target.sourceNumber && t.description?.includes(target.sourceNumber)) return false;
+          return true;
+        });
+      }
+
       if (target.sourceId != null) {
         const srcId = Number(target.sourceId);
         if (target.sourceType === 'order') {
@@ -2859,6 +2897,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         } else if (target.sourceType === 'expense') {
           updatedExpenses = prev.tables.expenses.map(e =>
             e.id === srcId && e.status === 'cancelled' ? { ...e, status: 'active' as const } : e
+          );
+        } else if (target.sourceType === 'purchase_batch') {
+          updatedPurchaseBatches = updatedPurchaseBatches.map(b =>
+            b.id === srcId && b.status === 'cancelled' ? { ...b, status: 'active' as const } : b
           );
         }
       }
@@ -2882,6 +2924,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           orders: updatedOrders,
           payments: updatedPayments,
           expenses: updatedExpenses,
+          purchaseBatches: updatedPurchaseBatches,
+          financialTransactions: updatedTrx,
           journalEntries: updatedEntries,
           journalLines: syncedLines,
           auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
@@ -3092,9 +3136,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return beforeCount;
   };
 
-  const reverseJournalEntry = (id: number, reason?: string) => {
+  const reverseJournalEntry = (
+    id: number,
+    reason?: string,
+    options?: { reverseLinkedOperation?: boolean; refundToWallet?: boolean }
+  ) => {
     const entry = journalEntries.find(j => j.id === id);
     if (!entry) throw new Error('القيد غير موجود');
+
+    const reverseLinkedOp = options?.reverseLinkedOperation !== false;
+    const refundWallet = options?.refundToWallet !== false;
 
     const now = new Date().toISOString();
     const periodCheck = assertFiscalPeriodOpen(now, fiscalPeriods);
@@ -3107,7 +3158,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const revEntryNumber = `JE-REV-${Date.now().toString().slice(-6)}`;
 
     // Flip debit lines to credit, and credit lines to debit
-    const reversedLines: JournalLine[] = entry.lines.map((l, idx) => {
+    const reversedLines: JournalLine[] = (entry.lines || []).map((l, idx) => {
       const newSide = l.side === 'debit' ? 'credit' : 'debit';
       const resolved = resolveChartAccount(l.accountName || '', newSide, l.accountId);
       return {
@@ -3138,7 +3189,210 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       lines: reversedLines
     };
 
+    const refundSummaryMessages: string[] = [];
+
     setData(prev => {
+      const targetSrcId = entry.sourceId != null ? Number(entry.sourceId) : null;
+      const targetSrcNum = entry.sourceNumber || null;
+      const entryDesc = entry.description || '';
+      const entryNum = entry.entryNumber || '';
+
+      let updatedOrders = prev.tables.orders;
+      let updatedPayments = prev.tables.payments;
+      let updatedExpenses = prev.tables.expenses;
+      let updatedPurchaseBatches = prev.tables.purchaseBatches || [];
+      let updatedCampaigns = prev.tables.marketingCampaigns || [];
+      let nextTransactions = [...(prev.tables.financialTransactions || [])];
+      const handledAccounts = new Set<number>();
+
+      // 1. Linked Expense handling (إلغاء المصروف واسترجاع المبلغ للمحفظة فوراً)
+      const isExpenseEntry = entry.sourceType === 'expense' || entryNum.startsWith('JE-EXP-');
+      const linkedExpense = (prev.tables.expenses || []).find(e => {
+        if (targetSrcId && e.id === targetSrcId) return true;
+        if (targetSrcNum && e.expenseNumber === targetSrcNum) return true;
+        if (e.expenseNumber && entryDesc.includes(e.expenseNumber)) return true;
+        if (isExpenseEntry && targetSrcNum && e.expenseNumber?.includes(targetSrcNum)) return true;
+        return false;
+      });
+
+      if (linkedExpense) {
+        if (reverseLinkedOp) {
+          updatedExpenses = updatedExpenses.map(e =>
+            e.id === linkedExpense.id ? { ...e, status: 'cancelled' as const } : e
+          );
+        }
+        if (linkedExpense.campaignId) {
+          updatedCampaigns = updatedCampaigns.map(cmp =>
+            cmp.id === linkedExpense.campaignId
+              ? { ...cmp, actualSpend: Math.max(0, (Number(cmp.actualSpend) || 0) - Number(linkedExpense.amount)) }
+              : cmp
+          );
+        }
+        if (refundWallet) {
+          const expAcc = (prev.tables.accounts || []).find(a => a.id === linkedExpense.accountId);
+          const expRefundTrx: FinancialTransaction = {
+            id: revId + 10,
+            transactionNumber: `TRX-REV-EXP-${Date.now().toString().slice(-5)}`,
+            transactionDate: now,
+            accountId: linkedExpense.accountId,
+            type: 'deposit',
+            amount: Number(linkedExpense.amount) || 0,
+            description: `استرجاع وعكس المبلغ المصروف إلى المحفظة لإلغاء القيد #${entry.entryNumber} (${linkedExpense.expenseNumber})`,
+            expenseId: linkedExpense.id,
+            createdAt: now
+          };
+          nextTransactions = [expRefundTrx, ...nextTransactions];
+          handledAccounts.add(linkedExpense.accountId);
+          refundSummaryMessages.push(`استرجاع ${Number(linkedExpense.amount).toLocaleString()} ريال إلى محفظة (${expAcc?.name || 'المحفظة'})`);
+        }
+      }
+
+      // 2. Linked Purchase Batch handling (إلغاء دفعة الشراء واسترجاع التكلفة بالكامل للمحفظة وتحرير الطلبات)
+      const isPurchaseBatchEntry = entry.sourceType === 'purchase_batch' || entryNum.startsWith('JE-PB-');
+      const linkedBatch = (prev.tables.purchaseBatches || []).find(b => {
+        if (targetSrcId && b.id === targetSrcId) return true;
+        if (targetSrcNum && b.batchNumber === targetSrcNum) return true;
+        if (b.batchNumber && entryDesc.includes(b.batchNumber)) return true;
+        if (isPurchaseBatchEntry && targetSrcNum && b.batchNumber?.includes(targetSrcNum)) return true;
+        return false;
+      });
+
+      if (linkedBatch) {
+        if (reverseLinkedOp) {
+          updatedPurchaseBatches = updatedPurchaseBatches.map(b =>
+            b.id === linkedBatch.id ? { ...b, status: 'cancelled' as const } : b
+          );
+          if (linkedBatch.orderIds && linkedBatch.orderIds.length > 0) {
+            updatedOrders = updatedOrders.map(o => {
+              if (linkedBatch.orderIds!.includes(o.id)) {
+                return {
+                  ...o,
+                  purchaseBatchId: null,
+                  status: o.status === 'purchased' ? ('pending' as const) : o.status
+                };
+              }
+              return o;
+            });
+          }
+        }
+        if (refundWallet) {
+          const batchTotalCost = (Number(linkedBatch.purchaseCost) || 0) + (Number(linkedBatch.purchaseFees) || 0) + (Number(linkedBatch.transferFees) || 0);
+          const batchAcc = (prev.tables.accounts || []).find(a => a.id === linkedBatch.accountId);
+          const batchRefundTrx: FinancialTransaction = {
+            id: revId + 11,
+            transactionNumber: `TRX-REV-PB-${Date.now().toString().slice(-5)}`,
+            transactionDate: now,
+            accountId: linkedBatch.accountId,
+            type: 'deposit',
+            amount: batchTotalCost,
+            description: `استرجاع وعكس تكلفة شراء الدفعة #${linkedBatch.batchNumber} إلى المحفظة لإلغاء القيد #${entry.entryNumber}`,
+            createdAt: now
+          };
+          nextTransactions = [batchRefundTrx, ...nextTransactions];
+          handledAccounts.add(linkedBatch.accountId);
+          refundSummaryMessages.push(`استرجاع تكلفة الشراء ${batchTotalCost.toLocaleString()} ريال إلى (${batchAcc?.name || 'الحساب'})`);
+        }
+      }
+
+      // 3. Linked Payment handling (إلغاء سند القبض وخصم المبلغ من المحفظة المستلمة)
+      const isPaymentEntry = entry.sourceType === 'payment' || entryNum.startsWith('JE-PAY-') || entryNum.startsWith('JE-RCT-');
+      const linkedPayment = (prev.tables.payments || []).find(p => {
+        if (targetSrcId && p.id === targetSrcId) return true;
+        if (targetSrcNum && (p.receiptNumber === targetSrcNum || p.paymentNumber === targetSrcNum)) return true;
+        if (p.receiptNumber && entryDesc.includes(p.receiptNumber)) return true;
+        if (p.paymentNumber && entryDesc.includes(p.paymentNumber)) return true;
+        return false;
+      });
+
+      if (linkedPayment) {
+        if (reverseLinkedOp) {
+          updatedPayments = updatedPayments.map(p =>
+            p.id === linkedPayment.id ? { ...p, status: 'cancelled' as const } : p
+          );
+        }
+        if (refundWallet) {
+          const pmtRefundTrx: FinancialTransaction = {
+            id: revId + 12,
+            transactionNumber: `TRX-REV-PAY-${Date.now().toString().slice(-5)}`,
+            transactionDate: now,
+            accountId: linkedPayment.accountId,
+            type: 'withdrawal',
+            amount: Number(linkedPayment.amount) || 0,
+            description: `خصم وعكس سند القبض #${linkedPayment.receiptNumber || linkedPayment.paymentNumber} لإلغاء القيد #${entry.entryNumber}`,
+            paymentId: linkedPayment.id,
+            createdAt: now
+          };
+          nextTransactions = [pmtRefundTrx, ...nextTransactions];
+          handledAccounts.add(linkedPayment.accountId);
+          refundSummaryMessages.push(`خصم وعكس سند القبض ${Number(linkedPayment.amount).toLocaleString()} ريال من المحفظة`);
+        }
+      }
+
+      // 4. Linked Sales Order handling (إلغاء الطلب)
+      const isOrderEntry = entry.sourceType === 'order' || entryNum.startsWith('JE-ORD-');
+      const linkedOrder = (prev.tables.orders || []).find(o => {
+        if (targetSrcId && o.id === targetSrcId) return true;
+        if (targetSrcNum && o.orderNumber === targetSrcNum) return true;
+        if (o.orderNumber && entryDesc.includes(o.orderNumber)) return true;
+        return false;
+      });
+
+      if (linkedOrder && reverseLinkedOp) {
+        updatedOrders = updatedOrders.map(o =>
+          o.id === linkedOrder.id ? { ...o, status: 'cancelled' as const } : o
+        );
+      }
+
+      // 5. Automatic Cash / Wallet lines reflection for manual entries or any unhandled account lines
+      if (refundWallet) {
+        (entry.lines || []).forEach((line, idx) => {
+          const lineAccId = line.accountId != null ? Number(line.accountId) : null;
+          const resolvedAcc = lineAccId
+            ? (prev.tables.accounts || []).find(a => a.id === lineAccId)
+            : (prev.tables.accounts || []).find(a => a.name.trim() === (line.accountName || '').trim());
+
+          if (resolvedAcc && !handledAccounts.has(resolvedAcc.id)) {
+            const lineAmt = Number(line.amount) || 0;
+            if (lineAmt > 0) {
+              if (line.side === 'credit') {
+                // Original was Credit = Outflow / Expense from Wallet.
+                // Reversal is Debit = Refund money back to the wallet!
+                const autoDepositTrx: FinancialTransaction = {
+                  id: revId + 20 + idx,
+                  transactionNumber: `TRX-REV-DEP-${Date.now().toString().slice(-5)}-${idx}`,
+                  transactionDate: now,
+                  accountId: resolvedAcc.id,
+                  type: 'deposit',
+                  amount: lineAmt,
+                  description: `استرجاع وعكس المبلغ المصروف إلى محفظة (${resolvedAcc.name}) بموجب القيد العكسي #${revEntryNumber}`,
+                  createdAt: now
+                };
+                nextTransactions = [autoDepositTrx, ...nextTransactions];
+                handledAccounts.add(resolvedAcc.id);
+                refundSummaryMessages.push(`استرجاع ${lineAmt.toLocaleString()} ريال إلى محفظة (${resolvedAcc.name})`);
+              } else if (line.side === 'debit') {
+                // Original was Debit = Inflow into Wallet.
+                // Reversal is Credit = Deduct money out from wallet!
+                const autoWithdrawTrx: FinancialTransaction = {
+                  id: revId + 30 + idx,
+                  transactionNumber: `TRX-REV-WTH-${Date.now().toString().slice(-5)}-${idx}`,
+                  transactionDate: now,
+                  accountId: resolvedAcc.id,
+                  type: 'withdrawal',
+                  amount: lineAmt,
+                  description: `خصم وعكس القيد من محفظة (${resolvedAcc.name}) بموجب القيد العكسي #${revEntryNumber}`,
+                  createdAt: now
+                };
+                nextTransactions = [autoWithdrawTrx, ...nextTransactions];
+                handledAccounts.add(resolvedAcc.id);
+                refundSummaryMessages.push(`خصم وعكس ${lineAmt.toLocaleString()} ريال من محفظة (${resolvedAcc.name})`);
+              }
+            }
+          }
+        });
+      }
+
+      // Update journal entries state
       const updatedEntries = prev.tables.journalEntries.map(j => {
         if (j.id === id) {
           return {
@@ -3152,14 +3406,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return j;
       });
 
+      const auditLogDesc = [
+        `إصدار قيد عكسي #${revEntryNumber} لإلغاء القيد #${entry.entryNumber}`,
+        refundSummaryMessages.length > 0 ? `(${refundSummaryMessages.join(' • ')})` : ''
+      ].filter(Boolean).join(' - ');
+
       const auditLog: AuditLog = {
-        id: Date.now(),
+        id: Date.now() + 1,
         createdAt: now,
-        action: 'إصدار قيد عكسي',
+        action: 'إصدار قيد عكسي وعكس العملية والمحفظة',
         performedBy: 'المحاسب المعتمد',
         entityType: 'journalEntry',
         entityId: revId,
-        description: `إصدار قيد عكسي #${revEntryNumber} لإلغاء القيد #${entry.entryNumber}`
+        description: auditLogDesc
       };
 
       const allJournals = [reversalEntry, ...updatedEntries];
@@ -3167,6 +3426,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         ...prev,
         tables: {
           ...prev.tables,
+          orders: updatedOrders,
+          payments: updatedPayments,
+          expenses: updatedExpenses,
+          purchaseBatches: updatedPurchaseBatches,
+          marketingCampaigns: updatedCampaigns,
+          financialTransactions: nextTransactions,
           journalEntries: allJournals,
           journalLines: allJournals.flatMap(e => e.lines || []),
           auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
@@ -3174,7 +3439,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       };
     });
 
-    showNotification(`تم إصدار قيد عكسي #${revEntryNumber} بنجاح. يمكنك استرجاع القيد الأصلي في أي وقت.`, 'success');
+    const notifMsg = refundSummaryMessages.length > 0
+      ? `تم إصدار القيد العكسي #${revEntryNumber} بنجاح: ${refundSummaryMessages.join(' • ')}`
+      : `تم إصدار القيد العكسي #${revEntryNumber} وعكس العملية بالكامل بنجاح.`;
+
+    showNotification(notifMsg, 'success');
     return reversalEntry;
   };
 
@@ -5752,6 +6021,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const je: JournalEntry = {
       id: jeId,
       entryNumber: `JE-PB-${Date.now().toString().slice(-6)}`,
+      sourceType: 'purchase_batch',
+      sourceId: batchId,
+      sourceNumber: batchNumber,
+      status: 'posted',
       description: `شراء بضاعة طلبات من ${batchData.source} - دفعة ${batchNumber}`,
       createdAt: new Date().toISOString(),
       lines: [

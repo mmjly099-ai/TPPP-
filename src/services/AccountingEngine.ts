@@ -908,6 +908,8 @@ export function sanitizeAndReconcileJournalEntries(
       fixedSourceType = 'order';
     } else if (numStr.startsWith('JE-REV-')) {
       fixedSourceType = 'reversal';
+    } else if (numStr.startsWith('JE-PB-')) {
+      fixedSourceType = 'purchase_batch';
     } else if (numStr.startsWith('JE-OPEN-')) {
       fixedSourceType = 'opening_balance';
     }

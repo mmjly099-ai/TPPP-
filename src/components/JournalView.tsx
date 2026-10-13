@@ -36,7 +36,8 @@ import {
   Clock,
   FileCheck,
   Download,
-  CheckSquare
+  CheckSquare,
+  Receipt
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useStore } from '../context/StoreContext';
@@ -54,6 +55,7 @@ export const JournalView: React.FC = () => {
     orders,
     payments,
     expenses,
+    purchaseBatches,
     totalCashAndBanks,
     addJournalEntry,
     updateJournalEntry,
@@ -106,6 +108,8 @@ export const JournalView: React.FC = () => {
   const [isConfirmEmptyTrashOpen, setIsConfirmEmptyTrashOpen] = useState(false);
   const [reversingEntry, setReversingEntry] = useState<JournalEntry | null>(null);
   const [reversalReason, setReversalReason] = useState('إلغاء وتسوية القيد بالكامل');
+  const [reverseOperationOption, setReverseOperationOption] = useState(true);
+  const [refundWalletOption, setRefundWalletOption] = useState(true);
 
   // Deleted & Reversed (Restorable) Entries
   const activeJournalEntries = useMemo(
@@ -2868,47 +2872,218 @@ export const JournalView: React.FC = () => {
       {/* ============================================================== */}
       {/* MODAL 4: REVERSE JOURNAL ENTRY (عكس القيد المحاسبي)              */}
       {/* ============================================================== */}
-      {reversingEntry && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
-            <div className="flex items-center gap-3 text-purple-600">
-              <RotateCcw className="w-6 h-6" />
-              <div>
-                <h3 className="text-base font-bold text-slate-900">إصدار قيد عكسي للتسوية (Storno)</h3>
-                <p className="text-xs text-slate-500">عكس أطراف القيد الأصلي لإلغاء أثره المالي رسمياً</p>
+      {reversingEntry && (() => {
+        const targetSrcId = reversingEntry.sourceId != null ? Number(reversingEntry.sourceId) : null;
+        const targetSrcNum = reversingEntry.sourceNumber || null;
+        const entryDesc = reversingEntry.description || '';
+        const entryNum = reversingEntry.entryNumber || '';
+
+        const linkedExpense = expenses.find(e => {
+          if (targetSrcId && e.id === targetSrcId) return true;
+          if (targetSrcNum && e.expenseNumber === targetSrcNum) return true;
+          if (e.expenseNumber && entryDesc.includes(e.expenseNumber)) return true;
+          if (entryNum.startsWith('JE-EXP-') && targetSrcNum && e.expenseNumber?.includes(targetSrcNum)) return true;
+          return false;
+        });
+
+        const linkedBatch = (purchaseBatches || []).find(b => {
+          if (targetSrcId && b.id === targetSrcId) return true;
+          if (targetSrcNum && b.batchNumber === targetSrcNum) return true;
+          if (b.batchNumber && entryDesc.includes(b.batchNumber)) return true;
+          if (entryNum.startsWith('JE-PB-') && targetSrcNum && b.batchNumber?.includes(targetSrcNum)) return true;
+          return false;
+        });
+
+        const linkedPayment = payments.find(p => {
+          if (targetSrcId && p.id === targetSrcId) return true;
+          if (targetSrcNum && (p.receiptNumber === targetSrcNum || p.paymentNumber === targetSrcNum)) return true;
+          if (p.receiptNumber && entryDesc.includes(p.receiptNumber)) return true;
+          if (p.paymentNumber && entryDesc.includes(p.paymentNumber)) return true;
+          return false;
+        });
+
+        const linkedOrder = orders.find(o => {
+          if (targetSrcId && o.id === targetSrcId) return true;
+          if (targetSrcNum && o.orderNumber === targetSrcNum) return true;
+          if (o.orderNumber && entryDesc.includes(o.orderNumber)) return true;
+          return false;
+        });
+
+        const accountLines = (reversingEntry.lines || []).filter(l => {
+          return l.accountId != null || accounts.some(a => a.name.trim() === (l.accountName || '').trim());
+        });
+
+        return (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center gap-3 text-purple-600">
+                <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                  <RotateCcw className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">إصدار قيد عكسي للتسوية (Storno Reversal)</h3>
+                  <p className="text-xs text-slate-500">عكس أطراف القيد الأصلي وإلغاء أثره المالي وإرجاع المبالغ للمحافظ</p>
+                </div>
+              </div>
+
+              {/* Target Entry Summary */}
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs space-y-1">
+                <div className="flex items-center justify-between text-slate-700">
+                  <span className="font-bold">القيد المستهدف:</span>
+                  <span className="font-mono font-bold text-slate-900">#{reversingEntry.entryNumber}</span>
+                </div>
+                <div className="text-slate-600 text-[11px] line-clamp-2">
+                  {reversingEntry.description}
+                </div>
+              </div>
+
+              {/* Linked Operation Preview Card */}
+              {linkedExpense && (
+                <div className="p-3 bg-rose-50/70 border border-rose-200 rounded-xl text-xs space-y-1.5">
+                  <div className="flex items-center justify-between text-rose-900 font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <Receipt className="w-4 h-4 text-rose-600" />
+                      سند صرف / مصروف مرتبط: #{linkedExpense.expenseNumber}
+                    </span>
+                    <span className="font-mono text-sm text-rose-700 font-bold">
+                      {Number(linkedExpense.amount).toLocaleString()} ريال
+                    </span>
+                  </div>
+                  <p className="text-slate-600 text-[11px]">
+                    التصنيف: <strong className="text-slate-800">{linkedExpense.category}</strong> • الحساب الدافع: <strong className="text-slate-800">{accounts.find(a => a.id === linkedExpense.accountId)?.name || 'المحفظة'}</strong>
+                  </p>
+                  <div className="flex items-center gap-1.5 text-emerald-700 font-bold text-[11px] pt-1 border-t border-rose-200/50">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>سيتم إلغاء المصروف وإيداع المبلغ فوراً إلى المحفظة لإرجاع الرصيد بالكامل</span>
+                  </div>
+                </div>
+              )}
+
+              {linkedBatch && (
+                <div className="p-3 bg-indigo-50/70 border border-indigo-200 rounded-xl text-xs space-y-1.5">
+                  <div className="flex items-center justify-between text-indigo-900 font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <Layers className="w-4 h-4 text-indigo-600" />
+                      دفعة مشتريات جماعية: #{linkedBatch.batchNumber}
+                    </span>
+                    <span className="font-mono text-sm text-indigo-700 font-bold">
+                      {Number(linkedBatch.totalCost).toLocaleString()} ريال
+                    </span>
+                  </div>
+                  <p className="text-slate-600 text-[11px]">
+                    المصدر: <strong className="text-slate-800">{linkedBatch.source}</strong> • الحساب: <strong className="text-slate-800">{linkedBatch.accountName || 'البنك / المحفظة'}</strong> • طلبات: <strong className="text-slate-800">{linkedBatch.orderIds?.length || 0} طلبات</strong>
+                  </p>
+                  <div className="flex items-center gap-1.5 text-emerald-700 font-bold text-[11px] pt-1 border-t border-indigo-200/50">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>سيتم إلغاء دفعة الشراء واسترجاع التكلفة بالكامل للمحفظة وإعادة الطلبات للانتظار</span>
+                  </div>
+                </div>
+              )}
+
+              {linkedPayment && (
+                <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl text-xs space-y-1.5">
+                  <div className="flex items-center justify-between text-emerald-900 font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <DollarSign className="w-4 h-4 text-emerald-600" />
+                      سند قبض مرتبط: #{linkedPayment.receiptNumber || linkedPayment.paymentNumber}
+                    </span>
+                    <span className="font-mono text-sm text-emerald-700 font-bold">
+                      {Number(linkedPayment.amount).toLocaleString()} ريال
+                    </span>
+                  </div>
+                  <p className="text-slate-600 text-[11px]">
+                    العميل: <strong className="text-slate-800">{customers.find(c => c.id === linkedPayment.customerId)?.name || 'عميل'}</strong> • المحفظة: <strong className="text-slate-800">{accounts.find(a => a.id === linkedPayment.accountId)?.name || 'المحفظة'}</strong>
+                  </p>
+                  <div className="flex items-center gap-1.5 text-purple-700 font-bold text-[11px] pt-1 border-t border-emerald-200/50">
+                    <CheckCircle className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                    <span>سيتم إلغاء سند القبض وخصم المبلغ من المحفظة وإعادة إثبات مديونية العميل</span>
+                  </div>
+                </div>
+              )}
+
+              {linkedOrder && (
+                <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl text-xs space-y-1.5">
+                  <div className="flex items-center justify-between text-blue-900 font-bold">
+                    <span>طلب مبيعات مرتبط: #{linkedOrder.orderNumber}</span>
+                    <span className="font-mono text-sm text-blue-700 font-bold">{Number(linkedOrder.totalAmount).toLocaleString()} ريال</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-purple-700 font-bold text-[11px] pt-1 border-t border-blue-200/50">
+                    <CheckCircle className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                    <span>سيتم إلغاء طلب المبيعات وتعديل رصيد العميل تلقائياً</span>
+                  </div>
+                </div>
+              )}
+
+              {!linkedExpense && !linkedBatch && !linkedPayment && !linkedOrder && accountLines.length > 0 && (
+                <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-xs space-y-1.5">
+                  <div className="flex items-center gap-1.5 font-bold text-amber-900">
+                    <Wallet className="w-4 h-4 text-amber-600" />
+                    <span>حسابات نقدية ومحافظ متأثرة بالقيد ({accountLines.length})</span>
+                  </div>
+                  <p className="text-slate-600 text-[11px]">
+                    سيتم استرجاع أي مبالغ تم صرفها من المحفظة تلقائياً عبر حركة نقدية عكسية لضمان تطابق الأرصدة 100%.
+                  </p>
+                </div>
+              )}
+
+              {/* Options */}
+              <div className="space-y-2 pt-1 border-t border-slate-100">
+                <label className="flex items-center gap-2 text-xs font-bold text-slate-800 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={reverseOperationOption}
+                    onChange={e => setReverseOperationOption(e.target.checked)}
+                    className="rounded text-purple-600 cursor-pointer"
+                  />
+                  <span>عكس وإلغاء العملية المرتبطة في النظام (مصروف / دفعة شراء / سند) تلقائياً</span>
+                </label>
+                <label className="flex items-center gap-2 text-xs font-bold text-slate-800 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={refundWalletOption}
+                    onChange={e => setRefundWalletOption(e.target.checked)}
+                    className="rounded text-purple-600 cursor-pointer"
+                  />
+                  <span>استرجاع وعكس المبلغ المصروف فوراً إلى رصيد المحفظة / الحساب البنكي</span>
+                </label>
+              </div>
+
+              {/* Reversal Reason */}
+              <div className="space-y-1.5 text-xs">
+                <label className="font-bold text-slate-700">سبب عكس القيد:</label>
+                <input
+                  type="text"
+                  value={reversalReason}
+                  onChange={e => setReversalReason(e.target.value)}
+                  className="w-full border border-slate-200 rounded-lg p-2.5 text-xs focus:outline-hidden focus:border-purple-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  onClick={() => setReversingEntry(null)}
+                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+                >
+                  إلغاء
+                </button>
+                <button
+                  onClick={() => {
+                    reverseJournalEntry(reversingEntry.id, reversalReason, {
+                      reverseLinkedOperation: reverseOperationOption,
+                      refundToWallet: refundWalletOption
+                    });
+                    setReversingEntry(null);
+                  }}
+                  className="px-4 py-2 text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition shadow-xs cursor-pointer flex items-center gap-1.5"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>تأكيد عكس القيد والمحفظة والعملية</span>
+                </button>
               </div>
             </div>
-
-            <div className="space-y-2 text-xs">
-              <label className="font-bold text-slate-700">سبب عكس القيد:</label>
-              <input
-                type="text"
-                value={reversalReason}
-                onChange={e => setReversalReason(e.target.value)}
-                className="w-full border border-slate-200 rounded-lg p-2.5 text-xs focus:outline-hidden focus:border-purple-500"
-              />
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-              <button
-                onClick={() => setReversingEntry(null)}
-                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
-              >
-                إلغاء
-              </button>
-              <button
-                onClick={() => {
-                  reverseJournalEntry(reversingEntry.id, reversalReason);
-                  setReversingEntry(null);
-                }}
-                className="px-4 py-2 text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition shadow-xs cursor-pointer"
-              >
-                تأكيد إنشاء القيد العكسي
-              </button>
-            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ============================================================== */}
       {/* MODAL 5: ADD / EDIT CHART ACCOUNT (إضافة أو تعديل حساب)        */}
