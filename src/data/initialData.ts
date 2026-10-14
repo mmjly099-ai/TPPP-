@@ -1232,7 +1232,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "totalAmount": 3200,
         "paidAmount": 1500,
         "remainingAmount": 1700,
-        "createdAt": "2026-10-06T21:18:07.809Z"
+        "createdAt": "2026-10-06T21:18:07.809Z",
+        "internalNumber": "3"
       },
       {
         "orderNumber": "8",
@@ -1255,7 +1256,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "totalAmount": 1700,
         "paidAmount": 0,
         "remainingAmount": 1700,
-        "createdAt": "2026-10-03T22:11:55.779Z"
+        "createdAt": "2026-10-03T22:11:55.779Z",
+        "internalNumber": "8"
       },
       {
         "orderNumber": "3",
@@ -1279,11 +1281,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "totalAmount": 16200,
         "paidAmount": 5000,
         "remainingAmount": 11200,
-        "createdAt": "2026-10-03T22:10:43.530Z"
+        "createdAt": "2026-10-03T22:10:43.530Z",
+        "internalNumber": "3"
       },
       {
-        "orderNumber": "1 ",
-        "customerOrderNumber": "1  1",
+        "orderNumber": "1",
+        "customerOrderNumber": "1",
         "customerId": 1790722738088,
         "site": "SHEIN",
         "itemsCount": 21,
@@ -1304,7 +1307,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paidAmount": 63700,
         "remainingAmount": 13400,
         "createdAt": "2026-10-03T22:06:56.031Z",
-        "purchaseBatchId": null
+        "purchaseBatchId": null,
+        "internalNumber": "1"
       },
       {
         "orderNumber": "1",
@@ -1327,7 +1331,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "totalAmount": 1300,
         "paidAmount": 700,
         "remainingAmount": 600,
-        "createdAt": "2026-10-03T21:28:54.600Z"
+        "createdAt": "2026-10-03T21:28:54.600Z",
+        "internalNumber": "1"
       },
       {
         "orderNumber": "1",
@@ -1351,7 +1356,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "totalAmount": 15300,
         "paidAmount": 7500,
         "remainingAmount": 7800,
-        "createdAt": "2026-09-30T17:08:10.764Z"
+        "createdAt": "2026-09-30T17:08:10.764Z",
+        "internalNumber": "1"
       },
       {
         "orderNumber": "2",
@@ -1374,7 +1380,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "totalAmount": 18200,
         "paidAmount": 5000,
         "remainingAmount": 13200,
-        "createdAt": "2026-09-30T17:04:17.086Z"
+        "createdAt": "2026-09-30T17:04:17.086Z",
+        "internalNumber": "2"
       },
       {
         "orderNumber": "10",
@@ -1397,7 +1404,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "totalAmount": 34000,
         "paidAmount": 17000,
         "remainingAmount": 17000,
-        "createdAt": "2026-09-30T17:01:44.173Z"
+        "createdAt": "2026-09-30T17:01:44.173Z",
+        "internalNumber": "10"
       },
       {
         "orderNumber": "7",
@@ -1420,7 +1428,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "totalAmount": 42600,
         "paidAmount": 20000,
         "remainingAmount": 22600,
-        "createdAt": "2026-09-30T17:00:31.068Z"
+        "createdAt": "2026-09-30T17:00:31.068Z",
+        "internalNumber": "7"
       },
       {
         "orderNumber": "8",
@@ -1443,7 +1452,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "totalAmount": 16100,
         "paidAmount": 6000,
         "remainingAmount": 10100,
-        "createdAt": "2026-09-30T16:58:57.842Z"
+        "createdAt": "2026-09-30T16:58:57.842Z",
+        "internalNumber": "8"
       },
       {
         "orderNumber": "6",
@@ -1466,7 +1476,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "totalAmount": 53700,
         "paidAmount": 5000,
         "remainingAmount": 48700,
-        "createdAt": "2026-09-30T16:57:00.527Z"
+        "createdAt": "2026-09-30T16:57:00.527Z",
+        "internalNumber": "6"
       },
       {
         "orderNumber": "10",
@@ -1489,7 +1500,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "totalAmount": 5100,
         "paidAmount": 3000,
         "remainingAmount": 2100,
-        "createdAt": "2026-09-30T15:20:04.211Z"
+        "createdAt": "2026-09-30T15:20:04.211Z",
+        "internalNumber": "10"
       },
       {
         "orderNumber": "1",
@@ -1512,13 +1524,14 @@ export const INITIAL_DATA: TopStoreBackup = {
         "totalAmount": 7400,
         "paidAmount": 4000,
         "remainingAmount": 3400,
-        "createdAt": "2026-09-30T15:18:27.794Z"
+        "createdAt": "2026-09-30T15:18:27.794Z",
+        "internalNumber": "1"
       },
       {
         "id": 330001,
-        "internalNumber": "ORD-8041948865-7116",
+        "internalNumber": "7",
         "customerId": 510004,
-        "customerOrderNumber": 7,
+        "customerOrderNumber": "7",
         "orderDate": "2026-08-30T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 1000,
@@ -1533,19 +1546,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "22700.00",
         "status": "pending",
         "paymentStatus": "partial",
-        "orderNumber": "ORD-8041948865-7116",
+        "orderNumber": "7",
         "site": "SHEIN",
         "totalAmount": 46500,
         "paidAmount": 22700,
         "remainingAmount": 23800,
         "deliveryFee": 1000,
-        "createdAt": "2026-08-29T22:19:08.000Z"
+        "createdAt": "2026-08-29T22:19:08.000Z",
+        "customerName": "محمد جميل محمد مطر",
+        "customerCode": "TOP 014"
       },
       {
         "id": 390001,
-        "internalNumber": "ORD-8052070896-8879",
+        "internalNumber": "1",
         "customerId": 660001,
-        "customerOrderNumber": 1,
+        "customerOrderNumber": "1",
         "orderDate": "2026-08-29T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -1560,19 +1575,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "20000.00",
         "status": "pending",
         "paymentStatus": "partial",
-        "orderNumber": "ORD-8052070896-8879",
+        "orderNumber": "1",
         "site": "SHEIN",
         "totalAmount": 21200,
         "paidAmount": 20000,
         "remainingAmount": 1200,
         "deliveryFee": 0,
-        "createdAt": "2026-08-30T01:07:50.000Z"
+        "createdAt": "2026-08-30T01:07:50.000Z",
+        "customerName": "زينب علي محمد إبراهيم دلواح",
+        "customerCode": "TOP 024"
       },
       {
         "id": 420001,
-        "internalNumber": "ORD-8125147413-6225",
+        "internalNumber": "3",
         "customerId": 690002,
-        "customerOrderNumber": 3,
+        "customerOrderNumber": "3",
         "orderDate": "2026-08-30T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 1000,
@@ -1588,19 +1605,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "status": "pending",
         "paymentStatus": "partial",
         "notes": "تم إرسال الحواله من مونجرام ",
-        "orderNumber": "ORD-8125147413-6225",
+        "orderNumber": "3",
         "site": "SHEIN",
         "totalAmount": 59700,
         "paidAmount": 52400,
         "remainingAmount": 7300,
         "deliveryFee": 1000,
-        "createdAt": "2026-08-30T21:25:47.000Z"
+        "createdAt": "2026-08-30T21:25:47.000Z",
+        "customerName": "امةالله محسن عبداللة عبدالجليل",
+        "customerCode": "TOP 025"
       },
       {
         "id": 450001,
-        "internalNumber": "ORD-8215695728-5855",
+        "internalNumber": "6",
         "customerId": 720001,
-        "customerOrderNumber": 6,
+        "customerOrderNumber": "6",
         "orderDate": "2026-09-01T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -1614,19 +1633,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "0.00",
         "status": "pending",
         "paymentStatus": "unpaid",
-        "orderNumber": "ORD-8215695728-5855",
+        "orderNumber": "6",
         "site": "SHEIN",
         "totalAmount": 4000,
         "paidAmount": 0,
         "remainingAmount": 4000,
         "deliveryFee": 0,
-        "createdAt": "2026-08-31T22:34:55.000Z"
+        "createdAt": "2026-08-31T22:34:55.000Z",
+        "customerName": "مرام محمد كشيع سالم",
+        "customerCode": "TOP 026"
       },
       {
         "id": 480001,
-        "internalNumber": "ORD-8215823439-5531",
+        "internalNumber": "2",
         "customerId": 540004,
-        "customerOrderNumber": 2,
+        "customerOrderNumber": "2",
         "orderDate": "2026-09-01T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -1640,19 +1661,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "15900.00",
         "status": "pending",
         "paymentStatus": "paid",
-        "orderNumber": "ORD-8215823439-5531",
+        "orderNumber": "2",
         "site": "SHEIN",
         "totalAmount": 15900,
         "paidAmount": 15900,
         "remainingAmount": 0,
         "deliveryFee": 0,
-        "createdAt": "2026-08-31T22:37:03.000Z"
+        "createdAt": "2026-08-31T22:37:03.000Z",
+        "customerName": "مرام عبد الجبار السريحي",
+        "customerCode": "TOP 018"
       },
       {
         "id": 510001,
-        "internalNumber": "ORD-8216013927-9760",
+        "internalNumber": "2",
         "customerId": 750001,
-        "customerOrderNumber": 2,
+        "customerOrderNumber": "2",
         "orderDate": "2026-09-01T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -1666,19 +1689,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "13300.00",
         "status": "pending",
         "paymentStatus": "paid",
-        "orderNumber": "ORD-8216013927-9760",
+        "orderNumber": "2",
         "site": "SHEIN",
         "totalAmount": 13300,
         "paidAmount": 13300,
         "remainingAmount": 0,
         "deliveryFee": 0,
-        "createdAt": "2026-08-31T22:40:13.000Z"
+        "createdAt": "2026-08-31T22:40:13.000Z",
+        "customerName": "غانم علي محمد  الشاذلي",
+        "customerCode": "TOP 027"
       },
       {
         "id": 540001,
-        "internalNumber": "ORD-8478999795-0814",
+        "internalNumber": "8",
         "customerId": 510004,
-        "customerOrderNumber": 8,
+        "customerOrderNumber": "8",
         "orderDate": "2026-09-02T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -1692,19 +1717,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "22800.00",
         "status": "pending",
         "paymentStatus": "paid",
-        "orderNumber": "ORD-8478999795-0814",
+        "orderNumber": "8",
         "site": "SHEIN",
         "totalAmount": 22800,
         "paidAmount": 22800,
         "remainingAmount": 0,
         "deliveryFee": 0,
-        "createdAt": "2026-09-03T23:43:19.000Z"
+        "createdAt": "2026-09-03T23:43:19.000Z",
+        "customerName": "محمد جميل محمد مطر",
+        "customerCode": "TOP 014"
       },
       {
         "id": 540002,
-        "internalNumber": "ORD-8479144746-3923",
+        "internalNumber": "4",
         "customerId": 690002,
-        "customerOrderNumber": 4,
+        "customerOrderNumber": "4",
         "orderDate": "2026-09-02T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -1718,19 +1745,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "0.00",
         "status": "pending",
         "paymentStatus": "unpaid",
-        "orderNumber": "ORD-8479144746-3923",
+        "orderNumber": "4",
         "site": "SHEIN",
         "totalAmount": 1700,
         "paidAmount": 0,
         "remainingAmount": 1700,
         "deliveryFee": 0,
-        "createdAt": "2026-09-03T23:45:44.000Z"
+        "createdAt": "2026-09-03T23:45:44.000Z",
+        "customerName": "امةالله محسن عبداللة عبدالجليل",
+        "customerCode": "TOP 025"
       },
       {
         "id": 600002,
-        "internalNumber": "ORD-8658159317-4172",
+        "internalNumber": "11",
         "customerId": 630001,
-        "customerOrderNumber": 11,
+        "customerOrderNumber": "11",
         "orderDate": "2026-09-05T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -1744,19 +1773,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "3000.00",
         "status": "pending",
         "paymentStatus": "partial",
-        "orderNumber": "ORD-8658159317-4172",
+        "orderNumber": "11",
         "site": "SHEIN",
         "totalAmount": 18400,
         "paidAmount": 3000,
         "remainingAmount": 15400,
         "deliveryFee": 0,
-        "createdAt": "2026-09-06T01:29:19.000Z"
+        "createdAt": "2026-09-06T01:29:19.000Z",
+        "customerName": "ام عبد الوهاب",
+        "customerCode": "TOP 022"
       },
       {
         "id": 630001,
-        "internalNumber": "ORD-8658997531-0903",
+        "internalNumber": "4",
         "customerId": 870002,
-        "customerOrderNumber": 4,
+        "customerOrderNumber": "4",
         "orderDate": "2026-09-04T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -1770,19 +1801,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "10000.00",
         "status": "pending",
         "paymentStatus": "partial",
-        "orderNumber": "ORD-8658997531-0903",
+        "orderNumber": "4",
         "site": "SHEIN",
         "totalAmount": 32600,
         "paidAmount": 10000,
         "remainingAmount": 22600,
         "deliveryFee": 0,
-        "createdAt": "2026-09-06T01:43:17.000Z"
+        "createdAt": "2026-09-06T01:43:17.000Z",
+        "customerName": "حنان علي محمد القاسمي",
+        "customerCode": "TOP 028"
       },
       {
         "id": 660001,
-        "internalNumber": "ORD-8659131406-8563",
+        "internalNumber": "2",
         "customerId": 870003,
-        "customerOrderNumber": 2,
+        "customerOrderNumber": "2",
         "orderDate": "2026-09-04T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -1796,19 +1829,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "0.00",
         "status": "pending",
         "paymentStatus": "unpaid",
-        "orderNumber": "ORD-8659131406-8563",
+        "orderNumber": "2",
         "site": "SHEIN",
         "totalAmount": 15400,
         "paidAmount": 0,
         "remainingAmount": 15400,
         "deliveryFee": 0,
-        "createdAt": "2026-09-06T01:45:31.000Z"
+        "createdAt": "2026-09-06T01:45:31.000Z",
+        "customerName": "علي علي محسن سعود",
+        "customerCode": "TOP 029"
       },
       {
         "id": 660002,
-        "internalNumber": "ORD-8659372115-7541",
+        "internalNumber": "2",
         "customerId": 900001,
-        "customerOrderNumber": 2,
+        "customerOrderNumber": "2",
         "orderDate": "2026-09-05T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -1822,7 +1857,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "10000.00",
         "status": "pending",
         "paymentStatus": "partial",
-        "orderNumber": 2,
+        "orderNumber": "2",
         "site": "SHEIN",
         "totalAmount": 29200,
         "paidAmount": 10000,
@@ -1837,9 +1872,9 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 660003,
-        "internalNumber": "ORD-8659579189-7521",
+        "internalNumber": "6",
         "customerId": 600002,
-        "customerOrderNumber": 6,
+        "customerOrderNumber": "6",
         "orderDate": "2026-09-06T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -1853,19 +1888,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "0.00",
         "status": "pending",
         "paymentStatus": "unpaid",
-        "orderNumber": "ORD-8659579189-7521",
+        "orderNumber": "6",
         "site": "SHEIN",
         "totalAmount": 70300,
         "paidAmount": 0,
         "remainingAmount": 70300,
         "deliveryFee": 0,
-        "createdAt": "2026-09-06T01:52:59.000Z"
+        "createdAt": "2026-09-06T01:52:59.000Z",
+        "customerName": "نورا سلطان الصلاحي",
+        "customerCode": "TOP 021"
       },
       {
         "id": 690001,
-        "internalNumber": "ORD-8659788749-3974",
+        "internalNumber": "2",
         "customerId": 900002,
-        "customerOrderNumber": 2,
+        "customerOrderNumber": "2",
         "orderDate": "2026-09-06T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -1879,19 +1916,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "15000.00",
         "status": "pending",
         "paymentStatus": "partial",
-        "orderNumber": "ORD-8659788749-3974",
+        "orderNumber": "2",
         "site": "SHEIN",
         "totalAmount": 25400,
         "paidAmount": 15000,
         "remainingAmount": 10400,
         "deliveryFee": 0,
-        "createdAt": "2026-09-06T01:56:28.000Z"
+        "createdAt": "2026-09-06T01:56:28.000Z",
+        "customerName": "اشجان إدريس احمد القدسي",
+        "customerCode": "TOP 031"
       },
       {
         "id": 720001,
-        "internalNumber": "ORD-8738044243-8007",
+        "internalNumber": "3",
         "customerId": 900002,
-        "customerOrderNumber": 3,
+        "customerOrderNumber": "3",
         "orderDate": "2026-09-07T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -1905,19 +1944,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "0.00",
         "status": "pending",
         "paymentStatus": "unpaid",
-        "orderNumber": "ORD-8738044243-8007",
+        "orderNumber": "3",
         "site": "SHEIN",
         "totalAmount": 2900,
         "paidAmount": 0,
         "remainingAmount": 2900,
         "deliveryFee": 0,
-        "createdAt": "2026-09-06T23:40:44.000Z"
+        "createdAt": "2026-09-06T23:40:44.000Z",
+        "customerName": "اشجان إدريس احمد القدسي",
+        "customerCode": "TOP 031"
       },
       {
         "id": 750001,
-        "internalNumber": "ORD-9264773077-0952",
+        "internalNumber": "3",
         "customerId": 900001,
-        "customerOrderNumber": 3,
+        "customerOrderNumber": "3",
         "orderDate": "2026-09-10T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -1931,19 +1972,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "20000.00",
         "status": "pending",
         "paymentStatus": "partial",
-        "orderNumber": "ORD-9264773077-0952",
+        "orderNumber": "3",
         "site": "SHEIN",
         "totalAmount": 72600,
         "paidAmount": 20000,
         "remainingAmount": 52600,
         "deliveryFee": 0,
-        "createdAt": "2026-09-13T01:59:33.000Z"
+        "createdAt": "2026-09-13T01:59:33.000Z",
+        "customerName": "بيت الحلحلي",
+        "customerCode": "TOP 030"
       },
       {
         "id": 750002,
-        "internalNumber": "ORD-9264866299-8228",
+        "internalNumber": "5",
         "customerId": 690002,
-        "customerOrderNumber": 5,
+        "customerOrderNumber": "5",
         "orderDate": "2026-09-12T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -1957,19 +2000,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "0.00",
         "status": "pending",
         "paymentStatus": "unpaid",
-        "orderNumber": "ORD-9264866299-8228",
+        "orderNumber": "5",
         "site": "SHEIN",
         "totalAmount": 26500,
         "paidAmount": 0,
         "remainingAmount": 26500,
         "deliveryFee": 0,
-        "createdAt": "2026-09-13T02:01:06.000Z"
+        "createdAt": "2026-09-13T02:01:06.000Z",
+        "customerName": "امةالله محسن عبداللة عبدالجليل",
+        "customerCode": "TOP 025"
       },
       {
         "id": 780001,
-        "internalNumber": "ORD-9434591419-3717",
+        "internalNumber": "3",
         "customerId": 600001,
-        "customerOrderNumber": 3,
+        "customerOrderNumber": "3",
         "orderDate": "2026-09-15T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -1983,19 +2028,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "35000.00",
         "status": "pending",
         "paymentStatus": "partial",
-        "orderNumber": "ORD-9434591419-3717",
+        "orderNumber": "3",
         "site": "SHEIN",
         "totalAmount": 118400,
         "paidAmount": 35000,
         "remainingAmount": 83400,
         "deliveryFee": 0,
-        "createdAt": "2026-09-15T01:09:51.000Z"
+        "createdAt": "2026-09-15T01:09:51.000Z",
+        "customerName": "حنان علي محسن النجار",
+        "customerCode": "TOP 020"
       },
       {
         "id": 780002,
-        "internalNumber": "ORD-9434660277-0383",
+        "internalNumber": "9",
         "customerId": 510004,
-        "customerOrderNumber": 9,
+        "customerOrderNumber": "9",
         "orderDate": "2026-09-15T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -2010,7 +2057,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "7000.00",
         "status": "pending",
         "paymentStatus": "partial",
-        "orderNumber": "ORD-9434660277-0383",
+        "orderNumber": "9",
         "site": "SHEIN",
         "totalAmount": 14100,
         "paidAmount": 14100,
@@ -2019,13 +2066,15 @@ export const INITIAL_DATA: TopStoreBackup = {
         "deliverySettlementStatus": "collected_then_paid",
         "deliveryPaymentMethod": "cash",
         "deliverySettledAt": "2026-10-04T20:56:49.053Z",
-        "createdAt": "2026-09-15T01:11:00.000Z"
+        "createdAt": "2026-09-15T01:11:00.000Z",
+        "customerName": "محمد جميل محمد مطر",
+        "customerCode": "TOP 014"
       },
       {
         "id": 810001,
-        "internalNumber": "ORD-9855273358-7418",
+        "internalNumber": "7",
         "customerId": 720001,
-        "customerOrderNumber": 7,
+        "customerOrderNumber": "7",
         "orderDate": "2026-09-17T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -2039,19 +2088,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "0.00",
         "status": "pending",
         "paymentStatus": "unpaid",
-        "orderNumber": "ORD-9855273358-7418",
+        "orderNumber": "7",
         "site": "SHEIN",
         "totalAmount": 54700,
         "paidAmount": 0,
         "remainingAmount": 54700,
         "deliveryFee": 0,
-        "createdAt": "2026-09-19T22:01:13.000Z"
+        "createdAt": "2026-09-19T22:01:13.000Z",
+        "customerName": "مرام محمد كشيع سالم",
+        "customerCode": "TOP 026"
       },
       {
         "id": 810002,
-        "internalNumber": "ORD-9855332935-0526",
+        "internalNumber": "6",
         "customerId": 690002,
-        "customerOrderNumber": 6,
+        "customerOrderNumber": "6",
         "orderDate": "2026-09-18T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -2065,19 +2116,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "0.00",
         "status": "pending",
         "paymentStatus": "unpaid",
-        "orderNumber": "ORD-9855332935-0526",
+        "orderNumber": "6",
         "site": "SHEIN",
         "totalAmount": 2800,
         "paidAmount": 0,
         "remainingAmount": 2800,
         "deliveryFee": 0,
-        "createdAt": "2026-09-19T22:02:12.000Z"
+        "createdAt": "2026-09-19T22:02:12.000Z",
+        "customerName": "امةالله محسن عبداللة عبدالجليل",
+        "customerCode": "TOP 025"
       },
       {
         "id": 810003,
-        "internalNumber": "ORD-9855459958-3555",
+        "internalNumber": "8",
         "customerId": 720001,
-        "customerOrderNumber": 8,
+        "customerOrderNumber": "8",
         "orderDate": "2026-09-18T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -2091,19 +2144,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "0.00",
         "status": "pending",
         "paymentStatus": "unpaid",
-        "orderNumber": "ORD-9855459958-3555",
+        "orderNumber": "8",
         "site": "SHEIN",
         "totalAmount": 22700,
         "paidAmount": 0,
         "remainingAmount": 22700,
         "deliveryFee": 0,
-        "createdAt": "2026-09-19T22:04:20.000Z"
+        "createdAt": "2026-09-19T22:04:20.000Z",
+        "customerName": "مرام محمد كشيع سالم",
+        "customerCode": "TOP 026"
       },
       {
         "id": 810004,
-        "internalNumber": "ORD-9855566316-4922",
+        "internalNumber": "1",
         "customerId": 1020002,
-        "customerOrderNumber": 1,
+        "customerOrderNumber": "1",
         "orderDate": "2026-09-18T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -2117,19 +2172,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "0.00",
         "status": "pending",
         "paymentStatus": "unpaid",
-        "orderNumber": "ORD-9855566316-4922",
+        "orderNumber": "1",
         "site": "SHEIN",
         "totalAmount": 7200,
         "paidAmount": 0,
         "remainingAmount": 7200,
         "deliveryFee": 0,
-        "createdAt": "2026-09-19T22:06:06.000Z"
+        "createdAt": "2026-09-19T22:06:06.000Z",
+        "customerName": "احمد تمام",
+        "customerCode": "TOP 036"
       },
       {
         "id": 840001,
-        "internalNumber": "ORD-9855741062-1465",
+        "internalNumber": "3",
         "customerId": 540004,
-        "customerOrderNumber": 3,
+        "customerOrderNumber": "3",
         "orderDate": "2026-09-18T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -2144,19 +2201,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "status": "pending",
         "paymentStatus": "unpaid",
         "notes": "بدل القطعه المخلصه",
-        "orderNumber": "ORD-9855741062-1465",
+        "orderNumber": "3",
         "site": "SHEIN",
         "totalAmount": 3400,
         "paidAmount": 0,
         "remainingAmount": 3400,
         "deliveryFee": 0,
-        "createdAt": "2026-09-19T22:09:01.000Z"
+        "createdAt": "2026-09-19T22:09:01.000Z",
+        "customerName": "مرام عبد الجبار السريحي",
+        "customerCode": "TOP 018"
       },
       {
         "id": 870001,
-        "internalNumber": "ORD-9950408882-3993",
+        "internalNumber": "1",
         "customerId": 1050001,
-        "customerOrderNumber": 1,
+        "customerOrderNumber": "1",
         "orderDate": "2026-09-18T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -2170,19 +2229,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "4200.00",
         "status": "pending",
         "paymentStatus": "partial",
-        "orderNumber": "ORD-9950408882-3993",
+        "orderNumber": "1",
         "site": "SHEIN",
         "totalAmount": 8300,
         "paidAmount": 4200,
         "remainingAmount": 4100,
         "deliveryFee": 0,
-        "createdAt": "2026-09-21T00:26:48.000Z"
+        "createdAt": "2026-09-21T00:26:48.000Z",
+        "customerName": "امال عامر احمد العمري",
+        "customerCode": "TOP 037"
       },
       {
         "id": 930001,
-        "internalNumber": "ORD-0551671069-7135",
+        "internalNumber": "2",
         "customerId": 1080001,
-        "customerOrderNumber": 2,
+        "customerOrderNumber": "2",
         "orderDate": "2026-09-22T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -2196,19 +2257,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "5000.00",
         "status": "pending",
         "paymentStatus": "partial",
-        "orderNumber": "ORD-0551671069-7135",
+        "orderNumber": "2",
         "site": "SHEIN",
         "totalAmount": 10300,
         "paidAmount": 5000,
         "remainingAmount": 5300,
         "deliveryFee": 0,
-        "createdAt": "2026-09-27T23:27:51.000Z"
+        "createdAt": "2026-09-27T23:27:51.000Z",
+        "customerName": "ريناس عبد الحكيم يحيى محمد",
+        "customerCode": "TOP 038"
       },
       {
         "id": 960001,
-        "internalNumber": "ORD-0558592657-3074",
+        "internalNumber": "9",
         "customerId": 600001,
-        "customerOrderNumber": 9,
+        "customerOrderNumber": "9",
         "orderDate": "2026-09-20T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -2222,19 +2285,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "43000.00",
         "status": "pending",
         "paymentStatus": "partial",
-        "orderNumber": "ORD-0558592657-3074",
+        "orderNumber": "9",
         "site": "SHEIN",
         "totalAmount": 49700,
         "paidAmount": 43000,
         "remainingAmount": 6700,
         "deliveryFee": 0,
-        "createdAt": "2026-09-28T01:23:12.000Z"
+        "createdAt": "2026-09-28T01:23:12.000Z",
+        "customerName": "حنان علي محسن النجار",
+        "customerCode": "TOP 020"
       },
       {
         "id": 990001,
-        "internalNumber": "ORD-0559069296-1789",
+        "internalNumber": "5",
         "customerId": 600001,
-        "customerOrderNumber": 5,
+        "customerOrderNumber": "5",
         "orderDate": "2026-09-22T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -2248,19 +2313,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "0.00",
         "status": "pending",
         "paymentStatus": "unpaid",
-        "orderNumber": "ORD-0559069296-1789",
+        "orderNumber": "5",
         "site": "SHEIN",
         "totalAmount": 43900,
         "paidAmount": 0,
         "remainingAmount": 43900,
         "deliveryFee": 0,
-        "createdAt": "2026-09-28T01:31:09.000Z"
+        "createdAt": "2026-09-28T01:31:09.000Z",
+        "customerName": "حنان علي محسن النجار",
+        "customerCode": "TOP 020"
       },
       {
         "id": 990002,
-        "internalNumber": "ORD-0559129256-5095",
+        "internalNumber": "7",
         "customerId": 690002,
-        "customerOrderNumber": 7,
+        "customerOrderNumber": "7",
         "orderDate": "2026-09-22T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -2274,19 +2341,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "0.00",
         "status": "pending",
         "paymentStatus": "unpaid",
-        "orderNumber": "ORD-0559129256-5095",
+        "orderNumber": "7",
         "site": "SHEIN",
         "totalAmount": 12800,
         "paidAmount": 0,
         "remainingAmount": 12800,
         "deliveryFee": 0,
-        "createdAt": "2026-09-28T01:32:09.000Z"
+        "createdAt": "2026-09-28T01:32:09.000Z",
+        "customerName": "امةالله محسن عبداللة عبدالجليل",
+        "customerCode": "TOP 025"
       },
       {
         "id": 990003,
-        "internalNumber": "ORD-0559181098-5128",
+        "internalNumber": "6",
         "customerId": 600001,
-        "customerOrderNumber": 6,
+        "customerOrderNumber": "6",
         "orderDate": "2026-09-22T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -2300,19 +2369,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "0.00",
         "status": "pending",
         "paymentStatus": "unpaid",
-        "orderNumber": "ORD-0559181098-5128",
+        "orderNumber": "6",
         "site": "SHEIN",
         "totalAmount": 11600,
         "paidAmount": 0,
         "remainingAmount": 11600,
         "deliveryFee": 0,
-        "createdAt": "2026-09-28T01:33:01.000Z"
+        "createdAt": "2026-09-28T01:33:01.000Z",
+        "customerName": "حنان علي محسن النجار",
+        "customerCode": "TOP 020"
       },
       {
         "id": 990004,
-        "internalNumber": "ORD-0559250696-8038",
+        "internalNumber": "9",
         "customerId": 510002,
-        "customerOrderNumber": 9,
+        "customerOrderNumber": "9",
         "orderDate": "2026-09-24T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -2326,19 +2397,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "0.00",
         "status": "pending",
         "paymentStatus": "unpaid",
-        "orderNumber": "ORD-0559250696-8038",
+        "orderNumber": "9",
         "site": "SHEIN",
         "totalAmount": 20700,
         "paidAmount": 0,
         "remainingAmount": 20700,
         "deliveryFee": 0,
-        "createdAt": "2026-09-28T01:34:10.000Z"
+        "createdAt": "2026-09-28T01:34:10.000Z",
+        "customerName": "محمد محسن محمد هايم",
+        "customerCode": "TOP 012"
       },
       {
         "id": 990005,
-        "internalNumber": "ORD-0559345614-7445",
+        "internalNumber": "9",
         "customerId": 540003,
-        "customerOrderNumber": 9,
+        "customerOrderNumber": "9",
         "orderDate": "2026-09-23T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -2352,19 +2425,21 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "0.00",
         "status": "pending",
         "paymentStatus": "unpaid",
-        "orderNumber": "ORD-0559345614-7445",
+        "orderNumber": "9",
         "site": "SHEIN",
         "totalAmount": 46800,
         "paidAmount": 0,
         "remainingAmount": 46800,
         "deliveryFee": 0,
-        "createdAt": "2026-09-28T01:35:45.000Z"
+        "createdAt": "2026-09-28T01:35:45.000Z",
+        "customerName": "اسماء ابراهيم عبد القوي",
+        "customerCode": "TOP 017"
       },
       {
         "id": 990006,
-        "internalNumber": "ORD-0559416848-5586",
+        "internalNumber": "7",
         "customerId": 600001,
-        "customerOrderNumber": 7,
+        "customerOrderNumber": "7",
         "orderDate": "2026-09-28T00:00:00.000Z",
         "source": "SHEIN",
         "shippingFee": 0,
@@ -2378,13 +2453,15 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paid": "0.00",
         "status": "pending",
         "paymentStatus": "unpaid",
-        "orderNumber": "ORD-0559416848-5586",
+        "orderNumber": "7",
         "site": "SHEIN",
         "totalAmount": 7700,
         "paidAmount": 0,
         "remainingAmount": 7700,
         "deliveryFee": 0,
-        "createdAt": "2026-09-28T01:36:56.000Z"
+        "createdAt": "2026-09-28T01:36:56.000Z",
+        "customerName": "حنان علي محسن النجار",
+        "customerCode": "TOP 020"
       },
       {
         "orderNumber": "9",
@@ -2407,7 +2484,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "totalAmount": 46800,
         "paidAmount": 0,
         "remainingAmount": 46800,
-        "createdAt": "2026-09-30T15:03:17.354Z"
+        "createdAt": "2026-09-30T15:03:17.354Z",
+        "internalNumber": "9"
       },
       {
         "orderNumber": "7",
@@ -2430,7 +2508,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "totalAmount": 183500,
         "paidAmount": 37600,
         "remainingAmount": 145900,
-        "createdAt": "2026-10-04T01:29:58.275Z"
+        "createdAt": "2026-10-04T01:29:58.275Z",
+        "internalNumber": "7"
       },
       {
         "orderNumber": "9",
@@ -2453,7 +2532,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "totalAmount": 2600,
         "paidAmount": 0,
         "remainingAmount": 2600,
-        "createdAt": "2026-10-04T01:32:04.078Z"
+        "createdAt": "2026-10-04T01:32:04.078Z",
+        "internalNumber": "9"
       }
     ],
     "expenses": [
@@ -11429,11 +11509,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 3791065216031,
-        "entryNumber": "JE-ORD-001 ",
+        "entryNumber": "JE-ORD-0001",
         "sourceType": "order",
         "sourceId": 1791065216031,
-        "sourceNumber": "1 ",
-        "description": "فاتورة مبيعات للطلب #1  - العميل: خالد علي ناصر علي الغيثي",
+        "sourceNumber": "1",
+        "description": "فاتورة مبيعات للطلب #1 - العميل: خالد علي ناصر علي الغيثي",
         "createdAt": "2026-10-01",
         "lines": [
           {
@@ -13988,11 +14068,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000990006,
-        "entryNumber": "JE-ORD-ORD-0559416848-5586",
+        "entryNumber": "JE-ORD-0007",
         "sourceType": "order",
         "sourceId": 990006,
-        "sourceNumber": "ORD-0559416848-5586",
-        "description": "فاتورة مبيعات للطلب #ORD-0559416848-5586 - العميل: حنان علي محسن النجار",
+        "sourceNumber": "7",
+        "description": "فاتورة مبيعات للطلب #7 - العميل: حنان علي محسن النجار",
         "createdAt": "2026-09-28T00:00:00.000Z",
         "lines": [
           {
@@ -15023,11 +15103,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000990004,
-        "entryNumber": "JE-ORD-ORD-0559250696-8038",
+        "entryNumber": "JE-ORD-0009",
         "sourceType": "order",
         "sourceId": 990004,
-        "sourceNumber": "ORD-0559250696-8038",
-        "description": "فاتورة مبيعات للطلب #ORD-0559250696-8038 - العميل: محمد محسن محمد هايم",
+        "sourceNumber": "9",
+        "description": "فاتورة مبيعات للطلب #9 - العميل: محمد محسن محمد هايم",
         "createdAt": "2026-09-24T00:00:00.000Z",
         "lines": [
           {
@@ -15113,11 +15193,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000990005,
-        "entryNumber": "JE-ORD-ORD-0559345614-7445",
+        "entryNumber": "JE-ORD-0009",
         "sourceType": "order",
         "sourceId": 990005,
-        "sourceNumber": "ORD-0559345614-7445",
-        "description": "فاتورة مبيعات للطلب #ORD-0559345614-7445 - العميل: اسماء ابراهيم عبد القوي",
+        "sourceNumber": "9",
+        "description": "فاتورة مبيعات للطلب #9 - العميل: اسماء ابراهيم عبد القوي",
         "createdAt": "2026-09-23T00:00:00.000Z",
         "lines": [
           {
@@ -15338,11 +15418,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000930001,
-        "entryNumber": "JE-ORD-ORD-0551671069-7135",
+        "entryNumber": "JE-ORD-0002",
         "sourceType": "order",
         "sourceId": 930001,
-        "sourceNumber": "ORD-0551671069-7135",
-        "description": "فاتورة مبيعات للطلب #ORD-0551671069-7135 - العميل: ريناس عبد الحكيم يحيى محمد",
+        "sourceNumber": "2",
+        "description": "فاتورة مبيعات للطلب #2 - العميل: ريناس عبد الحكيم يحيى محمد",
         "createdAt": "2026-09-22T00:00:00.000Z",
         "lines": [
           {
@@ -15383,11 +15463,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000990001,
-        "entryNumber": "JE-ORD-ORD-0559069296-1789",
+        "entryNumber": "JE-ORD-0005",
         "sourceType": "order",
         "sourceId": 990001,
-        "sourceNumber": "ORD-0559069296-1789",
-        "description": "فاتورة مبيعات للطلب #ORD-0559069296-1789 - العميل: حنان علي محسن النجار",
+        "sourceNumber": "5",
+        "description": "فاتورة مبيعات للطلب #5 - العميل: حنان علي محسن النجار",
         "createdAt": "2026-09-22T00:00:00.000Z",
         "lines": [
           {
@@ -15428,11 +15508,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000990002,
-        "entryNumber": "JE-ORD-ORD-0559129256-5095",
+        "entryNumber": "JE-ORD-0007",
         "sourceType": "order",
         "sourceId": 990002,
-        "sourceNumber": "ORD-0559129256-5095",
-        "description": "فاتورة مبيعات للطلب #ORD-0559129256-5095 - العميل: امةالله محسن عبداللة عبدالجليل",
+        "sourceNumber": "7",
+        "description": "فاتورة مبيعات للطلب #7 - العميل: امةالله محسن عبداللة عبدالجليل",
         "createdAt": "2026-09-22T00:00:00.000Z",
         "lines": [
           {
@@ -15473,11 +15553,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000990003,
-        "entryNumber": "JE-ORD-ORD-0559181098-5128",
+        "entryNumber": "JE-ORD-0006",
         "sourceType": "order",
         "sourceId": 990003,
-        "sourceNumber": "ORD-0559181098-5128",
-        "description": "فاتورة مبيعات للطلب #ORD-0559181098-5128 - العميل: حنان علي محسن النجار",
+        "sourceNumber": "6",
+        "description": "فاتورة مبيعات للطلب #6 - العميل: حنان علي محسن النجار",
         "createdAt": "2026-09-22T00:00:00.000Z",
         "lines": [
           {
@@ -15923,11 +16003,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000960001,
-        "entryNumber": "JE-ORD-ORD-0558592657-3074",
+        "entryNumber": "JE-ORD-0009",
         "sourceType": "order",
         "sourceId": 960001,
-        "sourceNumber": "ORD-0558592657-3074",
-        "description": "فاتورة مبيعات للطلب #ORD-0558592657-3074 - العميل: حنان علي محسن النجار",
+        "sourceNumber": "9",
+        "description": "فاتورة مبيعات للطلب #9 - العميل: حنان علي محسن النجار",
         "createdAt": "2026-09-20T00:00:00.000Z",
         "lines": [
           {
@@ -16643,11 +16723,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000810002,
-        "entryNumber": "JE-ORD-ORD-9855332935-0526",
+        "entryNumber": "JE-ORD-0006",
         "sourceType": "order",
         "sourceId": 810002,
-        "sourceNumber": "ORD-9855332935-0526",
-        "description": "فاتورة مبيعات للطلب #ORD-9855332935-0526 - العميل: امةالله محسن عبداللة عبدالجليل",
+        "sourceNumber": "6",
+        "description": "فاتورة مبيعات للطلب #6 - العميل: امةالله محسن عبداللة عبدالجليل",
         "createdAt": "2026-09-18T00:00:00.000Z",
         "lines": [
           {
@@ -16688,11 +16768,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000810003,
-        "entryNumber": "JE-ORD-ORD-9855459958-3555",
+        "entryNumber": "JE-ORD-0008",
         "sourceType": "order",
         "sourceId": 810003,
-        "sourceNumber": "ORD-9855459958-3555",
-        "description": "فاتورة مبيعات للطلب #ORD-9855459958-3555 - العميل: مرام محمد كشيع سالم",
+        "sourceNumber": "8",
+        "description": "فاتورة مبيعات للطلب #8 - العميل: مرام محمد كشيع سالم",
         "createdAt": "2026-09-18T00:00:00.000Z",
         "lines": [
           {
@@ -16733,11 +16813,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000810004,
-        "entryNumber": "JE-ORD-ORD-9855566316-4922",
+        "entryNumber": "JE-ORD-0001",
         "sourceType": "order",
         "sourceId": 810004,
-        "sourceNumber": "ORD-9855566316-4922",
-        "description": "فاتورة مبيعات للطلب #ORD-9855566316-4922 - العميل: احمد تمام",
+        "sourceNumber": "1",
+        "description": "فاتورة مبيعات للطلب #1 - العميل: احمد تمام",
         "createdAt": "2026-09-18T00:00:00.000Z",
         "lines": [
           {
@@ -16778,11 +16858,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000840001,
-        "entryNumber": "JE-ORD-ORD-9855741062-1465",
+        "entryNumber": "JE-ORD-0003",
         "sourceType": "order",
         "sourceId": 840001,
-        "sourceNumber": "ORD-9855741062-1465",
-        "description": "فاتورة مبيعات للطلب #ORD-9855741062-1465 - العميل: مرام عبد الجبار السريحي",
+        "sourceNumber": "3",
+        "description": "فاتورة مبيعات للطلب #3 - العميل: مرام عبد الجبار السريحي",
         "createdAt": "2026-09-18T00:00:00.000Z",
         "lines": [
           {
@@ -16823,11 +16903,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000870001,
-        "entryNumber": "JE-ORD-ORD-9950408882-3993",
+        "entryNumber": "JE-ORD-0001",
         "sourceType": "order",
         "sourceId": 870001,
-        "sourceNumber": "ORD-9950408882-3993",
-        "description": "فاتورة مبيعات للطلب #ORD-9950408882-3993 - العميل: امال عامر احمد العمري",
+        "sourceNumber": "1",
+        "description": "فاتورة مبيعات للطلب #1 - العميل: امال عامر احمد العمري",
         "createdAt": "2026-09-18T00:00:00.000Z",
         "lines": [
           {
@@ -16868,11 +16948,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000810001,
-        "entryNumber": "JE-ORD-ORD-9855273358-7418",
+        "entryNumber": "JE-ORD-0007",
         "sourceType": "order",
         "sourceId": 810001,
-        "sourceNumber": "ORD-9855273358-7418",
-        "description": "فاتورة مبيعات للطلب #ORD-9855273358-7418 - العميل: مرام محمد كشيع سالم",
+        "sourceNumber": "7",
+        "description": "فاتورة مبيعات للطلب #7 - العميل: مرام محمد كشيع سالم",
         "createdAt": "2026-09-17T00:00:00.000Z",
         "lines": [
           {
@@ -17363,11 +17443,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000780001,
-        "entryNumber": "JE-ORD-ORD-9434591419-3717",
+        "entryNumber": "JE-ORD-0003",
         "sourceType": "order",
         "sourceId": 780001,
-        "sourceNumber": "ORD-9434591419-3717",
-        "description": "فاتورة مبيعات للطلب #ORD-9434591419-3717 - العميل: حنان علي محسن النجار",
+        "sourceNumber": "3",
+        "description": "فاتورة مبيعات للطلب #3 - العميل: حنان علي محسن النجار",
         "createdAt": "2026-09-15T00:00:00.000Z",
         "lines": [
           {
@@ -17408,11 +17488,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000780002,
-        "entryNumber": "JE-ORD-ORD-9434660277-0383",
+        "entryNumber": "JE-ORD-0009",
         "sourceType": "order",
         "sourceId": 780002,
-        "sourceNumber": "ORD-9434660277-0383",
-        "description": "فاتورة مبيعات للطلب #ORD-9434660277-0383 - العميل: محمد جميل محمد مطر",
+        "sourceNumber": "9",
+        "description": "فاتورة مبيعات للطلب #9 - العميل: محمد جميل محمد مطر",
         "createdAt": "2026-09-15T00:00:00.000Z",
         "lines": [
           {
@@ -18218,11 +18298,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000750002,
-        "entryNumber": "JE-ORD-ORD-9264866299-8228",
+        "entryNumber": "JE-ORD-0005",
         "sourceType": "order",
         "sourceId": 750002,
-        "sourceNumber": "ORD-9264866299-8228",
-        "description": "فاتورة مبيعات للطلب #ORD-9264866299-8228 - العميل: امةالله محسن عبداللة عبدالجليل",
+        "sourceNumber": "5",
+        "description": "فاتورة مبيعات للطلب #5 - العميل: امةالله محسن عبداللة عبدالجليل",
         "createdAt": "2026-09-12T00:00:00.000Z",
         "lines": [
           {
@@ -18533,11 +18613,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000750001,
-        "entryNumber": "JE-ORD-ORD-9264773077-0952",
+        "entryNumber": "JE-ORD-0003",
         "sourceType": "order",
         "sourceId": 750001,
-        "sourceNumber": "ORD-9264773077-0952",
-        "description": "فاتورة مبيعات للطلب #ORD-9264773077-0952 - العميل: بيت الحلحلي",
+        "sourceNumber": "3",
+        "description": "فاتورة مبيعات للطلب #3 - العميل: بيت الحلحلي",
         "createdAt": "2026-09-10T00:00:00.000Z",
         "lines": [
           {
@@ -19073,11 +19153,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000720001,
-        "entryNumber": "JE-ORD-ORD-8738044243-8007",
+        "entryNumber": "JE-ORD-0003",
         "sourceType": "order",
         "sourceId": 720001,
-        "sourceNumber": "ORD-8738044243-8007",
-        "description": "فاتورة مبيعات للطلب #ORD-8738044243-8007 - العميل: اشجان إدريس احمد القدسي",
+        "sourceNumber": "3",
+        "description": "فاتورة مبيعات للطلب #3 - العميل: اشجان إدريس احمد القدسي",
         "createdAt": "2026-09-07T00:00:00.000Z",
         "lines": [
           {
@@ -19253,11 +19333,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000660003,
-        "entryNumber": "JE-ORD-ORD-8659579189-7521",
+        "entryNumber": "JE-ORD-0006",
         "sourceType": "order",
         "sourceId": 660003,
-        "sourceNumber": "ORD-8659579189-7521",
-        "description": "فاتورة مبيعات للطلب #ORD-8659579189-7521 - العميل: نورا سلطان الصلاحي",
+        "sourceNumber": "6",
+        "description": "فاتورة مبيعات للطلب #6 - العميل: نورا سلطان الصلاحي",
         "createdAt": "2026-09-06T00:00:00.000Z",
         "lines": [
           {
@@ -19298,11 +19378,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000690001,
-        "entryNumber": "JE-ORD-ORD-8659788749-3974",
+        "entryNumber": "JE-ORD-0002",
         "sourceType": "order",
         "sourceId": 690001,
-        "sourceNumber": "ORD-8659788749-3974",
-        "description": "فاتورة مبيعات للطلب #ORD-8659788749-3974 - العميل: اشجان إدريس احمد القدسي",
+        "sourceNumber": "2",
+        "description": "فاتورة مبيعات للطلب #2 - العميل: اشجان إدريس احمد القدسي",
         "createdAt": "2026-09-06T00:00:00.000Z",
         "lines": [
           {
@@ -19523,11 +19603,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000600002,
-        "entryNumber": "JE-ORD-ORD-8658159317-4172",
+        "entryNumber": "JE-ORD-0011",
         "sourceType": "order",
         "sourceId": 600002,
-        "sourceNumber": "ORD-8658159317-4172",
-        "description": "فاتورة مبيعات للطلب #ORD-8658159317-4172 - العميل: ام عبد الوهاب",
+        "sourceNumber": "11",
+        "description": "فاتورة مبيعات للطلب #11 - العميل: ام عبد الوهاب",
         "createdAt": "2026-09-05T00:00:00.000Z",
         "lines": [
           {
@@ -19928,11 +20008,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000630001,
-        "entryNumber": "JE-ORD-ORD-8658997531-0903",
+        "entryNumber": "JE-ORD-0004",
         "sourceType": "order",
         "sourceId": 630001,
-        "sourceNumber": "ORD-8658997531-0903",
-        "description": "فاتورة مبيعات للطلب #ORD-8658997531-0903 - العميل: حنان علي محمد القاسمي",
+        "sourceNumber": "4",
+        "description": "فاتورة مبيعات للطلب #4 - العميل: حنان علي محمد القاسمي",
         "createdAt": "2026-09-04T00:00:00.000Z",
         "lines": [
           {
@@ -19973,11 +20053,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000660001,
-        "entryNumber": "JE-ORD-ORD-8659131406-8563",
+        "entryNumber": "JE-ORD-0002",
         "sourceType": "order",
         "sourceId": 660001,
-        "sourceNumber": "ORD-8659131406-8563",
-        "description": "فاتورة مبيعات للطلب #ORD-8659131406-8563 - العميل: علي علي محسن سعود",
+        "sourceNumber": "2",
+        "description": "فاتورة مبيعات للطلب #2 - العميل: علي علي محسن سعود",
         "createdAt": "2026-09-04T00:00:00.000Z",
         "lines": [
           {
@@ -20378,11 +20458,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000540001,
-        "entryNumber": "JE-ORD-ORD-8478999795-0814",
+        "entryNumber": "JE-ORD-0008",
         "sourceType": "order",
         "sourceId": 540001,
-        "sourceNumber": "ORD-8478999795-0814",
-        "description": "فاتورة مبيعات للطلب #ORD-8478999795-0814 - العميل: محمد جميل محمد مطر",
+        "sourceNumber": "8",
+        "description": "فاتورة مبيعات للطلب #8 - العميل: محمد جميل محمد مطر",
         "createdAt": "2026-09-02T00:00:00.000Z",
         "lines": [
           {
@@ -20423,11 +20503,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000540002,
-        "entryNumber": "JE-ORD-ORD-8479144746-3923",
+        "entryNumber": "JE-ORD-0004",
         "sourceType": "order",
         "sourceId": 540002,
-        "sourceNumber": "ORD-8479144746-3923",
-        "description": "فاتورة مبيعات للطلب #ORD-8479144746-3923 - العميل: امةالله محسن عبداللة عبدالجليل",
+        "sourceNumber": "4",
+        "description": "فاتورة مبيعات للطلب #4 - العميل: امةالله محسن عبداللة عبدالجليل",
         "createdAt": "2026-09-02T00:00:00.000Z",
         "lines": [
           {
@@ -20558,11 +20638,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000450001,
-        "entryNumber": "JE-ORD-ORD-8215695728-5855",
+        "entryNumber": "JE-ORD-0006",
         "sourceType": "order",
         "sourceId": 450001,
-        "sourceNumber": "ORD-8215695728-5855",
-        "description": "فاتورة مبيعات للطلب #ORD-8215695728-5855 - العميل: مرام محمد كشيع سالم",
+        "sourceNumber": "6",
+        "description": "فاتورة مبيعات للطلب #6 - العميل: مرام محمد كشيع سالم",
         "createdAt": "2026-09-01T00:00:00.000Z",
         "lines": [
           {
@@ -20603,11 +20683,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000480001,
-        "entryNumber": "JE-ORD-ORD-8215823439-5531",
+        "entryNumber": "JE-ORD-0002",
         "sourceType": "order",
         "sourceId": 480001,
-        "sourceNumber": "ORD-8215823439-5531",
-        "description": "فاتورة مبيعات للطلب #ORD-8215823439-5531 - العميل: مرام عبد الجبار السريحي",
+        "sourceNumber": "2",
+        "description": "فاتورة مبيعات للطلب #2 - العميل: مرام عبد الجبار السريحي",
         "createdAt": "2026-09-01T00:00:00.000Z",
         "lines": [
           {
@@ -20648,11 +20728,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000510001,
-        "entryNumber": "JE-ORD-ORD-8216013927-9760",
+        "entryNumber": "JE-ORD-0002",
         "sourceType": "order",
         "sourceId": 510001,
-        "sourceNumber": "ORD-8216013927-9760",
-        "description": "فاتورة مبيعات للطلب #ORD-8216013927-9760 - العميل: غانم علي محمد  الشاذلي",
+        "sourceNumber": "2",
+        "description": "فاتورة مبيعات للطلب #2 - العميل: غانم علي محمد  الشاذلي",
         "createdAt": "2026-09-01T00:00:00.000Z",
         "lines": [
           {
@@ -21323,11 +21403,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000330001,
-        "entryNumber": "JE-ORD-ORD-8041948865-7116",
+        "entryNumber": "JE-ORD-0007",
         "sourceType": "order",
         "sourceId": 330001,
-        "sourceNumber": "ORD-8041948865-7116",
-        "description": "فاتورة مبيعات للطلب #ORD-8041948865-7116 - العميل: محمد جميل محمد مطر",
+        "sourceNumber": "7",
+        "description": "فاتورة مبيعات للطلب #7 - العميل: محمد جميل محمد مطر",
         "createdAt": "2026-08-30T00:00:00.000Z",
         "lines": [
           {
@@ -21368,11 +21448,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000420001,
-        "entryNumber": "JE-ORD-ORD-8125147413-6225",
+        "entryNumber": "JE-ORD-0003",
         "sourceType": "order",
         "sourceId": 420001,
-        "sourceNumber": "ORD-8125147413-6225",
-        "description": "فاتورة مبيعات للطلب #ORD-8125147413-6225 - العميل: امةالله محسن عبداللة عبدالجليل",
+        "sourceNumber": "3",
+        "description": "فاتورة مبيعات للطلب #3 - العميل: امةالله محسن عبداللة عبدالجليل",
         "createdAt": "2026-08-30T00:00:00.000Z",
         "lines": [
           {
@@ -21728,11 +21808,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000390001,
-        "entryNumber": "JE-ORD-ORD-8052070896-8879",
+        "entryNumber": "JE-ORD-0001",
         "sourceType": "order",
         "sourceId": 390001,
-        "sourceNumber": "ORD-8052070896-8879",
-        "description": "فاتورة مبيعات للطلب #ORD-8052070896-8879 - العميل: زينب علي محمد إبراهيم دلواح",
+        "sourceNumber": "1",
+        "description": "فاتورة مبيعات للطلب #1 - العميل: زينب علي محمد إبراهيم دلواح",
         "createdAt": "2026-08-29T00:00:00.000Z",
         "lines": [
           {
@@ -30027,7 +30107,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "id": 1001,
         "deliveryNumber": "DLV-2026-001",
         "orderId": 780001,
-        "orderNumber": "ORD-3",
+        "orderNumber": "3",
         "shipmentNumber": "2000",
         "customerName": "سحر عادل المقطري",
         "customerPhone": "782483210",
@@ -30051,7 +30131,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "id": 1002,
         "deliveryNumber": "DLV-2026-002",
         "orderId": 780002,
-        "orderNumber": "ORD-9",
+        "orderNumber": "9",
         "shipmentNumber": "2000",
         "customerName": "رانيا محمود قادري المقطري",
         "customerPhone": "781706330",
@@ -30078,7 +30158,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "id": 1003,
         "deliveryNumber": "DLV-2026-003",
         "orderId": 600002,
-        "orderNumber": "ORD-11",
+        "orderNumber": "11",
         "shipmentNumber": "2200",
         "customerName": "ماريا محمد سيف البناء",
         "customerPhone": "771972595",
@@ -30102,7 +30182,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "id": 1004,
         "deliveryNumber": "DLV-2026-004",
         "orderId": 660003,
-        "orderNumber": "ORD-6",
+        "orderNumber": "6",
         "shipmentNumber": "2204",
         "customerName": "مرام حميد احمد سنان",
         "customerPhone": "773833724",
@@ -30125,7 +30205,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "id": 1005,
         "deliveryNumber": "DLV-2026-005",
         "orderId": 390001,
-        "orderNumber": "ORD-1",
+        "orderNumber": "1",
         "shipmentNumber": "2207",
         "customerName": "خالد علي ناصر علي الغيثي",
         "customerPhone": "776451363",

@@ -842,11 +842,40 @@ export function sanitizeAndReconcileJournalEntries(
   const forceRestore = Boolean(options?.forceRestoreMissing);
   const t = backup.tables;
   const customers = t.customers || [];
-  const orders = t.orders || [];
+  const rawOrders = t.orders || [];
   const payments = t.payments || [];
   const accounts = t.accounts || [];
   const rawEntries = Array.isArray(t.journalEntries) ? t.journalEntries : [];
   const rawLines = Array.isArray(t.journalLines) ? t.journalLines : [];
+
+  // Normalize orders: ensure all orders are purely numbered by their actual order number (رقم الطلب) and not automatic system strings (ORD-xxx)
+  const cleanedOrders = rawOrders.map(o => {
+    let num = String(o.orderNumber || '').trim();
+    if (o.customerOrderNumber != null && String(o.customerOrderNumber).trim()) {
+      num = String(o.customerOrderNumber).trim();
+    } else {
+      num = num.replace(/^ORD-/, '').trim();
+    }
+    if (num === '1  1' || num === '1 ') num = '1';
+    const cust = customers.find(c => c.id === o.customerId);
+    return {
+      ...o,
+      orderNumber: num,
+      customerOrderNumber: num,
+      customerName: o.customerName || cust?.name || undefined,
+      customerCode: o.customerCode || cust?.code || undefined,
+      internalNumber: num
+    };
+  });
+  t.orders = cleanedOrders;
+  const orders = cleanedOrders;
+
+  if (Array.isArray(t.deliveryOrders)) {
+    t.deliveryOrders = t.deliveryOrders.map(d => ({
+      ...d,
+      orderNumber: String(d.orderNumber || '').replace(/^ORD-/, '').trim()
+    }));
+  }
 
   const hasSyntheticCanonicalSet = rawEntries.some(
     j => String(j.id).length >= 13 && !String(j.id).startsWith('179')
@@ -1018,19 +1047,20 @@ export function sanitizeAndReconcileJournalEntries(
     const ordSalesChart = resolveChartAccount('حـ/ إيرادات المبيعات والوساطة', 'credit');
     const createdAt = o.createdAt || o.orderDate || new Date().toISOString();
 
+    const cleanNum = String(o.orderNumber || o.id).trim().replace(/^ORD-/, '');
     entries.push({
       id: jeId,
-      entryNumber: `JE-ORD-${String(o.orderNumber || o.id).trim().padStart(4, '0')}`,
+      entryNumber: `JE-ORD-${cleanNum.padStart(4, '0')}`,
       sourceType: 'order',
       sourceId: o.id,
-      sourceNumber: String(o.orderNumber || o.id),
+      sourceNumber: cleanNum,
       status: 'posted',
       currency: 'YER',
       exchangeRate: 1,
       createdBy: 'admin',
       postedBy: 'admin',
       postedAt: createdAt,
-      description: `فاتورة مبيعات للطلب #${o.orderNumber} - العميل: ${custName}`,
+      description: `فاتورة مبيعات للطلب #${cleanNum} - العميل: ${custName}`,
       createdAt,
       lines: [
         {

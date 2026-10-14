@@ -1,0 +1,17 @@
+{
+  "dev_1791837466750_vt17tro": {
+    "deviceId": "dev_1791837466750_vt17tro",
+    "deviceName": "لابتوب / كمبيوتر (ويندوز) - #164",
+    "deviceType": "desktop",
+    "browser": "جوجل كروم (Chrome)",
+    "os": "ويندوز (Windows)",
+    "lastSyncAt": "2026-10-14T18:19:41.072Z",
+    "lastAction": "pull",
+    "recordsCount": {
+      "customers": 43,
+      "orders": 49,
+      "expenses": 139,
+      "journalEntries": 283
+    }
+  }
+}

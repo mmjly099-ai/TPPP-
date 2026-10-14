@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { X, ChevronDown, UserPlus, Check, Sparkles } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 
@@ -8,7 +8,7 @@ interface NewOrderModalProps {
 }
 
 export const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose }) => {
-  const { customers, accounts, addOrder, addCustomer, marketingCampaigns, marketingChannels, discountCodes } = useStore();
+  const { orders, customers, accounts, addOrder, addCustomer, marketingCampaigns, marketingChannels, discountCodes } = useStore();
 
   const [customerId, setCustomerId] = useState<number>(() => customers[0]?.id || 0);
   const [customerOrderCode, setCustomerOrderCode] = useState<string>('');
@@ -47,6 +47,14 @@ export const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose })
   });
 
   const [formError, setFormError] = useState<string>('');
+
+  // الرقم المقترح التالي للطلب (أرقام فقط)
+  const suggestedOrderNum = useMemo(() => {
+    const existingNums = orders
+      .map(o => parseInt(String(o.orderNumber).replace(/\D/g, ''), 10))
+      .filter(n => !isNaN(n) && n > 0);
+    return existingNums.length > 0 ? Math.max(...existingNums) + 1 : 1;
+  }, [orders]);
 
   if (!isOpen) return null;
 
@@ -124,12 +132,19 @@ export const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose })
     }
     setFormError('');
 
-    const orderNumber = customerOrderCode.trim() || `ORD-${Math.floor(100 + Math.random() * 900)}`;
+    const existingNums = orders
+      .map(o => parseInt(String(o.orderNumber).replace(/\D/g, ''), 10))
+      .filter(n => !isNaN(n) && n > 0);
+    const nextSequentialNum = existingNums.length > 0 ? Math.max(...existingNums) + 1 : 1;
+
+    const rawNum = customerOrderCode.trim().replace(/^ORD-/, '').trim();
+    const orderNumber = rawNum ? String(parseInt(rawNum.replace(/\D/g, ''), 10) || rawNum) : String(nextSequentialNum);
     const selectedAcc = accounts.find(a => a.id === accountId);
 
     addOrder(
       {
         orderNumber,
+        customerOrderNumber: orderNumber,
         customerId,
         site,
         shipmentNumber: shipmentNumber.trim() || undefined,
@@ -334,16 +349,23 @@ export const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose })
               })()}
             </div>
 
-            {/* Field 2: رقم طلب العميل */}
+            {/* Field 2: رقم الطلب (أرقام فقط) */}
             <div className="space-y-1">
-              <label className="text-[#856934] font-bold block text-sm">رقم طلب العميل</label>
+              <div className="flex items-center justify-between">
+                <label className="text-[#856934] font-bold block text-sm">رقم الطلب (أرقام الطلب الفعلية)</label>
+                <span className="text-[11px] text-slate-500 font-mono">تلقائي مقترح: #{suggestedOrderNum}</span>
+              </div>
               <input
                 type="text"
+                inputMode="numeric"
                 value={customerOrderCode}
-                onChange={e => setCustomerOrderCode(e.target.value)}
-                placeholder=""
-                className="w-full border border-[#d6c4a8] rounded-2xl p-3 text-center sm:text-right font-mono text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#856934]/30 shadow-2xs text-xs sm:text-sm"
+                onChange={e => setCustomerOrderCode(e.target.value.replace(/[^\d]/g, ''))}
+                placeholder={`رقم الطلب (مثال: ${suggestedOrderNum})`}
+                className="w-full border border-[#d6c4a8] rounded-2xl p-3 text-center sm:text-right font-mono font-bold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#856934]/30 shadow-2xs text-xs sm:text-sm"
               />
+              <span className="text-[10px] text-slate-400 block">
+                يتم تسجيل الطلب برقم الطلب الصافي مباشرة (أرقام فقط) دون أي بادئات نظام تلقائية
+              </span>
             </div>
 
             {/* Field 3: رقم الشحنة (مشترك بين العملاء) */}

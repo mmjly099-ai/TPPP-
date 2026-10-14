@@ -1019,9 +1019,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const customer = customers.find(c => c.id === orderData.customerId);
 
-    const invoiceNumber = `INV-${orderData.orderNumber || orderId}`;
+    // ضمان تسجيل أرقام الطلبات بالأرقام الصافية وليس أرقام النظام التلقائية
+    let cleanOrderNum = String(orderData.orderNumber || '').trim().replace(/^ORD-/, '').trim();
+    if (orderData.customerOrderNumber && (!cleanOrderNum || /^ORD-/.test(String(orderData.orderNumber)))) {
+      cleanOrderNum = String(orderData.customerOrderNumber).trim();
+    }
+    if (!cleanOrderNum) {
+      const existingNums = orders
+        .map(o => parseInt(String(o.orderNumber).replace(/\D/g, ''), 10))
+        .filter(n => !isNaN(n) && n > 0);
+      cleanOrderNum = String(existingNums.length > 0 ? Math.max(...existingNums) + 1 : 1);
+    }
+
+    const invoiceNumber = `INV-${cleanOrderNum}`;
     const newOrder: Order = {
       ...orderData,
+      orderNumber: cleanOrderNum,
+      customerOrderNumber: cleanOrderNum,
+      internalNumber: cleanOrderNum,
       id: orderId,
       customerName: customer?.name || orderData.customerName,
       customerCode: customer?.code || orderData.customerCode,
@@ -1228,7 +1243,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const oldOrder = prev.tables.orders.find(o => o.id === updatedOrder.id);
       if (!oldOrder) return prev;
 
-      // Update linked sales journal entry if amount or customer changed
+      const cleanNum = String(updatedOrder.orderNumber || oldOrder.orderNumber).trim().replace(/^ORD-/, '').trim();
+      const finalOrder: Order = {
+        ...updatedOrder,
+        orderNumber: cleanNum,
+        customerOrderNumber: cleanNum,
+        internalNumber: cleanNum,
+        invoiceNumber: `INV-${cleanNum}`
+      };
+
+      // Update linked sales journal entry if amount or customer or orderNumber changed
       const updatedJournals = prev.tables.journalEntries.map(je => {
         const isLinkedOrder =
           (je.sourceType === 'order' && (je.sourceId === updatedOrder.id || je.sourceId === String(updatedOrder.id))) ||
@@ -1237,18 +1261,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (isLinkedOrder) {
           return {
             ...je,
-            description: `إثبات فاتورة الطلب #${updatedOrder.orderNumber} - ${updatedOrder.customerName || 'العميل'}`,
+            sourceNumber: cleanNum,
+            entryNumber: `JE-ORD-${cleanNum.padStart(4, '0')}`,
+            description: `إثبات فاتورة الطلب #${cleanNum} - ${finalOrder.customerName || 'العميل'}`,
             lines: je.lines.map(l => {
               if (l.side === 'debit') {
                 return {
                   ...l,
-                  accountName: `حـ/ العميل: ${updatedOrder.customerName || 'العميل'}`,
-                  amount: updatedOrder.totalAmount
+                  accountName: `حـ/ العميل: ${finalOrder.customerName || 'العميل'}`,
+                  amount: finalOrder.totalAmount
                 };
               } else {
                 return {
                   ...l,
-                  amount: updatedOrder.totalAmount
+                  amount: finalOrder.totalAmount
                 };
               }
             })
@@ -1263,17 +1289,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         action: 'تعديل طلب وتحديث قيده المحاسبي',
         performedBy: 'الإدارة المالية',
         entityType: 'order',
-        entityId: updatedOrder.id,
-        description: `تعديل الطلب #${updatedOrder.orderNumber} - تحديث المبلغ إلى ${updatedOrder.totalAmount} ريال وتحديث قيد اليومية المرتبط`,
+        entityId: finalOrder.id,
+        description: `تعديل الطلب #${finalOrder.orderNumber} - تحديث المبلغ إلى ${finalOrder.totalAmount} ريال وتحديث قيد اليومية المرتبط`,
         oldValue: `${oldOrder.totalAmount} ريال`,
-        newValue: `${updatedOrder.totalAmount} ريال`
+        newValue: `${finalOrder.totalAmount} ريال`
       };
 
       return {
         ...prev,
         tables: {
           ...prev.tables,
-          orders: prev.tables.orders.map(o => o.id === updatedOrder.id ? updatedOrder : o),
+          orders: prev.tables.orders.map(o => o.id === finalOrder.id ? finalOrder : o),
           journalEntries: updatedJournals,
           auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
         }

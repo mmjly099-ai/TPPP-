@@ -417,6 +417,7 @@ interface EditOrderModalProps {
 }
 
 const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, onClose, onSave }) => {
+  const [orderNumber, setOrderNumber] = useState<string>(String(order.orderNumber || '').replace(/^ORD-/, '').trim());
   const [subtotal, setSubtotal] = useState<number>(order.subtotal || 0);
   const [shippingFee, setShippingFee] = useState<number>(order.shippingFee || 0);
   const [discount, setDiscount] = useState<number>(order.discount || 0);
@@ -432,8 +433,12 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, onClose, onSave 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const cleanNum = orderNumber.trim().replace(/^ORD-/, '').trim() || String(order.orderNumber);
     onSave({
       ...order,
+      orderNumber: cleanNum,
+      customerOrderNumber: cleanNum,
+      internalNumber: cleanNum,
       subtotal,
       shippingFee,
       discount,
@@ -461,6 +466,22 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, onClose, onSave 
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3 text-xs">
+          <div className="space-y-1 bg-amber-50/70 p-2.5 rounded-xl border border-amber-200/80">
+            <div className="flex items-center justify-between">
+              <label className="font-bold text-amber-900">رقم الطلب (أرقام فقط):</label>
+              <span className="text-[10px] text-amber-700">رقم الطلب الصافي المسجل</span>
+            </div>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={orderNumber}
+              onChange={e => setOrderNumber(e.target.value.replace(/[^\d]/g, ''))}
+              placeholder="مثال: 7 أو 1001"
+              className="w-full border border-amber-300 rounded-lg p-2 font-mono font-bold text-amber-950 bg-white focus:ring-2 focus:ring-amber-500/30"
+              required
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="font-bold text-slate-700">موقع الشراء:</label>

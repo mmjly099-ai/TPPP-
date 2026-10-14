@@ -116,11 +116,12 @@ export const NewDocumentWizardModal: React.FC<NewDocumentWizardModalProps> = ({
       const deliveryFeeNum = parseFloat(deliveryFee) || 0;
       const payAmountNum = includePayment ? (parseFloat(paymentAmount) || 0) : 0;
 
+      const cleanCustOrderNum = (customerOrderNumber ? String(customerOrderNumber).trim() : '').replace(/[^\d]/g, '') || '1';
       const createdOrder = addOrder(
         {
           customerId: selectedCustomer.id,
-          orderNumber: `ORD-${Date.now().toString().slice(-6)}`,
-          customerOrderNumber: customerOrderNumber || '1',
+          orderNumber: cleanCustOrderNum,
+          customerOrderNumber: cleanCustOrderNum,
           purchaseSite: purchaseSite || 'SHEIN',
           itemsCount: 1,
           orderPrice: orderAmountNum,
@@ -130,7 +131,7 @@ export const NewDocumentWizardModal: React.FC<NewDocumentWizardModalProps> = ({
           status: 'pending',
           orderDate: new Date().toISOString().split('T')[0],
           notes: orderNotes,
-          invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+          invoiceNumber: `INV-${cleanCustOrderNum}`,
           invoiceStatus: 'approved'
         },
         includePayment && payAmountNum > 0

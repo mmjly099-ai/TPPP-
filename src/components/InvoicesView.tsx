@@ -267,7 +267,7 @@ export const InvoicesView: React.FC = () => {
       const newOrder = addOrder(
         {
           customerId: demoCust.id,
-          orderNumber: 'ORD-870001',
+          orderNumber: '1',
           customerOrderNumber: '1',
           purchaseSite: 'SHEIN',
           itemsCount: 1,
@@ -277,7 +277,7 @@ export const InvoicesView: React.FC = () => {
           deliveryFeeCollectionStatus: 'unpaid',
           status: 'pending',
           orderDate: '2026/9/18',
-          invoiceNumber: 'INV-870001',
+          invoiceNumber: 'INV-1',
           invoiceStatus: 'approved'
         },
         {
