@@ -419,6 +419,7 @@ interface StoreContextType {
     purchaseCost: number;
     purchaseFees: number;
     transferFees: number;
+    exchangeRateDiff?: number;
     orderIds: number[];
     notes?: string;
   }) => void;
@@ -430,6 +431,7 @@ interface StoreContextType {
     purchaseCost?: number;
     purchaseFees?: number;
     transferFees?: number;
+    exchangeRateDiff?: number;
     orderIds?: number[];
     notes?: string | null;
   }) => void;
@@ -3276,7 +3278,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           }
         }
         if (refundWallet) {
-          const batchTotalCost = (Number(linkedBatch.purchaseCost) || 0) + (Number(linkedBatch.purchaseFees) || 0) + (Number(linkedBatch.transferFees) || 0);
+          const batchTotalCost = Number(linkedBatch.totalCost) || ((Number(linkedBatch.purchaseCost) || 0) + (Number(linkedBatch.purchaseFees) || 0) + (Number(linkedBatch.transferFees) || 0) + (Number(linkedBatch.exchangeRateDiff) || 0));
           const batchAcc = (prev.tables.accounts || []).find(a => a.id === linkedBatch.accountId);
           const batchRefundTrx: FinancialTransaction = {
             id: revId + 11,
@@ -5977,13 +5979,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     purchaseCost: number;
     purchaseFees: number;
     transferFees: number;
+    exchangeRateDiff?: number;
     orderIds: number[];
     notes?: string;
   }) => {
     const batchId = Date.now();
     const batchNumber = `PB-${new Date().getFullYear()}-${String((purchaseBatches.length || 0) + 1).padStart(3, '0')}`;
     const acc = accounts.find(a => a.id === batchData.accountId);
-    const totalCost = (batchData.purchaseCost || 0) + (batchData.purchaseFees || 0) + (batchData.transferFees || 0);
+    const purchaseCost = Number(batchData.purchaseCost) || 0;
+    const transferFees = Number(batchData.transferFees) || 0;
+    const purchaseFees = Number(batchData.purchaseFees) || 0;
+    const exchangeRateDiff = Number(batchData.exchangeRateDiff) || 0;
+    // التكلفة الكلية = تكلفة الشراء الصافية + عمولات التحويل البنكي + رسوم الشراء + فروق الصرف
+    const totalCost = purchaseCost + transferFees + purchaseFees + exchangeRateDiff;
 
     const newBatch: PurchaseBatch = {
       id: batchId,
@@ -5993,9 +6001,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       purchaseDate: new Date().toISOString().split('T')[0],
       accountId: batchData.accountId,
       accountName: acc?.name || 'البنك / البطاقة',
-      purchaseCost: batchData.purchaseCost,
-      purchaseFees: batchData.purchaseFees,
-      transferFees: batchData.transferFees,
+      purchaseCost,
+      purchaseFees,
+      transferFees,
+      exchangeRateDiff,
       totalCost,
       orderIds: batchData.orderIds,
       notes: batchData.notes || null,
@@ -6016,8 +6025,61 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       createdAt: new Date().toISOString()
     };
 
-    // Journal Entry (من حـ/ مشتريات بضاعة وعمولات إلى حـ/ البطاقة)
+    // Journal Entry (من حـ/ مشتريات بضاعة وعمولات ورسوم وفروق صرف إلى حـ/ البطاقة أو البنك)
     const jeId = batchId + 2;
+    const jeLines: any[] = [
+      {
+        id: jeId + 1,
+        journalEntryId: jeId,
+        accountId: null,
+        accountName: `مشتريات بضائع - ${batchData.source}`,
+        side: 'debit',
+        amount: purchaseCost
+      }
+    ];
+
+    if (transferFees > 0) {
+      jeLines.push({
+        id: jeId + 2,
+        journalEntryId: jeId,
+        accountId: null,
+        accountName: 'عمولات تحويل بنكي للمشتريات',
+        side: 'debit',
+        amount: transferFees
+      });
+    }
+
+    if (purchaseFees > 0) {
+      jeLines.push({
+        id: jeId + 3,
+        journalEntryId: jeId,
+        accountId: null,
+        accountName: 'رسوم شراء وعمليات دفع',
+        side: 'debit',
+        amount: purchaseFees
+      });
+    }
+
+    if (exchangeRateDiff > 0) {
+      jeLines.push({
+        id: jeId + 4,
+        journalEntryId: jeId,
+        accountId: null,
+        accountName: 'فروق أسعار صرف العملات',
+        side: 'debit',
+        amount: exchangeRateDiff
+      });
+    }
+
+    jeLines.push({
+      id: jeId + 5,
+      journalEntryId: jeId,
+      accountId: batchData.accountId,
+      accountName: acc?.name || 'البطاقة / الحساب',
+      side: 'credit',
+      amount: totalCost
+    });
+
     const je: JournalEntry = {
       id: jeId,
       entryNumber: `JE-PB-${Date.now().toString().slice(-6)}`,
@@ -6027,32 +6089,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       status: 'posted',
       description: `شراء بضاعة طلبات من ${batchData.source} - دفعة ${batchNumber}`,
       createdAt: new Date().toISOString(),
-      lines: [
-        {
-          id: jeId + 1,
-          journalEntryId: jeId,
-          accountId: null,
-          accountName: `مشتريات بضائع - ${batchData.source}`,
-          side: 'debit',
-          amount: batchData.purchaseCost
-        },
-        ...(batchData.purchaseFees + batchData.transferFees > 0 ? [{
-          id: jeId + 2,
-          journalEntryId: jeId,
-          accountId: null,
-          accountName: 'رسوم وعمولات شراء وتحويل بنكي',
-          side: 'debit' as const,
-          amount: batchData.purchaseFees + batchData.transferFees
-        }] : []),
-        {
-          id: jeId + 3,
-          journalEntryId: jeId,
-          accountId: batchData.accountId,
-          accountName: acc?.name || 'البطاقة / الحساب',
-          side: 'credit',
-          amount: totalCost
-        }
-      ]
+      lines: jeLines
     };
 
     // Update affected orders to 'purchased' and set purchaseBatchId
@@ -6113,6 +6150,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     purchaseCost?: number;
     purchaseFees?: number;
     transferFees?: number;
+    exchangeRateDiff?: number;
     orderIds?: number[];
     notes?: string | null;
   }) => {
@@ -6128,7 +6166,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const newPurchaseCost = batchData.purchaseCost !== undefined ? Number(batchData.purchaseCost) : Number(existing.purchaseCost || 0);
       const newPurchaseFees = batchData.purchaseFees !== undefined ? Number(batchData.purchaseFees) : Number(existing.purchaseFees || 0);
       const newTransferFees = batchData.transferFees !== undefined ? Number(batchData.transferFees) : Number(existing.transferFees || 0);
-      const newTotalCost = newPurchaseCost + newPurchaseFees + newTransferFees;
+      const newExchangeRateDiff = batchData.exchangeRateDiff !== undefined ? Number(batchData.exchangeRateDiff) : Number(existing.exchangeRateDiff || 0);
+      const newTotalCost = newPurchaseCost + newPurchaseFees + newTransferFees + newExchangeRateDiff;
       const newOrderIds = batchData.orderIds !== undefined ? batchData.orderIds : (existing.orderIds || []);
       const newNotes = batchData.notes !== undefined ? batchData.notes : existing.notes;
 
@@ -6142,6 +6181,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         purchaseCost: newPurchaseCost,
         purchaseFees: newPurchaseFees,
         transferFees: newTransferFees,
+        exchangeRateDiff: newExchangeRateDiff,
         totalCost: newTotalCost,
         orderIds: newOrderIds,
         notes: newNotes || null
@@ -6194,35 +6234,63 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const isLinked = je.id === id + 2 ||
                          (existing.batchNumber && je.description?.includes(existing.batchNumber));
         if (isLinked) {
+          const lines: any[] = [
+            {
+              id: je.id + 1,
+              journalEntryId: je.id,
+              accountId: null,
+              accountName: `مشتريات بضائع - ${newSource}`,
+              side: 'debit' as const,
+              amount: newPurchaseCost
+            }
+          ];
+
+          if (newTransferFees > 0) {
+            lines.push({
+              id: je.id + 2,
+              journalEntryId: je.id,
+              accountId: null,
+              accountName: 'عمولات تحويل بنكي للمشتريات',
+              side: 'debit' as const,
+              amount: newTransferFees
+            });
+          }
+
+          if (newPurchaseFees > 0) {
+            lines.push({
+              id: je.id + 3,
+              journalEntryId: je.id,
+              accountId: null,
+              accountName: 'رسوم شراء وعمليات دفع',
+              side: 'debit' as const,
+              amount: newPurchaseFees
+            });
+          }
+
+          if (newExchangeRateDiff > 0) {
+            lines.push({
+              id: je.id + 4,
+              journalEntryId: je.id,
+              accountId: null,
+              accountName: 'فروق أسعار صرف العملات',
+              side: 'debit' as const,
+              amount: newExchangeRateDiff
+            });
+          }
+
+          lines.push({
+            id: je.id + 5,
+            journalEntryId: je.id,
+            accountId: newAccountId,
+            accountName: acc?.name || 'البطاقة / الحساب',
+            side: 'credit' as const,
+            amount: newTotalCost
+          });
+
           return {
             ...je,
             description: `شراء بضاعة طلبات من ${newSource} - دفعة ${existing.batchNumber}`,
-            lines: [
-              {
-                id: je.id + 1,
-                journalEntryId: je.id,
-                accountId: null,
-                accountName: `مشتريات بضائع - ${newSource}`,
-                side: 'debit' as const,
-                amount: newPurchaseCost
-              },
-              ...(newPurchaseFees + newTransferFees > 0 ? [{
-                id: je.id + 2,
-                journalEntryId: je.id,
-                accountId: null,
-                accountName: 'رسوم وعمولات شراء وتحويل بنكي',
-                side: 'debit' as const,
-                amount: newPurchaseFees + newTransferFees
-              }] : []),
-              {
-                id: je.id + 3,
-                journalEntryId: je.id,
-                accountId: newAccountId,
-                accountName: acc?.name || 'البطاقة / الحساب',
-                side: 'credit' as const,
-                amount: newTotalCost
-              }
-            ]
+            lines
           };
         }
         return je;

@@ -20,7 +20,8 @@ import {
   HelpCircle,
   Copy,
   Check,
-  Cpu
+  Cpu,
+  Code
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import {
@@ -29,9 +30,11 @@ import {
   testSupabaseConnection,
   getActiveSupabaseConfig,
   setRuntimeSupabaseConfig,
+  sanitizeSupabaseUrl,
   migrateLocalDataToSupabase
 } from '../lib/supabase';
 import { getOrCreateCurrentDevice, DeviceInfo, DeviceSyncRecord } from '../utils/deviceTracker';
+import supabaseSchemaSql from '../lib/supabase-schema.sql?raw';
 
 export const SupabaseMonitorView: React.FC = () => {
   const {
@@ -67,6 +70,7 @@ export const SupabaseMonitorView: React.FC = () => {
   const [editAnonKey, setEditAnonKey] = useState(supabaseConfig.anonKey);
   const [isEditingConfig, setIsEditingConfig] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
+  const [copiedSql, setCopiedSql] = useState(false);
   const [migrationStatus, setMigrationStatus] = useState<{
     running: boolean;
     result?: { success: boolean; insertedCounts: Record<string, number>; errors: string[] };
@@ -129,7 +133,9 @@ export const SupabaseMonitorView: React.FC = () => {
   // Handle saving credentials
   const handleSaveConfig = (e: React.FormEvent) => {
     e.preventDefault();
-    setRuntimeSupabaseConfig(editUrl, editAnonKey);
+    const cleanUrl = sanitizeSupabaseUrl(editUrl);
+    setEditUrl(cleanUrl);
+    setRuntimeSupabaseConfig(cleanUrl, editAnonKey.trim());
     const updated = getActiveSupabaseConfig();
     setSupabaseConfig(updated);
     setIsEditingConfig(false);
@@ -602,13 +608,44 @@ export const SupabaseMonitorView: React.FC = () => {
           </div>
         </div>
 
+        {/* Secret Key Warning Banner if user previously saved a secret key */}
+        {!isEditingConfig && (supabaseConfig.anonKey || '').toLowerCase().includes('secret') && (
+          <div className="p-4 bg-rose-50 border-2 border-rose-300 rounded-xl text-xs space-y-2 text-rose-950 animate-in fade-in">
+            <div className="font-bold flex items-center gap-2 text-rose-900 text-sm">
+              <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+              <span>سبب الخطأ في المتصفح: تم نسخ المفتاح السري (Secret Key) بدلاً من المفتاح العام!</span>
+            </div>
+            <p className="text-rose-800 leading-relaxed text-xs">
+              المفتاح المحفوظ حالياً يبدأ بـ <code className="font-mono font-bold bg-rose-200/80 text-rose-950 px-1.5 py-0.5 rounded">sb_secret_...</code> وهو المفتاح السري المخصص للسيرفرات فقط. منصة Supabase تحظره وتمنع استخدامه في المتصفح وتظهر رسالة:
+              <br />
+              <strong className="text-rose-950 font-mono text-[11px] block mt-1 bg-white/70 p-1.5 rounded border border-rose-200">
+                Forbidden use of secret API key in browser
+              </strong>
+            </p>
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setEditUrl(sanitizeSupabaseUrl(supabaseConfig.url));
+                  setEditAnonKey('');
+                  setIsEditingConfig(true);
+                }}
+                className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg transition-colors cursor-pointer text-xs flex items-center gap-1.5"
+              >
+                <Settings className="w-3.5 h-3.5" />
+                <span>اضغط هنا لتصحيح المفتاح الآن</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Credentials Form / View */}
         {isEditingConfig ? (
           <form onSubmit={handleSaveConfig} className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  رابط المشروع (Supabase Project URL)
+                  رابط المشروع (Supabase Project URL) *
                 </label>
                 <input
                   type="url"
@@ -620,30 +657,54 @@ export const SupabaseMonitorView: React.FC = () => {
                   required
                 />
                 <span className="text-[11px] text-slate-400 mt-1 block">
-                  انسخه من لوحة تحكم Supabase &gt; Project Settings &gt; API &gt; Project URL
+                  انسخ الرابط الأساسي فقط (مثال: https://xxxx.supabase.co) بدون إضافة /rest/v1
                 </span>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  المفتاح العام (Supabase Anon Public Key)
+                  المفتاح العام (anon public key / publishable) *
                 </label>
                 <input
                   type="text"
                   value={editAnonKey}
                   onChange={e => setEditAnonKey(e.target.value)}
-                  placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  placeholder="eyJhbGciOiJIUzI1Ni... أو sb_publishable_..."
                   dir="ltr"
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-mono text-slate-800 focus:outline-none focus:border-emerald-500"
+                  className={`w-full px-3 py-2 bg-white border rounded-lg text-xs font-mono text-slate-800 focus:outline-none ${
+                    editAnonKey.toLowerCase().includes('secret')
+                      ? 'border-rose-400 focus:border-rose-500 bg-rose-50/30'
+                      : 'border-slate-300 focus:border-emerald-500'
+                  }`}
                   required
                 />
                 <span className="text-[11px] text-slate-400 mt-1 block">
-                  المفتاح العام (anon / public) المخصص لتطبيقات المتصفح
+                  المفتاح العام (anon أو publishable) المخصص للمتصفح (لا تنسخ المفتاح الذي يحتوي على كلمة secret)
                 </span>
               </div>
             </div>
 
+            {/* Live Warning if user inputs a secret key */}
+            {editAnonKey.toLowerCase().includes('secret') && (
+              <div className="p-3 bg-rose-50 border border-rose-300 rounded-xl text-xs text-rose-900 space-y-1">
+                <div className="font-bold flex items-center gap-1.5 text-rose-800">
+                  <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>تنبيه: هذا المفتاح يحتوي على كلمة (secret)!</span>
+                </div>
+                <p className="text-[11px] text-rose-700 leading-relaxed">
+                  هذا هو المفتاح السري، والمتصفح سيرفض الاتصال به فوراً. يرجى نسخ المفتاح الآخر المكتوب بجانبه <strong>anon</strong> أو <strong>public</strong> من إعدادات Supabase.
+                </p>
+              </div>
+            )}
+
             <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsEditingConfig(false)}
+                className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+              >
+                إلغاء
+              </button>
               <button
                 type="submit"
                 className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer shadow-xs"
@@ -725,10 +786,40 @@ export const SupabaseMonitorView: React.FC = () => {
             </div>
 
             {migrationStatus.result.errors.length > 0 && (
-              <div className="mt-2 text-rose-700 bg-rose-50 p-2 rounded font-mono text-[11px] space-y-1">
-                {migrationStatus.result.errors.map((err, i) => (
-                  <div key={i}>• {err}</div>
-                ))}
+              <div className="mt-3 space-y-2">
+                <div className="text-rose-800 bg-rose-50 p-2.5 rounded-xl border border-rose-200 font-mono text-[11px] space-y-1">
+                  {migrationStatus.result.errors.map((err, i) => (
+                    <div key={i}>• {err}</div>
+                  ))}
+                </div>
+
+                <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl text-xs space-y-2 text-amber-950">
+                  <div className="font-bold flex items-center gap-1.5 text-amber-900">
+                    <HelpCircle className="w-4 h-4 text-amber-700 shrink-0" />
+                    <span>سبب هذا الخطأ وكيفية حله بدقيقة واحدة:</span>
+                  </div>
+                  <p className="text-[11px] text-amber-900 leading-relaxed">
+                    إذا ظهرت لك عبارة مثل <code>relation "..." does not exist</code> أو مشكلة بالصلاحيات، فالسبب هو أن الجداول لم تُنشأ بعد في مشروع Supabase الخاص بك.
+                  </p>
+                  <ol className="list-decimal list-inside text-[11px] space-y-1 text-amber-900 font-medium">
+                    <li>اضغط على الزر أدناه لنسخ كود إنشاء الجداول (SQL Script).</li>
+                    <li>افتح لوحة تحكم <strong>Supabase</strong> واذهب إلى <strong>SQL Editor</strong> من القائمة الجانبية.</li>
+                    <li>الصق الكود واضغط على زر <strong>Run</strong> لتأسيس الجداول في ثوانٍ.</li>
+                    <li>عد إلى هنا واضغط مرة أخرى على <strong>"رفع البيانات الحالية إلى Supabase"</strong>.</li>
+                  </ol>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(supabaseSchemaSql);
+                      setCopiedSql(true);
+                      setTimeout(() => setCopiedSql(false), 2500);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs cursor-pointer shadow-xs transition"
+                  >
+                    {copiedSql ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedSql ? 'تم نسخ كود SQL بنجاح!' : 'نسخ كود SQL لإنشاء جداول Supabase'}</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>

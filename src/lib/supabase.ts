@@ -31,14 +31,25 @@ try {
   // ignore
 }
 
+export function sanitizeSupabaseUrl(url: string): string {
+  if (!url) return '';
+  let clean = url.trim();
+  try {
+    const parsed = new URL(clean);
+    return `${parsed.protocol}//${parsed.host}`;
+  } catch {
+    return clean.replace(/\/rest\/v1\/?$/i, '').replace(/\/+$/, '');
+  }
+}
+
 export function setRuntimeSupabaseConfig(url: string, anonKey: string) {
-  runtimeUrl = url.trim();
+  runtimeUrl = sanitizeSupabaseUrl(url);
   runtimeAnonKey = anonKey.trim();
   try {
-    if (url) localStorage.setItem('topstore_supabase_url', runtimeUrl);
+    if (runtimeUrl) localStorage.setItem('topstore_supabase_url', runtimeUrl);
     else localStorage.removeItem('topstore_supabase_url');
 
-    if (anonKey) localStorage.setItem('topstore_supabase_anon_key', runtimeAnonKey);
+    if (runtimeAnonKey) localStorage.setItem('topstore_supabase_anon_key', runtimeAnonKey);
     else localStorage.removeItem('topstore_supabase_anon_key');
   } catch (e) {
     // ignore

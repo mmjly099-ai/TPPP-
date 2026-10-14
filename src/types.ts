@@ -706,9 +706,10 @@ export interface PurchaseBatch {
   purchaseDate: string;
   accountId: number;
   accountName?: string;
-  purchaseCost: string | number;
-  purchaseFees: string | number;
-  transferFees: string | number;
+  purchaseCost: string | number; // تكلفة الشراء الصافية
+  purchaseFees: string | number; // رسوم الشراء
+  transferFees: string | number; // عمولات التحويل البنكي
+  exchangeRateDiff?: string | number; // فروق الصرف
   totalCost: string | number;
   orderIds?: number[];
   notes?: string | null;
