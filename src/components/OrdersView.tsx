@@ -108,7 +108,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
               className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold shadow-2xs transition-colors cursor-pointer"
             >
               <PackageCheck className="w-4 h-4" />
-              <span>دفعات الشراء المجمعة ({orders.filter(o => o.status === 'pending').length} معلق)</span>
+              <span>المشتريات والدفع بالفيزا ({orders.filter(o => o.status === 'pending').length} معلق)</span>
             </button>
           )}
 

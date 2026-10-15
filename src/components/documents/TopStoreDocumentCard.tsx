@@ -788,7 +788,9 @@ export const TopStoreDocumentCard: React.FC<TopStoreDocumentCardProps> = ({
               <div>
                 <span className="text-[10px] text-slate-400 block font-medium">بطاقة / وسيلة الدفع</span>
                 <span className="text-xs sm:text-sm font-bold text-slate-700">
-                  {purchaseBatch?.cardName || accountName || 'فيزا كارد بنك التضامن'}
+                  {purchaseBatch?.paymentMode === 'split' && (purchaseBatch.accountId2 || purchaseBatch.accountName2)
+                    ? `${purchaseBatch.accountName || 'فيزا 1'} (${(Number(purchaseBatch.card1Amount) || 0).toLocaleString()} ر.ي) + ${purchaseBatch.accountName2 || 'فيزا 2'} (${(Number(purchaseBatch.card2Amount) || 0).toLocaleString()} ر.ي)`
+                    : (purchaseBatch?.accountName || purchaseBatch?.cardName || accountName || 'فيزا كارد بنك التضامن')}
                 </span>
               </div>
               <div>

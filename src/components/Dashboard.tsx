@@ -375,7 +375,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <p className="text-xs text-slate-300 mb-4">
               وسيط الشراء المباشر من المواقع العالمية: شي إن SHEIN وعلي إكسبرس AliExpress
             </p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <button
                 onClick={onOpenNewOrder}
                 className="flex items-center justify-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white p-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer"
@@ -389,6 +389,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>تحصيل دفعة</span>
+              </button>
+              <button
+                onClick={() => onNavigate('purchase-batches')}
+                className="flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white p-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer col-span-1 sm:col-span-1 shadow-xs"
+              >
+                <CreditCard className="w-3.5 h-3.5 text-amber-300" />
+                <span>المشتريات والدفع بالفيزا</span>
               </button>
             </div>
           </div>

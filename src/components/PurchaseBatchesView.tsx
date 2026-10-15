@@ -62,6 +62,11 @@ export const PurchaseBatchesView: React.FC = () => {
     totalCost: number;
     netProfit: number;
     margin: number;
+    paymentMode?: 'single' | 'split';
+    accountName?: string;
+    card1Amount?: number;
+    accountName2?: string | null;
+    card2Amount?: number;
   } | null>(null);
 
   // Search & Filter state
@@ -147,20 +152,30 @@ export const PurchaseBatchesView: React.FC = () => {
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-xs font-bold text-amber-300 mb-2">
               <PackageCheck className="w-3.5 h-3.5" />
-              <span>مشتريات الوساطة الجماعية</span>
+              <span>قسم المشتريات والدفع بالفيزا</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black">دفعات الشراء المجمعة (شي إن / علي إكسبرس)</h1>
+            <h1 className="text-2xl sm:text-3xl font-black">المشتريات ودفعات الشراء (شي إن / علي إكسبرس)</h1>
             <p className="text-sm text-slate-300 mt-1 max-w-2xl">
-              تجميع طلبيات العملاء وشرائها بحساب بنكي أو بطاقة واحدة، مع احتساب صافي الأرباح تلقائياً وتسجيل القيود وعمولات الشراء وتوزيع التكلفة على الطلبات.
+              تجميع طلبيات العملاء والشراء من المواقع، مع خيار الدفع الكامل من فيزا واحدة أو الدفع المجزأ من فيزتين (بنك التضامن وبنك التجاري) وتوزيع السحب تلقائياً مع احتساب الأرباح اللحظية.
             </p>
+            <div className="mt-3 flex items-center gap-2 flex-wrap text-xs">
+              <span className="bg-amber-400/20 text-amber-300 border border-amber-400/30 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5">
+                <CreditCard className="w-3.5 h-3.5" />
+                <span>دفع من فيزا واحدة</span>
+              </span>
+              <span className="bg-indigo-400/20 text-indigo-200 border border-indigo-400/30 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5" />
+                <span>دفع مجزأ من فيزتين (تضامن + تجاري) مع تحديد كم سحبت من كل فيزا</span>
+              </span>
+            </div>
           </div>
 
           <button
             onClick={handleOpenNewBatch}
-            className="inline-flex items-center gap-2 px-5 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl shadow-xs transition-all cursor-pointer text-xs sm:text-sm shrink-0"
+            className="inline-flex items-center gap-2 px-5 py-3.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl shadow-md transition-all cursor-pointer text-xs sm:text-sm shrink-0"
           >
-            <Plus className="w-4 h-4" />
-            <span>تسجيل دفعة شراء جماعية</span>
+            <Plus className="w-5 h-5" />
+            <span>تسجيل عملية شراء جديدة (دفع بالفيزا)</span>
           </button>
         </div>
       </div>
@@ -334,8 +349,20 @@ export const PurchaseBatchesView: React.FC = () => {
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-slate-400 mt-0.5">
-                          تاريخ الشراء: <span className="font-mono text-slate-600">{batch.purchaseDate}</span> • الحساب المسحوب منه: <span className="font-bold text-slate-700">{batch.accountName}</span>
+                        <div className="text-xs text-slate-500 mt-1 flex flex-wrap items-center gap-2">
+                          <span>تاريخ الشراء: <strong className="font-mono text-slate-700">{batch.purchaseDate}</strong></span>
+                          <span>•</span>
+                          {batch.paymentMode === 'split' && batch.accountId2 ? (
+                            <span className="inline-flex items-center gap-1.5 text-indigo-900 bg-indigo-50 px-2.5 py-0.5 rounded-lg font-medium border border-indigo-200 shadow-2xs">
+                              <CreditCard className="w-3.5 h-3.5 text-indigo-600" />
+                              <span className="font-bold">سحب مجزأ من فيزتين:</span>
+                              <span className="font-mono font-bold text-indigo-950">{batch.accountName} ({(Number(batch.card1Amount) || 0).toLocaleString()} YER)</span>
+                              <span className="text-indigo-400 font-bold">+</span>
+                              <span className="font-mono font-bold text-teal-950">{batch.accountName2 || 'فيزا 2'} ({(Number(batch.card2Amount) || 0).toLocaleString()} YER)</span>
+                            </span>
+                          ) : (
+                            <span>الحساب المسحوب منه: <strong className="text-slate-800 font-bold">{batch.accountName}</strong></span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -635,17 +662,57 @@ export const PurchaseBatchesView: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div>
-                      <span className="text-slate-500">الحساب المسحوب منه: </span>
-                      <span className="font-bold text-slate-900">{selectedBatch.accountName}</span>
+                  <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <CreditCard className="w-4 h-4 text-slate-500" />
+                        <span className="text-slate-600 font-bold">طريقة وقناة الدفع والسحب:</span>
+                        {selectedBatch.paymentMode === 'split' && selectedBatch.accountId2 ? (
+                          <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 font-bold text-[10px]">
+                            تجزئة الدفع بين فيزتين
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-800 font-bold text-[10px]">
+                            فيزا واحدة
+                          </span>
+                        )}
+                      </div>
+                      {selectedBatch.supplierOrderNumber && (
+                        <div>
+                          <span className="text-slate-500">رقم طلب المورد: </span>
+                          <span className="font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                            {selectedBatch.supplierOrderNumber}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    {selectedBatch.supplierOrderNumber && (
+
+                    {selectedBatch.paymentMode === 'split' && selectedBatch.accountId2 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-slate-200">
+                        <div className="p-2.5 bg-white rounded-lg border border-indigo-100 flex items-center justify-between">
+                          <div>
+                            <span className="text-[10px] text-slate-400 block">الفيزا الأولى:</span>
+                            <span className="font-bold text-slate-800">{selectedBatch.accountName}</span>
+                          </div>
+                          <span className="font-mono font-black text-indigo-700 text-xs sm:text-sm">
+                            {(Number(selectedBatch.card1Amount) || 0).toLocaleString()} YER
+                          </span>
+                        </div>
+                        <div className="p-2.5 bg-white rounded-lg border border-teal-100 flex items-center justify-between">
+                          <div>
+                            <span className="text-[10px] text-slate-400 block">الفيزا الثانية:</span>
+                            <span className="font-bold text-slate-800">{selectedBatch.accountName2 || 'الفيزا الثانية'}</span>
+                          </div>
+                          <span className="font-mono font-black text-teal-700 text-xs sm:text-sm">
+                            {(Number(selectedBatch.card2Amount) || 0).toLocaleString()} YER
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
                       <div>
-                        <span className="text-slate-500">رقم طلب المورد: </span>
-                        <span className="font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
-                          {selectedBatch.supplierOrderNumber}
-                        </span>
+                        <span className="text-slate-500">الحساب المسحوب منه كامل المبلغ: </span>
+                        <span className="font-bold text-slate-900">{selectedBatch.accountName}</span>
+                        <span className="font-mono text-slate-600 mr-1">({(Number(selectedBatch.totalCost) || 0).toLocaleString()} YER)</span>
                       </div>
                     )}
                   </div>
@@ -748,6 +815,10 @@ export const PurchaseBatchesView: React.FC = () => {
             const profit = selling - totalSpent;
             const margin = selling > 0 ? (profit / selling) * 100 : 0;
 
+            const isSplit = batchData.paymentMode === 'split' && Boolean(batchData.accountId2);
+            const acc1 = accounts.find(a => a.id === batchData.accountId);
+            const acc2 = isSplit && batchData.accountId2 ? accounts.find(a => a.id === batchData.accountId2) : undefined;
+
             addPurchaseBatch(batchData);
             setIsNewBatchOpen(false);
 
@@ -762,7 +833,12 @@ export const PurchaseBatchesView: React.FC = () => {
               fees: tFees + pFees + fxDiff,
               totalCost: totalSpent,
               netProfit: profit,
-              margin
+              margin,
+              paymentMode: batchData.paymentMode,
+              accountName: acc1?.name,
+              card1Amount: batchData.card1Amount,
+              accountName2: acc2?.name,
+              card2Amount: batchData.card2Amount
             });
           }}
         />
@@ -837,6 +913,30 @@ export const PurchaseBatchesView: React.FC = () => {
                 <span>إجمالي المبلغ المسحوب الكلي:</span>
                 <strong className="font-mono text-slate-900">{completedBatchSummary.totalCost.toLocaleString()} YER</strong>
               </div>
+
+              {/* Visa Withdrawal Details */}
+              {completedBatchSummary.paymentMode === 'split' && completedBatchSummary.accountName2 ? (
+                <div className="bg-indigo-50/70 border border-indigo-200 rounded-xl p-2.5 text-right text-xs space-y-1.5 mt-2">
+                  <div className="font-bold text-indigo-950 flex items-center gap-1.5 text-[11px]">
+                    <CreditCard className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>تم السحب مجزأ من فيزتين بنجاح:</span>
+                  </div>
+                  <div className="flex justify-between items-center text-slate-700 font-mono text-[11px] pr-2">
+                    <span>• {completedBatchSummary.accountName || 'الفيزا الأولى'}:</span>
+                    <strong className="text-indigo-950 font-bold">{(completedBatchSummary.card1Amount || 0).toLocaleString()} YER</strong>
+                  </div>
+                  <div className="flex justify-between items-center text-slate-700 font-mono text-[11px] pr-2">
+                    <span>• {completedBatchSummary.accountName2 || 'الفيزا الثانية'}:</span>
+                    <strong className="text-teal-950 font-bold">{(completedBatchSummary.card2Amount || 0).toLocaleString()} YER</strong>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-white border border-slate-200 rounded-xl p-2 text-right text-[11px] flex justify-between items-center">
+                  <span className="text-slate-600">تم السحب بالكامل من:</span>
+                  <strong className="text-slate-900 font-bold">{completedBatchSummary.accountName || 'البطاقة / الحساب'}</strong>
+                </div>
+              )}
+
               <div className="flex justify-between text-indigo-700 font-bold pt-1">
                 <span>متوسط ربح الطلب الواحد:</span>
                 <strong className="font-mono">
@@ -896,7 +996,11 @@ interface NewPurchaseBatchModalProps {
   onSubmit: (batchData: {
     source: string;
     supplierOrderNumber?: string;
+    paymentMode?: 'single' | 'split';
     accountId: number;
+    card1Amount?: number;
+    accountId2?: number | null;
+    card2Amount?: number;
     purchaseCost: number;
     purchaseFees: number;
     transferFees: number;
@@ -915,8 +1019,32 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
   const [source, setSource] = useState('SHEIN');
   const [supplierOrderNumber, setSupplierOrderNumber] = useState('');
   const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split('T')[0]);
-  const defaultAccId = accounts.find(a => a.type === 'بطاقة' || a.name.includes('فيزا') || a.name.includes('كريمي'))?.id || accounts[0]?.id || '';
+
+  // البحث عن فيزا بنك التضامن وفيزا بنك التجاري بالاسم أو النوع
+  const tadamonCard = useMemo(() => {
+    return accounts.find(a => (a.name.includes('التضامن') && (a.type === 'بطاقة' || a.name.includes('فيزا'))) || a.name.includes('التضامن')) ||
+           accounts.find(a => a.type === 'بطاقة') || accounts[0];
+  }, [accounts]);
+
+  const commercialCard = useMemo(() => {
+    return accounts.find(a => (a.name.includes('التجاري') && (a.type === 'بطاقة' || a.name.includes('فيزا'))) || a.name.includes('التجاري')) ||
+           accounts.find(a => a.id !== tadamonCard?.id && a.type === 'بطاقة') ||
+           accounts.find(a => a.id !== tadamonCard?.id) || accounts[1] || accounts[0];
+  }, [accounts, tadamonCard]);
+
+  // حالة طريقة وقناة الدفع: إما فيزا واحدة أو فيزتين
+  const [paymentMode, setPaymentMode] = useState<'single' | 'split'>('single');
+
+  // خيار فيزا واحدة
+  const defaultAccId = tadamonCard?.id || accounts.find(a => a.type === 'بطاقة' || a.name.includes('فيزا'))?.id || accounts[0]?.id || '';
   const [accountId, setAccountId] = useState<string>(String(defaultAccId));
+
+  // خيار فيزتين (تجزئة الدفع بين فيزا بنك التضامن وفيزا بنك التجاري)
+  const [card1Id, setCard1Id] = useState<string>(String(tadamonCard?.id || defaultAccId));
+  const [card2Id, setCard2Id] = useState<string>(String(commercialCard?.id || accounts.find(a => a.id !== Number(tadamonCard?.id || defaultAccId))?.id || ''));
+  const [card1Amount, setCard1Amount] = useState<string>('');
+  const [card2Amount, setCard2Amount] = useState<string>('');
+
   const [purchaseCost, setPurchaseCost] = useState('');
   const [transferFees, setTransferFees] = useState('0');
   const [purchaseFees, setPurchaseFees] = useState('0');
@@ -966,6 +1094,53 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
   const margin = selectedOrdersTotal > 0 ? (netProfit / selectedOrdersTotal) * 100 : 0;
   const avgProfitPerOrder = selectedOrderIds.length > 0 ? Math.round(netProfit / selectedOrderIds.length) : 0;
 
+  // دوال مساعدة لتوزيع المبالغ المسحوبة بين الفيزتين
+  const handleSplit5050 = () => {
+    if (totalCalculated <= 0) return;
+    const half = Math.floor(totalCalculated / 2);
+    setCard1Amount(String(half));
+    setCard2Amount(String(totalCalculated - half));
+    setFormError('');
+  };
+
+  const handleFullOnCard1 = () => {
+    if (totalCalculated <= 0) return;
+    setCard1Amount(String(totalCalculated));
+    setCard2Amount('0');
+    setFormError('');
+  };
+
+  const handleFullOnCard2 = () => {
+    if (totalCalculated <= 0) return;
+    setCard1Amount('0');
+    setCard2Amount(String(totalCalculated));
+    setFormError('');
+  };
+
+  const handleCard1Change = (val: string) => {
+    setCard1Amount(val);
+    setFormError('');
+    const n = Number(val);
+    if (!isNaN(n) && n >= 0 && n <= totalCalculated && totalCalculated > 0) {
+      setCard2Amount(String(totalCalculated - n));
+    }
+  };
+
+  const handleCard2Change = (val: string) => {
+    setCard2Amount(val);
+    setFormError('');
+    const n = Number(val);
+    if (!isNaN(n) && n >= 0 && n <= totalCalculated && totalCalculated > 0) {
+      setCard1Amount(String(totalCalculated - n));
+    }
+  };
+
+  const handleAutoBalance = () => {
+    const c1 = Number(card1Amount) || 0;
+    setCard2Amount(String(Math.max(0, totalCalculated - c1)));
+    setFormError('');
+  };
+
   const handleToggleOrder = (orderId: number) => {
     setSelectedOrderIds(prev =>
       prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]
@@ -982,10 +1157,6 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!accountId) {
-      setFormError('يرجى اختيار حساب الدفع أو البطاقة البنكية المسحوب منها');
-      return;
-    }
     if (!purchaseCost || Number(purchaseCost) <= 0) {
       setFormError('يرجى إدخال تكلفة الشراء الصافية');
       return;
@@ -995,17 +1166,63 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
       return;
     }
 
-    onSubmit({
-      source,
-      supplierOrderNumber: supplierOrderNumber.trim() || undefined,
-      accountId: Number(accountId),
-      purchaseCost: Number(purchaseCost) || 0,
-      transferFees: Number(transferFees) || 0,
-      purchaseFees: Number(purchaseFees) || 0,
-      exchangeRateDiff: Number(exchangeRateDiff) || 0,
-      orderIds: selectedOrderIds,
-      notes: notes.trim() || undefined
-    });
+    if (paymentMode === 'split') {
+      const c1 = Number(card1Amount) || 0;
+      const c2 = Number(card2Amount) || 0;
+      if (!card1Id || !card2Id) {
+        setFormError('يرجى تحديد كلتا الفيزتين للسحب المجزأ');
+        return;
+      }
+      if (card1Id === card2Id) {
+        setFormError('يرجى اختيار بطاقتين مختلفتين (مثال: فيزا بنك التضامن وفيزا بنك التجاري)');
+        return;
+      }
+      if (c1 <= 0 && c2 <= 0) {
+        setFormError('يرجى إدخال المبالغ المسحوبة من الفيزتين');
+        return;
+      }
+      if (c1 + c2 !== totalCalculated) {
+        setFormError(`مجموع المبالغ المسحوبة من الفيزتين (${(c1 + c2).toLocaleString()} YER) لا يتطابق مع إجمالي التكلفة المطلوبة (${totalCalculated.toLocaleString()} YER). اضغط على زر ضبط الفارق.`);
+        return;
+      }
+
+      onSubmit({
+        source,
+        supplierOrderNumber: supplierOrderNumber.trim() || undefined,
+        paymentMode: 'split',
+        accountId: Number(card1Id),
+        card1Amount: c1,
+        accountId2: Number(card2Id),
+        card2Amount: c2,
+        purchaseCost: Number(purchaseCost) || 0,
+        transferFees: Number(transferFees) || 0,
+        purchaseFees: Number(purchaseFees) || 0,
+        exchangeRateDiff: Number(exchangeRateDiff) || 0,
+        orderIds: selectedOrderIds,
+        notes: notes.trim() || undefined
+      });
+    } else {
+      if (!accountId) {
+        setFormError('يرجى اختيار حساب الدفع أو البطاقة البنكية المسحوب منها');
+        return;
+      }
+
+      onSubmit({
+        source,
+        supplierOrderNumber: supplierOrderNumber.trim() || undefined,
+        paymentMode: 'single',
+        accountId: Number(accountId),
+        card1Amount: totalCalculated,
+        accountId2: null,
+        card2Amount: undefined,
+        purchaseCost: Number(purchaseCost) || 0,
+        transferFees: Number(transferFees) || 0,
+        purchaseFees: Number(purchaseFees) || 0,
+        exchangeRateDiff: Number(exchangeRateDiff) || 0,
+        orderIds: selectedOrderIds,
+        notes: notes.trim() || undefined
+      });
+    }
   };
 
   return (
@@ -1070,23 +1287,6 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
                 className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500 font-mono"
               />
             </div>
-          </div>
-
-          <div>
-            <label className="font-bold text-slate-700 block mb-1">حساب الدفع / البطاقة البنكية *</label>
-            <select
-              required
-              value={accountId}
-              onChange={e => setAccountId(e.target.value)}
-              className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500"
-            >
-              <option value="">اختر الحساب أو المحفظة المسحوب منها</option>
-              {accounts.filter(a => a.status === 'active').map(a => (
-                <option key={a.id} value={a.id}>
-                  {a.name} ({a.type})
-                </option>
-              ))}
-            </select>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -1216,6 +1416,334 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
                 صافي الربح: {netProfit >= 0 ? '+' : ''}{netProfit.toLocaleString()} YER
               </span>
             </div>
+          </div>
+
+          {/* ============================================================== */}
+          {/* SECTION: خيارات الدفع من الفيزا (فيزا واحدة أو فيزتين)            */}
+          {/* ============================================================== */}
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-50/70 via-slate-50 to-indigo-50/50 border-2 border-amber-300/80 shadow-xs space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold">
+                  <CreditCard className="w-4 h-4" />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-900 text-xs block">
+                    طريقة وقناة الدفع والسحب من الفيزا *
+                  </label>
+                  <span className="text-[10px] text-slate-500">
+                    اختر ما إذا كان السحب تم من فيزا واحدة أو مجزأ بين فيزتين (تضامن وتجاري)
+                  </span>
+                </div>
+              </div>
+
+              <div className="text-left font-mono">
+                <span className="text-[10px] text-slate-400 block">إجمالي المبلغ المطلوب تغطيته:</span>
+                <span className="text-xs font-black text-slate-900">{totalCalculated.toLocaleString()} YER</span>
+              </div>
+            </div>
+
+            {/* Mode Switcher Buttons */}
+            <div className="grid grid-cols-2 gap-2 p-1 bg-white rounded-xl border border-slate-200 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setPaymentMode('single')}
+                className={`py-2.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                  paymentMode === 'single'
+                    ? 'bg-amber-500 text-slate-950 shadow-xs font-black'
+                    : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <CreditCard className="w-4 h-4" />
+                <span>خيار الدفع من فيزا واحدة</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setPaymentMode('split');
+                  if (!card1Amount && !card2Amount && totalCalculated > 0) {
+                    const half = Math.floor(totalCalculated / 2);
+                    setCard1Amount(String(half));
+                    setCard2Amount(String(totalCalculated - half));
+                  }
+                }}
+                className={`py-2.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                  paymentMode === 'split'
+                    ? 'bg-indigo-600 text-white shadow-xs font-black'
+                    : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <Layers className="w-4 h-4" />
+                <span>خيار الدفع من فيزتين (سحب مجزأ)</span>
+              </button>
+            </div>
+
+            {/* OPTION 1: SINGLE VISA */}
+            {paymentMode === 'single' && (
+              <div className="space-y-3 pt-1">
+                <div className="flex flex-wrap gap-2">
+                  {tadamonCard && (
+                    <button
+                      type="button"
+                      onClick={() => setAccountId(String(tadamonCard.id))}
+                      className={`flex-1 min-w-[200px] p-3 rounded-xl border text-right transition cursor-pointer flex items-center justify-between ${
+                        Number(accountId) === tadamonCard.id
+                          ? 'bg-amber-50 border-amber-400 text-amber-950 font-bold ring-2 ring-amber-400/40 shadow-xs'
+                          : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-900 flex items-center justify-center text-sm font-bold">
+                          💳
+                        </div>
+                        <div>
+                          <span className="block text-xs font-bold text-slate-900">{tadamonCard.name}</span>
+                          <span className="text-[10px] text-slate-400 font-mono">{tadamonCard.accountNumber || 'فيزا بنك التضامن'}</span>
+                        </div>
+                      </div>
+                      {Number(accountId) === tadamonCard.id && (
+                        <CheckCircle2 className="w-5 h-5 text-amber-600 shrink-0" />
+                      )}
+                    </button>
+                  )}
+
+                  {commercialCard && (
+                    <button
+                      type="button"
+                      onClick={() => setAccountId(String(commercialCard.id))}
+                      className={`flex-1 min-w-[200px] p-3 rounded-xl border text-right transition cursor-pointer flex items-center justify-between ${
+                        Number(accountId) === commercialCard.id
+                          ? 'bg-emerald-50 border-emerald-400 text-emerald-950 font-bold ring-2 ring-emerald-400/40 shadow-xs'
+                          : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-900 flex items-center justify-center text-sm font-bold">
+                          💳
+                        </div>
+                        <div>
+                          <span className="block text-xs font-bold text-slate-900">{commercialCard.name}</span>
+                          <span className="text-[10px] text-slate-400 font-mono">{commercialCard.accountNumber || 'فيزا بنك التجاري'}</span>
+                        </div>
+                      </div>
+                      {Number(accountId) === commercialCard.id && (
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1 text-[11px]">أو اختر حساب أو محفظة أخرى من القائمة:</label>
+                  <select
+                    value={accountId}
+                    onChange={e => setAccountId(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-amber-500 text-xs font-medium"
+                  >
+                    <option value="">اختر الحساب المسحوب منه المبلغ</option>
+                    {accounts.filter(a => a.status === 'active').map(a => (
+                      <option key={a.id} value={a.id}>
+                        {a.name} ({a.type})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="p-2.5 bg-amber-50/90 border border-amber-200 rounded-xl text-xs text-amber-950 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-amber-700" />
+                    <span>سيتم سحب كامل تكلفة الشراء من هذه الفيزا:</span>
+                  </div>
+                  <strong className="font-mono font-black text-amber-950 text-sm">
+                    {totalCalculated.toLocaleString()} YER
+                  </strong>
+                </div>
+              </div>
+            )}
+
+            {/* OPTION 2: TWO VISAS (SPLIT) */}
+            {paymentMode === 'split' && (
+              <div className="space-y-3 pt-1">
+                {/* Fast presets buttons */}
+                <div className="flex flex-wrap items-center justify-between gap-1.5 p-2 bg-indigo-50/70 rounded-xl border border-indigo-200 text-xs">
+                  <span className="font-bold text-indigo-950 flex items-center gap-1">
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>توزيع سريع للمبالغ:</span>
+                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={handleSplit5050}
+                      className="px-2.5 py-1 bg-white hover:bg-indigo-100 text-indigo-900 font-bold rounded-lg border border-indigo-200 transition cursor-pointer text-[11px] shadow-2xs"
+                    >
+                      مناصفة (50% / 50%)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleFullOnCard1}
+                      className="px-2.5 py-1 bg-white hover:bg-indigo-100 text-indigo-900 font-bold rounded-lg border border-indigo-200 transition cursor-pointer text-[11px] shadow-2xs"
+                    >
+                      كامل المبلغ على فيزا التضامن
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleFullOnCard2}
+                      className="px-2.5 py-1 bg-white hover:bg-indigo-100 text-indigo-900 font-bold rounded-lg border border-indigo-200 transition cursor-pointer text-[11px] shadow-2xs"
+                    >
+                      كامل المبلغ على فيزا التجاري
+                    </button>
+                  </div>
+                </div>
+
+                {/* The Two Visa Cards Inputs */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Card 1: Tadhamon */}
+                  <div className="p-3 bg-white rounded-xl border-2 border-indigo-200 shadow-2xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-indigo-950 text-xs flex items-center gap-1.5">
+                        <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] flex items-center justify-center font-bold">1</span>
+                        <span>الفيزا الأولى (بنك التضامن)</span>
+                      </span>
+                      <span className="text-[10px] text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded font-bold border border-indigo-100">بطاقة أساسية</span>
+                    </div>
+
+                    <select
+                      value={card1Id}
+                      onChange={e => setCard1Id(e.target.value)}
+                      className="w-full p-2 rounded-lg border border-slate-300 text-xs font-bold focus:outline-indigo-500 bg-slate-50"
+                    >
+                      {accounts.filter(a => a.status === 'active').map(a => (
+                        <option key={a.id} value={a.id}>
+                          {a.name} ({a.type})
+                        </option>
+                      ))}
+                    </select>
+
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1 text-[11px]">
+                        كم سحبت من الفيزا الأولى؟ (YER) *
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          required
+                          placeholder="المبلغ المسحوب"
+                          value={card1Amount}
+                          onChange={e => handleCard1Change(e.target.value)}
+                          className="w-full p-2.5 rounded-lg border border-indigo-300 text-sm font-mono font-black text-indigo-950 focus:outline-indigo-500 pl-12 bg-indigo-50/20"
+                        />
+                        <span className="absolute left-2.5 top-2.5 text-[10px] text-indigo-600 font-bold font-mono">
+                          YER
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card 2: Commercial */}
+                  <div className="p-3 bg-white rounded-xl border-2 border-teal-200 shadow-2xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-teal-950 text-xs flex items-center gap-1.5">
+                        <span className="w-5 h-5 rounded-full bg-teal-600 text-white text-[10px] flex items-center justify-center font-bold">2</span>
+                        <span>الفيزا الثانية (بنك التجاري)</span>
+                      </span>
+                      <span className="text-[10px] text-teal-700 bg-teal-50 px-2 py-0.5 rounded font-bold border border-teal-100">بطاقة مساعدة</span>
+                    </div>
+
+                    <select
+                      value={card2Id}
+                      onChange={e => setCard2Id(e.target.value)}
+                      className="w-full p-2 rounded-lg border border-slate-300 text-xs font-bold focus:outline-teal-500 bg-slate-50"
+                    >
+                      {accounts.filter(a => a.status === 'active').map(a => (
+                        <option key={a.id} value={a.id}>
+                          {a.name} ({a.type})
+                        </option>
+                      ))}
+                    </select>
+
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1 text-[11px]">
+                        كم سحبت من الفيزا الثانية؟ (YER) *
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          required
+                          placeholder="المبلغ المسحوب"
+                          value={card2Amount}
+                          onChange={e => handleCard2Change(e.target.value)}
+                          className="w-full p-2.5 rounded-lg border border-teal-300 text-sm font-mono font-black text-teal-950 focus:outline-teal-500 pl-12 bg-teal-50/20"
+                        />
+                        <span className="absolute left-2.5 top-2.5 text-[10px] text-teal-600 font-bold font-mono">
+                          YER
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Split Match Validation Banner */}
+                {(() => {
+                  const sumCards = (Number(card1Amount) || 0) + (Number(card2Amount) || 0);
+                  const diff = totalCalculated - sumCards;
+                  const isMatch = Math.abs(diff) === 0 && totalCalculated > 0;
+
+                  return (
+                    <div className={`p-3 rounded-xl border text-xs transition ${
+                      isMatch
+                        ? 'bg-emerald-50/80 border-emerald-300 text-emerald-950'
+                        : 'bg-amber-50/90 border-amber-300 text-amber-950'
+                    }`}>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          {isMatch ? (
+                            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                          ) : (
+                            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
+                          )}
+                          <div>
+                            <div className="font-bold flex items-center gap-2">
+                              <span>المجموع المسحوب من الفيزتين:</span>
+                              <span className="font-mono text-sm font-black">{sumCards.toLocaleString()} YER</span>
+                              <span className="text-slate-400 font-normal">|</span>
+                              <span className="text-slate-600 font-medium">المطلوب: {totalCalculated.toLocaleString()} YER</span>
+                            </div>
+                            <span className="text-[11px] block mt-0.5">
+                              {isMatch ? (
+                                <span className="text-emerald-700 font-bold">
+                                  ✓ المبالغ مطابقة تماماً لإجمالي تكلفة الشراء والرسوم (100%)
+                                </span>
+                              ) : diff > 0 ? (
+                                <span className="text-amber-800 font-bold">
+                                  متبقي لتغطية التكلفة بالكامل: {diff.toLocaleString()} YER
+                                </span>
+                              ) : (
+                                <span className="text-rose-700 font-bold">
+                                  المبالغ المدخلة تزيد عن التكلفة بمقدار: {Math.abs(diff).toLocaleString()} YER
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        </div>
+
+                        {!isMatch && totalCalculated > 0 && (
+                          <button
+                            type="button"
+                            onClick={handleAutoBalance}
+                            className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition cursor-pointer shrink-0"
+                          >
+                            ضبط الفارق تلقائياً
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
           </div>
 
           {/* Clarity Box: Orders Total Registered with Actual Discounts */}
@@ -1380,7 +1908,11 @@ interface EditPurchaseBatchModalProps {
     source: string;
     supplierOrderNumber?: string | null;
     purchaseDate: string;
+    paymentMode?: 'single' | 'split';
     accountId: number;
+    card1Amount?: number;
+    accountId2?: number | null;
+    card2Amount?: number;
     purchaseCost: number;
     purchaseFees: number;
     transferFees: number;
@@ -1400,8 +1932,32 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
   const [source, setSource] = useState(batch.source || 'SHEIN');
   const [supplierOrderNumber, setSupplierOrderNumber] = useState(batch.supplierOrderNumber || '');
   const [purchaseDate, setPurchaseDate] = useState(batch.purchaseDate || new Date().toISOString().split('T')[0]);
-  const defaultAccId = batch.accountId || accounts[0]?.id || '';
+
+  // البحث عن فيزا بنك التضامن وفيزا بنك التجاري
+  const tadamonCard = useMemo(() => {
+    return accounts.find(a => (a.name.includes('التضامن') && (a.type === 'بطاقة' || a.name.includes('فيزا'))) || a.name.includes('التضامن')) ||
+           accounts.find(a => a.type === 'بطاقة') || accounts[0];
+  }, [accounts]);
+
+  const commercialCard = useMemo(() => {
+    return accounts.find(a => (a.name.includes('التجاري') && (a.type === 'بطاقة' || a.name.includes('فيزا'))) || a.name.includes('التجاري')) ||
+           accounts.find(a => a.id !== tadamonCard?.id && a.type === 'بطاقة') ||
+           accounts.find(a => a.id !== tadamonCard?.id) || accounts[1] || accounts[0];
+  }, [accounts, tadamonCard]);
+
+  // طريقة الدفع المسجلة مسبقاً (فيزا واحدة أو فيزتين)
+  const [paymentMode, setPaymentMode] = useState<'single' | 'split'>(batch.paymentMode || 'single');
+
+  // خيار فيزا واحدة
+  const defaultAccId = batch.accountId || tadamonCard?.id || accounts[0]?.id || '';
   const [accountId, setAccountId] = useState<string>(String(defaultAccId));
+
+  // خيار فيزتين
+  const [card1Id, setCard1Id] = useState<string>(String(batch.accountId || tadamonCard?.id || defaultAccId));
+  const [card2Id, setCard2Id] = useState<string>(String(batch.accountId2 || commercialCard?.id || accounts.find(a => a.id !== Number(batch.accountId || tadamonCard?.id))?.id || ''));
+  const [card1Amount, setCard1Amount] = useState<string>(batch.paymentMode === 'split' && batch.card1Amount !== undefined ? String(batch.card1Amount) : '');
+  const [card2Amount, setCard2Amount] = useState<string>(batch.paymentMode === 'split' && batch.card2Amount !== undefined ? String(batch.card2Amount) : '');
+
   const [purchaseCost, setPurchaseCost] = useState<string>(String(batch.purchaseCost || ''));
   const [transferFees, setTransferFees] = useState<string>(String(batch.transferFees || '0'));
   const [purchaseFees, setPurchaseFees] = useState<string>(String(batch.purchaseFees || '0'));
@@ -1450,6 +2006,53 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
     (Number(purchaseFees) || 0) +
     (Number(exchangeRateDiff) || 0);
 
+  // دوال مساعدة لتوزيع المبالغ المسحوبة بين الفيزتين
+  const handleSplit5050 = () => {
+    if (totalCalculated <= 0) return;
+    const half = Math.floor(totalCalculated / 2);
+    setCard1Amount(String(half));
+    setCard2Amount(String(totalCalculated - half));
+    setFormError('');
+  };
+
+  const handleFullOnCard1 = () => {
+    if (totalCalculated <= 0) return;
+    setCard1Amount(String(totalCalculated));
+    setCard2Amount('0');
+    setFormError('');
+  };
+
+  const handleFullOnCard2 = () => {
+    if (totalCalculated <= 0) return;
+    setCard1Amount('0');
+    setCard2Amount(String(totalCalculated));
+    setFormError('');
+  };
+
+  const handleCard1Change = (val: string) => {
+    setCard1Amount(val);
+    setFormError('');
+    const n = Number(val);
+    if (!isNaN(n) && n >= 0 && n <= totalCalculated && totalCalculated > 0) {
+      setCard2Amount(String(totalCalculated - n));
+    }
+  };
+
+  const handleCard2Change = (val: string) => {
+    setCard2Amount(val);
+    setFormError('');
+    const n = Number(val);
+    if (!isNaN(n) && n >= 0 && n <= totalCalculated && totalCalculated > 0) {
+      setCard1Amount(String(totalCalculated - n));
+    }
+  };
+
+  const handleAutoBalance = () => {
+    const c1 = Number(card1Amount) || 0;
+    setCard2Amount(String(Math.max(0, totalCalculated - c1)));
+    setFormError('');
+  };
+
   const handleToggleOrder = (orderId: number) => {
     setSelectedOrderIds(prev =>
       prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]
@@ -1466,10 +2069,6 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!accountId) {
-      setFormError('يرجى اختيار حساب الدفع أو البطاقة البنكية');
-      return;
-    }
     if (!purchaseCost || Number(purchaseCost) <= 0) {
       setFormError('يرجى إدخال تكلفة الشراء الصافية');
       return;
@@ -1479,18 +2078,65 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
       return;
     }
 
-    onSave({
-      source,
-      supplierOrderNumber: supplierOrderNumber.trim() || null,
-      purchaseDate,
-      accountId: Number(accountId),
-      purchaseCost: Number(purchaseCost) || 0,
-      transferFees: Number(transferFees) || 0,
-      purchaseFees: Number(purchaseFees) || 0,
-      exchangeRateDiff: Number(exchangeRateDiff) || 0,
-      orderIds: selectedOrderIds,
-      notes: notes.trim() || null
-    });
+    if (paymentMode === 'split') {
+      const c1 = Number(card1Amount) || 0;
+      const c2 = Number(card2Amount) || 0;
+      if (!card1Id || !card2Id) {
+        setFormError('يرجى تحديد كلتا الفيزتين للسحب المجزأ');
+        return;
+      }
+      if (card1Id === card2Id) {
+        setFormError('يرجى اختيار بطاقتين مختلفتين (مثال: فيزا بنك التضامن وفيزا بنك التجاري)');
+        return;
+      }
+      if (c1 <= 0 && c2 <= 0) {
+        setFormError('يرجى إدخال المبالغ المسحوبة من الفيزتين');
+        return;
+      }
+      if (c1 + c2 !== totalCalculated) {
+        setFormError(`مجموع المبالغ المسحوبة من الفيزتين (${(c1 + c2).toLocaleString()} YER) لا يتطابق مع إجمالي التكلفة المطلوبة (${totalCalculated.toLocaleString()} YER). اضغط على زر ضبط الفارق.`);
+        return;
+      }
+
+      onSave({
+        source,
+        supplierOrderNumber: supplierOrderNumber.trim() || null,
+        purchaseDate,
+        paymentMode: 'split',
+        accountId: Number(card1Id),
+        card1Amount: c1,
+        accountId2: Number(card2Id),
+        card2Amount: c2,
+        purchaseCost: Number(purchaseCost) || 0,
+        transferFees: Number(transferFees) || 0,
+        purchaseFees: Number(purchaseFees) || 0,
+        exchangeRateDiff: Number(exchangeRateDiff) || 0,
+        orderIds: selectedOrderIds,
+        notes: notes.trim() || null
+      });
+    } else {
+      if (!accountId) {
+        setFormError('يرجى اختيار حساب الدفع أو البطاقة البنكية');
+        return;
+      }
+
+      onSave({
+        source,
+        supplierOrderNumber: supplierOrderNumber.trim() || null,
+        purchaseDate,
+        paymentMode: 'single',
+        accountId: Number(accountId),
+        card1Amount: totalCalculated,
+        accountId2: null,
+        card2Amount: undefined,
+        purchaseCost: Number(purchaseCost) || 0,
+        transferFees: Number(transferFees) || 0,
+        purchaseFees: Number(purchaseFees) || 0,
+        exchangeRateDiff: Number(exchangeRateDiff) || 0,
+        orderIds: selectedOrderIds,
+        notes: notes.trim() || null
+      });
+    }
   };
 
   return (
@@ -1555,23 +2201,6 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
                 className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500 font-mono"
               />
             </div>
-          </div>
-
-          <div>
-            <label className="font-bold text-slate-700 block mb-1">حساب الدفع / البطاقة البنكية *</label>
-            <select
-              required
-              value={accountId}
-              onChange={e => setAccountId(e.target.value)}
-              className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500"
-            >
-              <option value="">اختر الحساب المسحوب منه المبلغ</option>
-              {accounts.filter(a => a.status === 'active').map(a => (
-                <option key={a.id} value={a.id}>
-                  {a.name} ({a.type})
-                </option>
-              ))}
-            </select>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -1709,6 +2338,334 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
               </div>
             );
           })()}
+
+          {/* ============================================================== */}
+          {/* SECTION: خيارات الدفع من الفيزا (فيزا واحدة أو فيزتين) - تعديل   */}
+          {/* ============================================================== */}
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-50/70 via-slate-50 to-indigo-50/50 border-2 border-amber-300/80 shadow-xs space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold">
+                  <CreditCard className="w-4 h-4" />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-900 text-xs block">
+                    طريقة وقناة الدفع والسحب من الفيزا *
+                  </label>
+                  <span className="text-[10px] text-slate-500">
+                    اختر ما إذا كان السحب تم من فيزا واحدة أو مجزأ بين فيزتين (تضامن وتجاري)
+                  </span>
+                </div>
+              </div>
+
+              <div className="text-left font-mono">
+                <span className="text-[10px] text-slate-400 block">إجمالي المبلغ المطلوب تغطيته:</span>
+                <span className="text-xs font-black text-slate-900">{totalCalculated.toLocaleString()} YER</span>
+              </div>
+            </div>
+
+            {/* Mode Switcher Buttons */}
+            <div className="grid grid-cols-2 gap-2 p-1 bg-white rounded-xl border border-slate-200 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setPaymentMode('single')}
+                className={`py-2.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                  paymentMode === 'single'
+                    ? 'bg-amber-500 text-slate-950 shadow-xs font-black'
+                    : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <CreditCard className="w-4 h-4" />
+                <span>خيار الدفع من فيزا واحدة</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setPaymentMode('split');
+                  if (!card1Amount && !card2Amount && totalCalculated > 0) {
+                    const half = Math.floor(totalCalculated / 2);
+                    setCard1Amount(String(half));
+                    setCard2Amount(String(totalCalculated - half));
+                  }
+                }}
+                className={`py-2.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                  paymentMode === 'split'
+                    ? 'bg-indigo-600 text-white shadow-xs font-black'
+                    : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <Layers className="w-4 h-4" />
+                <span>خيار الدفع من فيزتين (سحب مجزأ)</span>
+              </button>
+            </div>
+
+            {/* OPTION 1: SINGLE VISA */}
+            {paymentMode === 'single' && (
+              <div className="space-y-3 pt-1">
+                <div className="flex flex-wrap gap-2">
+                  {tadamonCard && (
+                    <button
+                      type="button"
+                      onClick={() => setAccountId(String(tadamonCard.id))}
+                      className={`flex-1 min-w-[200px] p-3 rounded-xl border text-right transition cursor-pointer flex items-center justify-between ${
+                        Number(accountId) === tadamonCard.id
+                          ? 'bg-amber-50 border-amber-400 text-amber-950 font-bold ring-2 ring-amber-400/40 shadow-xs'
+                          : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-900 flex items-center justify-center text-sm font-bold">
+                          💳
+                        </div>
+                        <div>
+                          <span className="block text-xs font-bold text-slate-900">{tadamonCard.name}</span>
+                          <span className="text-[10px] text-slate-400 font-mono">{tadamonCard.accountNumber || 'فيزا بنك التضامن'}</span>
+                        </div>
+                      </div>
+                      {Number(accountId) === tadamonCard.id && (
+                        <CheckCircle2 className="w-5 h-5 text-amber-600 shrink-0" />
+                      )}
+                    </button>
+                  )}
+
+                  {commercialCard && (
+                    <button
+                      type="button"
+                      onClick={() => setAccountId(String(commercialCard.id))}
+                      className={`flex-1 min-w-[200px] p-3 rounded-xl border text-right transition cursor-pointer flex items-center justify-between ${
+                        Number(accountId) === commercialCard.id
+                          ? 'bg-emerald-50 border-emerald-400 text-emerald-950 font-bold ring-2 ring-emerald-400/40 shadow-xs'
+                          : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-900 flex items-center justify-center text-sm font-bold">
+                          💳
+                        </div>
+                        <div>
+                          <span className="block text-xs font-bold text-slate-900">{commercialCard.name}</span>
+                          <span className="text-[10px] text-slate-400 font-mono">{commercialCard.accountNumber || 'فيزا بنك التجاري'}</span>
+                        </div>
+                      </div>
+                      {Number(accountId) === commercialCard.id && (
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1 text-[11px]">أو اختر حساب أو محفظة أخرى من القائمة:</label>
+                  <select
+                    value={accountId}
+                    onChange={e => setAccountId(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-amber-500 text-xs font-medium"
+                  >
+                    <option value="">اختر الحساب المسحوب منه المبلغ</option>
+                    {accounts.filter(a => a.status === 'active').map(a => (
+                      <option key={a.id} value={a.id}>
+                        {a.name} ({a.type})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="p-2.5 bg-amber-50/90 border border-amber-200 rounded-xl text-xs text-amber-950 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-amber-700" />
+                    <span>سيتم سحب كامل تكلفة الشراء من هذه الفيزا:</span>
+                  </div>
+                  <strong className="font-mono font-black text-amber-950 text-sm">
+                    {totalCalculated.toLocaleString()} YER
+                  </strong>
+                </div>
+              </div>
+            )}
+
+            {/* OPTION 2: TWO VISAS (SPLIT) */}
+            {paymentMode === 'split' && (
+              <div className="space-y-3 pt-1">
+                {/* Fast presets buttons */}
+                <div className="flex flex-wrap items-center justify-between gap-1.5 p-2 bg-indigo-50/70 rounded-xl border border-indigo-200 text-xs">
+                  <span className="font-bold text-indigo-950 flex items-center gap-1">
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>توزيع سريع للمبالغ:</span>
+                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={handleSplit5050}
+                      className="px-2.5 py-1 bg-white hover:bg-indigo-100 text-indigo-900 font-bold rounded-lg border border-indigo-200 transition cursor-pointer text-[11px] shadow-2xs"
+                    >
+                      مناصفة (50% / 50%)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleFullOnCard1}
+                      className="px-2.5 py-1 bg-white hover:bg-indigo-100 text-indigo-900 font-bold rounded-lg border border-indigo-200 transition cursor-pointer text-[11px] shadow-2xs"
+                    >
+                      كامل المبلغ على فيزا التضامن
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleFullOnCard2}
+                      className="px-2.5 py-1 bg-white hover:bg-indigo-100 text-indigo-900 font-bold rounded-lg border border-indigo-200 transition cursor-pointer text-[11px] shadow-2xs"
+                    >
+                      كامل المبلغ على فيزا التجاري
+                    </button>
+                  </div>
+                </div>
+
+                {/* The Two Visa Cards Inputs */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Card 1: Tadhamon */}
+                  <div className="p-3 bg-white rounded-xl border-2 border-indigo-200 shadow-2xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-indigo-950 text-xs flex items-center gap-1.5">
+                        <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] flex items-center justify-center font-bold">1</span>
+                        <span>الفيزا الأولى (بنك التضامن)</span>
+                      </span>
+                      <span className="text-[10px] text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded font-bold border border-indigo-100">بطاقة أساسية</span>
+                    </div>
+
+                    <select
+                      value={card1Id}
+                      onChange={e => setCard1Id(e.target.value)}
+                      className="w-full p-2 rounded-lg border border-slate-300 text-xs font-bold focus:outline-indigo-500 bg-slate-50"
+                    >
+                      {accounts.filter(a => a.status === 'active').map(a => (
+                        <option key={a.id} value={a.id}>
+                          {a.name} ({a.type})
+                        </option>
+                      ))}
+                    </select>
+
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1 text-[11px]">
+                        كم سحبت من الفيزا الأولى؟ (YER) *
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          required
+                          placeholder="المبلغ المسحوب"
+                          value={card1Amount}
+                          onChange={e => handleCard1Change(e.target.value)}
+                          className="w-full p-2.5 rounded-lg border border-indigo-300 text-sm font-mono font-black text-indigo-950 focus:outline-indigo-500 pl-12 bg-indigo-50/20"
+                        />
+                        <span className="absolute left-2.5 top-2.5 text-[10px] text-indigo-600 font-bold font-mono">
+                          YER
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card 2: Commercial */}
+                  <div className="p-3 bg-white rounded-xl border-2 border-teal-200 shadow-2xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-teal-950 text-xs flex items-center gap-1.5">
+                        <span className="w-5 h-5 rounded-full bg-teal-600 text-white text-[10px] flex items-center justify-center font-bold">2</span>
+                        <span>الفيزا الثانية (بنك التجاري)</span>
+                      </span>
+                      <span className="text-[10px] text-teal-700 bg-teal-50 px-2 py-0.5 rounded font-bold border border-teal-100">بطاقة مساعدة</span>
+                    </div>
+
+                    <select
+                      value={card2Id}
+                      onChange={e => setCard2Id(e.target.value)}
+                      className="w-full p-2 rounded-lg border border-slate-300 text-xs font-bold focus:outline-teal-500 bg-slate-50"
+                    >
+                      {accounts.filter(a => a.status === 'active').map(a => (
+                        <option key={a.id} value={a.id}>
+                          {a.name} ({a.type})
+                        </option>
+                      ))}
+                    </select>
+
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1 text-[11px]">
+                        كم سحبت من الفيزا الثانية؟ (YER) *
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          required
+                          placeholder="المبلغ المسحوب"
+                          value={card2Amount}
+                          onChange={e => handleCard2Change(e.target.value)}
+                          className="w-full p-2.5 rounded-lg border border-teal-300 text-sm font-mono font-black text-teal-950 focus:outline-teal-500 pl-12 bg-teal-50/20"
+                        />
+                        <span className="absolute left-2.5 top-2.5 text-[10px] text-teal-600 font-bold font-mono">
+                          YER
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Split Match Validation Banner */}
+                {(() => {
+                  const sumCards = (Number(card1Amount) || 0) + (Number(card2Amount) || 0);
+                  const diff = totalCalculated - sumCards;
+                  const isMatch = Math.abs(diff) === 0 && totalCalculated > 0;
+
+                  return (
+                    <div className={`p-3 rounded-xl border text-xs transition ${
+                      isMatch
+                        ? 'bg-emerald-50/80 border-emerald-300 text-emerald-950'
+                        : 'bg-amber-50/90 border-amber-300 text-amber-950'
+                    }`}>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          {isMatch ? (
+                            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                          ) : (
+                            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
+                          )}
+                          <div>
+                            <div className="font-bold flex items-center gap-2">
+                              <span>المجموع المسحوب من الفيزتين:</span>
+                              <span className="font-mono text-sm font-black">{sumCards.toLocaleString()} YER</span>
+                              <span className="text-slate-400 font-normal">|</span>
+                              <span className="text-slate-600 font-medium">المطلوب: {totalCalculated.toLocaleString()} YER</span>
+                            </div>
+                            <span className="text-[11px] block mt-0.5">
+                              {isMatch ? (
+                                <span className="text-emerald-700 font-bold">
+                                  ✓ المبالغ مطابقة تماماً لإجمالي تكلفة الشراء والرسوم (100%)
+                                </span>
+                              ) : diff > 0 ? (
+                                <span className="text-amber-800 font-bold">
+                                  متبقي لتغطية التكلفة بالكامل: {diff.toLocaleString()} YER
+                                </span>
+                              ) : (
+                                <span className="text-rose-700 font-bold">
+                                  المبالغ المدخلة تزيد عن التكلفة بمقدار: {Math.abs(diff).toLocaleString()} YER
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        </div>
+
+                        {!isMatch && totalCalculated > 0 && (
+                          <button
+                            type="button"
+                            onClick={handleAutoBalance}
+                            className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition cursor-pointer shrink-0"
+                          >
+                            ضبط الفارق تلقائياً
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
 
           {/* Clarity Box: Orders Total Registered with Actual Discounts */}
           {selectedOrderIds.length > 0 && (

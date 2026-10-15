@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { X, Receipt, CheckCircle2, User, Wallet, Sparkles, ShieldCheck, Bike, DollarSign } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { X, Receipt, CheckCircle2, Check, CreditCard, User, Wallet, Sparkles, ShieldCheck, Bike, DollarSign, Plus, Building2, Banknote, ChevronDown } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
-import { Customer, Order, Payment } from '../../types';
+import { Customer, Order, Payment, Account } from '../../types';
 import { numberToArabicWords } from '../../utils/tafqeet';
 
 interface PaymentModalProps {
@@ -19,28 +19,90 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   preSelectedOrder,
   onPaymentSuccess
 }) => {
-  const { customers, orders, accounts, couriers = [], deliveryOrders = [], recordPayment, getCustomerBalance, payments } = useStore();
+  const { customers, orders, accounts, chartAccounts = [], couriers = [], deliveryOrders = [], recordPayment, getCustomerBalance, getAccountBalance, addAccount, payments } = useStore();
 
   const [customerId, setCustomerId] = useState<number>(() => preSelectedCustomer?.id || customers[0]?.id || 0);
   const [orderId, setOrderId] = useState<number | undefined>(() => preSelectedOrder?.id || undefined);
   const [amount, setAmount] = useState<number>(() => preSelectedOrder?.remainingAmount || 0);
+
+  // تجميع كافة الحسابات والمحافظ المالية (من جدول الحسابات + أي حساب مالي مضاف في شجرة الحسابات)
+  const availableAccounts = useMemo(() => {
+    const list = accounts.filter(a => a.status !== 'inactive' && a.type !== 'حقوق ملكية');
+    const existingNames = new Set(list.map(a => a.name.trim().toLowerCase()));
+    const extraFromChart: Account[] = [];
+
+    (chartAccounts || []).forEach(ca => {
+      if (
+        ca.category === 'asset' &&
+        (ca.code?.startsWith('101') ||
+         ca.code?.startsWith('102') ||
+         ca.subCategory?.includes('بنوك') ||
+         ca.subCategory?.includes('محافظ') ||
+         ca.subCategory?.includes('نقدية') ||
+         ca.name?.includes('محفظة') ||
+         ca.name?.includes('بنك') ||
+         ca.name?.includes('كاش') ||
+         ca.name?.includes('صندوق') ||
+         ca.name?.includes('كريمي') ||
+         ca.name?.includes('جيب') ||
+         ca.name?.includes('ون كاش'))
+      ) {
+        if (!existingNames.has(ca.name.trim().toLowerCase())) {
+          existingNames.add(ca.name.trim().toLowerCase());
+          extraFromChart.push({
+            id: ca.id,
+            name: ca.name,
+            type: ca.name.includes('محفظة')
+              ? 'محفظة'
+              : (ca.name.includes('بنك') ? 'بنكي' : (ca.name.includes('بطاقة') ? 'بطاقة' : 'نقدي')),
+            openingBalance: 0,
+            status: 'active',
+            createdAt: ca.createdAt || new Date().toISOString()
+          });
+        }
+      }
+    });
+
+    return [...list, ...extraFromChart];
+  }, [accounts, chartAccounts]);
+
   const [accountId, setAccountId] = useState<number>(() => {
     const defaultAcc = accounts.find(a => a.name.includes('جيب') || a.name.includes('كريمي')) || accounts[0];
     return defaultAcc ? defaultAcc.id : 1;
   });
+
+  // التأكد من تحديد محفظة صحيحة دائماً
+  useEffect(() => {
+    if (availableAccounts.length > 0 && !availableAccounts.some(a => a.id === accountId)) {
+      const preferred = availableAccounts.find(a => a.name.includes('جيب') || a.name.includes('كريمي')) || availableAccounts[0];
+      if (preferred) setAccountId(preferred.id);
+    }
+  }, [availableAccounts, accountId]);
+
+  // قناة الاستلام: محفظة/بنك (افتراضي) أو نقداً في الصندوق أو نقدي مع المندوب
+  const [paymentChannel, setPaymentChannel] = useState<'wallet' | 'cash' | 'courier'>('wallet');
+
+  // إضافة محفظة أو حساب جديد سريعاً مباشرة داخل النافذة
+  const [showQuickAddWallet, setShowQuickAddWallet] = useState(false);
+  const [newWalletName, setNewWalletName] = useState('');
+  const [newWalletType, setNewWalletType] = useState<Account['type']>('محفظة');
+  const [newWalletBalance, setNewWalletBalance] = useState<number>(0);
+  const [quickAddError, setQuickAddError] = useState('');
+
   const [paymentType, setPaymentType] = useState<string>('دفعة أولى');
   const [statement, setStatement] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
   const [formError, setFormError] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Courier & Delivery System Integration for Final Payment
+  // Courier & Delivery System Integration
   const activeCouriers = couriers.filter(c => c.status === 'active' || c.status === 'available');
   const [courierId, setCourierId] = useState<number>(() => preSelectedOrder?.courierId || activeCouriers[0]?.id || couriers[0]?.id || 0);
-  const [deliveryPaymentMethod, setDeliveryPaymentMethod] = useState<'cash_to_courier' | 'transfer_to_wallet'>('cash_to_courier');
+  const [deliveryPaymentMethod, setDeliveryPaymentMethod] = useState<'cash_to_courier' | 'transfer_to_wallet'>('transfer_to_wallet');
   const [deliveryFee, setDeliveryFee] = useState<number>(1500);
   const [courierCustodyAmount, setCourierCustodyAmount] = useState<number>(0);
   const [customCustodyEdited, setCustomCustodyEdited] = useState<boolean>(false);
+  const [hasCourierDelivery, setHasCourierDelivery] = useState<boolean>(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -110,6 +172,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const linkedOrder = orderId ? orders.find(o => o.id === orderId) : undefined;
   const selectedCourier = couriers.find(c => c.id === courierId);
   const selectedAcc = accounts.find(a => a.id === accountId);
+  const isFinalPaymentFlow = Boolean(
+    paymentType === 'دفعة نهائية' ||
+    (linkedOrder && Number(amount) > 0 && (Number(linkedOrder.remainingAmount || 0) - Number(amount)) <= 0)
+  );
 
   const handleSelectOrderInModal = (ord: Order | undefined) => {
     if (ord) {
@@ -130,11 +196,29 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     }
   };
 
-  // Show Courier & Delivery System panel when paying Final Payment (الدفعة النهائية) or settling remaining order amount
-  const isFinalPaymentFlow = Boolean(
-    paymentType === 'دفعة نهائية' ||
-    (linkedOrder && amount > 0 && amount >= linkedOrder.remainingAmount && linkedOrder.paidAmount > 0)
-  );
+  const handleQuickAddWallet = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!newWalletName.trim()) {
+      setQuickAddError('يرجى إدخال اسم المحفظة أو الحساب');
+      return;
+    }
+    setQuickAddError('');
+    const created = addAccount({
+      name: newWalletName.trim(),
+      type: newWalletType,
+      openingBalance: Number(newWalletBalance) || 0,
+      openingBalanceDate: new Date().toISOString(),
+      status: 'active',
+      notes: 'تمت إضافتها أثناء تسجيل دفعة'
+    });
+    if (created?.id) {
+      setAccountId(created.id);
+      setPaymentChannel(newWalletType === 'نقدي' ? 'cash' : 'wallet');
+    }
+    setShowQuickAddWallet(false);
+    setNewWalletName('');
+    setNewWalletBalance(0);
+  };
 
   const amountInWords = amount > 0 ? numberToArabicWords(amount) : '';
 
@@ -150,31 +234,41 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       setFormError('يرجى إدخال مبلغ دفع صحيح أكبر من الصفر');
       return;
     }
-    if (isFinalPaymentFlow && !courierId && couriers.length > 0) {
-      setFormError('يرجى اختيار المندوب الذي وصّل الطلب ليتم تسجيله في نظام الموصلين');
+    if (paymentChannel === 'courier' && !courierId && couriers.length > 0) {
+      setFormError('يرجى اختيار المندوب المستلم ليتم تسجيل العهدة في حسابه');
       return;
     }
     setFormError('');
     setIsSubmitting(true);
 
     try {
+      const isCashToCourier = paymentChannel === 'courier';
+      const isDirectCash = paymentChannel === 'cash';
+      let chosenAccountId = accountId;
+      if (isDirectCash) {
+        const cashAcc = availableAccounts.find(a => a.type === 'نقدي' || a.name.includes('الصندوق')) || availableAccounts[0];
+        if (cashAcc) chosenAccountId = cashAcc.id;
+      }
+
+      const activeAcc = availableAccounts.find(a => a.id === chosenAccountId) || accounts.find(a => a.id === chosenAccountId);
+
       const createdPayment = recordPayment({
         customerId,
         orderId: orderId || undefined,
         amount: Number(amount),
-        accountId,
-        paymentMethod: isFinalPaymentFlow && deliveryPaymentMethod === 'cash_to_courier'
+        accountId: chosenAccountId,
+        paymentMethod: isCashToCourier
           ? `نقدي للمندوب (${selectedCourier?.name || 'المندوب'})`
-          : (selectedAcc?.name || 'محفظة'),
+          : isDirectCash
+          ? 'نقداً في الصندوق'
+          : (activeAcc?.name || 'محفظة'),
         paymentType: isFinalPaymentFlow ? 'دفعة نهائية' : paymentType,
         statement: statement.trim() || undefined,
         notes: notes.trim() || undefined,
-        courierId: isFinalPaymentFlow && courierId ? courierId : undefined,
-        deliveryPaymentMethod: isFinalPaymentFlow && courierId ? deliveryPaymentMethod : undefined,
-        deliveryFee: isFinalPaymentFlow && courierId ? Number(deliveryFee) : undefined,
-        courierCustodyAmount: isFinalPaymentFlow && courierId && deliveryPaymentMethod === 'cash_to_courier'
-          ? Number(courierCustodyAmount)
-          : undefined
+        courierId: (isCashToCourier || (hasCourierDelivery && courierId)) ? courierId : undefined,
+        deliveryPaymentMethod: isCashToCourier ? 'cash_to_courier' : 'transfer_to_wallet',
+        deliveryFee: (isCashToCourier || (hasCourierDelivery && courierId)) ? Number(deliveryFee) : undefined,
+        courierCustodyAmount: isCashToCourier && courierId ? Number(courierCustodyAmount) : undefined
       });
 
       setIsSubmitting(false);
@@ -443,232 +537,352 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             />
           </div>
 
-          {/* COURIER & DELIVERY SYSTEM PANEL (Appears on Final Payment) */}
-          {isFinalPaymentFlow && (
-            <div className="bg-gradient-to-br from-[#1A3668]/5 via-blue-50/60 to-amber-50/40 border-2 border-[#1A3668]/25 rounded-2xl p-4 space-y-3.5">
-              <div className="flex items-center justify-between border-b border-[#1A3668]/15 pb-2.5">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-[#1A3668] text-[#C5A059] flex items-center justify-center">
-                    <Bike className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="font-black text-slate-900 text-xs">
-                      ترحيل الطلب لنظام الموصلين (الدفعة النهائية)
-                    </h4>
-                    <p className="text-[10px] text-slate-600">
-                      سيظهر {linkedOrder ? `طلب رقم #${linkedOrder.orderNumber}` : 'طلب العميل'} تلقائياً في نظام الموصلين مع المندوب المختار
-                    </p>
-                  </div>
+          {/* ============================================================== */}
+          {/* SECTION: طريقة وقناة استلام الدفعة (محفظة / نقدي / مندوب) */}
+          {/* ============================================================== */}
+          <div className="space-y-3 bg-slate-50/90 p-3.5 rounded-2xl border border-slate-200 shadow-2xs">
+            <div>
+              <label className="font-bold text-slate-800 block mb-1.5 text-xs">
+                طريقة وقناة استلام الدفعة *
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPaymentChannel('wallet')}
+                  className={`p-2.5 rounded-xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
+                    paymentChannel === 'wallet'
+                      ? 'border-[#1A3668] bg-blue-50/90 text-[#1A3668] shadow-xs font-black'
+                      : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100 font-bold'
+                  }`}
+                >
+                  <Wallet className="w-4 h-4 text-[#C5A059]" />
+                  <span className="text-[11px]">محفظة / بنك</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPaymentChannel('cash');
+                    const cashAcc = availableAccounts.find(a => a.type === 'نقدي' || a.name.includes('الصندوق')) || availableAccounts[0];
+                    if (cashAcc) setAccountId(cashAcc.id);
+                  }}
+                  className={`p-2.5 rounded-xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
+                    paymentChannel === 'cash'
+                      ? 'border-emerald-600 bg-emerald-50 text-emerald-950 shadow-xs font-black'
+                      : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100 font-bold'
+                  }`}
+                >
+                  <Banknote className="w-4 h-4 text-emerald-600" />
+                  <span className="text-[11px]">نقداً في الصندوق</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPaymentChannel('courier')}
+                  className={`p-2.5 rounded-xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
+                    paymentChannel === 'courier'
+                      ? 'border-amber-600 bg-amber-50 text-amber-950 shadow-xs font-black'
+                      : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100 font-bold'
+                  }`}
+                >
+                  <Bike className="w-4 h-4 text-amber-600" />
+                  <span className="text-[11px]">نقدي للمندوب</span>
+                </button>
+              </div>
+            </div>
+
+            {/* CHANNEL 1: WALLET & BANK (DEFAULT & MAIN CHANNEL) */}
+            {paymentChannel === 'wallet' && (
+              <div className="space-y-2 pt-1">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                    <Wallet className="w-4 h-4 text-blue-700" />
+                    <span>المحفظة / الحساب البنكي المودع فيه *</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowQuickAddWallet(!showQuickAddWallet)}
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-[#1A3668] hover:text-[#132c52] bg-white px-2.5 py-1 rounded-lg border border-blue-200 shadow-2xs hover:bg-blue-50 transition cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>{showQuickAddWallet ? 'إلغاء' : '+ إضافة محفظة جديدة'}</span>
+                  </button>
                 </div>
-                {linkedOrder && (
-                  <span className="px-2.5 py-1 rounded-lg bg-[#1A3668] text-white font-mono font-black text-[11px]">
-                    طلب رقم #{linkedOrder.orderNumber}
-                  </span>
+
+                {/* Inline Quick Add Wallet Card */}
+                {showQuickAddWallet && (
+                  <div className="p-3 bg-white border-2 border-blue-300 rounded-xl space-y-2.5 shadow-xs">
+                    <div className="text-[11px] font-black text-blue-900 border-b border-blue-100 pb-1.5 flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                      <span>إضافة محفظة أو حساب بنكي جديد فوراً:</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-0.5">اسم المحفظة / الحساب *</label>
+                        <input
+                          type="text"
+                          value={newWalletName}
+                          onChange={e => setNewWalletName(e.target.value)}
+                          placeholder="مثال: محفظة ون كاش، حساب العمقي..."
+                          className="w-full border border-blue-200 rounded-lg p-2 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-0.5">نوع الحساب</label>
+                        <select
+                          value={newWalletType}
+                          onChange={e => setNewWalletType(e.target.value as Account['type'])}
+                          className="w-full border border-blue-200 rounded-lg p-2 bg-white font-medium"
+                        >
+                          <option value="محفظة">محفظة إلكترونية</option>
+                          <option value="بنكي">حساب بنكي</option>
+                          <option value="بطاقة">بطاقة دفع (VISA)</option>
+                          <option value="نقدي">صندوق نقدي</option>
+                        </select>
+                      </div>
+                    </div>
+                    {quickAddError && (
+                      <div className="text-[11px] text-rose-600 font-bold">{quickAddError}</div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleQuickAddWallet}
+                      className="w-full py-2 bg-[#1A3668] hover:bg-[#132c52] text-white rounded-lg font-bold text-xs shadow-xs transition cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#C5A059]" />
+                      <span>حفظ المحفظة واختيارها الآن للدفعة</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Interactive Visual Wallet Selection Cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-44 overflow-y-auto p-1.5 border border-slate-200 rounded-xl bg-white shadow-2xs">
+                  {availableAccounts.map(a => {
+                    const isSelected = a.id === accountId;
+                    const bal = getAccountBalance(a.id);
+                    const IconComp = a.type === 'بنكي' ? Building2 : (a.type === 'بطاقة' ? CreditCard : (a.type === 'نقدي' ? Banknote : Wallet));
+                    return (
+                      <button
+                        key={a.id}
+                        type="button"
+                        onClick={() => setAccountId(a.id)}
+                        className={`p-2 rounded-xl text-right transition-all border flex flex-col justify-between gap-1 cursor-pointer ${
+                          isSelected
+                            ? 'border-[#1A3668] bg-blue-50/90 ring-2 ring-[#1A3668]/30 shadow-xs'
+                            : 'border-slate-200 bg-slate-50/60 hover:bg-slate-100 text-slate-700'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <IconComp className={`w-3.5 h-3.5 ${isSelected ? 'text-[#1A3668]' : 'text-slate-400'}`} />
+                          {isSelected && <Check className="w-3.5 h-3.5 text-blue-700 font-black" />}
+                        </div>
+                        <div className="font-bold text-[11px] text-slate-900 truncate" title={a.name}>
+                          {a.name}
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                          <span className="text-[9px] px-1 py-0.2 rounded bg-white border border-slate-200">{a.type}</span>
+                          <span className="font-bold text-slate-700">{bal.toLocaleString()} YER</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Wallets Dropdown */}
+                <div className="relative">
+                  <select
+                    value={accountId}
+                    onChange={e => setAccountId(Number(e.target.value))}
+                    className="w-full border border-slate-300 rounded-xl p-2.5 bg-white font-bold text-slate-900 text-xs focus:ring-2 focus:ring-blue-500/20 shadow-2xs pr-3 pl-8 cursor-pointer"
+                    required
+                  >
+                    {availableAccounts.map(a => {
+                      const bal = getAccountBalance(a.id);
+                      return (
+                        <option key={a.id} value={a.id}>
+                          {a.name} ({a.type}) — الرصيد: {bal.toLocaleString()} ريال
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                {/* Selected Wallet Quick Info Badge */}
+                {(() => {
+                  const selAcc = availableAccounts.find(a => a.id === accountId);
+                  if (!selAcc) return null;
+                  const curBal = getAccountBalance(selAcc.id);
+                  const newBal = curBal + (Number(amount) || 0);
+                  return (
+                    <div className="flex items-center justify-between text-[11px] bg-blue-50/80 border border-blue-200/70 p-2 rounded-xl text-blue-950 font-medium">
+                      <span>المحفظة المستلمة: <strong>{selAcc.name}</strong></span>
+                      <span className="font-mono">الرصيد بعد الإيداع: <strong>{newBal.toLocaleString()} ريال</strong></span>
+                    </div>
+                  );
+                })()}
+
+                {/* Optional Delivery Courier integration when paying to wallet */}
+                {Boolean(orderId || isFinalPaymentFlow) && (
+                  <div className="pt-2 border-t border-slate-200/80">
+                    <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 select-none mb-1.5">
+                      <input
+                        type="checkbox"
+                        checked={hasCourierDelivery}
+                        onChange={e => setHasCourierDelivery(e.target.checked)}
+                        className="rounded text-blue-600 w-4 h-4 cursor-pointer"
+                      />
+                      <span>هل تم توصيل هذا الطلب عبر مندوب؟ (تسجيل استحقاق أجور التوصيل له)</span>
+                    </label>
+
+                    {hasCourierDelivery && (
+                      <div className="p-2.5 bg-amber-50/70 border border-amber-200 rounded-xl space-y-2 mt-1.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <label className="font-bold text-amber-950 block mb-0.5 text-[11px]">مندوب التوصيل *</label>
+                            <select
+                              value={courierId}
+                              onChange={e => {
+                                const cId = Number(e.target.value);
+                                setCourierId(cId);
+                                const cObj = couriers.find(c => c.id === cId);
+                                if (cObj?.defaultDeliveryFee) setDeliveryFee(Number(cObj.defaultDeliveryFee));
+                              }}
+                              className="w-full border border-amber-300 rounded-lg p-2 bg-white font-bold text-slate-900 text-xs"
+                            >
+                              {couriers.map(c => (
+                                <option key={c.id} value={c.id}>
+                                  {c.name} ({c.zone || c.coverageZones || 'صنعاء'})
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="font-bold text-amber-950 block mb-0.5 text-[11px]">أجرة التوصيل المستحقة للمندوب *</label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={deliveryFee}
+                              onChange={e => setDeliveryFee(Number(e.target.value))}
+                              className="w-full border border-amber-300 rounded-lg p-2 bg-white font-mono font-bold text-amber-900 text-xs"
+                            />
+                          </div>
+                        </div>
+                        <div className="text-[10px] text-amber-900 font-bold flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                          <span>يدخل المبلغ في محفظة المتجر، ويُسجل للمندوب استحقاق أجور توصيل {Number(deliveryFee).toLocaleString()} ريال.</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
+            )}
 
-              {/* 1. Select Courier who delivered the order */}
-              <div>
-                <label className="font-bold text-slate-800 block mb-1">
-                  1. اختر المندوب الذي وصّل الطلب *
-                </label>
-                <select
-                  value={courierId}
-                  onChange={e => {
-                    const cId = Number(e.target.value);
-                    setCourierId(cId);
-                    const cObj = couriers.find(c => c.id === cId);
-                    if (cObj && cObj.defaultDeliveryFee) {
-                      setDeliveryFee(Number(cObj.defaultDeliveryFee));
-                    }
-                  }}
-                  className="w-full border border-slate-300 rounded-xl p-2.5 bg-white font-bold text-slate-900"
-                  required
-                >
-                  {couriers.map(c => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} ({c.zone || c.coverageZones || 'صنعاء'}) — رصيده النقدي الحالي: {(Number(c.currentCustodyBalance) || 0).toLocaleString()} ريال
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* 2. Select Payment Method (نقدي للمندوب نفسه vs محفظة) */}
-              <div>
-                <label className="font-bold text-slate-800 block mb-1.5">
-                  2. اختر طريقة دفع العميل عند الاستلام *
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => setDeliveryPaymentMethod('cash_to_courier')}
-                    className={`p-3 rounded-xl border-2 text-right transition-all cursor-pointer flex items-start gap-2.5 ${
-                      deliveryPaymentMethod === 'cash_to_courier'
-                        ? 'border-amber-600 bg-amber-50/90 text-amber-950 shadow-xs'
-                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                    }`}
-                  >
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
-                      deliveryPaymentMethod === 'cash_to_courier' ? 'bg-amber-600 text-white' : 'bg-slate-100 text-slate-500'
-                    }`}>
-                      <DollarSign className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="font-black text-xs">نقدي للمندوب نفسه</div>
-                      <div className="text-[10px] text-slate-600 mt-0.5 leading-relaxed">
-                        تسجل برصيد المندوب ({selectedCourier?.name || 'المندوب'}) باسم <strong>طلب رقم #{linkedOrder?.orderNumber || orderId || ''}</strong>
-                      </div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setDeliveryPaymentMethod('transfer_to_wallet')}
-                    className={`p-3 rounded-xl border-2 text-right transition-all cursor-pointer flex items-start gap-2.5 ${
-                      deliveryPaymentMethod === 'transfer_to_wallet'
-                        ? 'border-[#1A3668] bg-blue-50/90 text-[#1A3668] shadow-xs'
-                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                    }`}
-                  >
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
-                      deliveryPaymentMethod === 'transfer_to_wallet' ? 'bg-[#1A3668] text-white' : 'bg-slate-100 text-slate-500'
-                    }`}>
-                      <Wallet className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="font-black text-xs">محفظة (تحويل للمحفظة)</div>
-                      <div className="text-[10px] text-slate-600 mt-0.5 leading-relaxed">
-                        يزداد رصيد المحفظة ويكون للمندوب <strong>استحقاق عندنا لازم ندفعه</strong>
-                      </div>
-                    </div>
-                  </button>
+            {/* CHANNEL 2: CASH (الصندوق) */}
+            {paymentChannel === 'cash' && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl space-y-2">
+                <div className="flex items-center gap-2 text-xs font-bold text-emerald-950">
+                  <Banknote className="w-4 h-4 text-emerald-700" />
+                  <span>استلام نقدي مباشر في خزينة وصندوق المتجر</span>
                 </div>
+                <p className="text-[11px] text-emerald-800 leading-relaxed">
+                  سيتم تسجيل سند القبض وإيداع مبلغ <strong>{Number(amount).toLocaleString()} ريال</strong> مباشرة في حساب <strong>الصندوق النقدي</strong> وإثبات القيد المحاسبي فوراً.
+                </p>
               </div>
+            )}
 
-              {/* Conditional Details based on Delivery Payment Method */}
-              {deliveryPaymentMethod === 'cash_to_courier' ? (
-                <div className="p-3 bg-amber-100/70 border border-amber-300 rounded-xl space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <label className="font-black text-amber-950 text-[11px]">
-                      المبلغ الذي يُسجل في رصيد المندوب ({selectedCourier?.name}) عن طلب رقم #{linkedOrder?.orderNumber || ''}:
-                    </label>
+            {/* CHANNEL 3: COURIER (نقدي مع المندوب) */}
+            {paymentChannel === 'courier' && (
+              <div className="p-3 bg-amber-50 border-2 border-amber-300 rounded-xl space-y-3">
+                <div className="flex items-center justify-between border-b border-amber-200 pb-1.5">
+                  <div className="flex items-center gap-1.5 font-black text-amber-950 text-xs">
+                    <Bike className="w-4 h-4 text-amber-700" />
+                    <span>تسليم نقدي لمندوب التوصيل باليد</span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div>
-                      <input
-                        type="number"
-                        value={courierCustodyAmount || ''}
-                        onChange={e => {
-                          setCourierCustodyAmount(Number(e.target.value));
-                          setCustomCustodyEdited(true);
-                        }}
-                        className="w-full border border-amber-400 rounded-xl p-2 bg-white font-mono font-black text-amber-900 text-sm"
-                      />
-                    </div>
-                    <div className="flex flex-wrap items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCourierCustodyAmount(Number(amount));
-                          setCustomCustodyEdited(false);
-                        }}
-                        className={`px-2 py-1 rounded-lg text-[10px] font-bold border cursor-pointer ${
-                          courierCustodyAmount === Number(amount)
-                            ? 'bg-amber-700 text-white border-amber-700'
-                            : 'bg-white text-amber-900 border-amber-300'
-                        }`}
-                      >
-                        مبلغ الدفعة ({Number(amount).toLocaleString()})
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCourierCustodyAmount(Number(amount) + Number(deliveryFee));
-                          setCustomCustodyEdited(true);
-                        }}
-                        className={`px-2 py-1 rounded-lg text-[10px] font-bold border cursor-pointer ${
-                          courierCustodyAmount === Number(amount) + Number(deliveryFee)
-                            ? 'bg-amber-700 text-white border-amber-700'
-                            : 'bg-white text-amber-900 border-amber-300'
-                        }`}
-                      >
-                        مع التوصيل ({(Number(amount) + Number(deliveryFee)).toLocaleString()})
-                      </button>
-                    </div>
-                  </div>
-                  <div className="text-[11px] text-amber-900 font-bold flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                    <span>
-                      سيُقيد في رصيد المندوب <strong>{selectedCourier?.name}</strong>: <strong>طلب رقم #{linkedOrder?.orderNumber || orderId || 'مباشر'}</strong> بمبلغ <strong>{(Number(courierCustodyAmount) || 0).toLocaleString()} ريال</strong>.
+                  {linkedOrder && (
+                    <span className="font-mono font-bold text-[11px] bg-amber-200/70 text-amber-900 px-2 py-0.5 rounded">
+                      طلب #{linkedOrder.orderNumber}
                     </span>
-                  </div>
+                  )}
                 </div>
-              ) : (
-                <div className="p-3 bg-blue-100/60 border border-blue-300 rounded-xl space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <div>
-                      <label className="font-black text-blue-950 block mb-1 text-[11px]">
-                        المحفظة التي يزداد رصيدها *
-                      </label>
-                      <select
-                        value={accountId}
-                        onChange={e => setAccountId(Number(e.target.value))}
-                        className="w-full border border-blue-300 rounded-xl p-2 bg-white font-bold text-slate-900"
-                        required
-                      >
-                        {accounts.filter(a => a.status === 'active' && a.type !== 'حقوق ملكية').map(a => (
-                          <option key={a.id} value={a.id}>{a.name} ({a.type})</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="font-black text-purple-950 block mb-1 text-[11px]">
-                        استحقاق المندوب عندنا (لازم ندفعه) *
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={deliveryFee}
-                        onChange={e => setDeliveryFee(Number(e.target.value))}
-                        className="w-full border border-purple-300 rounded-xl p-2 bg-white font-mono font-black text-purple-900"
-                      />
-                    </div>
-                  </div>
-                  <div className="text-[11px] text-blue-950 font-bold space-y-1">
-                    <div className="flex items-center gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                      <span>
-                        يزداد رصيد <strong>{selectedAcc?.name}</strong> بمبلغ <strong>{Number(amount).toLocaleString()} ريال</strong>.
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-purple-900">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-purple-700 shrink-0" />
-                      <span>
-                        يُسجل للمندوب <strong>{selectedCourier?.name}</strong> استحقاق عندنا بقيمة <strong>{Number(deliveryFee).toLocaleString()} ريال</strong> عن <strong>طلب رقم #{linkedOrder?.orderNumber || orderId || 'مباشر'}</strong>.
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
 
-          {/* Standard Account selector when NOT in Final Payment Courier flow */}
-          {!isFinalPaymentFlow && (
-            <div>
-              <label className="font-bold text-slate-700 block mb-1">المحفظة / الحساب المودع فيه *</label>
-              <select
-                value={accountId}
-                onChange={e => setAccountId(Number(e.target.value))}
-                className="w-full border border-slate-200 rounded-xl p-2.5 bg-white font-medium"
-                required
-              >
-                {accounts.filter(a => a.status === 'active' && a.type !== 'حقوق ملكية').map(a => (
-                  <option key={a.id} value={a.id}>{a.name} ({a.type})</option>
-                ))}
-              </select>
-            </div>
-          )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <label className="font-bold text-amber-950 block mb-0.5 text-[11px]">المندوب المستلم *</label>
+                    <select
+                      value={courierId}
+                      onChange={e => {
+                        const cId = Number(e.target.value);
+                        setCourierId(cId);
+                        const cObj = couriers.find(c => c.id === cId);
+                        if (cObj?.defaultDeliveryFee) setDeliveryFee(Number(cObj.defaultDeliveryFee));
+                      }}
+                      className="w-full border border-amber-300 rounded-lg p-2 bg-white font-bold text-slate-900 text-xs"
+                      required
+                    >
+                      {couriers.map(c => (
+                        <option key={c.id} value={c.id}>
+                          {c.name} — رصيده الحالي: {(Number(c.currentCustodyBalance) || 0).toLocaleString()} ريال
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-amber-950 block mb-0.5 text-[11px]">المبلغ المقيد في عهدة المندوب *</label>
+                    <input
+                      type="number"
+                      value={courierCustodyAmount || ''}
+                      onChange={e => {
+                        setCourierCustodyAmount(Number(e.target.value));
+                        setCustomCustodyEdited(true);
+                      }}
+                      className="w-full border border-amber-300 rounded-lg p-2 bg-white font-mono font-bold text-amber-900 text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1 text-[10px]">
+                  <span className="text-slate-500 font-bold">تحديد سريع:</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCourierCustodyAmount(Number(amount));
+                      setCustomCustodyEdited(false);
+                    }}
+                    className={`px-2 py-0.5 rounded border font-bold cursor-pointer ${
+                      courierCustodyAmount === Number(amount)
+                        ? 'bg-amber-700 text-white border-amber-700'
+                        : 'bg-white text-amber-900 border-amber-300'
+                    }`}
+                  >
+                    مبلغ الدفعة ({Number(amount).toLocaleString()})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCourierCustodyAmount(Number(amount) + Number(deliveryFee));
+                      setCustomCustodyEdited(true);
+                    }}
+                    className={`px-2 py-0.5 rounded border font-bold cursor-pointer ${
+                      courierCustodyAmount === Number(amount) + Number(deliveryFee)
+                        ? 'bg-amber-700 text-white border-amber-700'
+                        : 'bg-white text-amber-900 border-amber-300'
+                    }`}
+                  >
+                    مع التوصيل ({(Number(amount) + Number(deliveryFee)).toLocaleString()})
+                  </button>
+                </div>
+
+                <div className="text-[11px] text-amber-900 font-bold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                  <span>
+                    يُسجل في رصيد عهدة المندوب <strong>{selectedCourier?.name}</strong> مبلغ <strong>{(Number(courierCustodyAmount) || 0).toLocaleString()} ريال</strong>.
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Tafqeet in words preview */}
           {amountInWords && (

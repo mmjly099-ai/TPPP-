@@ -131,8 +131,8 @@ export const Navigation: React.FC<NavigationProps> = ({
     },
     {
       id: 'purchase-batches',
-      label: 'دفعات الشراء المجمعة',
-      description: 'شراء طلبيات شي إن وعلي إكسبرس جماعياً بالبطاقات والمحافظ المصرفية',
+      label: 'المشتريات (الدفع بالفيزا)',
+      description: 'شراء طلبيات شي إن وعلي إكسبرس والدفع من فيزا بنك التضامن وفيزا بنك التجاري (مفرد أو مجزأ)',
       icon: PackageCheck,
       badge: purchaseBatches.length > 0 ? purchaseBatches.length : undefined,
       color: 'indigo'
