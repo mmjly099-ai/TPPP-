@@ -491,6 +491,66 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       try {
         const parsed = JSON.parse(saved);
         if (parsed.tables && parsed.tables.accounts) {
+          // Reconcile and heal any purchase batch or financial transaction that mistakenly used 120001 instead of 120002
+          const healedBatches = (Array.isArray(parsed.tables.purchaseBatches) ? parsed.tables.purchaseBatches : (INITIAL_DATA.tables.purchaseBatches || [])).map((b: any) => {
+            let acc1 = b.accountId;
+            let name1 = b.accountName;
+            let acc2 = b.accountId2;
+            let name2 = b.accountName2;
+            if (Number(acc1) === 120001) {
+              acc1 = 120002;
+              name1 = 'فيزا كارد بنك التجاري اليمني';
+            }
+            if (Number(acc2) === 120001) {
+              acc2 = 120002;
+              name2 = 'فيزا كارد بنك التجاري اليمني';
+            }
+            return {
+              ...b,
+              accountId: acc1,
+              accountName: name1,
+              accountId2: acc2,
+              accountName2: name2
+            };
+          });
+
+          const healedTrx = (Array.isArray(parsed.tables.financialTransactions) ? parsed.tables.financialTransactions : INITIAL_DATA.tables.financialTransactions).map((t: any) => {
+            if (Number(t.accountId) === 120001 && (
+              String(t.transactionNumber || '').startsWith('TRX-PB-') ||
+              String(t.transactionNumber || '').startsWith('TRX-REV-PB-') ||
+              String(t.description || '').includes('شراء جماعي') ||
+              String(t.description || '').includes('دفعة') ||
+              String(t.description || '').includes('فيزا') ||
+              String(t.description || '').includes('التجاري')
+            )) {
+              return {
+                ...t,
+                accountId: 120002,
+                description: String(t.description || '').replace('البنك التجاري اليمني', 'فيزا كارد بنك التجاري اليمني')
+              };
+            }
+            return t;
+          });
+
+          const healedJournals = (Array.isArray(parsed.tables.journalEntries) ? parsed.tables.journalEntries : INITIAL_DATA.tables.journalEntries).map((je: any) => {
+            if (je.lines && Array.isArray(je.lines)) {
+              return {
+                ...je,
+                lines: je.lines.map((l: any) => {
+                  if (Number(l.accountId) === 120001 && (je.sourceType === 'purchase_batch' || String(je.description || '').includes('شراء بضاعة') || String(je.entryNumber || '').includes('JE-PB-'))) {
+                    return {
+                      ...l,
+                      accountId: 120002,
+                      accountName: 'فيزا كارد بنك التجاري اليمني'
+                    };
+                  }
+                  return l;
+                })
+              };
+            }
+            return je;
+          });
+
           return sanitizeAndReconcileJournalEntries({
             ...parsed,
             tables: {
@@ -498,9 +558,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               ...parsed.tables,
               accounts: (() => {
                 const existing = Array.isArray(parsed.tables.accounts) ? [...parsed.tables.accounts] : [];
-                const existingIds = new Set(existing.map((a: any) => a.id));
+                const existingIds = new Set(existing.map((a: any) => Number(a.id)));
                 (INITIAL_DATA.tables.accounts || []).forEach((initAcc: any) => {
-                  if (!existingIds.has(initAcc.id) && (initAcc.name.includes('التضامن') || initAcc.name.includes('التجاري'))) {
+                  if (!existingIds.has(Number(initAcc.id)) && (initAcc.name.includes('التضامن') || initAcc.name.includes('التجاري'))) {
                     existing.push(initAcc);
                   }
                 });
@@ -509,9 +569,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               customers: Array.isArray(parsed.tables.customers) && parsed.tables.customers.length > 0 ? parsed.tables.customers : INITIAL_DATA.tables.customers,
               orders: Array.isArray(parsed.tables.orders) && parsed.tables.orders.length > 0 ? parsed.tables.orders : INITIAL_DATA.tables.orders,
               payments: Array.isArray(parsed.tables.payments) && parsed.tables.payments.length > 0 ? parsed.tables.payments : INITIAL_DATA.tables.payments,
-              financialTransactions: Array.isArray(parsed.tables.financialTransactions) && parsed.tables.financialTransactions.length > 0 ? parsed.tables.financialTransactions : INITIAL_DATA.tables.financialTransactions,
+              financialTransactions: healedTrx,
               expenses: Array.isArray(parsed.tables.expenses) && parsed.tables.expenses.length > 0 ? parsed.tables.expenses : INITIAL_DATA.tables.expenses,
-              journalEntries: Array.isArray(parsed.tables.journalEntries) && parsed.tables.journalEntries.length > 0 ? parsed.tables.journalEntries : INITIAL_DATA.tables.journalEntries,
+              journalEntries: healedJournals,
               journalLines: Array.isArray(parsed.tables.journalLines) && parsed.tables.journalLines.length > 0 ? parsed.tables.journalLines : INITIAL_DATA.tables.journalLines,
               shipments: Array.isArray(parsed.tables.shipments) && parsed.tables.shipments.length > 0 ? parsed.tables.shipments : (INITIAL_DATA.tables.shipments || []),
               shipmentItems: Array.isArray(parsed.tables.shipmentItems) ? parsed.tables.shipmentItems : [],
@@ -520,7 +580,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               discountCodes: Array.isArray(parsed.tables.discountCodes) && parsed.tables.discountCodes.length > 0 ? parsed.tables.discountCodes : (INITIAL_DATA.tables.discountCodes || []),
               marketingBudgets: Array.isArray(parsed.tables.marketingBudgets) ? parsed.tables.marketingBudgets : [],
               referrals: Array.isArray(parsed.tables.referrals) ? parsed.tables.referrals : [],
-              purchaseBatches: Array.isArray(parsed.tables.purchaseBatches) && parsed.tables.purchaseBatches.length > 0 ? parsed.tables.purchaseBatches : (INITIAL_DATA.tables.purchaseBatches || []),
+              purchaseBatches: healedBatches,
               installmentPlans: Array.isArray(parsed.tables.installmentPlans) ? parsed.tables.installmentPlans : [],
               otherReceivables: Array.isArray(parsed.tables.otherReceivables) && parsed.tables.otherReceivables.length > 0 ? parsed.tables.otherReceivables : (INITIAL_DATA.tables.otherReceivables || []),
               couriers: Array.isArray(parsed.tables.couriers) && parsed.tables.couriers.length > 0 ? parsed.tables.couriers : (INITIAL_DATA.tables.couriers || []),
@@ -834,12 +894,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Helper to compute account current balance
   const getAccountBalance = (accountId: number): number => {
-    const acc = accounts.find(a => a.id === accountId);
+    const acc = accounts.find(a => Number(a.id) === Number(accountId));
     if (!acc) return 0;
     let balance = parseFloat(String(acc.openingBalance || 0)) || 0;
 
     transactions.forEach(trx => {
-      if (trx.accountId === accountId) {
+      if (Number(trx.accountId) === Number(accountId)) {
         const amt = parseFloat(String(trx.amount || 0)) || 0;
         if (trx.type === 'deposit' || trx.type === 'transfer_in' || trx.type === 'payment') {
           balance += amt;
@@ -3898,9 +3958,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     amount: number,
     notes?: string
   ) => {
-    if (amount <= 0 || fromAccountId === toAccountId) return;
-    const fromAcc = accounts.find(a => a.id === fromAccountId);
-    const toAcc = accounts.find(a => a.id === toAccountId);
+    const fromId = Number(fromAccountId);
+    const toId = Number(toAccountId);
+    const numAmount = Math.max(0, Number(amount) || 0);
+    if (numAmount <= 0 || fromId === toId) return;
+    const fromAcc = accounts.find(a => Number(a.id) === fromId);
+    const toAcc = accounts.find(a => Number(a.id) === toId);
     if (!fromAcc || !toAcc) return;
 
     const trfDate = new Date().toISOString();
@@ -3916,60 +3979,69 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const trxOut: FinancialTransaction = {
       id: baseId,
       transactionNumber: `${transferGroup}-OUT`,
-      transactionDate: new Date().toISOString(),
-      accountId: fromAccountId,
+      transactionDate: trfDate,
+      accountId: fromId,
       type: 'transfer_out',
-      amount,
+      amount: numAmount,
       description: `تحويل إلى ${toAcc.name}${notes ? ` (${notes})` : ''}`,
       transferGroup,
-      createdAt: new Date().toISOString()
+      createdAt: trfDate
     };
 
     const trxIn: FinancialTransaction = {
       id: baseId + 1,
       transactionNumber: `${transferGroup}-IN`,
-      transactionDate: new Date().toISOString(),
-      accountId: toAccountId,
+      transactionDate: trfDate,
+      accountId: toId,
       type: 'transfer_in',
-      amount,
+      amount: numAmount,
       description: `تحويل من ${fromAcc.name}${notes ? ` (${notes})` : ''}`,
       transferGroup,
-      createdAt: new Date().toISOString()
+      createdAt: trfDate
     };
 
     const je: JournalEntry = {
       id: baseId + 2,
       entryNumber: `JE-TRF-${Date.now().toString().slice(-6)}`,
       description: `تحويل بنكي بين الحسابات من ${fromAcc.name} إلى ${toAcc.name}`,
-      createdAt: new Date().toISOString(),
+      createdAt: trfDate,
       lines: [
         {
           id: baseId + 3,
           journalEntryId: baseId + 2,
-          accountId: toAccountId,
+          accountId: toId,
           accountName: toAcc.name,
+          chartAccountId: 102,
+          chartAccountCode: '102',
           side: 'debit',
-          amount
+          amount: numAmount
         },
         {
           id: baseId + 4,
           journalEntryId: baseId + 2,
-          accountId: fromAccountId,
+          accountId: fromId,
           accountName: fromAcc.name,
+          chartAccountId: 102,
+          chartAccountCode: '102',
           side: 'credit',
-          amount
+          amount: numAmount
         }
       ]
     };
 
-    setData(prev => ({
-      ...prev,
-      tables: {
-        ...prev.tables,
-        financialTransactions: [trxOut, trxIn, ...prev.tables.financialTransactions],
-        journalEntries: [je, ...prev.tables.journalEntries]
-      }
-    }));
+    setData(prev => {
+      const nextJEs = [je, ...prev.tables.journalEntries];
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          financialTransactions: [trxOut, trxIn, ...prev.tables.financialTransactions],
+          journalEntries: nextJEs,
+          journalLines: nextJEs.flatMap(j => j.lines || [])
+        }
+      };
+    });
+    showNotification(`تم تحويل ${numAmount.toLocaleString()} ريال بنجاح من ${fromAcc.name} إلى ${toAcc.name}`, 'success');
   };
 
   const recordAccountTransaction = (params: {
@@ -3982,7 +4054,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     transactionDate?: string;
     notes?: string;
   }): FinancialTransaction => {
-    const acc = accounts.find(a => a.id === params.accountId);
+    const targetAccountId = Number(params.accountId);
+    const numAmount = Math.max(0, Number(params.amount) || 0);
+    const acc = accounts.find(a => Number(a.id) === targetAccountId);
     const trxId = Date.now();
     const prefix = params.type === 'deposit' ? 'IN' : 'OUT';
     const trxNumber = params.referenceNumber || `TRX-${prefix}-${Date.now().toString().slice(-6)}`;
@@ -3998,9 +4072,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       id: trxId,
       transactionNumber: trxNumber,
       transactionDate: date,
-      accountId: params.accountId,
+      accountId: targetAccountId,
       type: params.type,
-      amount: params.amount,
+      amount: numAmount,
       description: `${isDeposit ? 'سند وارد (إيداع)' : 'سند صادر (سحب)'}${params.category ? ` - ${params.category}` : ''}: ${params.description}`,
       notes: params.notes || null,
       createdAt: new Date().toISOString()
@@ -4011,40 +4085,48 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       id: jeId,
       entryNumber: `JE-${prefix}-${Date.now().toString().slice(-6)}`,
       description: `${isDeposit ? 'سند وارد إلى' : 'سند صادر من'} ${acc?.name || 'الحساب'}: ${params.description}`,
-      createdAt: new Date().toISOString(),
+      createdAt: date,
       lines: isDeposit ? [
         {
           id: jeId + 1,
           journalEntryId: jeId,
-          accountId: params.accountId,
+          accountId: targetAccountId,
           accountName: acc?.name || 'الصندوق/المحفظة',
+          chartAccountId: 102,
+          chartAccountCode: '102',
           side: 'debit',
-          amount: params.amount
+          amount: numAmount
         },
         {
           id: jeId + 2,
           journalEntryId: jeId,
           accountId: null,
           accountName: params.category ? `واردات - ${params.category}` : 'واردات وصناديق متنوعة',
+          chartAccountId: 400,
+          chartAccountCode: '400',
           side: 'credit',
-          amount: params.amount
+          amount: numAmount
         }
       ] : [
         {
           id: jeId + 1,
           journalEntryId: jeId,
           accountId: null,
-          accountName: params.category ? `صادرات - ${params.category}` : 'صادرات ومسحوبات متنوعة',
+          accountName: params.category ? `صادرات ومصاريف - ${params.category}` : 'صادرات ومسحوبات متنوعة',
+          chartAccountId: 509,
+          chartAccountCode: '509',
           side: 'debit',
-          amount: params.amount
+          amount: numAmount
         },
         {
           id: jeId + 2,
           journalEntryId: jeId,
-          accountId: params.accountId,
+          accountId: targetAccountId,
           accountName: acc?.name || 'الصندوق/المحفظة',
+          chartAccountId: 102,
+          chartAccountCode: '102',
           side: 'credit',
-          amount: params.amount
+          amount: numAmount
         }
       ]
     };
@@ -4054,19 +4136,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       action: isDeposit ? 'سند وارد' : 'سند صادر',
       entityType: 'financial_transaction',
       entityId: trxId,
-      description: `تسجيل ${isDeposit ? 'سند وارد (إيداع)' : 'سند صادر (سحب)'} بقيمة ${params.amount} ريال ${isDeposit ? 'في' : 'من'} حساب ${acc?.name || ''}`,
+      description: `تسجيل ${isDeposit ? 'سند وارد (إيداع)' : 'سند صادر (سحب)'} بقيمة ${numAmount} ريال ${isDeposit ? 'في' : 'من'} حساب ${acc?.name || ''}`,
       createdAt: new Date().toISOString()
     };
 
-    setData(prev => ({
-      ...prev,
-      tables: {
-        ...prev.tables,
-        financialTransactions: [newTrx, ...prev.tables.financialTransactions],
-        journalEntries: [je, ...prev.tables.journalEntries],
-        auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
-      }
-    }));
+    setData(prev => {
+      const nextJEs = [je, ...prev.tables.journalEntries];
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          financialTransactions: [newTrx, ...prev.tables.financialTransactions],
+          journalEntries: nextJEs,
+          journalLines: nextJEs.flatMap(j => j.lines || []),
+          auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
+        }
+      };
+    });
 
     return newTrx;
   };
@@ -6113,8 +6199,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const totalCost = purchaseCost + transferFees + purchaseFees + exchangeRateDiff;
 
     const isSplit = batchData.paymentMode === 'split' && Boolean(batchData.accountId2);
-    const acc1 = accounts.find(a => a.id === batchData.accountId);
-    const acc2 = isSplit && batchData.accountId2 ? accounts.find(a => a.id === batchData.accountId2) : undefined;
+    // Sanitize account IDs: Commercial Visa must always be 120002, not 120001
+    let rawAccId1 = Number(batchData.accountId);
+    if (rawAccId1 === 120001) rawAccId1 = 120002;
+    let rawAccId2 = isSplit && batchData.accountId2 ? Number(batchData.accountId2) : undefined;
+    if (rawAccId2 === 120001) rawAccId2 = 120002;
+
+    const acc1 = accounts.find(a => Number(a.id) === rawAccId1);
+    const acc2 = rawAccId2 ? accounts.find(a => Number(a.id) === rawAccId2) : undefined;
 
     let card1Amt = isSplit ? (Number(batchData.card1Amount) || 0) : totalCost;
     let card2Amt = isSplit ? (Number(batchData.card2Amount) || 0) : 0;
@@ -6129,11 +6221,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       supplierOrderNumber: batchData.supplierOrderNumber || null,
       purchaseDate: new Date().toISOString().split('T')[0],
       paymentMode: isSplit ? 'split' : 'single',
-      accountId: batchData.accountId,
-      accountName: acc1?.name || 'البنك / البطاقة',
+      accountId: rawAccId1,
+      accountName: acc1?.name || (rawAccId1 === 120002 ? 'فيزا كارد بنك التجاري اليمني' : (rawAccId1 === 1 ? 'فيزا كارد بنك التضامن' : 'البنك / البطاقة')),
       card1Amount: isSplit ? card1Amt : totalCost,
-      accountId2: isSplit && batchData.accountId2 ? batchData.accountId2 : null,
-      accountName2: isSplit && acc2 ? acc2.name : null,
+      accountId2: isSplit && rawAccId2 ? rawAccId2 : null,
+      accountName2: isSplit && acc2 ? acc2.name : (isSplit && rawAccId2 === 120002 ? 'فيزا كارد بنك التجاري اليمني' : null),
       card2Amount: isSplit ? card2Amt : undefined,
       purchaseCost,
       purchaseFees,
@@ -6154,22 +6246,22 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           id: batchId + 1,
           transactionNumber: `TRX-PB-${Date.now().toString().slice(-6)}-1`,
           transactionDate: new Date().toISOString(),
-          accountId: batchData.accountId,
+          accountId: rawAccId1,
           type: 'withdrawal',
           amount: card1Amt,
           description: `شراء جماعي لطلبات ${batchData.source} (دفعة ${batchNumber}) - سحب من ${acc1?.name || 'الفيزا الأولى'}`,
           createdAt: new Date().toISOString()
         });
       }
-      if (card2Amt > 0 && batchData.accountId2) {
+      if (card2Amt > 0 && rawAccId2) {
         transactionsToPush.push({
           id: batchId + 11,
           transactionNumber: `TRX-PB-${Date.now().toString().slice(-6)}-2`,
           transactionDate: new Date().toISOString(),
-          accountId: batchData.accountId2,
+          accountId: rawAccId2,
           type: 'withdrawal',
           amount: card2Amt,
-          description: `شراء جماعي لطلبات ${batchData.source} (دفعة ${batchNumber}) - سحب من ${acc2?.name || 'الفيزا الثانية'}`,
+          description: `شراء جماعي لطلبات ${batchData.source} (دفعة ${batchNumber}) - سحب من ${acc2?.name || (rawAccId2 === 120002 ? 'فيزا كارد بنك التجاري اليمني' : 'الفيزا الثانية')}`,
           createdAt: new Date().toISOString()
         });
       }
@@ -6178,10 +6270,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         id: batchId + 1,
         transactionNumber: `TRX-PB-${Date.now().toString().slice(-6)}`,
         transactionDate: new Date().toISOString(),
-        accountId: batchData.accountId,
+        accountId: rawAccId1,
         type: 'withdrawal',
         amount: totalCost,
-        description: `شراء جماعي لطلبات ${batchData.source} (دفعة ${batchNumber})`,
+        description: `شراء جماعي لطلبات ${batchData.source} (دفعة ${batchNumber}) - سحب من ${acc1?.name || 'البطاقة'}`,
         createdAt: new Date().toISOString()
       });
     }
@@ -6237,18 +6329,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         jeLines.push({
           id: jeId + 5,
           journalEntryId: jeId,
-          accountId: batchData.accountId,
+          accountId: rawAccId1,
           accountName: acc1?.name || 'الفيزا الأولى',
           side: 'credit',
           amount: card1Amt
         });
       }
-      if (card2Amt > 0 && batchData.accountId2) {
+      if (card2Amt > 0 && rawAccId2) {
         jeLines.push({
           id: jeId + 6,
           journalEntryId: jeId,
-          accountId: batchData.accountId2,
-          accountName: acc2?.name || 'الفيزا الثانية',
+          accountId: rawAccId2,
+          accountName: acc2?.name || (rawAccId2 === 120002 ? 'فيزا كارد بنك التجاري اليمني' : 'الفيزا الثانية'),
           side: 'credit',
           amount: card2Amt
         });
@@ -6257,7 +6349,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       jeLines.push({
         id: jeId + 5,
         journalEntryId: jeId,
-        accountId: batchData.accountId,
+        accountId: rawAccId1,
         accountName: acc1?.name || 'البطاقة / الحساب',
         side: 'credit',
         amount: totalCost
@@ -6351,8 +6443,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const newSource = batchData.source !== undefined ? batchData.source : existing.source;
       const newSupplierOrderNumber = batchData.supplierOrderNumber !== undefined ? batchData.supplierOrderNumber : existing.supplierOrderNumber;
       const newPurchaseDate = batchData.purchaseDate || existing.purchaseDate;
-      const newAccountId = batchData.accountId !== undefined ? Number(batchData.accountId) : existing.accountId;
-      const acc = accounts.find(a => a.id === newAccountId);
+      let newAccountId = batchData.accountId !== undefined ? Number(batchData.accountId) : Number(existing.accountId);
+      if (newAccountId === 120001) newAccountId = 120002;
+      const acc = accounts.find(a => Number(a.id) === newAccountId);
       const newPurchaseCost = batchData.purchaseCost !== undefined ? Number(batchData.purchaseCost) : Number(existing.purchaseCost || 0);
       const newPurchaseFees = batchData.purchaseFees !== undefined ? Number(batchData.purchaseFees) : Number(existing.purchaseFees || 0);
       const newTransferFees = batchData.transferFees !== undefined ? Number(batchData.transferFees) : Number(existing.transferFees || 0);
@@ -6362,8 +6455,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const newNotes = batchData.notes !== undefined ? batchData.notes : existing.notes;
 
       const newPaymentMode = batchData.paymentMode !== undefined ? batchData.paymentMode : (existing.paymentMode || 'single');
-      const newAccountId2 = batchData.accountId2 !== undefined ? batchData.accountId2 : (existing.accountId2 || null);
-      const acc2 = newAccountId2 ? accounts.find(a => a.id === newAccountId2) : undefined;
+      let newAccountId2 = batchData.accountId2 !== undefined ? (batchData.accountId2 ? Number(batchData.accountId2) : null) : (existing.accountId2 ? Number(existing.accountId2) : null);
+      if (newAccountId2 === 120001) newAccountId2 = 120002;
+      const acc2 = newAccountId2 ? accounts.find(a => Number(a.id) === newAccountId2) : undefined;
       const isSplit = newPaymentMode === 'split' && Boolean(newAccountId2);
       let card1Amt = isSplit ? (batchData.card1Amount !== undefined ? Number(batchData.card1Amount) : Number(existing.card1Amount || 0)) : newTotalCost;
       let card2Amt = isSplit ? (batchData.card2Amount !== undefined ? Number(batchData.card2Amount) : Number(existing.card2Amount || 0)) : 0;
@@ -6378,10 +6472,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         purchaseDate: newPurchaseDate,
         paymentMode: isSplit ? 'split' : 'single',
         accountId: newAccountId,
-        accountName: acc?.name || existing.accountName || 'البنك / البطاقة',
+        accountName: acc?.name || (newAccountId === 120002 ? 'فيزا كارد بنك التجاري اليمني' : (existing.accountName || 'البنك / البطاقة')),
         card1Amount: isSplit ? card1Amt : newTotalCost,
         accountId2: isSplit ? newAccountId2 : null,
-        accountName2: isSplit && acc2 ? acc2.name : null,
+        accountName2: isSplit && acc2 ? acc2.name : (isSplit && newAccountId2 === 120002 ? 'فيزا كارد بنك التجاري اليمني' : null),
         card2Amount: isSplit ? card2Amt : undefined,
         purchaseCost: newPurchaseCost,
         purchaseFees: newPurchaseFees,
@@ -6601,7 +6695,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       // Reverse financial transaction into account(s)
       const revTrxList: FinancialTransaction[] = [];
-      if (target.paymentMode === 'split' && target.accountId2 && (Number(target.card2Amount) || 0) > 0) {
+      const targetAcc1 = Number(target.accountId) === 120001 ? 120002 : Number(target.accountId);
+      const targetAcc2 = target.accountId2 ? (Number(target.accountId2) === 120001 ? 120002 : Number(target.accountId2)) : null;
+
+      if (target.paymentMode === 'split' && targetAcc2 && (Number(target.card2Amount) || 0) > 0) {
         const c1 = Number(target.card1Amount) || 0;
         const c2 = Number(target.card2Amount) || 0;
         if (c1 > 0) {
@@ -6609,7 +6706,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             id: Date.now(),
             transactionNumber: `TRX-REV-PB-${Date.now().toString().slice(-6)}-1`,
             transactionDate: new Date().toISOString(),
-            accountId: target.accountId,
+            accountId: targetAcc1,
             type: 'deposit',
             amount: c1,
             description: `استرجاع مالي لإلغاء دفعة الشراء ${target.batchNumber} (سحب فيزا 1)`,
@@ -6621,7 +6718,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             id: Date.now() + 1,
             transactionNumber: `TRX-REV-PB-${Date.now().toString().slice(-6)}-2`,
             transactionDate: new Date().toISOString(),
-            accountId: target.accountId2,
+            accountId: targetAcc2,
             type: 'deposit',
             amount: c2,
             description: `استرجاع مالي لإلغاء دفعة الشراء ${target.batchNumber} (سحب فيزا 2)`,
@@ -6633,7 +6730,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           id: Date.now(),
           transactionNumber: `TRX-REV-PB-${Date.now().toString().slice(-6)}`,
           transactionDate: new Date().toISOString(),
-          accountId: target.accountId,
+          accountId: targetAcc1,
           type: 'deposit',
           amount: Number(target.totalCost) || 0,
           description: `استرجاع مالي لإلغاء دفعة الشراء ${target.batchNumber}`,
@@ -6698,7 +6795,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       // Remove financial transaction linked to this batch
       const updatedTransactions = prev.tables.financialTransactions.filter(t => {
-        if (t.id === id + 1) return false;
+        if (t.id === id + 1 || t.id === id + 11) return false;
         if (target && t.description && t.description.includes(target.batchNumber)) return false;
         return true;
       });

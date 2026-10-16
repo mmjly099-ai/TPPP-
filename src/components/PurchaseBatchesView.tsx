@@ -40,6 +40,7 @@ export const PurchaseBatchesView: React.FC = () => {
     purchaseBatches,
     orders,
     accounts,
+    getAccountBalance,
     addPurchaseBatch,
     updatePurchaseBatch,
     cancelPurchaseBatch,
@@ -177,6 +178,64 @@ export const PurchaseBatchesView: React.FC = () => {
             <Plus className="w-5 h-5" />
             <span>تسجيل عملية شراء جديدة (دفع بالفيزا)</span>
           </button>
+        </div>
+      </div>
+
+      {/* Visa Cards Live Balance Banner */}
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-4 text-white shadow-md border border-slate-800">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold border border-amber-500/30 shrink-0">
+              <CreditCard className="w-5 h-5 text-amber-400" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                <span>أرصدة بطاقات الفيزا المعتمدة للشراء الدولي (شي إن وعلي إكسبرس)</span>
+                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30 font-bold">
+                  سحب مباشر فوري
+                </span>
+              </h3>
+              <p className="text-xs text-slate-300 mt-0.5">
+                تخصم تكلفة الشراء من رصيد الفيزا المختارة فور تسجيل الدفعة بدقة محاسبية متكاملة.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 shrink-0">
+            {/* Tadhamon Visa */}
+            <div className="p-2.5 px-3.5 bg-white/10 backdrop-blur-xs rounded-xl border border-white/10 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 ring-2 ring-indigo-400/40"></span>
+                <div>
+                  <span className="text-[11px] text-indigo-200 font-bold block">فيزا كارد بنك التضامن</span>
+                  <span className="text-[10px] text-slate-400 font-mono">حساب #1</span>
+                </div>
+              </div>
+              <div className="text-left font-mono">
+                <span className="text-sm sm:text-base font-black text-white block">
+                  {getAccountBalance(1).toLocaleString()}
+                </span>
+                <span className="text-[9px] text-slate-300">YER</span>
+              </div>
+            </div>
+
+            {/* Commercial Visa */}
+            <div className="p-2.5 px-3.5 bg-white/10 backdrop-blur-xs rounded-xl border border-white/10 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-teal-400 ring-2 ring-teal-400/40"></span>
+                <div>
+                  <span className="text-[11px] text-teal-200 font-bold block">فيزا كارد بنك التجاري</span>
+                  <span className="text-[10px] text-slate-400 font-mono">حساب #120002</span>
+                </div>
+              </div>
+              <div className="text-left font-mono">
+                <span className="text-sm sm:text-base font-black text-emerald-300 block">
+                  {getAccountBalance(120002).toLocaleString()}
+                </span>
+                <span className="text-[9px] text-slate-300">YER</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1016,20 +1075,25 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
   onClose,
   onSubmit
 }) => {
+  const { getAccountBalance } = useStore();
   const [source, setSource] = useState('SHEIN');
   const [supplierOrderNumber, setSupplierOrderNumber] = useState('');
   const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // البحث عن فيزا بنك التضامن وفيزا بنك التجاري بالاسم أو النوع
+  // البحث عن فيزا بنك التضامن وفيزا بنك التجاري بدقة متناهية
   const tadamonCard = useMemo(() => {
-    return accounts.find(a => (a.name.includes('التضامن') && (a.type === 'بطاقة' || a.name.includes('فيزا'))) || a.name.includes('التضامن')) ||
+    return accounts.find(a => Number(a.id) === 1) ||
+           accounts.find(a => a.name.includes('التضامن') && (a.name.includes('فيزا') || a.type === 'بطاقة')) ||
+           accounts.find(a => a.name.includes('التضامن')) ||
            accounts.find(a => a.type === 'بطاقة') || accounts[0];
   }, [accounts]);
 
   const commercialCard = useMemo(() => {
-    return accounts.find(a => (a.name.includes('التجاري') && (a.type === 'بطاقة' || a.name.includes('فيزا'))) || a.name.includes('التجاري')) ||
-           accounts.find(a => a.id !== tadamonCard?.id && a.type === 'بطاقة') ||
-           accounts.find(a => a.id !== tadamonCard?.id) || accounts[1] || accounts[0];
+    return accounts.find(a => Number(a.id) === 120002) ||
+           accounts.find(a => a.name.includes('التجاري') && (a.name.includes('فيزا') || a.type === 'بطاقة')) ||
+           accounts.find(a => Number(a.id) !== Number(tadamonCard?.id) && (a.name.includes('فيزا') || a.type === 'بطاقة')) ||
+           accounts.find(a => Number(a.id) !== Number(tadamonCard?.id) && a.name.includes('التجاري')) ||
+           accounts[1] || accounts[0];
   }, [accounts, tadamonCard]);
 
   // حالة طريقة وقناة الدفع: إما فيزا واحدة أو فيزتين
@@ -1040,8 +1104,8 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
   const [accountId, setAccountId] = useState<string>(String(defaultAccId));
 
   // خيار فيزتين (تجزئة الدفع بين فيزا بنك التضامن وفيزا بنك التجاري)
-  const [card1Id, setCard1Id] = useState<string>(String(tadamonCard?.id || defaultAccId));
-  const [card2Id, setCard2Id] = useState<string>(String(commercialCard?.id || accounts.find(a => a.id !== Number(tadamonCard?.id || defaultAccId))?.id || ''));
+  const [card1Id, setCard1Id] = useState<string>(String(tadamonCard?.id || 1));
+  const [card2Id, setCard2Id] = useState<string>(String(commercialCard?.id || 120002));
   const [card1Amount, setCard1Amount] = useState<string>('');
   const [card2Amount, setCard2Amount] = useState<string>('');
 
@@ -1105,6 +1169,7 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
 
   const handleFullOnCard1 = () => {
     if (totalCalculated <= 0) return;
+    if (tadamonCard?.id) setCard1Id(String(tadamonCard.id));
     setCard1Amount(String(totalCalculated));
     setCard2Amount('0');
     setFormError('');
@@ -1112,6 +1177,7 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
 
   const handleFullOnCard2 = () => {
     if (totalCalculated <= 0) return;
+    if (commercialCard?.id) setCard2Id(String(commercialCard.id));
     setCard1Amount('0');
     setCard2Amount(String(totalCalculated));
     setFormError('');
@@ -1499,7 +1565,7 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
                         </div>
                         <div>
                           <span className="block text-xs font-bold text-slate-900">{tadamonCard.name}</span>
-                          <span className="text-[10px] text-slate-400 font-mono">{tadamonCard.accountNumber || 'فيزا بنك التضامن'}</span>
+                          <span className="text-[10px] text-slate-500 font-mono">الرصيد المتاح: {getAccountBalance(tadamonCard.id).toLocaleString()} YER</span>
                         </div>
                       </div>
                       {Number(accountId) === tadamonCard.id && (
@@ -1524,7 +1590,7 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
                         </div>
                         <div>
                           <span className="block text-xs font-bold text-slate-900">{commercialCard.name}</span>
-                          <span className="text-[10px] text-slate-400 font-mono">{commercialCard.accountNumber || 'فيزا بنك التجاري'}</span>
+                          <span className="text-[10px] text-emerald-700 font-bold font-mono">الرصيد المتاح: {getAccountBalance(commercialCard.id).toLocaleString()} YER</span>
                         </div>
                       </div>
                       {Number(accountId) === commercialCard.id && (
@@ -1544,7 +1610,7 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
                     <option value="">اختر الحساب المسحوب منه المبلغ</option>
                     {accounts.filter(a => a.status === 'active').map(a => (
                       <option key={a.id} value={a.id}>
-                        {a.name} ({a.type})
+                        {a.name} ({a.type}) — الرصيد: {getAccountBalance(a.id).toLocaleString()} YER
                       </option>
                     ))}
                   </select>
@@ -1584,14 +1650,14 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
                       onClick={handleFullOnCard1}
                       className="px-2.5 py-1 bg-white hover:bg-indigo-100 text-indigo-900 font-bold rounded-lg border border-indigo-200 transition cursor-pointer text-[11px] shadow-2xs"
                     >
-                      كامل المبلغ على فيزا التضامن
+                      كامل المبلغ على فيزا التضامن ({getAccountBalance(tadamonCard?.id || 1).toLocaleString()} YER)
                     </button>
                     <button
                       type="button"
                       onClick={handleFullOnCard2}
-                      className="px-2.5 py-1 bg-white hover:bg-indigo-100 text-indigo-900 font-bold rounded-lg border border-indigo-200 transition cursor-pointer text-[11px] shadow-2xs"
+                      className="px-2.5 py-1 bg-white hover:bg-teal-100 text-teal-900 font-bold rounded-lg border border-teal-200 transition cursor-pointer text-[11px] shadow-2xs"
                     >
-                      كامل المبلغ على فيزا التجاري
+                      كامل المبلغ على فيزا التجاري ({getAccountBalance(commercialCard?.id || 120002).toLocaleString()} YER)
                     </button>
                   </div>
                 </div>
@@ -1615,10 +1681,14 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
                     >
                       {accounts.filter(a => a.status === 'active').map(a => (
                         <option key={a.id} value={a.id}>
-                          {a.name} ({a.type})
+                          {a.name} ({a.type}) — الرصيد: {getAccountBalance(a.id).toLocaleString()} YER
                         </option>
                       ))}
                     </select>
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono px-1">
+                      <span>الرصيد المتاح بالفيزا:</span>
+                      <span className="font-bold text-indigo-900">{getAccountBalance(Number(card1Id)).toLocaleString()} YER</span>
+                    </div>
 
                     <div>
                       <label className="font-bold text-slate-700 block mb-1 text-[11px]">
@@ -1658,10 +1728,14 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
                     >
                       {accounts.filter(a => a.status === 'active').map(a => (
                         <option key={a.id} value={a.id}>
-                          {a.name} ({a.type})
+                          {a.name} ({a.type}) — الرصيد: {getAccountBalance(a.id).toLocaleString()} YER
                         </option>
                       ))}
                     </select>
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono px-1">
+                      <span>الرصيد المتاح بالفيزا:</span>
+                      <span className="font-bold text-teal-900">{getAccountBalance(Number(card2Id)).toLocaleString()} YER</span>
+                    </div>
 
                     <div>
                       <label className="font-bold text-slate-700 block mb-1 text-[11px]">
@@ -1929,32 +2003,41 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
   onClose,
   onSave
 }) => {
+  const { getAccountBalance } = useStore();
   const [source, setSource] = useState(batch.source || 'SHEIN');
   const [supplierOrderNumber, setSupplierOrderNumber] = useState(batch.supplierOrderNumber || '');
   const [purchaseDate, setPurchaseDate] = useState(batch.purchaseDate || new Date().toISOString().split('T')[0]);
 
   // البحث عن فيزا بنك التضامن وفيزا بنك التجاري
   const tadamonCard = useMemo(() => {
-    return accounts.find(a => (a.name.includes('التضامن') && (a.type === 'بطاقة' || a.name.includes('فيزا'))) || a.name.includes('التضامن')) ||
+    return accounts.find(a => Number(a.id) === 1) ||
+           accounts.find(a => a.name.includes('التضامن') && (a.name.includes('فيزا') || a.type === 'بطاقة')) ||
+           accounts.find(a => a.name.includes('التضامن')) ||
            accounts.find(a => a.type === 'بطاقة') || accounts[0];
   }, [accounts]);
 
   const commercialCard = useMemo(() => {
-    return accounts.find(a => (a.name.includes('التجاري') && (a.type === 'بطاقة' || a.name.includes('فيزا'))) || a.name.includes('التجاري')) ||
-           accounts.find(a => a.id !== tadamonCard?.id && a.type === 'بطاقة') ||
-           accounts.find(a => a.id !== tadamonCard?.id) || accounts[1] || accounts[0];
+    return accounts.find(a => Number(a.id) === 120002) ||
+           accounts.find(a => a.name.includes('التجاري') && (a.name.includes('فيزا') || a.type === 'بطاقة')) ||
+           accounts.find(a => Number(a.id) !== Number(tadamonCard?.id) && (a.name.includes('فيزا') || a.type === 'بطاقة')) ||
+           accounts.find(a => Number(a.id) !== Number(tadamonCard?.id) && a.name.includes('التجاري')) ||
+           accounts[1] || accounts[0];
   }, [accounts, tadamonCard]);
 
   // طريقة الدفع المسجلة مسبقاً (فيزا واحدة أو فيزتين)
   const [paymentMode, setPaymentMode] = useState<'single' | 'split'>(batch.paymentMode || 'single');
 
   // خيار فيزا واحدة
-  const defaultAccId = batch.accountId || tadamonCard?.id || accounts[0]?.id || '';
+  const normalizedBatchAccId = Number(batch.accountId) === 120001 ? 120002 : batch.accountId;
+  const defaultAccId = normalizedBatchAccId || tadamonCard?.id || accounts[0]?.id || '';
   const [accountId, setAccountId] = useState<string>(String(defaultAccId));
 
   // خيار فيزتين
-  const [card1Id, setCard1Id] = useState<string>(String(batch.accountId || tadamonCard?.id || defaultAccId));
-  const [card2Id, setCard2Id] = useState<string>(String(batch.accountId2 || commercialCard?.id || accounts.find(a => a.id !== Number(batch.accountId || tadamonCard?.id))?.id || ''));
+  const normalizedBatchAccId2 = Number(batch.accountId2) === 120001 ? 120002 : batch.accountId2;
+  const initialCard1 = normalizedBatchAccId || tadamonCard?.id || defaultAccId;
+  const initialCard2 = normalizedBatchAccId2 || commercialCard?.id || 120002;
+  const [card1Id, setCard1Id] = useState<string>(String(initialCard1));
+  const [card2Id, setCard2Id] = useState<string>(String(initialCard2));
   const [card1Amount, setCard1Amount] = useState<string>(batch.paymentMode === 'split' && batch.card1Amount !== undefined ? String(batch.card1Amount) : '');
   const [card2Amount, setCard2Amount] = useState<string>(batch.paymentMode === 'split' && batch.card2Amount !== undefined ? String(batch.card2Amount) : '');
 
@@ -2017,6 +2100,7 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
 
   const handleFullOnCard1 = () => {
     if (totalCalculated <= 0) return;
+    if (tadamonCard?.id) setCard1Id(String(tadamonCard.id));
     setCard1Amount(String(totalCalculated));
     setCard2Amount('0');
     setFormError('');
@@ -2024,6 +2108,7 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
 
   const handleFullOnCard2 = () => {
     if (totalCalculated <= 0) return;
+    if (commercialCard?.id) setCard2Id(String(commercialCard.id));
     setCard1Amount('0');
     setCard2Amount(String(totalCalculated));
     setFormError('');
@@ -2420,7 +2505,7 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
                         </div>
                         <div>
                           <span className="block text-xs font-bold text-slate-900">{tadamonCard.name}</span>
-                          <span className="text-[10px] text-slate-400 font-mono">{tadamonCard.accountNumber || 'فيزا بنك التضامن'}</span>
+                          <span className="text-[10px] text-slate-500 font-mono">الرصيد المتاح: {getAccountBalance(tadamonCard.id).toLocaleString()} YER</span>
                         </div>
                       </div>
                       {Number(accountId) === tadamonCard.id && (
@@ -2445,7 +2530,7 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
                         </div>
                         <div>
                           <span className="block text-xs font-bold text-slate-900">{commercialCard.name}</span>
-                          <span className="text-[10px] text-slate-400 font-mono">{commercialCard.accountNumber || 'فيزا بنك التجاري'}</span>
+                          <span className="text-[10px] text-emerald-700 font-bold font-mono">الرصيد المتاح: {getAccountBalance(commercialCard.id).toLocaleString()} YER</span>
                         </div>
                       </div>
                       {Number(accountId) === commercialCard.id && (
@@ -2465,7 +2550,7 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
                     <option value="">اختر الحساب المسحوب منه المبلغ</option>
                     {accounts.filter(a => a.status === 'active').map(a => (
                       <option key={a.id} value={a.id}>
-                        {a.name} ({a.type})
+                        {a.name} ({a.type}) — الرصيد: {getAccountBalance(a.id).toLocaleString()} YER
                       </option>
                     ))}
                   </select>
@@ -2505,14 +2590,14 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
                       onClick={handleFullOnCard1}
                       className="px-2.5 py-1 bg-white hover:bg-indigo-100 text-indigo-900 font-bold rounded-lg border border-indigo-200 transition cursor-pointer text-[11px] shadow-2xs"
                     >
-                      كامل المبلغ على فيزا التضامن
+                      كامل المبلغ على فيزا التضامن ({getAccountBalance(tadamonCard?.id || 1).toLocaleString()} YER)
                     </button>
                     <button
                       type="button"
                       onClick={handleFullOnCard2}
-                      className="px-2.5 py-1 bg-white hover:bg-indigo-100 text-indigo-900 font-bold rounded-lg border border-indigo-200 transition cursor-pointer text-[11px] shadow-2xs"
+                      className="px-2.5 py-1 bg-white hover:bg-teal-100 text-teal-900 font-bold rounded-lg border border-teal-200 transition cursor-pointer text-[11px] shadow-2xs"
                     >
-                      كامل المبلغ على فيزا التجاري
+                      كامل المبلغ على فيزا التجاري ({getAccountBalance(commercialCard?.id || 120002).toLocaleString()} YER)
                     </button>
                   </div>
                 </div>
@@ -2536,10 +2621,14 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
                     >
                       {accounts.filter(a => a.status === 'active').map(a => (
                         <option key={a.id} value={a.id}>
-                          {a.name} ({a.type})
+                          {a.name} ({a.type}) — الرصيد: {getAccountBalance(a.id).toLocaleString()} YER
                         </option>
                       ))}
                     </select>
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono px-1">
+                      <span>الرصيد المتاح بالفيزا:</span>
+                      <span className="font-bold text-indigo-900">{getAccountBalance(Number(card1Id)).toLocaleString()} YER</span>
+                    </div>
 
                     <div>
                       <label className="font-bold text-slate-700 block mb-1 text-[11px]">
@@ -2579,10 +2668,14 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
                     >
                       {accounts.filter(a => a.status === 'active').map(a => (
                         <option key={a.id} value={a.id}>
-                          {a.name} ({a.type})
+                          {a.name} ({a.type}) — الرصيد: {getAccountBalance(a.id).toLocaleString()} YER
                         </option>
                       ))}
                     </select>
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono px-1">
+                      <span>الرصيد المتاح بالفيزا:</span>
+                      <span className="font-bold text-teal-900">{getAccountBalance(Number(card2Id)).toLocaleString()} YER</span>
+                    </div>
 
                     <div>
                       <label className="font-bold text-slate-700 block mb-1 text-[11px]">

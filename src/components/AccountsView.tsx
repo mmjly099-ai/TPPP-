@@ -73,11 +73,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     let outCount = 0;
 
     const activeAccountIds = new Set(
-      accounts.filter(a => a.status === 'active' && a.type !== 'حقوق ملكية').map(a => a.id)
+      accounts.filter(a => a.status === 'active' && a.type !== 'حقوق ملكية').map(a => Number(a.id))
     );
 
     transactions.forEach(trx => {
-      if (activeAccountIds.has(trx.accountId)) {
+      if (activeAccountIds.has(Number(trx.accountId))) {
         const amt = parseFloat(String(trx.amount || 0)) || 0;
         const isIncome = trx.type === 'deposit' || trx.type === 'transfer_in' || trx.type === 'payment';
         if (isIncome) {
@@ -103,19 +103,20 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   const accountStatsMap = useMemo(() => {
     const map: Record<number, { totalIn: number; totalOut: number; inCount: number; outCount: number }> = {};
     accounts.forEach(acc => {
-      map[acc.id] = { totalIn: 0, totalOut: 0, inCount: 0, outCount: 0 };
+      map[Number(acc.id)] = { totalIn: 0, totalOut: 0, inCount: 0, outCount: 0 };
     });
 
     transactions.forEach(trx => {
-      if (map[trx.accountId]) {
+      const accId = Number(trx.accountId);
+      if (map[accId]) {
         const amt = parseFloat(String(trx.amount || 0)) || 0;
         const isIncome = trx.type === 'deposit' || trx.type === 'transfer_in' || trx.type === 'payment';
         if (isIncome) {
-          map[trx.accountId].totalIn += amt;
-          map[trx.accountId].inCount += 1;
+          map[accId].totalIn += amt;
+          map[accId].inCount += 1;
         } else {
-          map[trx.accountId].totalOut += amt;
-          map[trx.accountId].outCount += 1;
+          map[accId].totalOut += amt;
+          map[accId].outCount += 1;
         }
       }
     });
@@ -137,13 +138,13 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     }
   };
 
-  const selectedAccount = accounts.find(a => a.id === selectedAccountId);
+  const selectedAccount = accounts.find(a => Number(a.id) === Number(selectedAccountId));
 
   // Selected account transactions & filtering
   const rawAccountTransactions = useMemo(() => {
     if (!selectedAccountId) return [];
     return transactions
-      .filter(t => t.accountId === selectedAccountId)
+      .filter(t => Number(t.accountId) === Number(selectedAccountId))
       .sort((a, b) => new Date(b.createdAt || b.transactionDate).getTime() - new Date(a.createdAt || a.transactionDate).getTime());
   }, [transactions, selectedAccountId]);
 

@@ -706,6 +706,11 @@ export interface PurchaseBatch {
   purchaseDate: string;
   accountId: number;
   accountName?: string;
+  paymentMode?: 'single' | 'split';
+  card1Amount?: number;
+  accountId2?: number | null;
+  accountName2?: string | null;
+  card2Amount?: number;
   purchaseCost: string | number; // تكلفة الشراء الصافية
   purchaseFees: string | number; // رسوم الشراء
   transferFees: string | number; // عمولات التحويل البنكي
