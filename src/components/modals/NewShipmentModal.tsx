@@ -8,14 +8,14 @@ interface NewShipmentModalProps {
 }
 
 export const NewShipmentModal: React.FC<NewShipmentModalProps> = ({ isOpen, onClose }) => {
-  const { accounts, orders, customers, addShipment } = useStore();
+  const { accounts, orders, customers, addShipment, getAccountBalance } = useStore();
 
   const [shipmentNumber, setShipmentNumber] = useState('');
   const [carrier, setCarrier] = useState('المهيب');
   const [shippingCost, setShippingCost] = useState<number>(0);
   const [accountId, setAccountId] = useState<number>(() => {
     const defaultAcc = accounts.find(a => a.name.includes('جيب')) || accounts[0];
-    return defaultAcc ? defaultAcc.id : 1;
+    return defaultAcc ? Number(defaultAcc.id) : 2;
   });
   const [notes, setNotes] = useState('');
   const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
@@ -23,6 +23,7 @@ export const NewShipmentModal: React.FC<NewShipmentModalProps> = ({ isOpen, onCl
   const [orderFilterMode, setOrderFilterMode] = useState<'eligible' | 'all'>('eligible');
   const [updateOrderStatusToShipped, setUpdateOrderStatusToShipped] = useState(true);
   const [formError, setFormError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Filter orders according to user selection
   const filteredOrders = useMemo(() => {
@@ -79,6 +80,8 @@ export const NewShipmentModal: React.FC<NewShipmentModalProps> = ({ isOpen, onCl
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
     if (!shipmentNumber.trim()) {
       setFormError('يرجى إدخال رقم الشحنة');
       return;
@@ -88,18 +91,22 @@ export const NewShipmentModal: React.FC<NewShipmentModalProps> = ({ isOpen, onCl
       return;
     }
     setFormError('');
+    setIsSubmitting(true);
 
-    addShipment({
-      shipmentNumber: shipmentNumber.trim(),
-      carrier: carrier.trim(),
-      shippingCost: Number(shippingCost),
-      accountId,
-      notes: notes.trim() || undefined,
-      orderIds: selectedOrderIds,
-      updateOrderStatusToShipped
-    });
-
-    onClose();
+    try {
+      addShipment({
+        shipmentNumber: shipmentNumber.trim(),
+        carrier: carrier.trim(),
+        shippingCost: Number(shippingCost),
+        accountId: Number(accountId),
+        notes: notes.trim() || undefined,
+        orderIds: selectedOrderIds,
+        updateOrderStatusToShipped
+      });
+      onClose();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -171,16 +178,32 @@ export const NewShipmentModal: React.FC<NewShipmentModalProps> = ({ isOpen, onCl
             </div>
 
             <div>
-              <label className="font-bold text-slate-700 block mb-1">دُفعت من حساب النقدية / المحفظة *</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="font-bold text-slate-700 block">دُفعت من حساب النقدية / المحفظة *</label>
+                {(() => {
+                  const selectedAcc = accounts.find(a => Number(a.id) === Number(accountId));
+                  const curBal = selectedAcc ? getAccountBalance(selectedAcc.id) : 0;
+                  return (
+                    <span className="text-[10px] font-mono font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md">
+                      الرصيد المتاح: {curBal.toLocaleString()} ريال
+                    </span>
+                  );
+                })()}
+              </div>
               <select
                 value={accountId}
                 onChange={e => setAccountId(Number(e.target.value))}
                 className="w-full border border-slate-200 rounded-xl p-2.5 bg-white font-medium text-slate-900 focus:outline-hidden focus:border-purple-500"
                 required
               >
-                {accounts.filter(a => a.status === 'active' && a.type !== 'حقوق ملكية').map(a => (
-                  <option key={a.id} value={a.id}>{a.name} ({a.type})</option>
-                ))}
+                {accounts.filter(a => a.status === 'active' && a.type !== 'حقوق ملكية').map(a => {
+                  const bal = getAccountBalance(a.id);
+                  return (
+                    <option key={a.id} value={a.id}>
+                      {a.name} ({a.type}) — الرصيد: {bal.toLocaleString()} ريال
+                    </option>
+                  );
+                })}
               </select>
             </div>
           </div>
@@ -389,10 +412,11 @@ export const NewShipmentModal: React.FC<NewShipmentModalProps> = ({ isOpen, onCl
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold transition-colors cursor-pointer shadow-xs flex items-center gap-1.5"
+                disabled={isSubmitting}
+                className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold transition-colors cursor-pointer shadow-xs flex items-center gap-1.5"
               >
                 <Truck className="w-4 h-4" />
-                <span>حفظ الشحنة وتضمين الطلبات</span>
+                <span>{isSubmitting ? 'جاري الحفظ والخصم...' : 'حفظ الشحنة وتضمين الطلبات'}</span>
               </button>
             </div>
           </div>

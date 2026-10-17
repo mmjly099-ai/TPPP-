@@ -558,13 +558,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               ...parsed.tables,
               accounts: (() => {
                 const existing = Array.isArray(parsed.tables.accounts) ? [...parsed.tables.accounts] : [];
-                const existingIds = new Set(existing.map((a: any) => Number(a.id)));
+                const filtered = existing.filter((a: any) => Number(a.id) !== 150002);
+                const existingIds = new Set(filtered.map((a: any) => Number(a.id)));
                 (INITIAL_DATA.tables.accounts || []).forEach((initAcc: any) => {
-                  if (!existingIds.has(Number(initAcc.id)) && (initAcc.name.includes('التضامن') || initAcc.name.includes('التجاري'))) {
-                    existing.push(initAcc);
+                  if (!existingIds.has(Number(initAcc.id)) && Number(initAcc.id) !== 150002) {
+                    filtered.push(initAcc);
                   }
                 });
-                return existing;
+                return filtered;
+              })(),
+              paymentMethods: (() => {
+                const methods = Array.isArray(parsed.tables.paymentMethods) && parsed.tables.paymentMethods.length > 0
+                  ? parsed.tables.paymentMethods
+                  : (INITIAL_DATA.tables.paymentMethods || []);
+                return methods.map((pm: any) => Number(pm.accountId) === 150002 ? { ...pm, accountId: 120003 } : pm);
               })(),
               customers: Array.isArray(parsed.tables.customers) && parsed.tables.customers.length > 0 ? parsed.tables.customers : INITIAL_DATA.tables.customers,
               orders: Array.isArray(parsed.tables.orders) && parsed.tables.orders.length > 0 ? parsed.tables.orders : INITIAL_DATA.tables.orders,
@@ -4230,7 +4237,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     orderIds?: number[];
     updateOrderStatusToShipped?: boolean;
   }) => {
-    const acc = accounts.find(a => a.id === s.accountId);
+    const targetAccountId = Number(s.accountId);
+    const numCost = Math.max(0, Number(s.shippingCost) || 0);
+    const acc = accounts.find(a => Number(a.id) === targetAccountId);
     const shipId = Date.now();
     const trxNumber = `TRX-SHP-${Date.now().toString().slice(-6)}`;
     const linkedOrdersCount = s.orderIds?.length || 0;
@@ -4239,9 +4248,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       id: shipId + 1,
       transactionNumber: trxNumber,
       transactionDate: new Date().toISOString(),
-      accountId: s.accountId,
+      accountId: targetAccountId,
       type: 'withdrawal',
-      amount: s.shippingCost,
+      amount: numCost,
       description: `تكلفة الشحنة ${s.shipmentNumber} عبر ${s.carrier}${linkedOrdersCount ? ` (${linkedOrdersCount} طلبات)` : ''}`,
       createdAt: new Date().toISOString()
     };
@@ -4250,9 +4259,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       id: shipId,
       shipmentNumber: s.shipmentNumber,
       carrier: s.carrier,
-      shippingCost: s.shippingCost,
+      shippingCost: numCost,
       shippingCostPaidAt: new Date().toISOString(),
-      accountId: s.accountId,
+      accountId: targetAccountId,
       financialTransactionId: trx.id,
       status: 'completed',
       notes: s.notes,
@@ -4265,9 +4274,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       expenseNumber: `EXP-SHP-${s.shipmentNumber}`,
       category: 'شحن ونقل لوجستي',
       vendorName: s.carrier,
-      amount: s.shippingCost,
+      amount: numCost,
       paymentMethod: acc?.name || 'محفظة',
-      accountId: s.accountId,
+      accountId: targetAccountId,
       description: `أجور وتكاليف شحن طرود الشحنة #${s.shipmentNumber} عبر ${s.carrier}${linkedOrdersCount ? ` (${linkedOrdersCount} طلبات مشمولة)` : ''}`,
       notes: s.notes || null,
       status: 'active',
@@ -4285,16 +4294,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           journalEntryId: shipId + 2,
           accountId: null,
           accountName: 'تكاليف الشحنات واللوجستيات',
+          chartAccountId: 504,
+          chartAccountCode: '504',
           side: 'debit',
-          amount: s.shippingCost
+          amount: numCost
         },
         {
           id: shipId + 4,
           journalEntryId: shipId + 2,
-          accountId: s.accountId,
-          accountName: acc?.name || 'المحفظة',
+          accountId: targetAccountId,
+          accountName: acc?.name || 'المحفظة/الحساب',
+          chartAccountId: 102,
+          chartAccountCode: '102',
           side: 'credit',
-          amount: s.shippingCost
+          amount: numCost
         }
       ]
     };
@@ -4317,6 +4330,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           })
         : prev.tables.orders;
 
+      const nextJEs = [je, ...prev.tables.journalEntries];
+
       return {
         ...prev,
         tables: {
@@ -4325,12 +4340,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           shipments: [newShipment, ...prev.tables.shipments],
           expenses: [newExpense, ...prev.tables.expenses],
           financialTransactions: [trx, ...prev.tables.financialTransactions],
-          journalEntries: [je, ...prev.tables.journalEntries]
+          journalEntries: nextJEs,
+          journalLines: nextJEs.flatMap(j => j.lines || [])
         }
       };
     });
-    addAuditLog('CREATE', 'shipment', `تسجيل شحنة جديدة #${s.shipmentNumber} عبر ${s.carrier} بتكلفة ${s.shippingCost} ريال`, shipId);
-    showNotification(`تم تسجيل الشحنة #${s.shipmentNumber} وتضمين الطلبات بنجاح`, 'success');
+    addAuditLog('CREATE', 'shipment', `تسجيل شحنة جديدة #${s.shipmentNumber} عبر ${s.carrier} بتكلفة ${numCost} ريال خصماً من ${acc?.name || 'المحفظة'}`, shipId);
+    showNotification(`تم تسجيل الشحنة #${s.shipmentNumber} وخصم ${numCost.toLocaleString()} ريال من ${acc?.name || 'المحفظة'} بنجاح`, 'success');
   };
 
   const updateShipmentStatus = (id: number, status: Shipment['status']) => {
@@ -4346,15 +4362,81 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const updateShipment = (shipment: Shipment) => {
-    setData(prev => ({
-      ...prev,
-      tables: {
-        ...prev.tables,
-        shipments: prev.tables.shipments.map(s => s.id === shipment.id ? { ...shipment, updatedAt: new Date().toISOString() } : s)
-      }
-    }));
-    addAuditLog('UPDATE', 'shipment', `تعديل بيانات الشحنة #${shipment.shipmentNumber}`, shipment.id);
-    showNotification('تم تحديث بيانات الشحنة بنجاح', 'success');
+    const targetAccountId = Number(shipment.accountId);
+    const numCost = Math.max(0, Number(shipment.shippingCost) || 0);
+    const acc = accounts.find(a => Number(a.id) === targetAccountId);
+
+    setData(prev => {
+      const updatedShipments = prev.tables.shipments.map(s =>
+        s.id === shipment.id
+          ? { ...shipment, accountId: targetAccountId, shippingCost: numCost, updatedAt: new Date().toISOString() }
+          : s
+      );
+
+      const updatedTrxs = prev.tables.financialTransactions.map(t => {
+        if (t.id === shipment.financialTransactionId || (t.description && t.description.includes(`الشحنة ${shipment.shipmentNumber}`))) {
+          return {
+            ...t,
+            accountId: targetAccountId,
+            amount: numCost,
+            description: `تكلفة الشحنة ${shipment.shipmentNumber} عبر ${shipment.carrier}`,
+            updatedAt: new Date().toISOString()
+          };
+        }
+        return t;
+      });
+
+      const expNumber = `EXP-SHP-${shipment.shipmentNumber}`;
+      const updatedExpenses = prev.tables.expenses.map(e => {
+        if (e.expenseNumber === expNumber || (e.description && e.description.includes(`الشحنة #${shipment.shipmentNumber}`))) {
+          return {
+            ...e,
+            amount: numCost,
+            accountId: targetAccountId,
+            paymentMethod: acc?.name || e.paymentMethod,
+            vendorName: shipment.carrier,
+            notes: shipment.notes || e.notes,
+            updatedAt: new Date().toISOString()
+          };
+        }
+        return e;
+      });
+
+      const updatedJEs = prev.tables.journalEntries.map(je => {
+        if (je.description && je.description.includes(`الشحنة ${shipment.shipmentNumber}`)) {
+          return {
+            ...je,
+            lines: (je.lines || []).map(line => {
+              if (line.side === 'debit') {
+                return { ...line, amount: numCost };
+              } else {
+                return {
+                  ...line,
+                  accountId: targetAccountId,
+                  accountName: acc?.name || line.accountName,
+                  amount: numCost
+                };
+              }
+            })
+          };
+        }
+        return je;
+      });
+
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          shipments: updatedShipments,
+          financialTransactions: updatedTrxs,
+          expenses: updatedExpenses,
+          journalEntries: updatedJEs,
+          journalLines: updatedJEs.flatMap(j => j.lines || [])
+        }
+      };
+    });
+    addAuditLog('UPDATE', 'shipment', `تعديل بيانات وتكلفة الشحنة #${shipment.shipmentNumber} (${numCost} ريال من ${acc?.name || 'المحفظة'})`, shipment.id);
+    showNotification('تم تحديث بيانات وتكلفة الشحنة بنجاح وتحديث رصيد المحفظة', 'success');
   };
 
   const deleteShipment = (id: number) => {
@@ -4374,20 +4456,33 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return o;
       });
 
+      const nextJEs = prev.tables.journalEntries.filter(je =>
+        !(je.description && je.description.includes(`الشحنة ${shipmentToDelete.shipmentNumber}`)) &&
+        je.entryNumber !== `JE-SHP-${String(shipmentToDelete.id).slice(-6)}`
+      );
+
       return {
         ...prev,
         tables: {
           ...prev.tables,
           orders: updatedOrders,
           shipments: prev.tables.shipments.filter(s => s.id !== id),
-          expenses: prev.tables.expenses.filter(e => e.expenseNumber !== `EXP-SHP-${shipmentToDelete.shipmentNumber}`),
-          financialTransactions: prev.tables.financialTransactions.filter(t => t.id !== shipmentToDelete.financialTransactionId)
+          expenses: prev.tables.expenses.filter(e =>
+            e.expenseNumber !== `EXP-SHP-${shipmentToDelete.shipmentNumber}` &&
+            !(e.description && e.description.includes(`الشحنة #${shipmentToDelete.shipmentNumber}`))
+          ),
+          financialTransactions: prev.tables.financialTransactions.filter(t =>
+            t.id !== shipmentToDelete.financialTransactionId &&
+            !(t.description && t.description.includes(`الشحنة ${shipmentToDelete.shipmentNumber}`))
+          ),
+          journalEntries: nextJEs,
+          journalLines: nextJEs.flatMap(j => j.lines || [])
         }
       };
     });
 
-    addAuditLog('DELETE', 'shipment', `حذف الشحنة #${shipmentToDelete.shipmentNumber}`, id);
-    showNotification(`تم حذف الشحنة #${shipmentToDelete.shipmentNumber} بنجاح`, 'success');
+    addAuditLog('DELETE', 'shipment', `حذف الشحنة #${shipmentToDelete.shipmentNumber} واسترداد الرصيد المخصوم`, id);
+    showNotification(`تم حذف الشحنة #${shipmentToDelete.shipmentNumber} واسترداد الرصيد بنجاح`, 'success');
   };
 
   const addOtherReceivable = (rec: Omit<OtherReceivable, 'id' | 'createdAt' | 'status'>) => {

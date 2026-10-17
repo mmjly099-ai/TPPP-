@@ -1,0 +1,109 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isUser(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isBootstrapAdmin() {
+      return isSignedIn() &&
+        request.auth.token.email == "m1193883q@gmail.com" &&
+        request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // User Profiles
+    match /users/{userId} {
+      function isValidUser(data) {
+        return data.keys().hasAll(['uid', 'email', 'role']) &&
+               data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'role', 'createdAt', 'updatedAt']) &&
+               data.uid == request.auth.uid &&
+               data.email is string && data.email.size() <= 256 &&
+               data.role in ['admin', 'accountant', 'cashier', 'viewer'] &&
+               (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 128)) &&
+               (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 1024));
+      }
+
+      allow get: if isUser(userId) || isBootstrapAdmin();
+      allow list: if isBootstrapAdmin();
+      allow create: if isUser(userId) &&
+                       isValidId(userId) &&
+                       isValidUser(incoming()) &&
+                       (incoming().role != 'admin' || isBootstrapAdmin());
+      allow update: if isUser(userId) &&
+                       isValidId(userId) &&
+                       isValidUser(incoming()) &&
+                       incoming().uid == existing().uid &&
+                       (incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'updatedAt']) ||
+                        isBootstrapAdmin());
+      allow delete: if isBootstrapAdmin();
+    }
+
+    // Store State Backups / Sync
+    match /store_state/{stateId} {
+      function isValidState(data) {
+        return data.keys().hasAll(['id', 'userId', 'dataJson', 'updatedAt']) &&
+               data.keys().hasOnly(['id', 'userId', 'version', 'dataJson', 'summary', 'updatedAt']) &&
+               data.id is string && data.id.size() <= 128 &&
+               data.userId == request.auth.uid &&
+               data.dataJson is string && data.dataJson.size() <= 1048576 &&
+               (!('version' in data) || (data.version is string && data.version.size() <= 32)) &&
+               (!('summary' in data) || (data.summary is string && data.summary.size() <= 512));
+      }
+
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() &&
+                       isValidId(stateId) &&
+                       isValidState(incoming());
+      allow update: if isSignedIn() &&
+                       isValidId(stateId) &&
+                       isValidState(incoming()) &&
+                       incoming().id == existing().id &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['dataJson', 'summary', 'version', 'updatedAt', 'userId']);
+      allow delete: if isBootstrapAdmin();
+    }
+
+    // Cloud Audit Logs
+    match /cloud_audit_logs/{logId} {
+      function isValidAuditLog(data) {
+        return data.keys().hasAll(['id', 'userId', 'action', 'details']) &&
+               data.keys().hasOnly(['id', 'userId', 'action', 'entityType', 'details', 'createdAt']) &&
+               data.id is string && data.id.size() <= 128 &&
+               data.userId == request.auth.uid &&
+               data.action is string && data.action.size() <= 64 &&
+               data.details is string && data.details.size() <= 1024 &&
+               (!('entityType' in data) || (data.entityType is string && data.entityType.size() <= 64));
+      }
+
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() &&
+                       isValidId(logId) &&
+                       isValidAuditLog(incoming());
+      allow update, delete: if false; // Immutable audit trail
+    }
+  }
+}

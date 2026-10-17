@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { FirebaseProvider } from './firebase/FirebaseContext';
 import { StoreProvider, useStore } from './context/StoreContext';
 import { Header } from './components/Header';
 import { Navigation, NavTab } from './components/Navigation';
@@ -456,8 +457,10 @@ const MainApp: React.FC = () => {
 
 export default function App() {
   return (
-    <StoreProvider>
-      <MainApp />
-    </StoreProvider>
+    <FirebaseProvider>
+      <StoreProvider>
+        <MainApp />
+      </StoreProvider>
+    </FirebaseProvider>
   );
 }

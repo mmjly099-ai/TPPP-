@@ -44,6 +44,7 @@ export const ShipmentsView: React.FC<ShipmentsViewProps> = ({
     updateShipmentStatus,
     updateShipment,
     deleteShipment,
+    getAccountBalance,
     showNotification
   } = useStore();
 
@@ -67,6 +68,7 @@ export const ShipmentsView: React.FC<ShipmentsViewProps> = ({
   const [editingShipment, setEditingShipment] = useState<Shipment | null>(null);
   const [editCarrier, setEditCarrier] = useState('');
   const [editCost, setEditCost] = useState<number>(0);
+  const [editAccountId, setEditAccountId] = useState<number>(2);
   const [editNotes, setEditNotes] = useState('');
 
   // Delete shipment confirmation state
@@ -121,6 +123,7 @@ export const ShipmentsView: React.FC<ShipmentsViewProps> = ({
     setEditingShipment(s);
     setEditCarrier(s.carrier);
     setEditCost(Number(s.shippingCost) || 0);
+    setEditAccountId(Number(s.accountId) || 2);
     setEditNotes(s.notes || '');
   };
 
@@ -132,6 +135,7 @@ export const ShipmentsView: React.FC<ShipmentsViewProps> = ({
       ...editingShipment,
       carrier: editCarrier.trim() || editingShipment.carrier,
       shippingCost: editCost,
+      accountId: Number(editAccountId),
       notes: editNotes.trim() || undefined
     });
     setEditingShipment(null);
@@ -726,6 +730,36 @@ export const ShipmentsView: React.FC<ShipmentsViewProps> = ({
                   className="w-full border border-slate-200 rounded-xl p-2.5 font-mono font-bold text-purple-700"
                   required
                 />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-bold text-slate-700 block">دُفعت من حساب النقدية / المحفظة</label>
+                  {(() => {
+                    const selectedAcc = accounts.find(a => Number(a.id) === Number(editAccountId));
+                    const curBal = selectedAcc ? getAccountBalance(selectedAcc.id) : 0;
+                    return (
+                      <span className="text-[10px] font-mono font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md">
+                        الرصيد: {curBal.toLocaleString()} ريال
+                      </span>
+                    );
+                  })()}
+                </div>
+                <select
+                  value={editAccountId}
+                  onChange={e => setEditAccountId(Number(e.target.value))}
+                  className="w-full border border-slate-200 rounded-xl p-2.5 bg-white font-medium text-slate-900 focus:outline-hidden focus:border-purple-500"
+                  required
+                >
+                  {accounts.filter(a => a.status === 'active' && a.type !== 'حقوق ملكية').map(a => {
+                    const bal = getAccountBalance(a.id);
+                    return (
+                      <option key={a.id} value={a.id}>
+                        {a.name} ({a.type}) — الرصيد: {bal.toLocaleString()} ريال
+                      </option>
+                    );
+                  })}
+                </select>
               </div>
 
               <div>

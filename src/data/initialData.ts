@@ -387,17 +387,6 @@ export const INITIAL_DATA: TopStoreBackup = {
         "status": "inactive",
         "notes": null,
         "createdAt": "2026-08-28T00:08:49.000Z"
-      },
-      {
-        "id": 150002,
-        "name": "بنك الكريمي – حساب يمني",
-        "type": "بنكي",
-        "openingBalance": 0,
-        "openingBalanceDate": "2026-09-30T12:58:36.537Z",
-        "openingBalanceNotes": "حساب بنكي بالريال اليمني",
-        "status": "active",
-        "notes": "بنك الكريمي — حساب يمني",
-        "createdAt": "2026-09-30T12:58:36.537Z"
       }
     ],
     "paymentMethods": [
@@ -516,7 +505,7 @@ export const INITIAL_DATA: TopStoreBackup = {
       {
         "id": 240003,
         "name": "بنك الكريمي – حساب يمني",
-        "accountId": 150002,
+        "accountId": 120003,
         "status": "active",
         "createdAt": "2026-09-30T13:02:50.474Z"
       }

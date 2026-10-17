@@ -11,9 +11,13 @@ import {
   MapPin,
   RefreshCw,
   Lock,
-  Activity
+  Activity,
+  LogIn,
+  LogOut,
+  Cloud
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
+import { useFirebase } from '../firebase/FirebaseContext';
 
 import { NavTab } from './Navigation';
 import { PWAInstallButton } from './common/PWAInstallButton';
@@ -44,7 +48,8 @@ export const Header: React.FC<HeaderProps> = ({
   onNavigate,
   onLock
 }) => {
-  const { settings, totalCashAndBanks, totalCustomerDebts, isSyncing, lastSyncTime, syncWithServer } = useStore();
+  const { settings, totalCashAndBanks, totalCustomerDebts, isSyncing, lastSyncTime, syncWithServer, data: storeData, showNotification } = useStore();
+  const { currentUser, loginWithGoogle, logout, isSyncing: isFirebaseSyncing, saveStoreToCloud, isAuthLoading } = useFirebase() as any;
 
   const storeName = settings.storeName || 'TOP STORE – توب ستور';
   const businessName = settings.businessName || 'وسيط شراء وتسوق إلكتروني';
@@ -309,6 +314,59 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <Lock className="w-3.5 h-3.5" />
                 <span>قفل</span>
+              </button>
+            )}
+
+            {/* Firebase Auth & Cloud Firestore Sync */}
+            {currentUser ? (
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-orange-50 border border-orange-200 text-xs font-bold text-orange-950 shadow-2xs">
+                {currentUser.photoURL ? (
+                  <img src={currentUser.photoURL} alt={currentUser.displayName || ''} className="w-5 h-5 rounded-full object-cover border border-orange-300" />
+                ) : (
+                  <div className="w-5 h-5 rounded-full bg-orange-600 text-white flex items-center justify-center text-[10px] font-black">
+                    {(currentUser.displayName || currentUser.email || 'U')[0].toUpperCase()}
+                  </div>
+                )}
+                <span className="hidden xl:inline max-w-[120px] truncate">{currentUser.displayName || currentUser.email}</span>
+                <button
+                  onClick={async () => {
+                    try {
+                      await saveStoreToCloud(JSON.stringify(storeData), 'نسخة سحابية فورية من زر الشريط');
+                      showNotification('تمت المزامنة السحابية إلى Firebase Firestore بنجاح', 'success');
+                    } catch (e: any) {
+                      showNotification('فشلت المزامنة السحابية: ' + (e.message || ''), 'error');
+                    }
+                  }}
+                  disabled={isFirebaseSyncing}
+                  className="p-1 hover:bg-orange-100 rounded-md text-orange-700 cursor-pointer"
+                  title="مزامنة فورية إلى Firebase Firestore"
+                >
+                  <Cloud className={`w-3.5 h-3.5 ${isFirebaseSyncing ? 'animate-pulse text-amber-500' : ''}`} />
+                </button>
+                <button
+                  onClick={() => logout()}
+                  className="p-1 hover:bg-rose-100 rounded-md text-rose-600 cursor-pointer"
+                  title="تسجيل الخروج من حساب Google / Firebase"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={async () => {
+                  try {
+                    await loginWithGoogle();
+                  } catch (err: any) {
+                    if (err?.message) {
+                      showNotification(err.message, 'info');
+                    }
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold transition-all cursor-pointer shadow-xs"
+                title="تسجيل الدخول باستخدام Google لتفعيل المزامنة السحابية عبر Firebase"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Firebase Google</span>
               </button>
             )}
 

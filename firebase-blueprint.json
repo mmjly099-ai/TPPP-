@@ -1,0 +1,139 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile and access control data",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "User Firebase Auth UID",
+          "maxLength": 128
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "User email address",
+          "maxLength": 256
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User display name",
+          "maxLength": 128
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "Profile picture URL",
+          "maxLength": 1024
+        },
+        "role": {
+          "type": "string",
+          "description": "User system role",
+          "enum": ["admin", "accountant", "cashier", "viewer"],
+          "maxLength": 32
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Account creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Profile last update timestamp"
+        }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "StoreState": {
+      "title": "StoreState",
+      "description": "Synced store database snapshot and tables",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "State record ID",
+          "maxLength": 128
+        },
+        "userId": {
+          "type": "string",
+          "description": "ID of user who updated the state",
+          "maxLength": 128
+        },
+        "version": {
+          "type": "string",
+          "description": "Schema version",
+          "maxLength": 32
+        },
+        "dataJson": {
+          "type": "string",
+          "description": "Serialized store state snapshot",
+          "maxLength": 1048576
+        },
+        "summary": {
+          "type": "string",
+          "description": "State change summary",
+          "maxLength": 512
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last synced timestamp"
+        }
+      },
+      "required": ["id", "userId", "dataJson", "updatedAt"]
+    },
+    "CloudAuditLog": {
+      "title": "CloudAuditLog",
+      "description": "Auditable administrative and financial actions log",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Log ID",
+          "maxLength": 128
+        },
+        "userId": {
+          "type": "string",
+          "description": "Actor user UID",
+          "maxLength": 128
+        },
+        "action": {
+          "type": "string",
+          "description": "Action performed",
+          "maxLength": 64
+        },
+        "entityType": {
+          "type": "string",
+          "description": "Entity affected",
+          "maxLength": 64
+        },
+        "details": {
+          "type": "string",
+          "description": "Log description",
+          "maxLength": 1024
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of action"
+        }
+      },
+      "required": ["id", "userId", "action", "details"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profile documents keyed by Auth UID"
+    },
+    "/store_state/{stateId}": {
+      "schema": { "$ref": "#/entities/StoreState" },
+      "description": "Synced store data and snapshots for cloud persistence"
+    },
+    "/cloud_audit_logs/{logId}": {
+      "schema": { "$ref": "#/entities/CloudAuditLog" },
+      "description": "System activity logs recorded from operations"
+    }
+  }
+}
