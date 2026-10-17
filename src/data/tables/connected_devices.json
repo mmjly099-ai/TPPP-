@@ -5,8 +5,9 @@
     "deviceType": "desktop",
     "browser": "جوجل كروم (Chrome)",
     "os": "ويندوز (Windows)",
-    "lastSyncAt": "2026-10-14T18:19:41.072Z",
-    "lastAction": "pull",
+    "screenResolution": "1536x864",
+    "lastSyncAt": "2026-10-17T14:26:17.753Z",
+    "lastAction": "push",
     "recordsCount": {
       "customers": 43,
       "orders": 49,
