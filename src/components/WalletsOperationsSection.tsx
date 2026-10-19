@@ -230,7 +230,7 @@ export const WalletsOperationsSection: React.FC<WalletsOperationsSectionProps> =
             </span>
             <div className="flex items-baseline gap-1 mt-1">
               <span className="text-xl font-black font-mono text-rose-950">
-                -{overallStats.grandOut.toLocaleString()}
+                {overallStats.grandOut.toLocaleString()}
               </span>
               <span className="text-[11px] text-rose-700">ريال</span>
             </div>
@@ -531,7 +531,7 @@ export const WalletsOperationsSection: React.FC<WalletsOperationsSectionProps> =
                       </td>
                       <td className="py-3 px-4 text-left font-mono font-bold whitespace-nowrap text-sm">
                         <span className={isIncome ? 'text-emerald-600' : 'text-rose-600'}>
-                          {isIncome ? '+' : '-'} {amt.toLocaleString()}{' '}
+                          {amt.toLocaleString()}{' '}
                           <span className="text-[10px] font-normal text-slate-400">ريال</span>
                         </span>
                       </td>
@@ -542,7 +542,7 @@ export const WalletsOperationsSection: React.FC<WalletsOperationsSectionProps> =
                           </span>
                           {rb && (
                             <span className="text-[10px] text-slate-400 font-medium">
-                              ({rb.balanceBefore.toLocaleString()} {rb.impact >= 0 ? '+' : '-'} {Math.abs(rb.impact).toLocaleString()})
+                              السابق: {rb.balanceBefore.toLocaleString()} ريال
                             </span>
                           )}
                         </div>

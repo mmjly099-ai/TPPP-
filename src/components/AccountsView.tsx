@@ -22,6 +22,7 @@ import { useStore } from '../context/StoreContext';
 import { Account, FinancialTransaction } from '../types';
 import { AccountOperationsModal } from './modals/AccountOperationsModal';
 import { RecordAccountTransactionModal } from './modals/RecordAccountTransactionModal';
+import { sortTransactionsChronologicalDesc } from '../utils/runningBalance';
 
 interface AccountsViewProps {
   onOpenTransfer: (fromAccountId?: number) => void;
@@ -140,12 +141,12 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
   const selectedAccount = accounts.find(a => Number(a.id) === Number(selectedAccountId));
 
-  // Selected account transactions & filtering
+  // Selected account transactions & filtering (sorted strictly chronologically descending to match running balances)
   const rawAccountTransactions = useMemo(() => {
     if (!selectedAccountId) return [];
-    return transactions
-      .filter(t => Number(t.accountId) === Number(selectedAccountId))
-      .sort((a, b) => new Date(b.createdAt || b.transactionDate).getTime() - new Date(a.createdAt || a.transactionDate).getTime());
+    return sortTransactionsChronologicalDesc(
+      transactions.filter(t => Number(t.accountId) === Number(selectedAccountId))
+    );
   }, [transactions, selectedAccountId]);
 
   const filteredAccountTransactions = useMemo(() => {
@@ -202,7 +203,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all shadow-sm shadow-rose-600/20 cursor-pointer"
           >
             <ArrowUpRight className="w-4 h-4" />
-            <span>سند صادر (سحب -)</span>
+            <span>سند صادر (سحب)</span>
           </button>
 
           {/* Transfer between accounts */}
@@ -277,7 +278,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
             </span>
             <div className="flex items-baseline gap-1 mt-1">
               <span className="text-2xl font-black font-mono text-rose-950">
-                -{overallCashflow.grandOut.toLocaleString()}
+                {overallCashflow.grandOut.toLocaleString()}
               </span>
               <span className="text-xs font-medium text-rose-700">ريال</span>
             </div>
@@ -383,10 +384,10 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   <div className="bg-rose-50/60 border border-rose-100 rounded-lg px-2 py-1">
                     <span className="text-[9px] text-rose-700 font-semibold block flex items-center gap-0.5">
                       <ArrowUpRight className="w-2.5 h-2.5" />
-                      صادر (-)
+                      صادر
                     </span>
                     <span className="text-[11px] font-mono font-bold text-rose-900 block">
-                      -{stats.totalOut.toLocaleString()}
+                      {stats.totalOut.toLocaleString()}
                     </span>
                   </div>
                 </div>
@@ -496,7 +497,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors cursor-pointer"
                 >
                   <ArrowUpRight className="w-3.5 h-3.5" />
-                  <span>صادر منه (-)</span>
+                  <span>صادر منه</span>
                 </button>
 
                 <button
@@ -542,7 +543,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   </span>
                 </div>
                 <span className="text-lg font-black font-mono text-rose-950 block mt-1">
-                  -{stats.totalOut.toLocaleString()} <span className="text-xs font-normal text-rose-700">ريال</span>
+                  {stats.totalOut.toLocaleString()} <span className="text-xs font-normal text-rose-700">ريال</span>
                 </span>
               </div>
             </div>
@@ -674,7 +675,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                           </td>
                           <td className="py-3 px-4 text-left font-mono font-bold whitespace-nowrap">
                             <span className={isIncome ? 'text-emerald-600' : 'text-rose-600'}>
-                              {isIncome ? '+' : '-'} {amt.toLocaleString()} ريال
+                              {Math.abs(amt).toLocaleString()} ريال
                             </span>
                           </td>
                           <td className="py-3 px-4 text-left font-mono whitespace-nowrap">
@@ -684,7 +685,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                               </span>
                               {rb && (
                                 <span className="text-[10px] text-slate-400 font-medium">
-                                  ({rb.balanceBefore.toLocaleString()} {rb.impact >= 0 ? '+' : '-'} {Math.abs(rb.impact).toLocaleString()})
+                                  السابق: {rb.balanceBefore.toLocaleString()} ريال
                                 </span>
                               )}
                             </div>

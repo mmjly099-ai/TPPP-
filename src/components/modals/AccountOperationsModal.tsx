@@ -246,7 +246,7 @@ export const AccountOperationsModal: React.FC<AccountOperationsModalProps> = ({
             </div>
             <div className="mt-2 flex items-baseline gap-1">
               <span className="text-xl sm:text-2xl font-black font-mono text-rose-950">
-                -{totalOut.toLocaleString()}
+                {totalOut.toLocaleString()}
               </span>
               <span className="text-xs font-medium text-rose-700">ريال</span>
             </div>
@@ -373,7 +373,7 @@ export const AccountOperationsModal: React.FC<AccountOperationsModalProps> = ({
                       </td>
                       <td className="py-3 px-4 text-left font-mono font-bold whitespace-nowrap text-sm">
                         <span className={isIncome ? 'text-emerald-600' : 'text-rose-600'}>
-                          {isIncome ? '+' : '-'} {amt.toLocaleString()}{' '}
+                          {amt.toLocaleString()}{' '}
                           <span className="text-[10px] font-normal text-slate-400">ريال</span>
                         </span>
                       </td>
@@ -384,7 +384,7 @@ export const AccountOperationsModal: React.FC<AccountOperationsModalProps> = ({
                           </span>
                           {rb && (
                             <span className="text-[10px] text-slate-400 font-medium">
-                              ({rb.balanceBefore.toLocaleString()} {rb.impact >= 0 ? '+' : '-'} {Math.abs(rb.impact).toLocaleString()})
+                              السابق: {rb.balanceBefore.toLocaleString()} ريال
                             </span>
                           )}
                         </div>
