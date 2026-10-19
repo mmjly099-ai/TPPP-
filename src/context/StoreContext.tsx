@@ -59,6 +59,11 @@ import {
   sanitizeAndReconcileJournalEntries
 } from '../services/AccountingEngine';
 import { hasPermission, runDataIntegrityTests } from '../services/SecurityAndIntegrityTests';
+import {
+  RunningBalanceInfo,
+  computeAllAccountsRunningBalances,
+  computeAccountRunningBalances
+} from '../utils/runningBalance';
 
 export interface MarketingStats {
   totalSpend: number;
@@ -116,6 +121,8 @@ interface StoreContextType {
   // Computed values
   getAccountBalance: (accountId: number) => number;
   getCustomerBalance: (customerId: number) => number;
+  runningBalancesMap: Map<number, RunningBalanceInfo>;
+  getAccountRunningBalances: (accountId: number) => Map<number, RunningBalanceInfo>;
   totalCashAndBanks: number;
   totalCustomerDebts: number;
   totalReceivables: number;
@@ -801,13 +808,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         .map(e => e.expenseNumber)
     );
 
+    const existingIds = new Set(rawExpenses.map(e => Number(e.id)));
     const syntheticExpenses: Expense[] = [];
     shipments.forEach(s => {
       const expNum = `EXP-SHP-${s.shipmentNumber}`;
       if (!shipmentExpensesMap.has(expNum) && s.status !== 'cancelled') {
         const acc = accounts.find(a => a.id === s.accountId);
+        let synId = 980000000 + Number(s.id);
+        while (existingIds.has(synId)) {
+          synId += 1;
+        }
+        existingIds.add(synId);
+
         syntheticExpenses.push({
-          id: s.id + 900000,
+          id: synId,
           expenseNumber: expNum,
           category: 'شحن ونقل لوجستي',
           vendorName: s.carrier,
@@ -944,6 +958,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const runIntegrityAudit = () => {
     return runDataIntegrityTests(data);
+  };
+
+  // Cumulative running balance map across all accounts and transactions
+  const runningBalancesMap = useMemo(() => {
+    return computeAllAccountsRunningBalances(accounts, transactions);
+  }, [accounts, transactions]);
+
+  const getAccountRunningBalances = (accountId: number): Map<number, RunningBalanceInfo> => {
+    const acc = accounts.find(a => Number(a.id) === Number(accountId));
+    if (!acc) return new Map<number, RunningBalanceInfo>();
+    return computeAccountRunningBalances(acc, transactions);
   };
 
   // Total cash & wallets
@@ -4367,61 +4392,138 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const acc = accounts.find(a => Number(a.id) === targetAccountId);
 
     setData(prev => {
-      const updatedShipments = prev.tables.shipments.map(s =>
-        s.id === shipment.id
-          ? { ...shipment, accountId: targetAccountId, shippingCost: numCost, updatedAt: new Date().toISOString() }
-          : s
+      let finalTrxId = shipment.financialTransactionId;
+      let updatedTrxs = [...prev.tables.financialTransactions];
+      const existingTrxIndex = updatedTrxs.findIndex(t =>
+        (finalTrxId && t.id === finalTrxId) ||
+        (t.description && (t.description.includes(`الشحنة ${shipment.shipmentNumber}`) || t.description.includes(`الشحنة #${shipment.shipmentNumber}`)))
       );
 
-      const updatedTrxs = prev.tables.financialTransactions.map(t => {
-        if (t.id === shipment.financialTransactionId || (t.description && t.description.includes(`الشحنة ${shipment.shipmentNumber}`))) {
-          return {
-            ...t,
+      if (existingTrxIndex !== -1) {
+        finalTrxId = updatedTrxs[existingTrxIndex].id;
+        if (numCost > 0) {
+          updatedTrxs[existingTrxIndex] = {
+            ...updatedTrxs[existingTrxIndex],
             accountId: targetAccountId,
             amount: numCost,
             description: `تكلفة الشحنة ${shipment.shipmentNumber} عبر ${shipment.carrier}`,
             updatedAt: new Date().toISOString()
           };
+        } else {
+          updatedTrxs = updatedTrxs.filter((_, idx) => idx !== existingTrxIndex);
+          finalTrxId = undefined;
         }
-        return t;
-      });
+      } else if (numCost > 0) {
+        finalTrxId = finalTrxId || (Date.now() + 1);
+        const newTrx: FinancialTransaction = {
+          id: finalTrxId,
+          transactionNumber: `TRX-SHP-${Date.now().toString().slice(-6)}`,
+          transactionDate: new Date().toISOString(),
+          accountId: targetAccountId,
+          type: 'withdrawal',
+          amount: numCost,
+          description: `تكلفة الشحنة ${shipment.shipmentNumber} عبر ${shipment.carrier}`,
+          createdAt: new Date().toISOString()
+        };
+        updatedTrxs = [newTrx, ...updatedTrxs];
+      }
+
+      const updatedShipments = prev.tables.shipments.map(s =>
+        s.id === shipment.id
+          ? { ...shipment, accountId: targetAccountId, shippingCost: numCost, financialTransactionId: finalTrxId, updatedAt: new Date().toISOString() }
+          : s
+      );
 
       const expNumber = `EXP-SHP-${shipment.shipmentNumber}`;
-      const updatedExpenses = prev.tables.expenses.map(e => {
-        if (e.expenseNumber === expNumber || (e.description && e.description.includes(`الشحنة #${shipment.shipmentNumber}`))) {
-          return {
-            ...e,
+      let updatedExpenses = [...prev.tables.expenses];
+      const existingExpIndex = updatedExpenses.findIndex(e =>
+        e.expenseNumber === expNumber || (e.description && e.description.includes(`الشحنة #${shipment.shipmentNumber}`))
+      );
+
+      if (existingExpIndex !== -1) {
+        if (numCost > 0) {
+          updatedExpenses[existingExpIndex] = {
+            ...updatedExpenses[existingExpIndex],
             amount: numCost,
             accountId: targetAccountId,
-            paymentMethod: acc?.name || e.paymentMethod,
+            paymentMethod: acc?.name || updatedExpenses[existingExpIndex].paymentMethod,
             vendorName: shipment.carrier,
-            notes: shipment.notes || e.notes,
+            notes: shipment.notes || updatedExpenses[existingExpIndex].notes,
             updatedAt: new Date().toISOString()
           };
+        } else {
+          updatedExpenses = updatedExpenses.filter((_, idx) => idx !== existingExpIndex);
         }
-        return e;
-      });
+      } else if (numCost > 0) {
+        const newExp: Expense = {
+          id: Date.now() + 5,
+          expenseNumber: expNumber,
+          category: 'شحن ونقل لوجستي',
+          vendorName: shipment.carrier,
+          amount: numCost,
+          paymentMethod: acc?.name || 'محفظة',
+          accountId: targetAccountId,
+          description: `أجور وتكاليف شحن طرود الشحنة #${shipment.shipmentNumber} عبر ${shipment.carrier}`,
+          notes: shipment.notes || null,
+          status: 'active',
+          createdAt: new Date().toISOString()
+        };
+        updatedExpenses = [newExp, ...updatedExpenses];
+      }
 
-      const updatedJEs = prev.tables.journalEntries.map(je => {
-        if (je.description && je.description.includes(`الشحنة ${shipment.shipmentNumber}`)) {
-          return {
-            ...je,
-            lines: (je.lines || []).map(line => {
-              if (line.side === 'debit') {
-                return { ...line, amount: numCost };
-              } else {
-                return {
-                  ...line,
-                  accountId: targetAccountId,
-                  accountName: acc?.name || line.accountName,
-                  amount: numCost
-                };
-              }
-            })
-          };
-        }
-        return je;
-      });
+      let updatedJEs = [...prev.tables.journalEntries];
+      const existingJEIndex = updatedJEs.findIndex(je =>
+        je.description && (je.description.includes(`الشحنة ${shipment.shipmentNumber}`) || je.description.includes(`الشحنة #${shipment.shipmentNumber}`))
+      );
+
+      if (existingJEIndex !== -1) {
+        updatedJEs[existingJEIndex] = {
+          ...updatedJEs[existingJEIndex],
+          lines: (updatedJEs[existingJEIndex].lines || []).map(line => {
+            if (line.side === 'debit') {
+              return { ...line, amount: numCost };
+            } else {
+              return {
+                ...line,
+                accountId: targetAccountId,
+                accountName: acc?.name || line.accountName,
+                amount: numCost
+              };
+            }
+          })
+        };
+      } else if (numCost > 0) {
+        const jeId = Date.now() + 2;
+        const newJE: JournalEntry = {
+          id: jeId,
+          entryNumber: `JE-SHP-${Date.now().toString().slice(-6)}`,
+          description: `تكلفة الشحنة ${shipment.shipmentNumber} عبر ${shipment.carrier}`,
+          createdAt: new Date().toISOString(),
+          lines: [
+            {
+              id: jeId + 1,
+              journalEntryId: jeId,
+              accountId: null,
+              accountName: 'تكاليف الشحنات واللوجستيات',
+              chartAccountId: 504,
+              chartAccountCode: '504',
+              side: 'debit',
+              amount: numCost
+            },
+            {
+              id: jeId + 2,
+              journalEntryId: jeId,
+              accountId: targetAccountId,
+              accountName: acc?.name || 'المحفظة/الحساب',
+              chartAccountId: 102,
+              chartAccountCode: '102',
+              side: 'credit',
+              amount: numCost
+            }
+          ]
+        };
+        updatedJEs = [newJE, ...updatedJEs];
+      }
 
       return {
         ...prev,
@@ -7151,6 +7253,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         showNotification,
         getAccountBalance,
         getCustomerBalance,
+        runningBalancesMap,
+        getAccountRunningBalances,
         totalCashAndBanks,
         totalCustomerDebts,
         totalReceivables,

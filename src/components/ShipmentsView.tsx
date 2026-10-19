@@ -41,6 +41,8 @@ export const ShipmentsView: React.FC<ShipmentsViewProps> = ({
     orders = [],
     customers = [],
     deliveryOrders = [],
+    transactions = [],
+    runningBalancesMap,
     updateShipmentStatus,
     updateShipment,
     deleteShipment,
@@ -345,6 +347,12 @@ export const ShipmentsView: React.FC<ShipmentsViewProps> = ({
                 const totalPieces = linkedOrders.reduce((sum, o) => sum + (o.itemsCount || 0), 0);
                 const totalOrdersValue = linkedOrders.reduce((sum, o) => sum + (parseFloat(String(o.totalAmount || 0)) || 0), 0);
 
+                const linkedTrx = transactions.find(t =>
+                  (shipment.financialTransactionId && t.id === shipment.financialTransactionId) ||
+                  (t.description && (t.description.includes(`الشحنة ${shipment.shipmentNumber}`) || t.description.includes(`الشحنة #${shipment.shipmentNumber}`)))
+                );
+                const rb = linkedTrx ? runningBalancesMap.get(linkedTrx.id) : null;
+
                 return (
                   <div
                     key={shipment.id}
@@ -395,6 +403,26 @@ export const ShipmentsView: React.FC<ShipmentsViewProps> = ({
                         <div className="flex items-center justify-between text-slate-600">
                           <span>دُفعت من حساب:</span>
                           <span className="font-semibold text-slate-800">{acc?.name || 'محفظة النقدية'}</span>
+                        </div>
+
+                        <div className="flex items-center justify-between text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-100">
+                          <span className="text-[11px] font-semibold text-slate-700">حالة الخصم والترحيل:</span>
+                          {linkedTrx ? (
+                            <div className="text-left">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md">
+                                ✅ تم الخصم ({cost.toLocaleString()} ريال)
+                              </span>
+                              {rb && (
+                                <span className="block text-[10px] font-mono text-slate-500 mt-0.5">
+                                  الرصيد بعد الحركة: {rb.balanceAfter.toLocaleString()} ريال
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md">
+                              قيد التأكيد
+                            </span>
+                          )}
                         </div>
 
                         {shipment.shippingCostPaidAt && (

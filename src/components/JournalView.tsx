@@ -3301,7 +3301,7 @@ const NewJournalEntryModal: React.FC<NewJournalEntryModalProps> = ({
 
             <div className="border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-100">
               {lines.map((line, idx) => (
-                <div key={line.id} className="p-3 bg-slate-50/50 flex flex-wrap items-center gap-2 text-xs">
+                <div key={`line-${line.id}-${idx}`} className="p-3 bg-slate-50/50 flex flex-wrap items-center gap-2 text-xs">
                   {/* Side */}
                   <select
                     value={line.side}
@@ -3659,7 +3659,7 @@ const EditJournalEntryModal: React.FC<EditJournalEntryModalProps> = ({
 
             <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden">
               {lines.map((l, idx) => (
-                <div key={l.id || idx} className="p-3 bg-slate-50/50 flex flex-wrap items-center gap-2">
+                <div key={`line-${l.id || 'new'}-${idx}`} className="p-3 bg-slate-50/50 flex flex-wrap items-center gap-2">
                   <select
                     value={l.side}
                     onChange={e => handleUpdateLine(idx, 'side', e.target.value as 'debit' | 'credit')}

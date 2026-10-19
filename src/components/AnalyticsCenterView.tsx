@@ -1047,8 +1047,8 @@ export const AnalyticsCenterView: React.FC<AnalyticsCenterViewProps> = ({ onNavi
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {filteredData.expenses.slice(0, 4).map(exp => (
-                      <tr key={exp.id} className="hover:bg-slate-50">
+                    {filteredData.expenses.slice(0, 4).map((exp, idx) => (
+                      <tr key={`exp-${exp.id}-${exp.expenseNumber || idx}`} className="hover:bg-slate-50">
                         <td className="py-2.5 px-3 font-mono text-slate-500">{exp.expenseNumber}</td>
                         <td className="py-2.5 px-3">
                           <span className="font-bold text-slate-800">{exp.category}</span>

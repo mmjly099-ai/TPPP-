@@ -32,8 +32,8 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   onOpenTransfer,
   onOpenAddAccount
 }) => {
-  const { accounts, transactions, getAccountBalance, totalCashAndBanks } = useStore();
-  const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
+  const { accounts, transactions, getAccountBalance, totalCashAndBanks, runningBalancesMap } = useStore();
+  const [selectedAccountId, setSelectedAccountId] = useState<number | null>(2);
   const [modalAccount, setModalAccount] = useState<Account | null>(null);
   const [typeFilter, setTypeFilter] = useState<string>('ALL');
   
@@ -623,12 +623,14 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                       <th className="py-2.5 px-4">البيان والتفاصيل</th>
                       <th className="py-2.5 px-4 text-center">نوع الحركة (صادر / وارد)</th>
                       <th className="py-2.5 px-4 text-left">المبلغ</th>
+                      <th className="py-2.5 px-4 text-left">الرصيد التراكمي بعد الحركة</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {filteredAccountTransactions.map(trx => {
                       const isIncome = trx.type === 'deposit' || trx.type === 'transfer_in' || trx.type === 'payment';
                       const amt = parseFloat(String(trx.amount || 0));
+                      const rb = runningBalancesMap.get(trx.id);
 
                       let label = 'تسوية';
                       if (trx.type === 'payment') label = 'سند قبض وارد';
@@ -670,10 +672,22 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                               <span>{label}</span>
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-left font-mono font-bold">
+                          <td className="py-3 px-4 text-left font-mono font-bold whitespace-nowrap">
                             <span className={isIncome ? 'text-emerald-600' : 'text-rose-600'}>
                               {isIncome ? '+' : '-'} {amt.toLocaleString()} ريال
                             </span>
+                          </td>
+                          <td className="py-3 px-4 text-left font-mono whitespace-nowrap">
+                            <div className="flex flex-col items-end">
+                              <span className="font-bold text-slate-900 text-xs">
+                                {rb ? `${rb.balanceAfter.toLocaleString()} ريال` : '-'}
+                              </span>
+                              {rb && (
+                                <span className="text-[10px] text-slate-400 font-medium">
+                                  ({rb.balanceBefore.toLocaleString()} {rb.impact >= 0 ? '+' : '-'} {Math.abs(rb.impact).toLocaleString()})
+                                </span>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );

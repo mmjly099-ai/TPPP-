@@ -273,7 +273,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({ onOpenNewExpense, on
                   const dateStr = expense.createdAt ? new Date(expense.createdAt).toLocaleDateString('ar-YE') : '-';
 
                   return (
-                    <tr key={expense.id} className={`hover:bg-slate-50/70 transition-colors ${isLogistics ? 'bg-purple-50/15' : ''}`}>
+                    <tr key={`expense-${expense.id}-${expNum}`} className={`hover:bg-slate-50/70 transition-colors ${isLogistics ? 'bg-purple-50/15' : ''}`}>
                       <td className="py-3.5 px-4 font-mono font-bold text-slate-700">
                         {expNum}
                       </td>

@@ -37,7 +37,7 @@ export const AccountOperationsModal: React.FC<AccountOperationsModalProps> = ({
   onOpenTransfer,
   onOpenRecord
 }) => {
-  const { transactions, getAccountBalance } = useStore();
+  const { transactions, getAccountBalance, runningBalancesMap } = useStore();
   const [filterType, setFilterType] = useState<'ALL' | 'IN' | 'OUT'>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -328,12 +328,14 @@ export const AccountOperationsModal: React.FC<AccountOperationsModalProps> = ({
                   <th className="py-2.5 px-4">البيان والتفاصيل</th>
                   <th className="py-2.5 px-4 text-center">نوع الحركة</th>
                   <th className="py-2.5 px-4 text-left">المبلغ</th>
+                  <th className="py-2.5 px-4 text-left">الرصيد التراكمي بعد الحركة</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredTransactions.map(trx => {
                   const amt = parseFloat(String(trx.amount || 0));
                   const { label, isIncome } = getTransactionTypeName(trx.type);
+                  const rb = runningBalancesMap.get(trx.id);
                   const dateStr = new Date(trx.transactionDate || trx.createdAt).toLocaleString('ar-YE', {
                     year: 'numeric',
                     month: 'numeric',
@@ -374,6 +376,18 @@ export const AccountOperationsModal: React.FC<AccountOperationsModalProps> = ({
                           {isIncome ? '+' : '-'} {amt.toLocaleString()}{' '}
                           <span className="text-[10px] font-normal text-slate-400">ريال</span>
                         </span>
+                      </td>
+                      <td className="py-3 px-4 text-left font-mono whitespace-nowrap">
+                        <div className="flex flex-col items-end">
+                          <span className="font-bold text-slate-900 text-xs">
+                            {rb ? `${rb.balanceAfter.toLocaleString()} ريال` : '-'}
+                          </span>
+                          {rb && (
+                            <span className="text-[10px] text-slate-400 font-medium">
+                              ({rb.balanceBefore.toLocaleString()} {rb.impact >= 0 ? '+' : '-'} {Math.abs(rb.impact).toLocaleString()})
+                            </span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );

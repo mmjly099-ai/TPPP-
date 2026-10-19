@@ -33,8 +33,8 @@ export const WalletsOperationsSection: React.FC<WalletsOperationsSectionProps> =
   onNavigateToJournal,
   onOpenRecord
 }) => {
-  const { accounts, transactions, getAccountBalance } = useStore();
-  const [selectedAccountId, setSelectedAccountId] = useState<number | 'ALL'>('ALL');
+  const { accounts, transactions, getAccountBalance, runningBalancesMap } = useStore();
+  const [selectedAccountId, setSelectedAccountId] = useState<number | 'ALL'>(2);
   const [trxTypeFilter, setTrxTypeFilter] = useState<'ALL' | 'IN' | 'OUT'>('ALL');
 
   // Filter accounts (excluding Equity accounts)
@@ -473,6 +473,7 @@ export const WalletsOperationsSection: React.FC<WalletsOperationsSectionProps> =
                   <th className="py-2.5 px-4">البيان والتفاصيل</th>
                   <th className="py-2.5 px-4 text-center">نوع الحركة</th>
                   <th className="py-2.5 px-4 text-left">المبلغ بالريال</th>
+                  <th className="py-2.5 px-4 text-left">الرصيد التراكمي</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -480,6 +481,7 @@ export const WalletsOperationsSection: React.FC<WalletsOperationsSectionProps> =
                   const acc = accounts.find(a => a.id === trx.accountId);
                   const isIncome = trx.type === 'deposit' || trx.type === 'transfer_in' || trx.type === 'payment';
                   const amt = parseFloat(String(trx.amount || 0));
+                  const rb = runningBalancesMap.get(trx.id);
 
                   let typeLabel = 'تسوية';
                   if (trx.type === 'payment') typeLabel = 'سند قبض وارد';
@@ -532,6 +534,18 @@ export const WalletsOperationsSection: React.FC<WalletsOperationsSectionProps> =
                           {isIncome ? '+' : '-'} {amt.toLocaleString()}{' '}
                           <span className="text-[10px] font-normal text-slate-400">ريال</span>
                         </span>
+                      </td>
+                      <td className="py-3 px-4 text-left font-mono whitespace-nowrap">
+                        <div className="flex flex-col items-end">
+                          <span className="font-bold text-slate-900 text-xs">
+                            {rb ? `${rb.balanceAfter.toLocaleString()} ريال` : '-'}
+                          </span>
+                          {rb && (
+                            <span className="text-[10px] text-slate-400 font-medium">
+                              ({rb.balanceBefore.toLocaleString()} {rb.impact >= 0 ? '+' : '-'} {Math.abs(rb.impact).toLocaleString()})
+                            </span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
