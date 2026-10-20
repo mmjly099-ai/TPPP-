@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { Account, FinancialTransaction } from '../../types';
+import { sortTransactionsChronologicalDesc } from '../../utils/runningBalance';
 
 interface AccountOperationsModalProps {
   account: Account | null;
@@ -45,10 +46,12 @@ export const AccountOperationsModal: React.FC<AccountOperationsModalProps> = ({
 
   const currentBalance = getAccountBalance(account.id);
 
-  // Filter transactions for this specific account
-  const accountTransactions = transactions
-    .filter(t => t.accountId === account.id)
-    .sort((a, b) => new Date(b.createdAt || b.transactionDate).getTime() - new Date(a.createdAt || a.transactionDate).getTime());
+  // Filter transactions for this specific account (chronologically descending)
+  const accountTransactions = useMemo(() => {
+    return sortTransactionsChronologicalDesc(
+      transactions.filter(t => Number(t.accountId) === Number(account.id))
+    );
+  }, [transactions, account.id]);
 
   // Inflow (الوارد) vs Outflow (الصادر) totals
   let totalIn = 0;
@@ -166,7 +169,7 @@ export const AccountOperationsModal: React.FC<AccountOperationsModalProps> = ({
                   title="سند صادر سحب من هذا الحساب"
                 >
                   <ArrowUpRight className="w-3.5 h-3.5" />
-                  <span>صادر (-)</span>
+                  <span>صادر</span>
                 </button>
               </>
             )}
@@ -373,7 +376,7 @@ export const AccountOperationsModal: React.FC<AccountOperationsModalProps> = ({
                       </td>
                       <td className="py-3 px-4 text-left font-mono font-bold whitespace-nowrap text-sm">
                         <span className={isIncome ? 'text-emerald-600' : 'text-rose-600'}>
-                          {amt.toLocaleString()}{' '}
+                          {Math.abs(amt).toLocaleString()}{' '}
                           <span className="text-[10px] font-normal text-slate-400">ريال</span>
                         </span>
                       </td>

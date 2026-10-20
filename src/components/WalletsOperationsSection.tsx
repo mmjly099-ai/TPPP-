@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { Account, FinancialTransaction } from '../types';
+import { sortTransactionsChronologicalDesc } from '../utils/runningBalance';
 
 interface WalletsOperationsSectionProps {
   onOpenTransfer: (fromAccountId?: number) => void;
@@ -104,9 +105,7 @@ export const WalletsOperationsSection: React.FC<WalletsOperationsSectionProps> =
       list = list.filter(t => t.type !== 'deposit' && t.type !== 'transfer_in' && t.type !== 'payment');
     }
 
-    return list
-      .sort((a, b) => new Date(b.createdAt || b.transactionDate).getTime() - new Date(a.createdAt || a.transactionDate).getTime())
-      .slice(0, 15); // Show top 15 recent operations in this dashboard section
+    return sortTransactionsChronologicalDesc(list).slice(0, 15); // Show top 15 recent operations in this dashboard section
   }, [transactions, selectedAccountId, trxTypeFilter]);
 
   const selectedAccountObj = selectedAccountId !== 'ALL' ? accounts.find(a => a.id === selectedAccountId) : null;
@@ -163,7 +162,7 @@ export const WalletsOperationsSection: React.FC<WalletsOperationsSectionProps> =
                 title="تسجيل سند صادر سحب"
               >
                 <ArrowUpRight className="w-3.5 h-3.5" />
-                <span>صادر (-)</span>
+                <span>صادر</span>
               </button>
             </>
           )}
@@ -339,7 +338,7 @@ export const WalletsOperationsSection: React.FC<WalletsOperationsSectionProps> =
                       ↓ +{(stats.totalIn / 1000).toFixed(0)}k
                     </span>
                     <span className="text-rose-700" title="صادر">
-                      ↑ -{(stats.totalOut / 1000).toFixed(0)}k
+                      ↑ {(stats.totalOut / 1000).toFixed(0)}k
                     </span>
                   </div>
 
@@ -414,7 +413,7 @@ export const WalletsOperationsSection: React.FC<WalletsOperationsSectionProps> =
                   className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors cursor-pointer"
                 >
                   <ArrowUpRight className="w-3 h-3" />
-                  <span>صادر منه (-)</span>
+                  <span>صادر منه</span>
                 </button>
               </div>
             )}
@@ -531,7 +530,7 @@ export const WalletsOperationsSection: React.FC<WalletsOperationsSectionProps> =
                       </td>
                       <td className="py-3 px-4 text-left font-mono font-bold whitespace-nowrap text-sm">
                         <span className={isIncome ? 'text-emerald-600' : 'text-rose-600'}>
-                          {amt.toLocaleString()}{' '}
+                          {Math.abs(amt).toLocaleString()}{' '}
                           <span className="text-[10px] font-normal text-slate-400">ريال</span>
                         </span>
                       </td>

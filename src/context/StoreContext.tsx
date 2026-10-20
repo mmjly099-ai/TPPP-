@@ -773,14 +773,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [data.tables.appSettings]);
 
   const customers = data.tables.customers || [];
-  const rawOrders = data.tables.orders || [];
-  const orders = useMemo(() => {
-    return rawOrders.map(o => ({
-      ...o,
-      invoiceNumber: o.invoiceNumber || `INV-${String(o.orderNumber || o.id).replace(/\D/g, '').padStart(3, '0') || o.id}`,
-      invoiceStatus: o.invoiceStatus || (o.status === 'cancelled' ? 'cancelled' : 'approved')
-    }));
-  }, [rawOrders]);
   const accounts = data.tables.accounts || [];
   const paymentMethods = data.tables.paymentMethods || [];
   const rawPayments = (data.tables.payments && data.tables.payments.length > 0)
@@ -796,6 +788,48 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       createdByName: p.createdByName || 'أحمد الإدريسي (أمين الصندوق)'
     }));
   }, [rawPayments]);
+
+  const rawOrders = data.tables.orders || [];
+  const orders = useMemo(() => {
+    // Map orderId -> sum of non-cancelled payments
+    const orderPaidMap: Record<number, number> = {};
+    payments.forEach(p => {
+      if (p.status !== 'cancelled') {
+        const amt = parseFloat(String(p.amount || 0)) || 0;
+        if (p.orderId) {
+          orderPaidMap[p.orderId] = (orderPaidMap[p.orderId] || 0) + amt;
+        }
+        if (Array.isArray(p.orderIds)) {
+          p.orderIds.forEach(oid => {
+            if (oid && p.orderIds!.length === 1) {
+              orderPaidMap[oid] = (orderPaidMap[oid] || 0) + amt;
+            }
+          });
+        }
+      }
+    });
+
+    return rawOrders.map(o => {
+      const totalPayments = orderPaidMap[o.id] !== undefined ? orderPaidMap[o.id] : (Number(o.paidAmount) || 0);
+      const totalAmount = parseFloat(String(o.totalAmount || 0)) || 0;
+      const remainingAmount = Math.max(0, totalAmount - totalPayments);
+      const paymentStatus: Order['paymentStatus'] = 
+        totalPayments >= totalAmount && totalAmount > 0
+          ? 'paid'
+          : totalPayments > 0
+          ? 'partial'
+          : 'unpaid';
+
+      return {
+        ...o,
+        paidAmount: totalPayments,
+        remainingAmount,
+        paymentStatus,
+        invoiceNumber: o.invoiceNumber || `INV-${String(o.orderNumber || o.id).replace(/\D/g, '').padStart(3, '0') || o.id}`,
+        invoiceStatus: o.invoiceStatus || (o.status === 'cancelled' ? 'cancelled' : 'approved')
+      };
+    });
+  }, [rawOrders, payments]);
   const rawExpenses = data.tables.expenses || [];
   const shipments = data.tables.shipments || [];
 
@@ -6015,6 +6049,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     let newTrx: FinancialTransaction | null = null;
+    let newJe: JournalEntry | null = null;
     if (params.depositAccountId && depositAcc) {
       newTrx = {
         id: id + 1,
@@ -6025,6 +6060,55 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         amount,
         description: `توريد عهدة نقدية من الموصل ${courier?.name || ''} بموجب سند #${receiptNumber}`,
         createdAt: nowStr
+      };
+
+      const jeId = id + 20;
+      const accChart = resolveChartAccount(depositAcc.name || 'الصندوق', 'debit');
+      const courierChart = resolveChartAccount(`عهدة الموصل: ${courier?.name || 'الموصل'}`, 'credit');
+
+      newJe = {
+        id: jeId,
+        entryNumber: `JE-DCR-${Date.now().toString().slice(-6)}`,
+        transactionId: newTrx.id,
+        sourceType: 'collection' as any,
+        sourceId: id,
+        sourceNumber: receiptNumber,
+        status: 'posted',
+        currency: 'YER',
+        exchangeRate: 1,
+        createdBy: 'admin',
+        postedBy: 'admin',
+        postedAt: nowStr,
+        description: `إثبات توريد عهدة نقدية من الموصل ${courier?.name || ''} بسند #${receiptNumber}`,
+        createdAt: nowStr,
+        lines: [
+          {
+            id: jeId + 1,
+            journalEntryId: jeId,
+            accountId: params.depositAccountId,
+            accountName: depositAcc.name,
+            chartAccountId: accChart.id,
+            chartAccountCode: accChart.code,
+            side: 'debit',
+            amount,
+            currency: 'YER',
+            exchangeRate: 1,
+            baseAmount: amount
+          },
+          {
+            id: jeId + 2,
+            journalEntryId: jeId,
+            accountId: null,
+            accountName: `عهدة الموصل: ${courier?.name || 'الموصل'}`,
+            chartAccountId: courierChart.id,
+            chartAccountCode: courierChart.code,
+            side: 'credit',
+            amount,
+            currency: 'YER',
+            exchangeRate: 1,
+            baseAmount: amount
+          }
+        ]
       };
     }
 
@@ -6043,7 +6127,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           ...prev.tables,
           couriers: updatedCouriers,
           deliveryCashCollections: [collection, ...(prev.tables.deliveryCashCollections || [])],
-          financialTransactions: newTrx ? [newTrx, ...(prev.tables.financialTransactions || [])] : prev.tables.financialTransactions
+          financialTransactions: newTrx ? [newTrx, ...(prev.tables.financialTransactions || [])] : prev.tables.financialTransactions,
+          journalEntries: newJe ? [newJe, ...(prev.tables.journalEntries || [])] : prev.tables.journalEntries
         }
       };
     });
@@ -6098,6 +6183,55 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       createdAt: nowStr
     };
 
+    const jeId = id + 20;
+    const feeChart = resolveChartAccount('أجور ومستحقات توصيل طرود', 'debit');
+    const walletChart = resolveChartAccount(wallet?.name || 'محفظة', 'credit');
+
+    const payoutJe: JournalEntry = {
+      id: jeId,
+      entryNumber: `JE-STL-${Date.now().toString().slice(-6)}`,
+      transactionId: payoutTrx.id,
+      sourceType: 'settlement' as any,
+      sourceId: id,
+      sourceNumber: settlementNumber,
+      status: 'posted',
+      currency: 'YER',
+      exchangeRate: 1,
+      createdBy: 'admin',
+      postedBy: 'admin',
+      postedAt: nowStr,
+      description: `إثبات صرف مستحقات الموصل ${courier?.name || ''} بموجب تسوية #${settlementNumber}`,
+      createdAt: nowStr,
+      lines: [
+        {
+          id: jeId + 1,
+          journalEntryId: jeId,
+          accountId: null,
+          accountName: `أجور ومستحقات الموصل: ${courier?.name || 'الموصل'}`,
+          chartAccountId: feeChart.id,
+          chartAccountCode: feeChart.code,
+          side: 'debit',
+          amount,
+          currency: 'YER',
+          exchangeRate: 1,
+          baseAmount: amount
+        },
+        {
+          id: jeId + 2,
+          journalEntryId: jeId,
+          accountId: params.walletId,
+          accountName: wallet?.name || 'المحفظة',
+          chartAccountId: walletChart.id,
+          chartAccountCode: walletChart.code,
+          side: 'credit',
+          amount,
+          currency: 'YER',
+          exchangeRate: 1,
+          baseAmount: amount
+        }
+      ]
+    };
+
     setData(prev => {
       const updatedCouriers = (prev.tables.couriers || []).map(c => {
         if (c.id !== params.courierId) return c;
@@ -6114,7 +6248,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           ...prev.tables,
           couriers: updatedCouriers,
           courierSettlements: [settlement, ...(prev.tables.courierSettlements || [])],
-          financialTransactions: [payoutTrx, ...(prev.tables.financialTransactions || [])]
+          financialTransactions: [payoutTrx, ...(prev.tables.financialTransactions || [])],
+          journalEntries: [payoutJe, ...(prev.tables.journalEntries || [])]
         }
       };
     });

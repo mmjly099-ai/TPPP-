@@ -416,10 +416,10 @@ export const RecordAccountTransactionModal: React.FC<RecordAccountTransactionMod
                   : 'bg-rose-100/80 border-rose-200 text-rose-900'
               }`}>
                 <span className="text-[10px] block font-semibold">
-                  {isDeposit ? 'الوارد المضاف (+)' : 'الصادر المخصوم (-)'}
+                  {isDeposit ? 'الوارد المضاف' : 'الصادر المخصوم'}
                 </span>
                 <span className="text-xs font-mono font-bold">
-                  {isDeposit ? '+' : '-'}{numAmount.toLocaleString()}
+                  {isDeposit ? `+${numAmount.toLocaleString()}` : numAmount.toLocaleString()}
                 </span>
               </div>
               <div className="bg-white/80 p-2 rounded-xl border border-slate-200/60">

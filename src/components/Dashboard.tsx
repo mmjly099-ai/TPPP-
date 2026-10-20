@@ -25,6 +25,7 @@ import { WalletsOperationsSection } from './WalletsOperationsSection';
 import { AccountOperationsModal } from './modals/AccountOperationsModal';
 import { RecordAccountTransactionModal } from './modals/RecordAccountTransactionModal';
 import { Account } from '../types';
+import { sortTransactionsChronologicalDesc } from '../utils/runningBalance';
 
 interface DashboardProps {
   onNavigate: (tab: NavTab) => void;
@@ -94,10 +95,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
     .filter(c => c.debt > 0)
     .sort((a, b) => b.debt - a.debt);
 
-  // Recent 6 transactions
-  const recentTransactions = [...transactions]
-    .sort((a, b) => new Date(b.createdAt || b.transactionDate).getTime() - new Date(a.createdAt || a.transactionDate).getTime())
-    .slice(0, 6);
+  // Recent 6 transactions (chronologically descending)
+  const recentTransactions = sortTransactionsChronologicalDesc(transactions).slice(0, 6);
 
   return (
     <div className="space-y-6">
@@ -278,7 +277,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               const amt = parseFloat(String(trx.amount || 0));
 
               return (
-                <div key={trx.id} className="py-3 flex items-center justify-between gap-3">
+                <div key={`dash-trx-${trx.id}-${trx.transactionNumber || ''}`} className="py-3 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
@@ -303,7 +302,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         isIncome ? 'text-emerald-600' : 'text-rose-600'
                       }`}
                     >
-                      {isIncome ? '+' : '-'} {amt.toLocaleString()}
+                      {isIncome ? `+${Math.abs(amt).toLocaleString()}` : Math.abs(amt).toLocaleString()}
                     </span>
                     <span className="text-[10px] text-slate-400 block">ريال</span>
                   </div>

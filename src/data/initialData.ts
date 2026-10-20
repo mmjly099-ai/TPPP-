@@ -1219,10 +1219,11 @@ export const INITIAL_DATA: TopStoreBackup = {
         "invoiceNumber": "INV-3",
         "invoiceStatus": "approved",
         "totalAmount": 3200,
-        "paidAmount": 1500,
-        "remainingAmount": 1700,
+        "paidAmount": 0,
+        "remainingAmount": 3200,
         "createdAt": "2026-10-06T21:18:07.809Z",
-        "internalNumber": "3"
+        "internalNumber": "3",
+        "paymentStatus": "unpaid"
       },
       {
         "orderNumber": "8",
@@ -1246,7 +1247,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paidAmount": 0,
         "remainingAmount": 1700,
         "createdAt": "2026-10-03T22:11:55.779Z",
-        "internalNumber": "8"
+        "internalNumber": "8",
+        "paymentStatus": "unpaid"
       },
       {
         "orderNumber": "3",
@@ -1271,7 +1273,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paidAmount": 5000,
         "remainingAmount": 11200,
         "createdAt": "2026-10-03T22:10:43.530Z",
-        "internalNumber": "3"
+        "internalNumber": "3",
+        "paymentStatus": "partial"
       },
       {
         "orderNumber": "1",
@@ -1297,7 +1300,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "remainingAmount": 13400,
         "createdAt": "2026-10-03T22:06:56.031Z",
         "purchaseBatchId": null,
-        "internalNumber": "1"
+        "internalNumber": "1",
+        "paymentStatus": "partial"
       },
       {
         "orderNumber": "1",
@@ -1321,7 +1325,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paidAmount": 700,
         "remainingAmount": 600,
         "createdAt": "2026-10-03T21:28:54.600Z",
-        "internalNumber": "1"
+        "internalNumber": "1",
+        "paymentStatus": "partial"
       },
       {
         "orderNumber": "1",
@@ -1346,7 +1351,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paidAmount": 7500,
         "remainingAmount": 7800,
         "createdAt": "2026-09-30T17:08:10.764Z",
-        "internalNumber": "1"
+        "internalNumber": "1",
+        "paymentStatus": "partial"
       },
       {
         "orderNumber": "2",
@@ -1370,7 +1376,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paidAmount": 5000,
         "remainingAmount": 13200,
         "createdAt": "2026-09-30T17:04:17.086Z",
-        "internalNumber": "2"
+        "internalNumber": "2",
+        "paymentStatus": "partial"
       },
       {
         "orderNumber": "10",
@@ -1394,7 +1401,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paidAmount": 17000,
         "remainingAmount": 17000,
         "createdAt": "2026-09-30T17:01:44.173Z",
-        "internalNumber": "10"
+        "internalNumber": "10",
+        "paymentStatus": "partial"
       },
       {
         "orderNumber": "7",
@@ -1418,7 +1426,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paidAmount": 20000,
         "remainingAmount": 22600,
         "createdAt": "2026-09-30T17:00:31.068Z",
-        "internalNumber": "7"
+        "internalNumber": "7",
+        "paymentStatus": "partial"
       },
       {
         "orderNumber": "8",
@@ -1442,7 +1451,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paidAmount": 6000,
         "remainingAmount": 10100,
         "createdAt": "2026-09-30T16:58:57.842Z",
-        "internalNumber": "8"
+        "internalNumber": "8",
+        "paymentStatus": "partial"
       },
       {
         "orderNumber": "6",
@@ -1463,10 +1473,11 @@ export const INITIAL_DATA: TopStoreBackup = {
         "invoiceNumber": "INV-6",
         "invoiceStatus": "approved",
         "totalAmount": 53700,
-        "paidAmount": 5000,
-        "remainingAmount": 48700,
+        "paidAmount": 25000,
+        "remainingAmount": 28700,
         "createdAt": "2026-09-30T16:57:00.527Z",
-        "internalNumber": "6"
+        "internalNumber": "6",
+        "paymentStatus": "partial"
       },
       {
         "orderNumber": "10",
@@ -1490,7 +1501,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paidAmount": 3000,
         "remainingAmount": 2100,
         "createdAt": "2026-09-30T15:20:04.211Z",
-        "internalNumber": "10"
+        "internalNumber": "10",
+        "paymentStatus": "partial"
       },
       {
         "orderNumber": "1",
@@ -1514,7 +1526,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paidAmount": 4000,
         "remainingAmount": 3400,
         "createdAt": "2026-09-30T15:18:27.794Z",
-        "internalNumber": "1"
+        "internalNumber": "1",
+        "paymentStatus": "partial"
       },
       {
         "id": 330001,
@@ -1563,12 +1576,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "total": "21200.00",
         "paid": "20000.00",
         "status": "pending",
-        "paymentStatus": "partial",
+        "paymentStatus": "paid",
         "orderNumber": "1",
         "site": "SHEIN",
         "totalAmount": 21200,
-        "paidAmount": 20000,
-        "remainingAmount": 1200,
+        "paidAmount": 21200,
+        "remainingAmount": 0,
         "deliveryFee": 0,
         "createdAt": "2026-08-30T01:07:50.000Z",
         "customerName": "زينب علي محمد إبراهيم دلواح",
@@ -1592,13 +1605,13 @@ export const INITIAL_DATA: TopStoreBackup = {
         "total": "59700.00",
         "paid": "52400.00",
         "status": "pending",
-        "paymentStatus": "partial",
+        "paymentStatus": "paid",
         "notes": "تم إرسال الحواله من مونجرام ",
         "orderNumber": "3",
         "site": "SHEIN",
         "totalAmount": 59700,
-        "paidAmount": 52400,
-        "remainingAmount": 7300,
+        "paidAmount": 59700,
+        "remainingAmount": 0,
         "deliveryFee": 1000,
         "createdAt": "2026-08-30T21:25:47.000Z",
         "customerName": "امةالله محسن عبداللة عبدالجليل",
@@ -1733,12 +1746,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "total": "1700.00",
         "paid": "0.00",
         "status": "pending",
-        "paymentStatus": "unpaid",
+        "paymentStatus": "paid",
         "orderNumber": "4",
         "site": "SHEIN",
         "totalAmount": 1700,
-        "paidAmount": 0,
-        "remainingAmount": 1700,
+        "paidAmount": 1700,
+        "remainingAmount": 0,
         "deliveryFee": 0,
         "createdAt": "2026-09-03T23:45:44.000Z",
         "customerName": "امةالله محسن عبداللة عبدالجليل",
@@ -1765,8 +1778,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "orderNumber": "11",
         "site": "SHEIN",
         "totalAmount": 18400,
-        "paidAmount": 3000,
-        "remainingAmount": 15400,
+        "paidAmount": 16200,
+        "remainingAmount": 2200,
         "deliveryFee": 0,
         "createdAt": "2026-09-06T01:29:19.000Z",
         "customerName": "ام عبد الوهاب",
@@ -1876,12 +1889,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "total": "70300.00",
         "paid": "0.00",
         "status": "pending",
-        "paymentStatus": "unpaid",
+        "paymentStatus": "paid",
         "orderNumber": "6",
         "site": "SHEIN",
         "totalAmount": 70300,
-        "paidAmount": 0,
-        "remainingAmount": 70300,
+        "paidAmount": 70300,
+        "remainingAmount": 0,
         "deliveryFee": 0,
         "createdAt": "2026-09-06T01:52:59.000Z",
         "customerName": "نورا سلطان الصلاحي",
@@ -1904,12 +1917,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "total": "25400.00",
         "paid": "15000.00",
         "status": "pending",
-        "paymentStatus": "partial",
+        "paymentStatus": "paid",
         "orderNumber": "2",
         "site": "SHEIN",
         "totalAmount": 25400,
-        "paidAmount": 15000,
-        "remainingAmount": 10400,
+        "paidAmount": 25400,
+        "remainingAmount": 0,
         "deliveryFee": 0,
         "createdAt": "2026-09-06T01:56:28.000Z",
         "customerName": "اشجان إدريس احمد القدسي",
@@ -1932,12 +1945,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "total": "2900.00",
         "paid": "0.00",
         "status": "pending",
-        "paymentStatus": "unpaid",
+        "paymentStatus": "paid",
         "orderNumber": "3",
         "site": "SHEIN",
         "totalAmount": 2900,
-        "paidAmount": 0,
-        "remainingAmount": 2900,
+        "paidAmount": 2900,
+        "remainingAmount": 0,
         "deliveryFee": 0,
         "createdAt": "2026-09-06T23:40:44.000Z",
         "customerName": "اشجان إدريس احمد القدسي",
@@ -1988,12 +2001,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "total": "26500.00",
         "paid": "0.00",
         "status": "pending",
-        "paymentStatus": "unpaid",
+        "paymentStatus": "paid",
         "orderNumber": "5",
         "site": "SHEIN",
         "totalAmount": 26500,
-        "paidAmount": 0,
-        "remainingAmount": 26500,
+        "paidAmount": 26500,
+        "remainingAmount": 0,
         "deliveryFee": 0,
         "createdAt": "2026-09-13T02:01:06.000Z",
         "customerName": "امةالله محسن عبداللة عبدالجليل",
@@ -2020,8 +2033,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "orderNumber": "3",
         "site": "SHEIN",
         "totalAmount": 118400,
-        "paidAmount": 35000,
-        "remainingAmount": 83400,
+        "paidAmount": 65000,
+        "remainingAmount": 53400,
         "deliveryFee": 0,
         "createdAt": "2026-09-15T01:09:51.000Z",
         "customerName": "حنان علي محسن النجار",
@@ -2045,7 +2058,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "total": "14100.00",
         "paid": "7000.00",
         "status": "pending",
-        "paymentStatus": "partial",
+        "paymentStatus": "paid",
         "orderNumber": "9",
         "site": "SHEIN",
         "totalAmount": 14100,
@@ -2104,12 +2117,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "total": "2800.00",
         "paid": "0.00",
         "status": "pending",
-        "paymentStatus": "unpaid",
+        "paymentStatus": "paid",
         "orderNumber": "6",
         "site": "SHEIN",
         "totalAmount": 2800,
-        "paidAmount": 0,
-        "remainingAmount": 2800,
+        "paidAmount": 2800,
+        "remainingAmount": 0,
         "deliveryFee": 0,
         "createdAt": "2026-09-19T22:02:12.000Z",
         "customerName": "امةالله محسن عبداللة عبدالجليل",
@@ -2329,12 +2342,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "total": "12800.00",
         "paid": "0.00",
         "status": "pending",
-        "paymentStatus": "unpaid",
+        "paymentStatus": "paid",
         "orderNumber": "7",
         "site": "SHEIN",
         "totalAmount": 12800,
-        "paidAmount": 0,
-        "remainingAmount": 12800,
+        "paidAmount": 12800,
+        "remainingAmount": 0,
         "deliveryFee": 0,
         "createdAt": "2026-09-28T01:32:09.000Z",
         "customerName": "امةالله محسن عبداللة عبدالجليل",
@@ -2385,12 +2398,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "total": "20700.00",
         "paid": "0.00",
         "status": "pending",
-        "paymentStatus": "unpaid",
+        "paymentStatus": "partial",
         "orderNumber": "9",
         "site": "SHEIN",
         "totalAmount": 20700,
-        "paidAmount": 0,
-        "remainingAmount": 20700,
+        "paidAmount": 15500,
+        "remainingAmount": 5200,
         "deliveryFee": 0,
         "createdAt": "2026-09-28T01:34:10.000Z",
         "customerName": "محمد محسن محمد هايم",
@@ -2413,12 +2426,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "total": "46800.00",
         "paid": "0.00",
         "status": "pending",
-        "paymentStatus": "unpaid",
+        "paymentStatus": "partial",
         "orderNumber": "9",
         "site": "SHEIN",
         "totalAmount": 46800,
-        "paidAmount": 0,
-        "remainingAmount": 46800,
+        "paidAmount": 22000,
+        "remainingAmount": 24800,
         "deliveryFee": 0,
         "createdAt": "2026-09-28T01:35:45.000Z",
         "customerName": "اسماء ابراهيم عبد القوي",
@@ -2474,7 +2487,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paidAmount": 0,
         "remainingAmount": 46800,
         "createdAt": "2026-09-30T15:03:17.354Z",
-        "internalNumber": "9"
+        "internalNumber": "9",
+        "paymentStatus": "unpaid"
       },
       {
         "orderNumber": "7",
@@ -2498,7 +2512,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paidAmount": 37600,
         "remainingAmount": 145900,
         "createdAt": "2026-10-04T01:29:58.275Z",
-        "internalNumber": "7"
+        "internalNumber": "7",
+        "paymentStatus": "partial"
       },
       {
         "orderNumber": "9",
@@ -2522,7 +2537,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paidAmount": 0,
         "remainingAmount": 2600,
         "createdAt": "2026-10-04T01:32:04.078Z",
-        "internalNumber": "9"
+        "internalNumber": "9",
+        "paymentStatus": "unpaid"
       }
     ],
     "expenses": [
@@ -4871,7 +4887,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paymentNumber": "PAY-536790",
         "receiptNumber": "RCT-2026-042",
         "customerId": 540003,
-        "orderId": null,
+        "orderId": 1790781604211,
         "accountId": 2,
         "amount": 3000,
         "paymentDate": "2026-09-30",
