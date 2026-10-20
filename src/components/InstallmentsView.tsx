@@ -307,7 +307,7 @@ export const InstallmentsView: React.FC = () => {
       setCourierCustodyAmount(remaining);
       setCustomCustodyEdited(false);
     }
-  }, [selectedOrderId]);
+  }, [selectedOrderId, selectedOrder?.remainingAmount, selectedOrder?.paidAmount]);
 
   // Overall Financial Statistics
   const overallStats = useMemo(() => {

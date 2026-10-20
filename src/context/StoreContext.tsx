@@ -1804,6 +1804,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               ...o,
               paidAmount: paid,
               remainingAmount: remaining,
+              paid: String(paid),
+              paymentStatus: remaining === 0 ? 'paid' : 'partial',
               status: nextStatus,
               courierId: p.courierId || o.courierId,
               deliveryFee: p.courierId ? resolvedDeliveryFee : o.deliveryFee,
@@ -1821,10 +1823,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             const deduct = Math.min(o.remainingAmount, remainingToDeduct);
             remainingToDeduct -= deduct;
             const nextRemaining = Math.max(0, (o.remainingAmount || 0) - deduct);
+            const nextPaid = (o.paidAmount || 0) + deduct;
             const updatedOrd: Order = {
               ...o,
-              paidAmount: (o.paidAmount || 0) + deduct,
+              paidAmount: nextPaid,
               remainingAmount: nextRemaining,
+              paid: String(nextPaid),
+              paymentStatus: nextRemaining === 0 ? 'paid' : 'partial',
               status: (nextRemaining === 0 && p.courierId) ? ('delivered' as const) : o.status,
               courierId: p.courierId || o.courierId
             };

@@ -1,4 +1,4 @@
-import { TopStoreBackup } from "../types";
+import { TopStoreBackup } from ../types;
 
 export const INITIAL_DATA: TopStoreBackup = {
   "format": "top-store-backup",
@@ -387,6 +387,17 @@ export const INITIAL_DATA: TopStoreBackup = {
         "status": "inactive",
         "notes": null,
         "createdAt": "2026-08-28T00:08:49.000Z"
+      },
+      {
+        "id": 150002,
+        "name": "بنك الكريمي – حساب يمني",
+        "type": "بنكي",
+        "openingBalance": 0,
+        "openingBalanceDate": "2026-09-30T12:58:36.537Z",
+        "openingBalanceNotes": "حساب بنكي بالريال اليمني",
+        "status": "active",
+        "notes": "بنك الكريمي — حساب يمني",
+        "createdAt": "2026-09-30T12:58:36.537Z"
       }
     ],
     "paymentMethods": [
@@ -505,7 +516,7 @@ export const INITIAL_DATA: TopStoreBackup = {
       {
         "id": 240003,
         "name": "بنك الكريمي – حساب يمني",
-        "accountId": 120003,
+        "accountId": 150002,
         "status": "active",
         "createdAt": "2026-09-30T13:02:50.474Z"
       }
@@ -1223,7 +1234,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "remainingAmount": 3200,
         "createdAt": "2026-10-06T21:18:07.809Z",
         "internalNumber": "3",
-        "paymentStatus": "unpaid"
+        "paymentStatus": "unpaid",
+        "paid": "0"
       },
       {
         "orderNumber": "8",
@@ -1248,7 +1260,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "remainingAmount": 1700,
         "createdAt": "2026-10-03T22:11:55.779Z",
         "internalNumber": "8",
-        "paymentStatus": "unpaid"
+        "paymentStatus": "unpaid",
+        "paid": "0"
       },
       {
         "orderNumber": "3",
@@ -1274,7 +1287,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "remainingAmount": 11200,
         "createdAt": "2026-10-03T22:10:43.530Z",
         "internalNumber": "3",
-        "paymentStatus": "partial"
+        "paymentStatus": "partial",
+        "paid": "5000"
       },
       {
         "orderNumber": "1",
@@ -1301,7 +1315,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "createdAt": "2026-10-03T22:06:56.031Z",
         "purchaseBatchId": null,
         "internalNumber": "1",
-        "paymentStatus": "partial"
+        "paymentStatus": "partial",
+        "paid": "63700"
       },
       {
         "orderNumber": "1",
@@ -1326,7 +1341,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "remainingAmount": 600,
         "createdAt": "2026-10-03T21:28:54.600Z",
         "internalNumber": "1",
-        "paymentStatus": "partial"
+        "paymentStatus": "partial",
+        "paid": "700"
       },
       {
         "orderNumber": "1",
@@ -1352,7 +1368,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "remainingAmount": 7800,
         "createdAt": "2026-09-30T17:08:10.764Z",
         "internalNumber": "1",
-        "paymentStatus": "partial"
+        "paymentStatus": "partial",
+        "paid": "7500"
       },
       {
         "orderNumber": "2",
@@ -1377,7 +1394,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "remainingAmount": 13200,
         "createdAt": "2026-09-30T17:04:17.086Z",
         "internalNumber": "2",
-        "paymentStatus": "partial"
+        "paymentStatus": "partial",
+        "paid": "5000"
       },
       {
         "orderNumber": "10",
@@ -1402,7 +1420,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "remainingAmount": 17000,
         "createdAt": "2026-09-30T17:01:44.173Z",
         "internalNumber": "10",
-        "paymentStatus": "partial"
+        "paymentStatus": "partial",
+        "paid": "17000"
       },
       {
         "orderNumber": "7",
@@ -1427,7 +1446,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "remainingAmount": 22600,
         "createdAt": "2026-09-30T17:00:31.068Z",
         "internalNumber": "7",
-        "paymentStatus": "partial"
+        "paymentStatus": "partial",
+        "paid": "20000"
       },
       {
         "orderNumber": "8",
@@ -1452,7 +1472,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "remainingAmount": 10100,
         "createdAt": "2026-09-30T16:58:57.842Z",
         "internalNumber": "8",
-        "paymentStatus": "partial"
+        "paymentStatus": "partial",
+        "paid": "6000"
       },
       {
         "orderNumber": "6",
@@ -1473,11 +1494,12 @@ export const INITIAL_DATA: TopStoreBackup = {
         "invoiceNumber": "INV-6",
         "invoiceStatus": "approved",
         "totalAmount": 53700,
-        "paidAmount": 25000,
-        "remainingAmount": 28700,
+        "paidAmount": 53700,
+        "remainingAmount": 0,
         "createdAt": "2026-09-30T16:57:00.527Z",
         "internalNumber": "6",
-        "paymentStatus": "partial"
+        "paymentStatus": "paid",
+        "paid": "53700"
       },
       {
         "orderNumber": "10",
@@ -1502,7 +1524,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "remainingAmount": 2100,
         "createdAt": "2026-09-30T15:20:04.211Z",
         "internalNumber": "10",
-        "paymentStatus": "partial"
+        "paymentStatus": "partial",
+        "paid": "3000"
       },
       {
         "orderNumber": "1",
@@ -1527,7 +1550,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "remainingAmount": 3400,
         "createdAt": "2026-09-30T15:18:27.794Z",
         "internalNumber": "1",
-        "paymentStatus": "partial"
+        "paymentStatus": "partial",
+        "paid": "4000"
       },
       {
         "id": 330001,
@@ -1545,14 +1569,14 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 2900,
         "commission": "0.00",
         "total": "46500.00",
-        "paid": "22700.00",
+        "paid": "46500",
         "status": "pending",
-        "paymentStatus": "partial",
+        "paymentStatus": "paid",
         "orderNumber": "7",
         "site": "SHEIN",
         "totalAmount": 46500,
-        "paidAmount": 22700,
-        "remainingAmount": 23800,
+        "paidAmount": 46500,
+        "remainingAmount": 0,
         "deliveryFee": 1000,
         "createdAt": "2026-08-29T22:19:08.000Z",
         "customerName": "محمد جميل محمد مطر",
@@ -1574,7 +1598,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 1400,
         "commission": "0.00",
         "total": "21200.00",
-        "paid": "20000.00",
+        "paid": "21200",
         "status": "pending",
         "paymentStatus": "paid",
         "orderNumber": "1",
@@ -1603,7 +1627,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 1100,
         "commission": "0.00",
         "total": "59700.00",
-        "paid": "52400.00",
+        "paid": "59700",
         "status": "pending",
         "paymentStatus": "paid",
         "notes": "تم إرسال الحواله من مونجرام ",
@@ -1632,7 +1656,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 0,
         "commission": "0.00",
         "total": "4000.00",
-        "paid": "0.00",
+        "paid": "0",
         "status": "pending",
         "paymentStatus": "unpaid",
         "orderNumber": "6",
@@ -1660,7 +1684,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 0,
         "commission": "0.00",
         "total": "15900.00",
-        "paid": "15900.00",
+        "paid": "15900",
         "status": "pending",
         "paymentStatus": "paid",
         "orderNumber": "2",
@@ -1688,7 +1712,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 900,
         "commission": "0.00",
         "total": "13300.00",
-        "paid": "13300.00",
+        "paid": "13300",
         "status": "pending",
         "paymentStatus": "paid",
         "orderNumber": "2",
@@ -1716,7 +1740,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 1700,
         "commission": "0.00",
         "total": "22800.00",
-        "paid": "22800.00",
+        "paid": "22800",
         "status": "pending",
         "paymentStatus": "paid",
         "orderNumber": "8",
@@ -1744,7 +1768,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 0,
         "commission": "0.00",
         "total": "1700.00",
-        "paid": "0.00",
+        "paid": "1700",
         "status": "pending",
         "paymentStatus": "paid",
         "orderNumber": "4",
@@ -1772,14 +1796,14 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 1200,
         "commission": "0.00",
         "total": "18400.00",
-        "paid": "3000.00",
+        "paid": "18400",
         "status": "pending",
-        "paymentStatus": "partial",
+        "paymentStatus": "paid",
         "orderNumber": "11",
         "site": "SHEIN",
         "totalAmount": 18400,
-        "paidAmount": 16200,
-        "remainingAmount": 2200,
+        "paidAmount": 18400,
+        "remainingAmount": 0,
         "deliveryFee": 0,
         "createdAt": "2026-09-06T01:29:19.000Z",
         "customerName": "ام عبد الوهاب",
@@ -1800,7 +1824,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 2100,
         "commission": "0.00",
         "total": "32600.00",
-        "paid": "10000.00",
+        "paid": "10000",
         "status": "pending",
         "paymentStatus": "partial",
         "orderNumber": "4",
@@ -1828,7 +1852,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 0,
         "commission": "0.00",
         "total": "15400.00",
-        "paid": "0.00",
+        "paid": "0",
         "status": "pending",
         "paymentStatus": "unpaid",
         "orderNumber": "2",
@@ -1856,7 +1880,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 2500,
         "commission": "0.00",
         "total": "38900.00",
-        "paid": "10000.00",
+        "paid": "10000",
         "status": "pending",
         "paymentStatus": "partial",
         "orderNumber": "2",
@@ -1887,7 +1911,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 4500,
         "commission": "0.00",
         "total": "70300.00",
-        "paid": "0.00",
+        "paid": "70300",
         "status": "pending",
         "paymentStatus": "paid",
         "orderNumber": "6",
@@ -1915,7 +1939,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 0,
         "commission": "0.00",
         "total": "25400.00",
-        "paid": "15000.00",
+        "paid": "25400",
         "status": "pending",
         "paymentStatus": "paid",
         "orderNumber": "2",
@@ -1943,7 +1967,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 0,
         "commission": "0.00",
         "total": "2900.00",
-        "paid": "0.00",
+        "paid": "2900",
         "status": "pending",
         "paymentStatus": "paid",
         "orderNumber": "3",
@@ -1971,7 +1995,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 4600,
         "commission": "0.00",
         "total": "72600.00",
-        "paid": "20000.00",
+        "paid": "20000",
         "status": "pending",
         "paymentStatus": "partial",
         "orderNumber": "3",
@@ -1999,7 +2023,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 0,
         "commission": "0.00",
         "total": "26500.00",
-        "paid": "0.00",
+        "paid": "26500",
         "status": "pending",
         "paymentStatus": "paid",
         "orderNumber": "5",
@@ -2027,7 +2051,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 8900,
         "commission": "0.00",
         "total": "118400.00",
-        "paid": "35000.00",
+        "paid": "65000",
         "status": "pending",
         "paymentStatus": "partial",
         "orderNumber": "3",
@@ -2056,7 +2080,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 700,
         "commission": "0.00",
         "total": "14100.00",
-        "paid": "7000.00",
+        "paid": "14100",
         "status": "pending",
         "paymentStatus": "paid",
         "orderNumber": "9",
@@ -2087,7 +2111,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 3500,
         "commission": "0.00",
         "total": "54700.00",
-        "paid": "0.00",
+        "paid": "0",
         "status": "pending",
         "paymentStatus": "unpaid",
         "orderNumber": "7",
@@ -2115,7 +2139,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 0,
         "commission": "0.00",
         "total": "2800.00",
-        "paid": "0.00",
+        "paid": "2800",
         "status": "pending",
         "paymentStatus": "paid",
         "orderNumber": "6",
@@ -2143,7 +2167,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 1400,
         "commission": "0.00",
         "total": "22700.00",
-        "paid": "0.00",
+        "paid": "0",
         "status": "pending",
         "paymentStatus": "unpaid",
         "orderNumber": "8",
@@ -2171,7 +2195,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 0,
         "commission": "0.00",
         "total": "7200.00",
-        "paid": "0.00",
+        "paid": "0",
         "status": "pending",
         "paymentStatus": "unpaid",
         "orderNumber": "1",
@@ -2199,7 +2223,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 0,
         "commission": "0.00",
         "total": "3400.00",
-        "paid": "0.00",
+        "paid": "0",
         "status": "pending",
         "paymentStatus": "unpaid",
         "notes": "بدل القطعه المخلصه",
@@ -2228,7 +2252,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 0,
         "commission": "0.00",
         "total": "8300.00",
-        "paid": "4200.00",
+        "paid": "4200",
         "status": "pending",
         "paymentStatus": "partial",
         "orderNumber": "1",
@@ -2256,7 +2280,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 0,
         "commission": "0.00",
         "total": "10300.00",
-        "paid": "5000.00",
+        "paid": "5000",
         "status": "pending",
         "paymentStatus": "partial",
         "orderNumber": "2",
@@ -2284,7 +2308,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 2700,
         "commission": "0.00",
         "total": "49700.00",
-        "paid": "43000.00",
+        "paid": "43000",
         "status": "pending",
         "paymentStatus": "partial",
         "orderNumber": "9",
@@ -2312,7 +2336,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 2800,
         "commission": "0.00",
         "total": "43900.00",
-        "paid": "0.00",
+        "paid": "0",
         "status": "pending",
         "paymentStatus": "unpaid",
         "orderNumber": "5",
@@ -2340,7 +2364,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 0,
         "commission": "0.00",
         "total": "12800.00",
-        "paid": "0.00",
+        "paid": "12800",
         "status": "pending",
         "paymentStatus": "paid",
         "orderNumber": "7",
@@ -2368,7 +2392,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 0,
         "commission": "0.00",
         "total": "11600.00",
-        "paid": "0.00",
+        "paid": "0",
         "status": "pending",
         "paymentStatus": "unpaid",
         "orderNumber": "6",
@@ -2396,14 +2420,14 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 0,
         "commission": "0.00",
         "total": "20700.00",
-        "paid": "0.00",
+        "paid": "20700",
         "status": "pending",
-        "paymentStatus": "partial",
+        "paymentStatus": "paid",
         "orderNumber": "9",
         "site": "SHEIN",
         "totalAmount": 20700,
-        "paidAmount": 15500,
-        "remainingAmount": 5200,
+        "paidAmount": 20700,
+        "remainingAmount": 0,
         "deliveryFee": 0,
         "createdAt": "2026-09-28T01:34:10.000Z",
         "customerName": "محمد محسن محمد هايم",
@@ -2424,7 +2448,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 3000,
         "commission": "0.00",
         "total": "46800.00",
-        "paid": "0.00",
+        "paid": "22000",
         "status": "pending",
         "paymentStatus": "partial",
         "orderNumber": "9",
@@ -2452,7 +2476,7 @@ export const INITIAL_DATA: TopStoreBackup = {
         "discount": 0,
         "commission": "0.00",
         "total": "7700.00",
-        "paid": "0.00",
+        "paid": "0",
         "status": "pending",
         "paymentStatus": "unpaid",
         "orderNumber": "7",
@@ -2464,31 +2488,6 @@ export const INITIAL_DATA: TopStoreBackup = {
         "createdAt": "2026-09-28T01:36:56.000Z",
         "customerName": "حنان علي محسن النجار",
         "customerCode": "TOP 020"
-      },
-      {
-        "orderNumber": "9",
-        "customerOrderNumber": "9",
-        "customerId": 540003,
-        "site": "SHEIN",
-        "itemsCount": 31,
-        "subtotal": 49800,
-        "discount": 3000,
-        "shippingFee": 0,
-        "deliveryFee": 1000,
-        "deliveryFeeCollectionStatus": "unpaid",
-        "status": "pending",
-        "orderDate": "2026-09-30",
-        "id": 1790780597354,
-        "customerName": "اسماء ابراهيم عبد القوي",
-        "customerCode": "TOP 017",
-        "invoiceNumber": "INV-9",
-        "invoiceStatus": "approved",
-        "totalAmount": 46800,
-        "paidAmount": 0,
-        "remainingAmount": 46800,
-        "createdAt": "2026-09-30T15:03:17.354Z",
-        "internalNumber": "9",
-        "paymentStatus": "unpaid"
       },
       {
         "orderNumber": "7",
@@ -2513,7 +2512,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "remainingAmount": 145900,
         "createdAt": "2026-10-04T01:29:58.275Z",
         "internalNumber": "7",
-        "paymentStatus": "partial"
+        "paymentStatus": "partial",
+        "paid": "37600"
       },
       {
         "orderNumber": "9",
@@ -2538,7 +2538,8 @@ export const INITIAL_DATA: TopStoreBackup = {
         "remainingAmount": 2600,
         "createdAt": "2026-10-04T01:32:04.078Z",
         "internalNumber": "9",
-        "paymentStatus": "unpaid"
+        "paymentStatus": "unpaid",
+        "paid": "0"
       }
     ],
     "expenses": [
@@ -4700,6 +4701,40 @@ export const INITIAL_DATA: TopStoreBackup = {
     ],
     "payments": [
       {
+        "id": 1791066974199,
+        "paymentNumber": "PAY-974199",
+        "receiptNumber": "RCT-2026-056",
+        "customerId": 630002,
+        "orderId": 1790787420527,
+        "accountId": 2,
+        "amount": 11800,
+        "paymentDate": "2026-09-30",
+        "paymentMethod": "جيب",
+        "paymentType": "دفعة نهائية",
+        "deliverySettlementStatus": "collected_to_account",
+        "statement": "سداد الدفعة النهائية للطلب #6 من إيداعات العميل",
+        "status": "approved",
+        "createdByName": "أحمد الإدريسي (أمين الصندوق)",
+        "createdAt": "2026-09-30T18:00:00.000Z"
+      },
+      {
+        "id": 1791147525001,
+        "paymentNumber": "PAY-525001",
+        "receiptNumber": "RCT-2026-055",
+        "customerId": 510004,
+        "orderId": 330001,
+        "accountId": 10,
+        "amount": 23800,
+        "paymentDate": "2026-09-20",
+        "paymentMethod": "نقدي",
+        "paymentType": "دفعة نهائية",
+        "deliverySettlementStatus": "collected_to_account",
+        "statement": "سداد باقي قيمة طلب بيت مطر رقم 7 مع التوصيل",
+        "status": "approved",
+        "createdByName": "أحمد الإدريسي (أمين الصندوق)",
+        "createdAt": "2026-09-20T14:30:00.000Z"
+      },
+      {
         "id": 1791147409053,
         "paymentNumber": "PAY-409053",
         "receiptNumber": "RCT-2026-054",
@@ -4770,14 +4805,14 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paymentNumber": "PAY-345931",
         "receiptNumber": "RCT-2026-049",
         "customerId": 630001,
-        "orderId": null,
+        "orderId": 600002,
         "accountId": 2,
         "amount": 600,
         "paymentDate": "2026-10-03",
         "paymentMethod": "جيب",
         "paymentType": "تحصيل رصيد افتتاحي",
         "statement": "تحصيل من الرصيد الافتتاحي للعميل ام عبد الوهاب",
-        "notes": "تحصيل رصيد افتتاحي — بدون ربط بطلب",
+        "notes": "سداد باقي قيمة الطلب 11",
         "status": "approved",
         "createdByName": "أحمد الإدريسي (أمين الصندوق)",
         "createdAt": "2026-10-03T22:25:45.931Z"
@@ -4936,14 +4971,14 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paymentNumber": "PAY-076836",
         "receiptNumber": "RCT-2026-039",
         "customerId": 510002,
-        "orderId": null,
+        "orderId": 990004,
         "accountId": 2,
         "amount": 9200,
         "paymentDate": "2026-09-30",
         "paymentMethod": "جيب",
         "paymentType": "تحصيل رصيد افتتاحي",
         "statement": "تحصيل من الرصيد الافتتاحي للعميل محمد محسن محمد هايم",
-        "notes": "تحصيل رصيد افتتاحي — بدون ربط بطلب",
+        "notes": "سداد باقي قيمة الطلب 9",
         "status": "approved",
         "createdByName": "أحمد الإدريسي (أمين الصندوق)",
         "createdAt": "2026-09-30T18:14:36.836Z"
@@ -4986,14 +5021,14 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paymentNumber": "PAY-109798",
         "receiptNumber": "RCT-2026-036",
         "customerId": 630001,
-        "orderId": null,
+        "orderId": 600002,
         "accountId": 2,
         "amount": 1600,
         "paymentDate": "2026-09-30",
         "paymentMethod": "جيب",
         "paymentType": "تحصيل رصيد افتتاحي",
         "statement": "تحصيل من الرصيد الافتتاحي للعميل ام عبد الوهاب",
-        "notes": "تحصيل رصيد افتتاحي — بدون ربط بطلب",
+        "notes": "سداد باقي قيمة الطلب 11",
         "status": "approved",
         "createdByName": "أحمد الإدريسي (أمين الصندوق)",
         "createdAt": "2026-09-30T17:58:29.798Z"
@@ -5223,14 +5258,14 @@ export const INITIAL_DATA: TopStoreBackup = {
         "paymentNumber": "PAY-911668",
         "receiptNumber": "RCT-2026-022",
         "customerId": 630002,
-        "orderId": null,
+        "orderId": 1790787420527,
         "accountId": 2,
         "amount": 16900,
         "paymentDate": "2026-09-29",
         "paymentMethod": "جيب",
         "paymentType": "تحصيل رصيد افتتاحي",
         "statement": "تحصيل من الرصيد الافتتاحي للعميل احلام موسى عبد الله محمد احمد الهندي",
-        "notes": "تحصيل رصيد افتتاحي — بدون ربط بطلب",
+        "notes": "دفعة سداد للطلب 6",
         "status": "approved",
         "createdByName": "أحمد الإدريسي (أمين الصندوق)",
         "createdAt": "2026-09-29T21:55:11.668Z"
@@ -9669,7 +9704,9 @@ export const INITIAL_DATA: TopStoreBackup = {
             "exchangeRate": 1,
             "baseAmount": 3200
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1791148181353,
@@ -10612,7 +10649,9 @@ export const INITIAL_DATA: TopStoreBackup = {
             "exchangeRate": 1,
             "baseAmount": 1700
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1791064117816,
@@ -10745,7 +10784,9 @@ export const INITIAL_DATA: TopStoreBackup = {
             "exchangeRate": 1,
             "baseAmount": 1300
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1790995867320,
@@ -11514,11 +11555,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 3791065216031,
-        "entryNumber": "JE-ORD-0001",
+        "entryNumber": "JE-ORD-001 ",
         "sourceType": "order",
         "sourceId": 1791065216031,
-        "sourceNumber": "1",
-        "description": "فاتورة مبيعات للطلب #1 - العميل: خالد علي ناصر علي الغيثي",
+        "sourceNumber": "1 ",
+        "description": "فاتورة مبيعات للطلب #1  - العميل: خالد علي ناصر علي الغيثي",
         "createdAt": "2026-10-01",
         "lines": [
           {
@@ -12543,7 +12584,9 @@ export const INITIAL_DATA: TopStoreBackup = {
             "exchangeRate": 1,
             "baseAmount": 18200
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 3790787631068,
@@ -12586,7 +12629,9 @@ export const INITIAL_DATA: TopStoreBackup = {
             "exchangeRate": 1,
             "baseAmount": 42600
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 3790787420527,
@@ -12629,7 +12674,9 @@ export const INITIAL_DATA: TopStoreBackup = {
             "exchangeRate": 1,
             "baseAmount": 53700
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1790775727151,
@@ -12673,51 +12720,6 @@ export const INITIAL_DATA: TopStoreBackup = {
         "createdBy": "admin",
         "postedBy": "admin",
         "postedAt": "2026-09-30T13:42:07.151Z",
-        "deletedAt": null,
-        "deleteReason": null
-      },
-      {
-        "id": 3790780597354,
-        "entryNumber": "JE-ORD-0009",
-        "sourceType": "order",
-        "sourceId": 1790780597354,
-        "sourceNumber": "9",
-        "description": "فاتورة مبيعات للطلب #9 - العميل: اسماء ابراهيم عبد القوي",
-        "createdAt": "2026-09-30",
-        "lines": [
-          {
-            "id": 3790780597355,
-            "journalEntryId": 3790780597354,
-            "accountId": null,
-            "accountName": "حـ/ العميل: اسماء ابراهيم عبد القوي",
-            "side": "debit",
-            "amount": 46800,
-            "chartAccountId": 110,
-            "chartAccountCode": "110",
-            "currency": "YER",
-            "exchangeRate": 1,
-            "baseAmount": 46800
-          },
-          {
-            "id": 3790780597356,
-            "journalEntryId": 3790780597354,
-            "accountId": 401,
-            "accountName": "حـ/ إيرادات المبيعات والوساطة",
-            "side": "credit",
-            "amount": 46800,
-            "chartAccountId": 401,
-            "chartAccountCode": "401",
-            "currency": "YER",
-            "exchangeRate": 1,
-            "baseAmount": 46800
-          }
-        ],
-        "status": "posted",
-        "currency": "YER",
-        "exchangeRate": 1,
-        "createdBy": "admin",
-        "postedBy": "admin",
-        "postedAt": "2026-09-30",
         "deletedAt": null,
         "deleteReason": null
       },
@@ -14073,11 +14075,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000990006,
-        "entryNumber": "JE-ORD-0007",
+        "entryNumber": "JE-ORD-ORD-0559416848-5586",
         "sourceType": "order",
         "sourceId": 990006,
-        "sourceNumber": "7",
-        "description": "فاتورة مبيعات للطلب #7 - العميل: حنان علي محسن النجار",
+        "sourceNumber": "ORD-0559416848-5586",
+        "description": "فاتورة مبيعات للطلب #ORD-0559416848-5586 - العميل: حنان علي محسن النجار",
         "createdAt": "2026-09-28T00:00:00.000Z",
         "lines": [
           {
@@ -15108,11 +15110,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000990004,
-        "entryNumber": "JE-ORD-0009",
+        "entryNumber": "JE-ORD-ORD-0559250696-8038",
         "sourceType": "order",
         "sourceId": 990004,
-        "sourceNumber": "9",
-        "description": "فاتورة مبيعات للطلب #9 - العميل: محمد محسن محمد هايم",
+        "sourceNumber": "ORD-0559250696-8038",
+        "description": "فاتورة مبيعات للطلب #ORD-0559250696-8038 - العميل: محمد محسن محمد هايم",
         "createdAt": "2026-09-24T00:00:00.000Z",
         "lines": [
           {
@@ -15198,11 +15200,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000990005,
-        "entryNumber": "JE-ORD-0009",
+        "entryNumber": "JE-ORD-ORD-0559345614-7445",
         "sourceType": "order",
         "sourceId": 990005,
-        "sourceNumber": "9",
-        "description": "فاتورة مبيعات للطلب #9 - العميل: اسماء ابراهيم عبد القوي",
+        "sourceNumber": "ORD-0559345614-7445",
+        "description": "فاتورة مبيعات للطلب #ORD-0559345614-7445 - العميل: اسماء ابراهيم عبد القوي",
         "createdAt": "2026-09-23T00:00:00.000Z",
         "lines": [
           {
@@ -15423,11 +15425,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000930001,
-        "entryNumber": "JE-ORD-0002",
+        "entryNumber": "JE-ORD-ORD-0551671069-7135",
         "sourceType": "order",
         "sourceId": 930001,
-        "sourceNumber": "2",
-        "description": "فاتورة مبيعات للطلب #2 - العميل: ريناس عبد الحكيم يحيى محمد",
+        "sourceNumber": "ORD-0551671069-7135",
+        "description": "فاتورة مبيعات للطلب #ORD-0551671069-7135 - العميل: ريناس عبد الحكيم يحيى محمد",
         "createdAt": "2026-09-22T00:00:00.000Z",
         "lines": [
           {
@@ -15468,11 +15470,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000990001,
-        "entryNumber": "JE-ORD-0005",
+        "entryNumber": "JE-ORD-ORD-0559069296-1789",
         "sourceType": "order",
         "sourceId": 990001,
-        "sourceNumber": "5",
-        "description": "فاتورة مبيعات للطلب #5 - العميل: حنان علي محسن النجار",
+        "sourceNumber": "ORD-0559069296-1789",
+        "description": "فاتورة مبيعات للطلب #ORD-0559069296-1789 - العميل: حنان علي محسن النجار",
         "createdAt": "2026-09-22T00:00:00.000Z",
         "lines": [
           {
@@ -15513,11 +15515,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000990002,
-        "entryNumber": "JE-ORD-0007",
+        "entryNumber": "JE-ORD-ORD-0559129256-5095",
         "sourceType": "order",
         "sourceId": 990002,
-        "sourceNumber": "7",
-        "description": "فاتورة مبيعات للطلب #7 - العميل: امةالله محسن عبداللة عبدالجليل",
+        "sourceNumber": "ORD-0559129256-5095",
+        "description": "فاتورة مبيعات للطلب #ORD-0559129256-5095 - العميل: امةالله محسن عبداللة عبدالجليل",
         "createdAt": "2026-09-22T00:00:00.000Z",
         "lines": [
           {
@@ -15558,11 +15560,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000990003,
-        "entryNumber": "JE-ORD-0006",
+        "entryNumber": "JE-ORD-ORD-0559181098-5128",
         "sourceType": "order",
         "sourceId": 990003,
-        "sourceNumber": "6",
-        "description": "فاتورة مبيعات للطلب #6 - العميل: حنان علي محسن النجار",
+        "sourceNumber": "ORD-0559181098-5128",
+        "description": "فاتورة مبيعات للطلب #ORD-0559181098-5128 - العميل: حنان علي محسن النجار",
         "createdAt": "2026-09-22T00:00:00.000Z",
         "lines": [
           {
@@ -16008,11 +16010,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000960001,
-        "entryNumber": "JE-ORD-0009",
+        "entryNumber": "JE-ORD-ORD-0558592657-3074",
         "sourceType": "order",
         "sourceId": 960001,
-        "sourceNumber": "9",
-        "description": "فاتورة مبيعات للطلب #9 - العميل: حنان علي محسن النجار",
+        "sourceNumber": "ORD-0558592657-3074",
+        "description": "فاتورة مبيعات للطلب #ORD-0558592657-3074 - العميل: حنان علي محسن النجار",
         "createdAt": "2026-09-20T00:00:00.000Z",
         "lines": [
           {
@@ -16728,11 +16730,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000810002,
-        "entryNumber": "JE-ORD-0006",
+        "entryNumber": "JE-ORD-ORD-9855332935-0526",
         "sourceType": "order",
         "sourceId": 810002,
-        "sourceNumber": "6",
-        "description": "فاتورة مبيعات للطلب #6 - العميل: امةالله محسن عبداللة عبدالجليل",
+        "sourceNumber": "ORD-9855332935-0526",
+        "description": "فاتورة مبيعات للطلب #ORD-9855332935-0526 - العميل: امةالله محسن عبداللة عبدالجليل",
         "createdAt": "2026-09-18T00:00:00.000Z",
         "lines": [
           {
@@ -16773,11 +16775,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000810003,
-        "entryNumber": "JE-ORD-0008",
+        "entryNumber": "JE-ORD-ORD-9855459958-3555",
         "sourceType": "order",
         "sourceId": 810003,
-        "sourceNumber": "8",
-        "description": "فاتورة مبيعات للطلب #8 - العميل: مرام محمد كشيع سالم",
+        "sourceNumber": "ORD-9855459958-3555",
+        "description": "فاتورة مبيعات للطلب #ORD-9855459958-3555 - العميل: مرام محمد كشيع سالم",
         "createdAt": "2026-09-18T00:00:00.000Z",
         "lines": [
           {
@@ -16818,11 +16820,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000810004,
-        "entryNumber": "JE-ORD-0001",
+        "entryNumber": "JE-ORD-ORD-9855566316-4922",
         "sourceType": "order",
         "sourceId": 810004,
-        "sourceNumber": "1",
-        "description": "فاتورة مبيعات للطلب #1 - العميل: احمد تمام",
+        "sourceNumber": "ORD-9855566316-4922",
+        "description": "فاتورة مبيعات للطلب #ORD-9855566316-4922 - العميل: احمد تمام",
         "createdAt": "2026-09-18T00:00:00.000Z",
         "lines": [
           {
@@ -16863,11 +16865,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000840001,
-        "entryNumber": "JE-ORD-0003",
+        "entryNumber": "JE-ORD-ORD-9855741062-1465",
         "sourceType": "order",
         "sourceId": 840001,
-        "sourceNumber": "3",
-        "description": "فاتورة مبيعات للطلب #3 - العميل: مرام عبد الجبار السريحي",
+        "sourceNumber": "ORD-9855741062-1465",
+        "description": "فاتورة مبيعات للطلب #ORD-9855741062-1465 - العميل: مرام عبد الجبار السريحي",
         "createdAt": "2026-09-18T00:00:00.000Z",
         "lines": [
           {
@@ -16908,11 +16910,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000870001,
-        "entryNumber": "JE-ORD-0001",
+        "entryNumber": "JE-ORD-ORD-9950408882-3993",
         "sourceType": "order",
         "sourceId": 870001,
-        "sourceNumber": "1",
-        "description": "فاتورة مبيعات للطلب #1 - العميل: امال عامر احمد العمري",
+        "sourceNumber": "ORD-9950408882-3993",
+        "description": "فاتورة مبيعات للطلب #ORD-9950408882-3993 - العميل: امال عامر احمد العمري",
         "createdAt": "2026-09-18T00:00:00.000Z",
         "lines": [
           {
@@ -16953,11 +16955,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000810001,
-        "entryNumber": "JE-ORD-0007",
+        "entryNumber": "JE-ORD-ORD-9855273358-7418",
         "sourceType": "order",
         "sourceId": 810001,
-        "sourceNumber": "7",
-        "description": "فاتورة مبيعات للطلب #7 - العميل: مرام محمد كشيع سالم",
+        "sourceNumber": "ORD-9855273358-7418",
+        "description": "فاتورة مبيعات للطلب #ORD-9855273358-7418 - العميل: مرام محمد كشيع سالم",
         "createdAt": "2026-09-17T00:00:00.000Z",
         "lines": [
           {
@@ -17448,11 +17450,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000780001,
-        "entryNumber": "JE-ORD-0003",
+        "entryNumber": "JE-ORD-ORD-9434591419-3717",
         "sourceType": "order",
         "sourceId": 780001,
-        "sourceNumber": "3",
-        "description": "فاتورة مبيعات للطلب #3 - العميل: حنان علي محسن النجار",
+        "sourceNumber": "ORD-9434591419-3717",
+        "description": "فاتورة مبيعات للطلب #ORD-9434591419-3717 - العميل: حنان علي محسن النجار",
         "createdAt": "2026-09-15T00:00:00.000Z",
         "lines": [
           {
@@ -17493,11 +17495,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000780002,
-        "entryNumber": "JE-ORD-0009",
+        "entryNumber": "JE-ORD-ORD-9434660277-0383",
         "sourceType": "order",
         "sourceId": 780002,
-        "sourceNumber": "9",
-        "description": "فاتورة مبيعات للطلب #9 - العميل: محمد جميل محمد مطر",
+        "sourceNumber": "ORD-9434660277-0383",
+        "description": "فاتورة مبيعات للطلب #ORD-9434660277-0383 - العميل: محمد جميل محمد مطر",
         "createdAt": "2026-09-15T00:00:00.000Z",
         "lines": [
           {
@@ -18303,11 +18305,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000750002,
-        "entryNumber": "JE-ORD-0005",
+        "entryNumber": "JE-ORD-ORD-9264866299-8228",
         "sourceType": "order",
         "sourceId": 750002,
-        "sourceNumber": "5",
-        "description": "فاتورة مبيعات للطلب #5 - العميل: امةالله محسن عبداللة عبدالجليل",
+        "sourceNumber": "ORD-9264866299-8228",
+        "description": "فاتورة مبيعات للطلب #ORD-9264866299-8228 - العميل: امةالله محسن عبداللة عبدالجليل",
         "createdAt": "2026-09-12T00:00:00.000Z",
         "lines": [
           {
@@ -18618,11 +18620,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000750001,
-        "entryNumber": "JE-ORD-0003",
+        "entryNumber": "JE-ORD-ORD-9264773077-0952",
         "sourceType": "order",
         "sourceId": 750001,
-        "sourceNumber": "3",
-        "description": "فاتورة مبيعات للطلب #3 - العميل: بيت الحلحلي",
+        "sourceNumber": "ORD-9264773077-0952",
+        "description": "فاتورة مبيعات للطلب #ORD-9264773077-0952 - العميل: بيت الحلحلي",
         "createdAt": "2026-09-10T00:00:00.000Z",
         "lines": [
           {
@@ -19158,11 +19160,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000720001,
-        "entryNumber": "JE-ORD-0003",
+        "entryNumber": "JE-ORD-ORD-8738044243-8007",
         "sourceType": "order",
         "sourceId": 720001,
-        "sourceNumber": "3",
-        "description": "فاتورة مبيعات للطلب #3 - العميل: اشجان إدريس احمد القدسي",
+        "sourceNumber": "ORD-8738044243-8007",
+        "description": "فاتورة مبيعات للطلب #ORD-8738044243-8007 - العميل: اشجان إدريس احمد القدسي",
         "createdAt": "2026-09-07T00:00:00.000Z",
         "lines": [
           {
@@ -19338,11 +19340,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000660003,
-        "entryNumber": "JE-ORD-0006",
+        "entryNumber": "JE-ORD-ORD-8659579189-7521",
         "sourceType": "order",
         "sourceId": 660003,
-        "sourceNumber": "6",
-        "description": "فاتورة مبيعات للطلب #6 - العميل: نورا سلطان الصلاحي",
+        "sourceNumber": "ORD-8659579189-7521",
+        "description": "فاتورة مبيعات للطلب #ORD-8659579189-7521 - العميل: نورا سلطان الصلاحي",
         "createdAt": "2026-09-06T00:00:00.000Z",
         "lines": [
           {
@@ -19383,11 +19385,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000690001,
-        "entryNumber": "JE-ORD-0002",
+        "entryNumber": "JE-ORD-ORD-8659788749-3974",
         "sourceType": "order",
         "sourceId": 690001,
-        "sourceNumber": "2",
-        "description": "فاتورة مبيعات للطلب #2 - العميل: اشجان إدريس احمد القدسي",
+        "sourceNumber": "ORD-8659788749-3974",
+        "description": "فاتورة مبيعات للطلب #ORD-8659788749-3974 - العميل: اشجان إدريس احمد القدسي",
         "createdAt": "2026-09-06T00:00:00.000Z",
         "lines": [
           {
@@ -19608,11 +19610,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000600002,
-        "entryNumber": "JE-ORD-0011",
+        "entryNumber": "JE-ORD-ORD-8658159317-4172",
         "sourceType": "order",
         "sourceId": 600002,
-        "sourceNumber": "11",
-        "description": "فاتورة مبيعات للطلب #11 - العميل: ام عبد الوهاب",
+        "sourceNumber": "ORD-8658159317-4172",
+        "description": "فاتورة مبيعات للطلب #ORD-8658159317-4172 - العميل: ام عبد الوهاب",
         "createdAt": "2026-09-05T00:00:00.000Z",
         "lines": [
           {
@@ -20013,11 +20015,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000630001,
-        "entryNumber": "JE-ORD-0004",
+        "entryNumber": "JE-ORD-ORD-8658997531-0903",
         "sourceType": "order",
         "sourceId": 630001,
-        "sourceNumber": "4",
-        "description": "فاتورة مبيعات للطلب #4 - العميل: حنان علي محمد القاسمي",
+        "sourceNumber": "ORD-8658997531-0903",
+        "description": "فاتورة مبيعات للطلب #ORD-8658997531-0903 - العميل: حنان علي محمد القاسمي",
         "createdAt": "2026-09-04T00:00:00.000Z",
         "lines": [
           {
@@ -20058,11 +20060,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000660001,
-        "entryNumber": "JE-ORD-0002",
+        "entryNumber": "JE-ORD-ORD-8659131406-8563",
         "sourceType": "order",
         "sourceId": 660001,
-        "sourceNumber": "2",
-        "description": "فاتورة مبيعات للطلب #2 - العميل: علي علي محسن سعود",
+        "sourceNumber": "ORD-8659131406-8563",
+        "description": "فاتورة مبيعات للطلب #ORD-8659131406-8563 - العميل: علي علي محسن سعود",
         "createdAt": "2026-09-04T00:00:00.000Z",
         "lines": [
           {
@@ -20463,11 +20465,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000540001,
-        "entryNumber": "JE-ORD-0008",
+        "entryNumber": "JE-ORD-ORD-8478999795-0814",
         "sourceType": "order",
         "sourceId": 540001,
-        "sourceNumber": "8",
-        "description": "فاتورة مبيعات للطلب #8 - العميل: محمد جميل محمد مطر",
+        "sourceNumber": "ORD-8478999795-0814",
+        "description": "فاتورة مبيعات للطلب #ORD-8478999795-0814 - العميل: محمد جميل محمد مطر",
         "createdAt": "2026-09-02T00:00:00.000Z",
         "lines": [
           {
@@ -20508,11 +20510,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000540002,
-        "entryNumber": "JE-ORD-0004",
+        "entryNumber": "JE-ORD-ORD-8479144746-3923",
         "sourceType": "order",
         "sourceId": 540002,
-        "sourceNumber": "4",
-        "description": "فاتورة مبيعات للطلب #4 - العميل: امةالله محسن عبداللة عبدالجليل",
+        "sourceNumber": "ORD-8479144746-3923",
+        "description": "فاتورة مبيعات للطلب #ORD-8479144746-3923 - العميل: امةالله محسن عبداللة عبدالجليل",
         "createdAt": "2026-09-02T00:00:00.000Z",
         "lines": [
           {
@@ -20643,11 +20645,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000450001,
-        "entryNumber": "JE-ORD-0006",
+        "entryNumber": "JE-ORD-ORD-8215695728-5855",
         "sourceType": "order",
         "sourceId": 450001,
-        "sourceNumber": "6",
-        "description": "فاتورة مبيعات للطلب #6 - العميل: مرام محمد كشيع سالم",
+        "sourceNumber": "ORD-8215695728-5855",
+        "description": "فاتورة مبيعات للطلب #ORD-8215695728-5855 - العميل: مرام محمد كشيع سالم",
         "createdAt": "2026-09-01T00:00:00.000Z",
         "lines": [
           {
@@ -20688,11 +20690,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000480001,
-        "entryNumber": "JE-ORD-0002",
+        "entryNumber": "JE-ORD-ORD-8215823439-5531",
         "sourceType": "order",
         "sourceId": 480001,
-        "sourceNumber": "2",
-        "description": "فاتورة مبيعات للطلب #2 - العميل: مرام عبد الجبار السريحي",
+        "sourceNumber": "ORD-8215823439-5531",
+        "description": "فاتورة مبيعات للطلب #ORD-8215823439-5531 - العميل: مرام عبد الجبار السريحي",
         "createdAt": "2026-09-01T00:00:00.000Z",
         "lines": [
           {
@@ -20733,11 +20735,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000510001,
-        "entryNumber": "JE-ORD-0002",
+        "entryNumber": "JE-ORD-ORD-8216013927-9760",
         "sourceType": "order",
         "sourceId": 510001,
-        "sourceNumber": "2",
-        "description": "فاتورة مبيعات للطلب #2 - العميل: غانم علي محمد  الشاذلي",
+        "sourceNumber": "ORD-8216013927-9760",
+        "description": "فاتورة مبيعات للطلب #ORD-8216013927-9760 - العميل: غانم علي محمد  الشاذلي",
         "createdAt": "2026-09-01T00:00:00.000Z",
         "lines": [
           {
@@ -21408,11 +21410,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000330001,
-        "entryNumber": "JE-ORD-0007",
+        "entryNumber": "JE-ORD-ORD-8041948865-7116",
         "sourceType": "order",
         "sourceId": 330001,
-        "sourceNumber": "7",
-        "description": "فاتورة مبيعات للطلب #7 - العميل: محمد جميل محمد مطر",
+        "sourceNumber": "ORD-8041948865-7116",
+        "description": "فاتورة مبيعات للطلب #ORD-8041948865-7116 - العميل: محمد جميل محمد مطر",
         "createdAt": "2026-08-30T00:00:00.000Z",
         "lines": [
           {
@@ -21453,11 +21455,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000420001,
-        "entryNumber": "JE-ORD-0003",
+        "entryNumber": "JE-ORD-ORD-8125147413-6225",
         "sourceType": "order",
         "sourceId": 420001,
-        "sourceNumber": "3",
-        "description": "فاتورة مبيعات للطلب #3 - العميل: امةالله محسن عبداللة عبدالجليل",
+        "sourceNumber": "ORD-8125147413-6225",
+        "description": "فاتورة مبيعات للطلب #ORD-8125147413-6225 - العميل: امةالله محسن عبداللة عبدالجليل",
         "createdAt": "2026-08-30T00:00:00.000Z",
         "lines": [
           {
@@ -21813,11 +21815,11 @@ export const INITIAL_DATA: TopStoreBackup = {
       },
       {
         "id": 2000000390001,
-        "entryNumber": "JE-ORD-0001",
+        "entryNumber": "JE-ORD-ORD-8052070896-8879",
         "sourceType": "order",
         "sourceId": 390001,
-        "sourceNumber": "1",
-        "description": "فاتورة مبيعات للطلب #1 - العميل: زينب علي محمد إبراهيم دلواح",
+        "sourceNumber": "ORD-8052070896-8879",
+        "description": "فاتورة مبيعات للطلب #ORD-8052070896-8879 - العميل: زينب علي محمد إبراهيم دلواح",
         "createdAt": "2026-08-29T00:00:00.000Z",
         "lines": [
           {
@@ -21897,7 +21899,9 @@ export const INITIAL_DATA: TopStoreBackup = {
             "exchangeRate": 1,
             "baseAmount": 38800
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1000000330001,
@@ -21940,7 +21944,9 @@ export const INITIAL_DATA: TopStoreBackup = {
             "exchangeRate": 1,
             "baseAmount": 11200
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1000000390002,
@@ -21983,7 +21989,9 @@ export const INITIAL_DATA: TopStoreBackup = {
             "exchangeRate": 1,
             "baseAmount": 1200
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1000000510001,
@@ -22026,7 +22034,9 @@ export const INITIAL_DATA: TopStoreBackup = {
             "exchangeRate": 1,
             "baseAmount": 150
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1000000510002,
@@ -22069,7 +22079,9 @@ export const INITIAL_DATA: TopStoreBackup = {
             "exchangeRate": 1,
             "baseAmount": 9200
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1000000540003,
@@ -22112,7 +22124,9 @@ export const INITIAL_DATA: TopStoreBackup = {
             "exchangeRate": 1,
             "baseAmount": 2500
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1000000540004,
@@ -22155,7 +22169,9 @@ export const INITIAL_DATA: TopStoreBackup = {
             "exchangeRate": 1,
             "baseAmount": 3300
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1000000570001,
@@ -22198,7 +22214,9 @@ export const INITIAL_DATA: TopStoreBackup = {
             "exchangeRate": 1,
             "baseAmount": 63100
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1000000600002,
@@ -22241,7 +22259,9 @@ export const INITIAL_DATA: TopStoreBackup = {
             "exchangeRate": 1,
             "baseAmount": 7000
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1000000630001,
@@ -22284,7 +22304,9 @@ export const INITIAL_DATA: TopStoreBackup = {
             "exchangeRate": 1,
             "baseAmount": 2200
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       },
       {
         "id": 1000000630002,
@@ -22327,7 +22349,9 @@ export const INITIAL_DATA: TopStoreBackup = {
             "exchangeRate": 1,
             "baseAmount": 16900
           }
-        ]
+        ],
+        "deletedAt": null,
+        "deleteReason": null
       }
     ],
     "journalLines": [
