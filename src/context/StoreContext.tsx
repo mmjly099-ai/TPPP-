@@ -695,43 +695,80 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       } catch (e) {
         // Fallback silently if network offline
       }
-    }, 600);
+    }, 250);
 
     return () => clearTimeout(timer);
   }, [data, hasInitializedFromServer]);
 
-  // Realtime subscription setup to keep laptop and mobile in instant lockstep
+  // Real-time SSE stream listener: receives instant sync updates whenever ANY phone or laptop pushes changes
+  useEffect(() => {
+    let es: EventSource | null = null;
+    let reconnectTimer: any = null;
+
+    const setupSSE = () => {
+      try {
+        es = new EventSource('/api/sync/stream');
+
+        es.onopen = () => {
+          setRealtimeStatus('connected');
+        };
+
+        es.onmessage = (e) => {
+          try {
+            if (!e.data || e.data.startsWith(':')) return;
+            const payload = JSON.parse(e.data);
+            if (payload.type === 'sync_update') {
+              const currentDev = getOrCreateCurrentDevice();
+              // If another phone or laptop pushed an update, sync immediately
+              if (!payload.originDeviceId || payload.originDeviceId !== currentDev.deviceId) {
+                syncWithServer();
+              }
+            }
+          } catch (err) {
+            // ignore non-json
+          }
+        };
+
+        es.onerror = () => {
+          setRealtimeStatus('disconnected');
+          es?.close();
+          reconnectTimer = setTimeout(setupSSE, 3000);
+        };
+      } catch (err) {
+        setRealtimeStatus('offline');
+        reconnectTimer = setTimeout(setupSSE, 5000);
+      }
+    };
+
+    setupSSE();
+
+    return () => {
+      if (es) es.close();
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+    };
+  }, []);
+
+  // Supabase Realtime subscription fallback (if configured)
   useEffect(() => {
     if (!isSupabaseConfigured()) {
-      setRealtimeStatus('offline');
       return;
     }
 
-    setRealtimeStatus('connecting');
-
-    // Subscribe to primary core tables
     const coreTables = ['customers', 'orders', 'journal_entries', 'journal_lines', 'payments', 'expenses', 'shipments'];
 
     const sub = subscribeToSupabaseRealtime(
       coreTables,
       (payload) => {
-        // Whenever any change occurs on Supabase from another device (Laptop/Phone)
         setLastRealtimeEvent({
           table: payload.table,
           eventType: payload.eventType,
           time: new Date().toLocaleTimeString('ar-YE')
         });
-
-        // Trigger an immediate fast sync to synchronize state seamlessly across devices
         syncWithServer();
       },
       (status) => {
         if (status === 'SUBSCRIBED') {
           setRealtimeStatus('connected');
-        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          setRealtimeStatus('disconnected');
-        } else if (status === 'CLOSED') {
-          setRealtimeStatus('offline');
         }
       }
     );
@@ -743,19 +780,33 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, []);
 
-  // Initial pull and periodic 15-second heartbeat sync for cross-device/mobile sync
+  // Initial pull and periodic 4-second heartbeat sync for instant cross-device mobile/laptop lockstep
   useEffect(() => {
     syncWithServer();
+
+    // Fast 4-second heartbeat poll ensures immediate sync even if SSE is interrupted
     const interval = setInterval(() => {
       syncWithServer();
-    }, 15000);
+    }, 4000);
 
+    // Sync immediately when window gets focus or tab becomes visible (e.g. mobile app foregrounded)
     const onFocus = () => syncWithServer();
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncWithServer();
+      }
+    };
+    const onOnline = () => syncWithServer();
+
     window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('online', onOnline);
 
     return () => {
       clearInterval(interval);
       window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('online', onOnline);
     };
   }, []);
 

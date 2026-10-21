@@ -39,6 +39,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [siteFilter, setSiteFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [paymentFilter, setPaymentFilter] = useState<'ALL' | 'paid' | 'partial' | 'unpaid'>('ALL');
 
   // Edit & Delete Modal states
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
@@ -60,13 +61,51 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
     const matchesSite = siteFilter === 'ALL' || o.site === siteFilter;
     const matchesStatus = statusFilter === 'ALL' || o.status === statusFilter;
 
-    return matchesSearch && matchesSite && matchesStatus;
+    const isPaid = (o.remainingAmount || 0) === 0;
+    const isPartial = (o.remainingAmount || 0) > 0 && (o.paidAmount || 0) > 0;
+    const isUnpaid = (o.paidAmount || 0) === 0;
+
+    const matchesPayment =
+      paymentFilter === 'ALL' ||
+      (paymentFilter === 'paid' && isPaid) ||
+      (paymentFilter === 'partial' && isPartial) ||
+      (paymentFilter === 'unpaid' && isUnpaid);
+
+    return matchesSearch && matchesSite && matchesStatus && matchesPayment;
   });
 
   // Financial aggregates
   const totalOrdersAmount = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
   const totalPaid = orders.reduce((sum, o) => sum + (o.paidAmount || 0), 0);
   const totalRemaining = orders.reduce((sum, o) => sum + (o.remainingAmount || 0), 0);
+  const fullyPaidOrdersCount = orders.filter(o => (o.remainingAmount || 0) === 0).length;
+
+  const getPaymentStatusBadge = (order: Order) => {
+    const isPaid = (order.remainingAmount || 0) === 0;
+    const isPartial = (order.remainingAmount || 0) > 0 && (order.paidAmount || 0) > 0;
+    if (isPaid) {
+      return (
+        <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-bold border border-emerald-300">
+          <CheckCircle className="w-3 h-3 text-emerald-600" />
+          <span>مسدد بالكامل</span>
+        </span>
+      );
+    }
+    if (isPartial) {
+      return (
+        <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 text-[10px] px-2 py-0.5 rounded-full font-bold border border-amber-300">
+          <Clock className="w-3 h-3 text-amber-600" />
+          <span>مسدد جزئياً</span>
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 bg-rose-100 text-rose-800 text-[10px] px-2 py-0.5 rounded-full font-bold border border-rose-300">
+        <AlertCircle className="w-3 h-3 text-rose-600" />
+        <span>غير مسدد</span>
+      </span>
+    );
+  };
 
   const getStatusBadge = (status: Order['status']) => {
     switch (status) {
@@ -123,7 +162,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
       </div>
 
       {/* KPI Ribbon */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-xl border border-slate-200">
           <span className="text-xs text-slate-500">إجمالي قيمة الطلبات</span>
           <div className="text-xl font-black font-mono text-slate-900 mt-1">
@@ -144,6 +183,17 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
             {totalRemaining.toLocaleString()} <span className="text-xs text-slate-500 font-sans">ريال</span>
           </div>
         </div>
+
+        <div className="bg-white p-4 rounded-xl border border-emerald-200 bg-emerald-50/30">
+          <span className="text-xs text-emerald-700 font-bold flex items-center gap-1">
+            <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+            طلبات مسددة بالكامل
+          </span>
+          <div className="text-xl font-black font-mono text-emerald-700 mt-1 flex items-baseline gap-1.5">
+            <span>{fullyPaidOrdersCount}</span>
+            <span className="text-xs text-slate-500 font-sans font-normal">من أصل {orders.length} طلب</span>
+          </div>
+        </div>
       </div>
 
       {/* Search & Filters */}
@@ -159,7 +209,18 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <select
+            value={paymentFilter}
+            onChange={e => setPaymentFilter(e.target.value as any)}
+            className="text-xs border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700 font-bold"
+          >
+            <option value="ALL">جميع حالات السداد</option>
+            <option value="paid">✓ مسدد بالكامل ({orders.filter(o => (o.remainingAmount || 0) === 0).length})</option>
+            <option value="partial">⏳ مسدد جزئياً ({orders.filter(o => (o.remainingAmount || 0) > 0 && (o.paidAmount || 0) > 0).length})</option>
+            <option value="unpaid">✕ غير مسدد ({orders.filter(o => (o.paidAmount || 0) === 0).length})</option>
+          </select>
+
           <select
             value={siteFilter}
             onChange={e => setSiteFilter(e.target.value)}
@@ -204,6 +265,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                   <th className="py-3 px-4">الإجمالي</th>
                   <th className="py-3 px-4">المدفوع</th>
                   <th className="py-3 px-4">المتبقي</th>
+                  <th className="py-3 px-4">حالة السداد</th>
                   <th className="py-3 px-4">رسوم التوصيل</th>
                   <th className="py-3 px-4">الحالة</th>
                   <th className="py-3 px-4 text-center">إجراءات</th>
@@ -246,9 +308,12 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                         ) : (
                           <span className="text-emerald-600 flex items-center gap-1">
                             <CheckCircle className="w-3.5 h-3.5" />
-                            مسدد
+                            0 ريال
                           </span>
                         )}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        {getPaymentStatusBadge(order)}
                       </td>
                       <td className="py-3.5 px-4">
                         {order.deliveryFee > 0 ? (

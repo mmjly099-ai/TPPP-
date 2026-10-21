@@ -1,4 +1,4 @@
-import { TopStoreBackup } from ../types;
+import { TopStoreBackup } from '../types';
 
 export const INITIAL_DATA: TopStoreBackup = {
   "format": "top-store-backup",

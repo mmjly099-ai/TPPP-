@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FirebaseProvider } from './firebase/FirebaseContext';
 import { StoreProvider, useStore } from './context/StoreContext';
 import { Header } from './components/Header';
@@ -52,23 +52,40 @@ const MainApp: React.FC = () => {
   const { notification, lastSyncTime } = useStore();
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
 
-  // System password lock state (masnaamasnaa)
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    try {
-      return localStorage.getItem('topstore_auth_session') === 'authenticated_masnaamasnaa';
-    } catch {
-      return false;
-    }
-  });
+  // System password lock state (masnaamasnaa) - Requires password on every login/visit
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   const handleLogout = () => {
     try {
+      sessionStorage.removeItem('topstore_session_auth');
       localStorage.removeItem('topstore_auth_session');
     } catch (e) {
       console.warn('Error clearing auth session', e);
     }
     setIsAuthenticated(false);
   };
+
+  // Auto-lock after 15 minutes of inactivity for security across laptops and mobile phones
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    let timeoutId: any = null;
+    const resetTimer = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        handleLogout();
+      }, 15 * 60 * 1000); // 15 minutes
+    };
+
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    events.forEach(evt => window.addEventListener(evt, resetTimer, { passive: true }));
+    resetTimer();
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      events.forEach(evt => window.removeEventListener(evt, resetTimer));
+    };
+  }, [isAuthenticated]);
 
   // Mobile Bottom Sheets
   const [isMobileQuickActionsOpen, setIsMobileQuickActionsOpen] = useState(false);

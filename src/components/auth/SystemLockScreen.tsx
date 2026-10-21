@@ -2,38 +2,59 @@ import React, { useState } from 'react';
 import { Lock, KeyRound, Eye, EyeOff, ShieldCheck, ArrowLeft, Store, Smartphone, RefreshCw, AlertCircle } from 'lucide-react';
 import { PWAInstallButton } from '../common/PWAInstallButton';
 
+import { useStore } from '../../context/StoreContext';
+
 interface SystemLockScreenProps {
   onUnlock: () => void;
   syncTime?: string | null;
 }
 
 export const SystemLockScreen: React.FC<SystemLockScreenProps> = ({ onUnlock, syncTime }) => {
+  const { syncWithServer } = useStore();
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [rememberMe, setRememberMe] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
     setIsSubmitting(true);
 
     const trimmed = password.trim().toLowerCase();
 
-    // Check system password: masnaamasnaa (case-insensitive for mobile keyboards)
-    if (trimmed === 'masnaamasnaa') {
-      if (rememberMe) {
-        try {
-          localStorage.setItem('topstore_auth_session', 'authenticated_masnaamasnaa');
-        } catch (err) {
-          console.warn('Could not save auth session to storage', err);
-        }
+    // Verify password locally and with server
+    let isValid = trimmed === 'masnaamasnaa';
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: trimmed })
+      });
+      if (res.ok) {
+        isValid = true;
       }
+    } catch {
+      // offline fallback to default password
+    }
+
+    if (isValid) {
+      try {
+        localStorage.removeItem('topstore_auth_session');
+        sessionStorage.setItem('topstore_session_auth', 'authenticated_masnaamasnaa');
+      } catch (err) {
+        console.warn('Session auth note:', err);
+      }
+
+      // Immediately pull freshest data from server/cloud on unlock
+      try {
+        await syncWithServer();
+      } catch {}
+
       setTimeout(() => {
         setIsSubmitting(false);
         onUnlock();
-      }, 200);
+      }, 100);
     } else {
       setIsSubmitting(false);
       setErrorMsg('كلمة المرور غير صحيحة! يرجى إدخال كلمة المرور المعتمدة للنظام.');
@@ -141,17 +162,15 @@ export const SystemLockScreen: React.FC<SystemLockScreenProps> = ({ onUnlock, sy
               )}
             </div>
 
-            {/* Remember Me Option */}
-            <div className="flex items-center justify-between text-xs">
-              <label className="flex items-center gap-2 text-slate-600 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={e => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded-md border-slate-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
-                />
-                <span className="font-medium">تذكر تسجيل الدخول على هذا الجهاز</span>
-              </label>
+            {/* Multi-Device Security Notice */}
+            <div className="p-3 bg-amber-50/70 border border-amber-200/60 rounded-xl flex items-start gap-2.5 text-xs text-amber-950">
+              <Lock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div className="leading-relaxed">
+                <span className="font-bold block text-slate-800">حماية مشددة على كافة الهواتف واللابتوبات</span>
+                <span className="text-[11px] text-slate-600">
+                  يتطلب النظام إدخال كلمة المرور في كل تسجيل دخول لحماية البيانات والمزامنة الفورية.
+                </span>
+              </div>
             </div>
 
             {/* Submit Button */}

@@ -69,6 +69,55 @@ async function startServer() {
     console.warn('Could not read connected_devices.json', e);
   }
 
+  // Server revision tracking & SSE clients for real-time synchronization
+  let serverRevision = Date.now();
+  const sseClients = new Set<express.Response>();
+
+  const broadcastSyncUpdate = (originDeviceId?: string) => {
+    const payload = JSON.stringify({
+      type: 'sync_update',
+      revision: serverRevision,
+      originDeviceId,
+      timestamp: Date.now()
+    });
+    for (const client of sseClients) {
+      try {
+        client.write(`data: ${payload}\n\n`);
+      } catch (err) {
+        sseClients.delete(client);
+      }
+    }
+  };
+
+  // Heartbeat to keep mobile and laptop SSE connections alive
+  setInterval(() => {
+    for (const client of sseClients) {
+      try {
+        client.write(`: heartbeat ${Date.now()}\n\n`);
+      } catch (err) {
+        sseClients.delete(client);
+      }
+    }
+  }, 15000);
+
+  // SSE Stream endpoint for instant real-time synchronization across all devices
+  app.get('/api/sync/stream', (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.flushHeaders?.();
+
+    // Initial connection ack
+    res.write(`data: ${JSON.stringify({ type: 'connected', revision: serverRevision, timestamp: Date.now() })}\n\n`);
+
+    sseClients.add(res);
+
+    req.on('close', () => {
+      sseClients.delete(res);
+    });
+  });
+
   // Pull synced data
   app.get('/api/sync/pull', (req, res) => {
     try {
@@ -109,6 +158,7 @@ async function startServer() {
       res.json({
         success: true,
         data: serverStore,
+        revision: serverRevision,
         timestamp: Date.now()
       });
     } catch (err: any) {
@@ -122,6 +172,7 @@ async function startServer() {
       const { data, device } = req.body || {};
       if (data && data.tables) {
         serverStore = data;
+        serverRevision = Date.now();
         fs.writeFileSync(SYNC_FILE, JSON.stringify(data, null, 2), 'utf-8');
       }
 
@@ -144,8 +195,12 @@ async function startServer() {
         }
       }
 
+      // Instantly notify all other connected laptops and phones
+      broadcastSyncUpdate(device?.deviceId);
+
       res.json({
         success: true,
+        revision: serverRevision,
         timestamp: Date.now()
       });
     } catch (err: any) {
