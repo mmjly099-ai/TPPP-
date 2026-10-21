@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ShoppingBag,
   PlusCircle,
@@ -14,7 +14,13 @@ import {
   Activity,
   LogIn,
   LogOut,
-  Cloud
+  Cloud,
+  X,
+  ExternalLink,
+  Copy,
+  Check,
+  ShieldCheck,
+  AlertTriangle
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { useFirebase } from '../firebase/FirebaseContext';
@@ -50,6 +56,19 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const { settings, totalCashAndBanks, totalCustomerDebts, isSyncing, lastSyncTime, syncWithServer, data: storeData, showNotification } = useStore();
   const { currentUser, loginWithGoogle, logout, isSyncing: isFirebaseSyncing, saveStoreToCloud, isAuthLoading } = useFirebase() as any;
+
+  const [showDomainModal, setShowDomainModal] = useState(false);
+  const [copiedDomain, setCopiedDomain] = useState(false);
+
+  const currentHostname = typeof window !== 'undefined' ? window.location.hostname : '';
+
+  const copyHostname = () => {
+    if (navigator?.clipboard && currentHostname) {
+      navigator.clipboard.writeText(currentHostname);
+      setCopiedDomain(true);
+      setTimeout(() => setCopiedDomain(false), 2000);
+    }
+  };
 
   const storeName = settings.storeName || 'TOP STORE – توب ستور';
   const businessName = settings.businessName || 'وسيط شراء وتسوق إلكتروني';
@@ -357,7 +376,9 @@ export const Header: React.FC<HeaderProps> = ({
                   try {
                     await loginWithGoogle();
                   } catch (err: any) {
-                    if (err?.message) {
+                    if (err?.code === 'auth/unauthorized-domain' || err?.message?.includes('unauthorized-domain')) {
+                      setShowDomainModal(true);
+                    } else if (err?.message) {
                       showNotification(err.message, 'info');
                     }
                   }
@@ -375,6 +396,97 @@ export const Header: React.FC<HeaderProps> = ({
 
         </div>
       </div>
+
+      {/* Firebase Domain Authorization Info Modal */}
+      {showDomainModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 overflow-y-auto" dir="rtl">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 my-8 border border-amber-200">
+            
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900">تفعيل نطاق Firebase Authorized Domain</h3>
+                  <p className="text-xs text-slate-500">خاصية تسجيل دخول Google الإضافية</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowDomainModal(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Reassurance Banner */}
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-start gap-2 text-xs text-emerald-900">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <div className="leading-relaxed font-medium">
+                <span className="font-bold block text-emerald-800">نظامك متزامن ومحمي بالكامل الآن!</span>
+                تزامن البيانات وقفل الأمان بكلمة المرور (<code className="font-mono font-bold bg-white px-1 rounded">masnaamasnaa</code>) يعملان بنجاح تام بين كافة الهواتف واللابتوبات عبر السيرفر دون الحاجة لتسجيل دخول Google.
+              </div>
+            </div>
+
+            {/* Steps to Authorize Domain */}
+            <div className="space-y-3 text-xs text-slate-700">
+              <p className="leading-relaxed">
+                إذا كنت ترغب بربط حساب Google السحابي في Firebase، يتطلب Google إضافة نطاق الاستضافة إلى قائمة النطاقات المصرحة (Authorized Domains):
+              </p>
+
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
+                <span className="text-[11px] font-bold text-slate-500 block">نطاق الاستضافة الحالي للنسخ:</span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={currentHostname}
+                    className="flex-1 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 font-mono text-[11px] text-slate-800 select-all"
+                  />
+                  <button
+                    onClick={copyHostname}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs cursor-pointer shadow-xs"
+                  >
+                    {copiedDomain ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedDomain ? 'تم النسخ' : 'نسخ'}</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1.5 text-[11px] text-slate-600">
+                <span className="font-bold text-slate-800 block">خطوات الإضافة في ثوانٍ:</span>
+                <ol className="list-decimal list-inside space-y-1 pr-1">
+                  <li>افتح إعدادات مصادقة Firebase Console.</li>
+                  <li>انتقل إلى تبويب <strong>Settings</strong> ثم <strong>Authorized Domains</strong>.</li>
+                  <li>انقر <strong>Add Domain</strong> والصق النطاق المنسوخ أعلاه ثم حفظ.</li>
+                </ol>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
+              <a
+                href="https://console.firebase.google.com/project/ai-studio-applet-webapp-ff5f6/authentication/settings"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs"
+              >
+                <span>فتح Firebase Console</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+              <button
+                onClick={() => setShowDomainModal(false)}
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer"
+              >
+                إغلاق
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </header>
   );
 };

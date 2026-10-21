@@ -89,6 +89,10 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (error?.code === 'auth/popup-blocked') {
         throw new Error('تم حظر النافذة المنبثقة بواسطة المتصفح. يرجى السماح بالنوافذ المنبثقة والمحاولة مجدداً.');
       }
+      if (error?.code === 'auth/unauthorized-domain') {
+        const domain = typeof window !== 'undefined' ? window.location.hostname : 'run.app';
+        throw new Error(`النطاق (${domain}) يحتاج للإضافة في قائمة النطاقات المصرحة (Authorized Domains) في Firebase Console. علماً بأن النظام متزامن ومحمي بالفعل عبر السيرفر لكافة الهواتف واللابتوبات دون الحاجة لحساب Google.`);
+      }
       console.warn('Google Sign-In note:', error?.message || error);
       throw error;
     }
