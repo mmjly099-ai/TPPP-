@@ -121,7 +121,7 @@ async function startServer() {
   // Pull synced data
   app.get('/api/sync/pull', (req, res) => {
     try {
-      if (!serverStore && fs.existsSync(SYNC_FILE)) {
+      if (fs.existsSync(SYNC_FILE)) {
         serverStore = JSON.parse(fs.readFileSync(SYNC_FILE, 'utf-8'));
       }
 

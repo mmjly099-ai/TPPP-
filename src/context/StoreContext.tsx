@@ -141,6 +141,7 @@ interface StoreContextType {
   deleteOrder: (id: number, options?: { deleteJournal?: boolean; deletePayments?: boolean }) => void;
   updateOrderStatus: (orderId: number, status: Order['status']) => void;
   collectDeliveryFee: (orderId: number, accountId: number) => void;
+  consolidateOrders: (masterOrderId: number, orderIdsToMerge: number[]) => void;
   
   recordPayment: (payment: {
     customerId: number;
@@ -652,13 +653,71 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (res.ok) {
         const json = await res.json();
         if (json.success && json.data && json.data.tables) {
-          const cleaned = sanitizeAndReconcileJournalEntries(json.data);
-          setData(cleaned);
-          try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
-          } catch (e) {
-            console.warn('Could not persist synced data to localStorage', e);
-          }
+          const serverCleaned = sanitizeAndReconcileJournalEntries(json.data);
+
+          setData(prev => {
+            if (!prev || !prev.tables) {
+              try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(serverCleaned));
+              } catch (e) {}
+              return serverCleaned;
+            }
+
+            // Identify any locally entered records (from mobile phone / laptop offline) not yet on server
+            const serverOrderIds = new Set((serverCleaned.tables.orders || []).map(o => o.id));
+            const localOnlyOrders = (prev.tables.orders || []).filter(o => !serverOrderIds.has(o.id));
+
+            const serverPaymentIds = new Set((serverCleaned.tables.payments || []).map(p => p.id));
+            const localOnlyPayments = (prev.tables.payments || []).filter(p => !serverPaymentIds.has(p.id));
+
+            const serverCustomerIds = new Set((serverCleaned.tables.customers || []).map(c => c.id));
+            const localOnlyCustomers = (prev.tables.customers || []).filter(c => !serverCustomerIds.has(c.id));
+
+            const serverExpenseIds = new Set((serverCleaned.tables.expenses || []).map(e => e.id));
+            const localOnlyExpenses = (prev.tables.expenses || []).filter(e => !serverExpenseIds.has(e.id));
+
+            if (
+              localOnlyOrders.length > 0 ||
+              localOnlyPayments.length > 0 ||
+              localOnlyCustomers.length > 0 ||
+              localOnlyExpenses.length > 0
+            ) {
+              const merged: TopStoreBackup = {
+                ...serverCleaned,
+                tables: {
+                  ...serverCleaned.tables,
+                  orders: [...localOnlyOrders, ...(serverCleaned.tables.orders || [])],
+                  payments: [...localOnlyPayments, ...(serverCleaned.tables.payments || [])],
+                  customers: [...localOnlyCustomers, ...(serverCleaned.tables.customers || [])],
+                  expenses: [...localOnlyExpenses, ...(serverCleaned.tables.expenses || [])]
+                }
+              };
+              const reconciled = sanitizeAndReconcileJournalEntries(merged);
+
+              // Push the merged state back to server so all laptops & phones receive the mobile entries immediately
+              setTimeout(async () => {
+                try {
+                  const currentDev = getOrCreateCurrentDevice();
+                  await fetch('/api/sync/push', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: reconciled, device: currentDev })
+                  });
+                } catch (e) {}
+              }, 100);
+
+              try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(reconciled));
+              } catch (e) {}
+              return reconciled;
+            }
+
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(serverCleaned));
+            } catch (e) {}
+            return serverCleaned;
+          });
+
           setLastSyncTime(new Date().toLocaleTimeString('ar-YE'));
         }
       }
@@ -1598,6 +1657,68 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         orders: prev.tables.orders.map(o => o.id === orderId ? { ...o, status } : o)
       }
     }));
+  };
+
+  const consolidateOrders = (masterOrderId: number, orderIdsToMerge: number[]) => {
+    setData(prev => {
+      const allOrders = [...prev.tables.orders];
+      const masterOrder = allOrders.find(o => o.id === masterOrderId);
+      if (!masterOrder) return prev;
+
+      const mergeSet = new Set(orderIdsToMerge.filter(id => id !== masterOrderId));
+      const ordersBeingMerged = allOrders.filter(o => mergeSet.has(o.id));
+      if (ordersBeingMerged.length === 0) return prev;
+
+      // Reassign all payments from merged orders to masterOrder
+      const updatedPayments = (prev.tables.payments || []).map(p => {
+        if (mergeSet.has(p.orderId)) {
+          return {
+            ...p,
+            orderId: masterOrderId,
+            statement: p.statement ? `${p.statement} (مدمج في طلب #${masterOrder.orderNumber})` : `دفعة مدمجة للطلب #${masterOrder.orderNumber}`
+          };
+        }
+        return p;
+      });
+
+      // Calculate total payments now pointing to masterOrder
+      const totalPaymentsForMaster = updatedPayments
+        .filter(p => p.orderId === masterOrderId && p.status !== 'cancelled')
+        .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+
+      // Sum totals and items
+      const combinedTotal = masterOrder.totalAmount + ordersBeingMerged.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
+      const combinedItems = (masterOrder.itemsCount || 1) + ordersBeingMerged.reduce((sum, o) => sum + (Number(o.itemsCount) || 1), 0);
+      const combinedShipping = (Number(masterOrder.shippingFee) || 0) + ordersBeingMerged.reduce((sum, o) => sum + (Number(o.shippingFee) || 0), 0);
+      const combinedDelivery = (Number(masterOrder.deliveryFee) || 0) + ordersBeingMerged.reduce((sum, o) => sum + (Number(o.deliveryFee) || 0), 0);
+
+      const updatedMaster: Order = {
+        ...masterOrder,
+        totalAmount: combinedTotal,
+        paidAmount: totalPaymentsForMaster,
+        remainingAmount: Math.max(0, combinedTotal - totalPaymentsForMaster),
+        itemsCount: combinedItems,
+        shippingFee: combinedShipping,
+        deliveryFee: combinedDelivery,
+        notes: [masterOrder.notes, ...ordersBeingMerged.map(o => `طلب مدمج #${o.orderNumber}: ${o.notes || ''}`.trim())].filter(Boolean).join(' | ')
+      };
+
+      // Filter out the merged orders
+      const remainingOrders = allOrders
+        .filter(o => !mergeSet.has(o.id))
+        .map(o => o.id === masterOrderId ? updatedMaster : o);
+
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          orders: remainingOrders,
+          payments: updatedPayments
+        }
+      };
+    });
+
+    showNotification(`تم دمج الطلبات بنجاح واحتساب كافة الدفعات للطلب المعتمد`, 'success');
   };
 
   const collectDeliveryFee = (orderId: number, accountId: number) => {
@@ -7458,6 +7579,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         deleteOrder,
         updateOrderStatus,
         collectDeliveryFee,
+        consolidateOrders,
         recordPayment,
         cancelPayment,
         updatePayment,

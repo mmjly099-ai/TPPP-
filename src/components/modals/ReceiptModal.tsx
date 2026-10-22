@@ -18,7 +18,7 @@ import {
 import { Payment, Customer, Order } from '../../types';
 import { useStore } from '../../context/StoreContext';
 import { numberToArabicWords } from '../../utils/tafqeet';
-import { TopStoreOfficialVoucher } from '../documents/TopStoreOfficialVoucher';
+import { TopStoreDocumentCard } from '../documents/TopStoreDocumentCard';
 
 interface ReceiptModalProps {
   payment: Payment | null;
@@ -56,7 +56,11 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   const statementText = payment.statement || payment.notes || (linkedOrder ? `سداد دفعة للطلب #${linkedOrder.orderNumber}` : 'سداد دفعة نقدية على الحساب');
 
   const handlePrint = () => {
+    document.body.classList.add('modal-print-active');
     window.print();
+    setTimeout(() => {
+      document.body.classList.remove('modal-print-active');
+    }, 1000);
   };
 
   const handleCopyWhatsAppText = () => {
@@ -229,10 +233,9 @@ ${linkedOrder ? `🔹 *المتبقي على الطلب:* ${linkedOrder.remainin
         {/* DOCUMENT BODY: Official Voucher (Default) OR Classic Form */}
         {/* ========================================================= */}
         {layoutMode === 'official' ? (
-          <div className="py-1">
-            <TopStoreOfficialVoucher
-              voucherType="receipt"
-              voucherTitle={voucherTitle}
+          <div className="py-1 print:py-0">
+            <TopStoreDocumentCard
+              documentType="receipt"
               docNumber={receiptNumber}
               date={payment.paymentDate}
               order={linkedOrder}
@@ -241,7 +244,6 @@ ${linkedOrder ? `🔹 *المتبقي على الطلب:* ${linkedOrder.remainin
               accountName={account?.name}
               notes={payment.statement || payment.notes}
               isCancelled={isCancelled}
-              onPrint={handlePrint}
             />
           </div>
         ) : (

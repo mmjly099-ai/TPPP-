@@ -25,7 +25,7 @@ import { Order, Customer, Payment } from '../../types';
 import { useStore } from '../../context/StoreContext';
 import { numberToArabicWords } from '../../utils/tafqeet';
 import { getShipmentMilestones } from '../../utils/shipmentMilestones';
-import { TopStoreOfficialVoucher } from '../documents/TopStoreOfficialVoucher';
+import { TopStoreDocumentCard } from '../documents/TopStoreDocumentCard';
 
 export type InvoiceDesignTemplate = 'official' | 'classic' | 'modern' | 'compact';
 
@@ -147,7 +147,11 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
   const isUnpaid = activeOrder ? computedPaid === 0 : true;
 
   const handlePrint = () => {
+    document.body.classList.add('modal-print-active');
     window.print();
+    setTimeout(() => {
+      document.body.classList.remove('modal-print-active');
+    }, 1000);
   };
 
   const handleCopyWhatsAppSummary = () => {
@@ -365,21 +369,20 @@ ${activeOrder.shipmentNumber ? `🔹 *رقم الشحنة:* #${activeOrder.shipm
           </div>
         ) : (
           <div>
-            {/* DESIGN 0: TOP STORE OFFICIAL VOUCHER (Exact Replica of Reference Design) */}
+            {/* DESIGN 0: TOP STORE OFFICIAL DOCUMENT CARD (Exact Match to User Reference PDF) */}
             {activeDesign === 'official' && (
-              <div className="py-2">
-                <TopStoreOfficialVoucher
-                  voucherType="invoice"
-                  voucherTitle="إثبات تسليم وسند طلب"
+              <div className="py-1 print:py-0">
+                <TopStoreDocumentCard
+                  documentType="order_invoice"
                   docNumber={invoiceNumber}
                   date={activeOrder.orderDate}
                   order={activeOrder}
                   customer={activeCustomer}
                   payment={orderPayments[0]}
+                  customerPayments={orderPayments}
                   accountName={orderPayments[0]?.paymentMethod || 'حساب العميل'}
                   notes={activeOrder.notes}
                   isCancelled={activeOrder.status === 'cancelled'}
-                  onPrint={handlePrint}
                 />
               </div>
             )}

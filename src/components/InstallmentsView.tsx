@@ -45,13 +45,18 @@ export const InstallmentsView: React.FC = () => {
     recordPayment,
     getCustomerBalance,
     getAccountBalance,
-    addAccount
+    addAccount,
+    consolidateOrders
   } = useStore();
 
   // Selected Customer & Selected Order
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [customerSearchQuery, setCustomerSearchQuery] = useState<string>('');
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+
+  // Consolidation / Merge duplicate orders state
+  const [isMergeOrdersModalOpen, setIsMergeOrdersModalOpen] = useState<boolean>(false);
+  const [mergeTargetOrderId, setMergeTargetOrderId] = useState<number | null>(null);
 
   // Search & Filter for Orders list
   const [searchQuery, setSearchQuery] = useState('');
@@ -610,7 +615,7 @@ export const InstallmentsView: React.FC = () => {
             </div>
 
             {selectedCustomerOrders.length > 0 && (
-              <div className="flex flex-wrap items-center gap-3 text-xs">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs">
                 <span className="text-slate-500">
                   إجمالي طلبات العميل: <strong className="font-mono text-slate-900">{selectedCustomerOrders.reduce((s, o) => s + (o.totalAmount || 0), 0).toLocaleString()} ر.ي</strong>
                 </span>
@@ -620,6 +625,21 @@ export const InstallmentsView: React.FC = () => {
                 <span className="text-rose-700">
                   المتبقي: <strong className="font-mono font-black">{selectedCustomerOrders.reduce((s, o) => s + (o.remainingAmount || 0), 0).toLocaleString()} ر.ي</strong>
                 </span>
+
+                {selectedCustomerOrders.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMergeTargetOrderId(selectedCustomerOrders[0]?.id || null);
+                      setIsMergeOrdersModalOpen(true);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black shadow-xs transition cursor-pointer text-xs"
+                    title="دمج طلبات العميل المكررة وتجميع كافة الدفعات في طلب واحد معتمد"
+                  >
+                    <Layers className="w-3.5 h-3.5" />
+                    <span>دمج وتوحيد الطلبات (اعتماد الدفعات)</span>
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -1676,6 +1696,171 @@ export const InstallmentsView: React.FC = () => {
         )}
 
       </div>
+
+      {/* Modal لدمج وتوحيد طلبات العميل واعتماد الدفعات */}
+      {isMergeOrdersModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-5 bg-gradient-to-r from-[#1A3668] to-[#122447] text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-300">
+                  <Layers className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-base">دمج وتوحيد طلبات العميل</h3>
+                  <p className="text-xs text-blue-100">
+                    اعتماد كافة الدفعات وسندات القبض في طلب واحد رئيسي دون فقدان أي بيانات
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsMergeOrdersModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+              <div className="p-3.5 bg-blue-50/80 rounded-2xl border border-blue-200/80 text-xs text-blue-900 space-y-1.5">
+                <div className="font-bold flex items-center gap-1.5 text-[#1A3668]">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>العميل: {selectedCustomer?.name || selectedOrder?.customerName || 'غير محدد'}</span>
+                </div>
+                <p className="text-[11px] text-slate-600 leading-relaxed">
+                  اختر الطلب الرئيسي المعتمد الذي ترغب في تثبيته. سيقوم النظام آلياً بتحويل كافة سندات القبض والدفعات المسددة من الطلبات الأخرى وربطها بالطلب المعتمد، وجمع إجمالي القيمة والقطع دون لمس أو إلغاء أي دفعة مالية.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-slate-800 mb-2">
+                  1. حدد الطلب المعتمد (Master Order) الذي ستجتمع فيه الدفعات:
+                </label>
+                <div className="space-y-2">
+                  {selectedCustomerOrders.map(ord => {
+                    const isMaster = (mergeTargetOrderId ?? selectedCustomerOrders[0]?.id) === ord.id;
+                    const ordPayments = payments.filter(p => p.orderId === ord.id && p.status !== 'cancelled');
+                    const ordPaidTotal = ordPayments.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+
+                    return (
+                      <div
+                        key={ord.id}
+                        onClick={() => setMergeTargetOrderId(ord.id)}
+                        className={`p-3 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                          isMaster
+                            ? 'border-[#1A3668] bg-[#1A3668]/5 shadow-xs'
+                            : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="radio"
+                            name="mergeMasterOrder"
+                            checked={isMaster}
+                            onChange={() => setMergeTargetOrderId(ord.id)}
+                            className="w-4 h-4 text-[#1A3668] focus:ring-[#1A3668] cursor-pointer"
+                          />
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-black text-sm text-slate-900">طلب #{ord.orderNumber}</span>
+                              <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-mono">
+                                ID: {ord.id}
+                              </span>
+                              {isMaster && (
+                                <span className="text-[10px] px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 font-black">
+                                  الطلب المعتمد
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs text-slate-500 mt-0.5">
+                              <span>التاريخ: {ord.date}</span>
+                              <span className="mx-1.5">•</span>
+                              <span>الشحنة: {ord.shipmentNumber || 'غير محدد'}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="text-left font-mono">
+                          <div className="text-xs font-black text-slate-900">
+                            {Number(ord.totalAmount || 0).toLocaleString()} ر.ي
+                          </div>
+                          <div className="text-[11px] text-emerald-700 font-bold">
+                            المدفوع: {ordPaidTotal.toLocaleString()} ر.ي ({ordPayments.length} سند)
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* الملخص المالي للدمج */}
+              {(() => {
+                const targetId = mergeTargetOrderId ?? selectedCustomerOrders[0]?.id;
+                const allSelectedPayments = payments.filter(
+                  p => selectedCustomerOrders.some(o => o.id === p.orderId) && p.status !== 'cancelled'
+                );
+                const totalAllPayments = allSelectedPayments.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+                const totalAllAmount = selectedCustomerOrders.reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
+                const newRemaining = Math.max(0, totalAllAmount - totalAllPayments);
+
+                return (
+                  <div className="p-4 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent rounded-2xl border border-amber-300 space-y-2">
+                    <h5 className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                      نتيجة الاعتماد المالي بعد الدمج:
+                    </h5>
+                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                      <div className="p-2 bg-white rounded-xl border border-slate-200">
+                        <span className="text-[10px] text-slate-500 block">إجمالي الطلب الموحد</span>
+                        <strong className="font-mono text-slate-900">{totalAllAmount.toLocaleString()} ر.ي</strong>
+                      </div>
+                      <div className="p-2 bg-white rounded-xl border border-emerald-200 text-emerald-800">
+                        <span className="text-[10px] text-emerald-600 block">كافة الدفعات المعتمدة ({allSelectedPayments.length} سند)</span>
+                        <strong className="font-mono font-black">{totalAllPayments.toLocaleString()} ر.ي</strong>
+                      </div>
+                      <div className="p-2 bg-white rounded-xl border border-rose-200 text-rose-800">
+                        <span className="text-[10px] text-rose-600 block">المتبقي على العميل</span>
+                        <strong className="font-mono font-black">{newRemaining.toLocaleString()} ر.ي</strong>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setIsMergeOrdersModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition cursor-pointer"
+              >
+                إلغاء
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const targetId = mergeTargetOrderId ?? selectedCustomerOrders[0]?.id;
+                  if (!targetId) return;
+                  const ordersToMerge = selectedCustomerOrders.filter(o => o.id !== targetId).map(o => o.id);
+                  if (ordersToMerge.length === 0) {
+                    setIsMergeOrdersModalOpen(false);
+                    return;
+                  }
+                  consolidateOrders(targetId, ordersToMerge);
+                  setSelectedOrderId(targetId);
+                  setIsMergeOrdersModalOpen(false);
+                }}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 text-xs font-black shadow-md transition cursor-pointer flex items-center gap-2"
+              >
+                <Check className="w-4 h-4" />
+                <span>تأكيد دمج الطلبات واعتماد كامل الدفعات</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Official Receipt Modal when Payment is printed / issued */}
       {receiptToPrint && (

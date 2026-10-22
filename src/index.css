@@ -6,14 +6,15 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 8mm 6mm 8mm 6mm;
+    margin: 10mm 8mm 10mm 8mm;
   }
 
   html,
   body {
-    width: 210mm !important;
-    max-width: 210mm !important;
-    min-height: 297mm !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
     background: #ffffff !important;
     color: #000000 !important;
     margin: 0 !important;
@@ -24,17 +25,38 @@
     overflow: visible !important;
   }
 
-  /* Hide regular UI elements when printing */
+  /* Completely hide all system UI, navigation, headers, footers, mobile bottom bars, and toasts */
   header,
   nav,
   aside,
   footer,
+  #mobile-bottom-nav,
   .print\:hidden,
-  .no-print {
+  .no-print,
+  .mobile-bottom-nav-container,
+  [role="navigation"],
+  button:not(.print-keep),
+  select:not(.print-keep),
+  input:not(.print-keep) {
     display: none !important;
   }
 
-  /* Remove fixed modal dark backdrop in print */
+  /* When any modal dialog is open or printing, hide <main> completely so only the document sheet prints */
+  body:has(.fixed.inset-0) main,
+  body.modal-print-active main {
+    display: none !important;
+  }
+
+  /* Reset main container in print when printing from a full view page */
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-shadow: none !important;
+  }
+
+  /* Make sure modal overlays do not block or create dark background in print */
   .fixed.inset-0 {
     position: static !important;
     background: transparent !important;
@@ -44,18 +66,36 @@
     max-width: 100% !important;
     overflow: visible !important;
     backdrop-filter: none !important;
-  }
-
-  /* Document A4 Sheet container */
-  .a4-print-document {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
     box-shadow: none !important;
     border: none !important;
+    display: block !important;
+  }
+
+  .fixed.inset-0 > div {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+  }
+
+  /* Document A4 Sheet container matching the official reference PDF */
+  .a4-print-document,
+  #topstore-document-print-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 16px !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
+    overflow: hidden !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
   }
 
   /* Thermal 80mm POS Receipt Container */

@@ -12452,6 +12452,51 @@
         "deleteReason": null
       },
       {
+        "id": 5791066974199,
+        "entryNumber": "JE-PAY-RCT-2026-056",
+        "sourceType": "payment",
+        "sourceId": 1791066974199,
+        "sourceNumber": "RCT-2026-056",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-30T18:00:00.000Z",
+        "description": "سند قبض #RCT-2026-056 من العميل: احلام موسى عبد الله محمد احمد الهندي",
+        "createdAt": "2026-09-30T18:00:00.000Z",
+        "lines": [
+          {
+            "id": 57910669741991,
+            "journalEntryId": 5791066974199,
+            "accountId": 2,
+            "accountName": "جيب",
+            "chartAccountId": 102,
+            "chartAccountCode": "102",
+            "side": "debit",
+            "amount": 11800,
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 11800
+          },
+          {
+            "id": 57910669741992,
+            "journalEntryId": 5791066974199,
+            "accountId": null,
+            "accountName": "حـ/ العميل: احلام موسى عبد الله محمد احمد الهندي",
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "side": "credit",
+            "amount": 11800,
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 11800
+          }
+        ],
+        "deletedAt": null,
+        "deleteReason": null
+      },
+      {
         "id": 1790790752572,
         "entryNumber": "JE-TRF-752570",
         "description": "تحويل بنكي بين الحسابات من جيب إلى نقدي",
@@ -16003,6 +16048,51 @@
         "createdBy": "admin",
         "postedBy": "admin",
         "postedAt": "2026-09-20T22:35:23.000Z",
+        "deletedAt": null,
+        "deleteReason": null
+      },
+      {
+        "id": 5791147525001,
+        "entryNumber": "JE-PAY-RCT-2026-055",
+        "sourceType": "payment",
+        "sourceId": 1791147525001,
+        "sourceNumber": "RCT-2026-055",
+        "status": "posted",
+        "currency": "YER",
+        "exchangeRate": 1,
+        "createdBy": "admin",
+        "postedBy": "admin",
+        "postedAt": "2026-09-20T14:30:00.000Z",
+        "description": "سند قبض #RCT-2026-055 من العميل: محمد جميل محمد مطر",
+        "createdAt": "2026-09-20T14:30:00.000Z",
+        "lines": [
+          {
+            "id": 57911475250011,
+            "journalEntryId": 5791147525001,
+            "accountId": 10,
+            "accountName": "نقدي",
+            "chartAccountId": 101,
+            "chartAccountCode": "101",
+            "side": "debit",
+            "amount": 23800,
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 23800
+          },
+          {
+            "id": 57911475250012,
+            "journalEntryId": 5791147525001,
+            "accountId": null,
+            "accountName": "حـ/ العميل: محمد جميل محمد مطر",
+            "chartAccountId": 110,
+            "chartAccountCode": "110",
+            "side": "credit",
+            "amount": 23800,
+            "currency": "YER",
+            "exchangeRate": 1,
+            "baseAmount": 23800
+          }
+        ],
         "deletedAt": null,
         "deleteReason": null
       },
@@ -23966,6 +24056,32 @@
         "baseAmount": 7200
       },
       {
+        "id": 57910669741991,
+        "journalEntryId": 5791066974199,
+        "accountId": 2,
+        "accountName": "جيب",
+        "chartAccountId": 102,
+        "chartAccountCode": "102",
+        "side": "debit",
+        "amount": 11800,
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 11800
+      },
+      {
+        "id": 57910669741992,
+        "journalEntryId": 5791066974199,
+        "accountId": null,
+        "accountName": "حـ/ العميل: احلام موسى عبد الله محمد احمد الهندي",
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "side": "credit",
+        "amount": 11800,
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 11800
+      },
+      {
         "id": 1790790752573,
         "journalEntryId": 1790790752572,
         "accountId": 10,
@@ -24120,32 +24236,6 @@
         "currency": "YER",
         "exchangeRate": 1,
         "baseAmount": 200
-      },
-      {
-        "id": 3790780597355,
-        "journalEntryId": 3790780597354,
-        "accountId": null,
-        "accountName": "حـ/ العميل: اسماء ابراهيم عبد القوي",
-        "side": "debit",
-        "amount": 46800,
-        "chartAccountId": 110,
-        "chartAccountCode": "110",
-        "currency": "YER",
-        "exchangeRate": 1,
-        "baseAmount": 46800
-      },
-      {
-        "id": 3790780597356,
-        "journalEntryId": 3790780597354,
-        "accountId": 401,
-        "accountName": "حـ/ إيرادات المبيعات والوساطة",
-        "side": "credit",
-        "amount": 46800,
-        "chartAccountId": 401,
-        "chartAccountCode": "401",
-        "currency": "YER",
-        "exchangeRate": 1,
-        "baseAmount": 46800
       },
       {
         "id": 5791062934602,
@@ -26044,6 +26134,32 @@
         "currency": "YER",
         "exchangeRate": 1,
         "baseAmount": 1000
+      },
+      {
+        "id": 57911475250011,
+        "journalEntryId": 5791147525001,
+        "accountId": 10,
+        "accountName": "نقدي",
+        "chartAccountId": 101,
+        "chartAccountCode": "101",
+        "side": "debit",
+        "amount": 23800,
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 23800
+      },
+      {
+        "id": 57911475250012,
+        "journalEntryId": 5791147525001,
+        "accountId": null,
+        "accountName": "حـ/ العميل: محمد جميل محمد مطر",
+        "chartAccountId": 110,
+        "chartAccountCode": "110",
+        "side": "credit",
+        "amount": 23800,
+        "currency": "YER",
+        "exchangeRate": 1,
+        "baseAmount": 23800
       },
       {
         "id": 2000000960002,

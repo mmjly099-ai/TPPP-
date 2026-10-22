@@ -234,7 +234,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   const currentActiveObject = tabs.find(t => t.id === selectedTab) || tabs[0];
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-2">
+    <nav className="bg-white border border-slate-200 rounded-2xl shadow-xs p-2 print:hidden" role="navigation">
       
       {/* Mobile/Tablet Bar with All Menus Toggle */}
       <div className="flex items-center justify-between gap-2 md:hidden pb-2 mb-2 border-b border-slate-100">
@@ -395,6 +395,6 @@ export const Navigation: React.FC<NavigationProps> = ({
         </div>
       )}
 
-    </div>
+    </nav>
   );
 };

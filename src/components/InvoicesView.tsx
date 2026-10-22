@@ -555,7 +555,7 @@ export const InvoicesView: React.FC = () => {
       {/* ======================================================== */}
       {/* 1. TOP HEADER & NAVIGATION BAR                            */}
       {/* ======================================================== */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs print:hidden">
         <div>
           <span className="text-xs font-bold text-slate-400 block mb-0.5">مركز المستندات</span>
           <div className="flex items-center gap-3">
@@ -716,7 +716,7 @@ export const InvoicesView: React.FC = () => {
 
           {/* Prompt if no orders exist in DB to seed the sample view */}
           {allDocuments.length === 0 && (
-            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs print:hidden">
               <div className="flex items-center gap-2 text-amber-900 font-bold">
                 <Sparkles className="w-4 h-4 text-[#C5A059]" />
                 <span>لم تقم بإدخال طلبات بعد. يمكنك إنشاء طلب جديد الآن أو تحميل نموذج العرض للمعاينة:</span>
