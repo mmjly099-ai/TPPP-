@@ -9,6 +9,7 @@ interface PaymentModalProps {
   onClose: () => void;
   preSelectedCustomer?: Customer | null;
   preSelectedOrder?: Order | null;
+  paymentToEdit?: Payment | null;
   onPaymentSuccess?: (payment: Payment) => void;
 }
 
@@ -17,13 +18,17 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   onClose,
   preSelectedCustomer,
   preSelectedOrder,
+  paymentToEdit,
   onPaymentSuccess
 }) => {
-  const { customers, orders, accounts, chartAccounts = [], couriers = [], deliveryOrders = [], recordPayment, getCustomerBalance, getAccountBalance, addAccount, payments } = useStore();
+  const { customers, orders, accounts, chartAccounts = [], couriers = [], deliveryOrders = [], recordPayment, updatePayment, getCustomerBalance, getAccountBalance, addAccount, payments } = useStore();
 
-  const [customerId, setCustomerId] = useState<number>(() => preSelectedCustomer?.id || customers[0]?.id || 0);
-  const [orderId, setOrderId] = useState<number | undefined>(() => preSelectedOrder?.id || undefined);
-  const [amount, setAmount] = useState<number>(() => preSelectedOrder?.remainingAmount || 0);
+  const isEditMode = Boolean(paymentToEdit);
+  const [paymentDate, setPaymentDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
+  const [receiptNumber, setReceiptNumber] = useState<string>('');
+  const [customerId, setCustomerId] = useState<number>(() => paymentToEdit?.customerId || preSelectedCustomer?.id || customers[0]?.id || 0);
+  const [orderId, setOrderId] = useState<number | undefined>(() => paymentToEdit?.orderId || preSelectedOrder?.id || undefined);
+  const [amount, setAmount] = useState<number>(() => paymentToEdit?.amount || preSelectedOrder?.remainingAmount || 0);
 
   // تجميع كافة الحسابات والمحافظ المالية (من جدول الحسابات + أي حساب مالي مضاف في شجرة الحسابات)
   const availableAccounts = useMemo(() => {
@@ -106,6 +111,44 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
   useEffect(() => {
     if (!isOpen) return;
+
+    if (paymentToEdit) {
+      setCustomerId(paymentToEdit.customerId);
+      setOrderId(paymentToEdit.orderId || undefined);
+      setAmount(paymentToEdit.amount);
+      const rawDate = paymentToEdit.paymentDate || (paymentToEdit.createdAt ? paymentToEdit.createdAt.split('T')[0] : new Date().toISOString().split('T')[0]);
+      setPaymentDate(rawDate);
+      setReceiptNumber(paymentToEdit.receiptNumber || paymentToEdit.paymentNumber || '');
+      setPaymentType(paymentToEdit.paymentType || 'سداد دفعة');
+      setStatement(paymentToEdit.statement || '');
+      setNotes(paymentToEdit.notes || '');
+
+      if (paymentToEdit.accountId) {
+        setAccountId(paymentToEdit.accountId);
+      }
+
+      const isCourier = Boolean(paymentToEdit.deliveryPaymentMethod === 'cash_to_courier' || paymentToEdit.courierId);
+      const matchedAcc = accounts.find(a => a.id === paymentToEdit.accountId);
+      if (isCourier) {
+        setPaymentChannel('courier');
+        setCourierId(paymentToEdit.courierId || activeCouriers[0]?.id || 0);
+        setDeliveryPaymentMethod((paymentToEdit.deliveryPaymentMethod as any) || 'cash_to_courier');
+        setDeliveryFee(paymentToEdit.deliveryFee || 1500);
+        setCourierCustodyAmount(paymentToEdit.amount);
+        setHasCourierDelivery(true);
+      } else if (matchedAcc?.type === 'نقدي' || matchedAcc?.name.includes('صندوق') || matchedAcc?.name.includes('كاش')) {
+        setPaymentChannel('cash');
+        setHasCourierDelivery(false);
+      } else {
+        setPaymentChannel('wallet');
+        setHasCourierDelivery(false);
+      }
+      return;
+    }
+
+    setReceiptNumber('');
+    setPaymentDate(new Date().toISOString().split('T')[0]);
+
     const initCustomer = preSelectedCustomer || customers.find(c => c.id === customerId) || customers[0];
     if (initCustomer) {
       setCustomerId(initCustomer.id);
@@ -149,7 +192,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         setStatement('سداد دفعة على الحساب');
       }
     }
-  }, [preSelectedCustomer, preSelectedOrder, isOpen]);
+  }, [preSelectedCustomer, preSelectedOrder, paymentToEdit, isOpen]);
 
   // Keep courierCustodyAmount synced with amount unless manually customized
   useEffect(() => {
@@ -252,30 +295,64 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
       const activeAcc = availableAccounts.find(a => a.id === chosenAccountId) || accounts.find(a => a.id === chosenAccountId);
 
-      const createdPayment = recordPayment({
-        customerId,
-        orderId: orderId || undefined,
-        amount: Number(amount),
-        accountId: chosenAccountId,
-        paymentMethod: isCashToCourier
-          ? `نقدي للمندوب (${selectedCourier?.name || 'المندوب'})`
-          : isDirectCash
-          ? 'نقداً في الصندوق'
-          : (activeAcc?.name || 'محفظة'),
-        paymentType: isFinalPaymentFlow ? 'دفعة نهائية' : paymentType,
-        statement: statement.trim() || undefined,
-        notes: notes.trim() || undefined,
-        courierId: (isCashToCourier || (hasCourierDelivery && courierId)) ? courierId : undefined,
-        deliveryPaymentMethod: isCashToCourier ? 'cash_to_courier' : 'transfer_to_wallet',
-        deliveryFee: (isCashToCourier || (hasCourierDelivery && courierId)) ? Number(deliveryFee) : undefined,
-        courierCustodyAmount: isCashToCourier && courierId ? Number(courierCustodyAmount) : undefined
-      });
+      let createdOrUpdatedPayment: Payment | null = null;
+
+      if (isEditMode && paymentToEdit) {
+        const res = updatePayment(paymentToEdit.id, {
+          customerId,
+          orderId: orderId || null,
+          amount: Number(amount),
+          accountId: chosenAccountId,
+          paymentMethod: isCashToCourier
+            ? `نقدي للمندوب (${selectedCourier?.name || 'المندوب'})`
+            : isDirectCash
+            ? 'نقداً في الصندوق'
+            : (activeAcc?.name || 'محفظة'),
+          paymentType: isFinalPaymentFlow ? 'دفعة نهائية' : paymentType,
+          paymentDate,
+          receiptNumber: receiptNumber.trim() || undefined,
+          statement: statement.trim() || undefined,
+          notes: notes.trim() || undefined,
+          courierId: (isCashToCourier || (hasCourierDelivery && courierId)) ? courierId : undefined,
+          deliveryPaymentMethod: isCashToCourier ? 'cash_to_courier' : 'transfer_to_wallet',
+          deliveryFee: (isCashToCourier || (hasCourierDelivery && courierId)) ? Number(deliveryFee) : undefined,
+        });
+
+        createdOrUpdatedPayment = (res as Payment) || {
+          ...paymentToEdit,
+          customerId,
+          orderId: orderId || null,
+          amount: Number(amount),
+          accountId: chosenAccountId,
+          paymentDate,
+          receiptNumber: receiptNumber.trim() || paymentToEdit.receiptNumber
+        };
+      } else {
+        createdOrUpdatedPayment = recordPayment({
+          customerId,
+          orderId: orderId || undefined,
+          amount: Number(amount),
+          accountId: chosenAccountId,
+          paymentMethod: isCashToCourier
+            ? `نقدي للمندوب (${selectedCourier?.name || 'المندوب'})`
+            : isDirectCash
+            ? 'نقداً في الصندوق'
+            : (activeAcc?.name || 'محفظة'),
+          paymentType: isFinalPaymentFlow ? 'دفعة نهائية' : paymentType,
+          statement: statement.trim() || undefined,
+          notes: notes.trim() || undefined,
+          courierId: (isCashToCourier || (hasCourierDelivery && courierId)) ? courierId : undefined,
+          deliveryPaymentMethod: isCashToCourier ? 'cash_to_courier' : 'transfer_to_wallet',
+          deliveryFee: (isCashToCourier || (hasCourierDelivery && courierId)) ? Number(deliveryFee) : undefined,
+          courierCustodyAmount: isCashToCourier && courierId ? Number(courierCustodyAmount) : undefined
+        });
+      }
 
       setIsSubmitting(false);
       onClose();
 
-      if (onPaymentSuccess && createdPayment) {
-        onPaymentSuccess(createdPayment);
+      if (onPaymentSuccess && createdOrUpdatedPayment) {
+        onPaymentSuccess(createdOrUpdatedPayment);
       }
     } catch (err) {
       console.error(err);
@@ -291,12 +368,25 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-[#1A3668] text-white flex items-center justify-center font-bold">
-              <Receipt className="w-5 h-5 text-[#C5A059]" />
+            <div className={`w-9 h-9 rounded-xl ${isEditMode ? 'bg-amber-600' : 'bg-[#1A3668]'} text-white flex items-center justify-center font-bold`}>
+              <Receipt className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="text-base font-black text-slate-900 tracking-tight">إصدار سند قبض مالي رسمي</h3>
-              <p className="text-xs text-slate-500">إثبات استلام الدفعة وربط الدفعة النهائية بنظام الموصلين والقيود تلقائياً</p>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-black text-slate-900 tracking-tight">
+                  {isEditMode ? 'تعديل سند قبض / دفعة مالية' : 'إصدار سند قبض مالي رسمي'}
+                </h3>
+                {isEditMode && (
+                  <span className="bg-amber-100 text-amber-900 text-[10px] font-black px-2 py-0.5 rounded-full border border-amber-300">
+                    وضع التعديل #{paymentToEdit?.receiptNumber || paymentToEdit?.paymentNumber}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-500">
+                {isEditMode
+                  ? 'تعديل بيانات المبلغ، الحساب، أو الطلب المرتبط مع تحديث القيود والأرصدة فورياً'
+                  : 'إثبات استلام الدفعة وربط الدفعة النهائية بنظام الموصلين والقيود تلقائياً'}
+              </p>
             </div>
           </div>
           <button
@@ -523,9 +613,42 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             </div>
           </div>
 
+          {/* Payment Date & Receipt Number */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">تاريخ الدفعة / السند *</label>
+              <input
+                type="date"
+                value={paymentDate}
+                onChange={e => setPaymentDate(e.target.value)}
+                className="w-full border border-slate-300 rounded-lg p-2 font-mono text-slate-900 text-xs bg-white font-bold focus:ring-2 focus:ring-[#1A3668]"
+                required
+              />
+            </div>
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">
+                رقم السند {isEditMode ? '(تعديل الرقم)' : '(تلقائي أو مخصص)'}
+              </label>
+              <input
+                type="text"
+                value={receiptNumber}
+                onChange={e => setReceiptNumber(e.target.value)}
+                placeholder={isEditMode ? 'رقم السند' : 'اتركه فارغاً للترقيم التلقائي'}
+                className="w-full border border-slate-300 rounded-lg p-2 font-mono text-slate-900 text-xs bg-white font-bold focus:ring-2 focus:ring-[#1A3668]"
+              />
+            </div>
+          </div>
+
           {/* Amount Input */}
           <div>
-            <label className="font-bold text-slate-700 block mb-1">المبلغ المقبوض للطلب (ريال) *</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="font-bold text-slate-700">المبلغ المقبوض للطلب (ريال) *</label>
+              {isEditMode && paymentToEdit && (
+                <span className="text-[11px] text-slate-500 font-mono">
+                  المبلغ السابق: {paymentToEdit.amount.toLocaleString()} ريال
+                </span>
+              )}
+            </div>
             <input
               type="number"
               min="1"
@@ -941,9 +1064,17 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-5 py-2 rounded-xl bg-[#1A3668] hover:bg-[#152c54] text-white font-bold transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                className={`px-5 py-2 rounded-xl text-white font-bold transition-colors cursor-pointer shadow-xs disabled:opacity-50 ${
+                  isEditMode ? 'bg-amber-600 hover:bg-amber-700' : 'bg-[#1A3668] hover:bg-[#152c54]'
+                }`}
               >
-                {isSubmitting ? 'جاري الحفظ...' : isFinalPaymentFlow ? 'تأكيد الدفعة النهائية وترحيل للموصلين' : 'إصدار سند القبض'}
+                {isSubmitting
+                  ? 'جاري الحفظ...'
+                  : isEditMode
+                  ? 'حفظ التعديلات وتحديث القيد والأرصدة'
+                  : isFinalPaymentFlow
+                  ? 'تأكيد الدفعة النهائية وترحيل للموصلين'
+                  : 'إصدار سند القبض'}
               </button>
             </div>
           </div>

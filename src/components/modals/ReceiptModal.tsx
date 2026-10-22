@@ -13,7 +13,8 @@ import {
   CreditCard,
   FileText,
   Sparkles,
-  Layers
+  Layers,
+  Edit
 } from 'lucide-react';
 import { Payment, Customer, Order } from '../../types';
 import { useStore } from '../../context/StoreContext';
@@ -165,6 +166,20 @@ ${linkedOrder ? `🔹 *المتبقي على الطلب:* ${linkedOrder.remainin
               {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copied ? 'تم النسخ!' : 'نص الواتساب'}</span>
             </button>
+
+            {!isCancelled && onEditPayment && (
+              <button
+                onClick={() => {
+                  onEditPayment(payment);
+                  onClose();
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold transition-colors cursor-pointer border border-amber-300"
+                title="تعديل بيانات أو مبلغ سند القبض"
+              >
+                <Edit className="w-3.5 h-3.5 text-amber-700" />
+                <span>تعديل السند</span>
+              </button>
+            )}
 
             <button
               onClick={handlePrint}

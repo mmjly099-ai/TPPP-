@@ -31,6 +31,7 @@ import { Order, Payment, Customer, DocumentType, DocumentRecord, OtherReceivable
 import { TopStoreDocumentCard } from './documents/TopStoreDocumentCard';
 import { NewDocumentWizardModal } from './modals/NewDocumentWizardModal';
 import { DocumentImpactDeleteModal } from './modals/DocumentImpactDeleteModal';
+import { PaymentModal } from './modals/PaymentModal';
 
 export const InvoicesView: React.FC = () => {
   const {
@@ -67,6 +68,8 @@ export const InvoicesView: React.FC = () => {
   // Modals
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [cancelModalDoc, setCancelModalDoc] = useState<DocumentRecord | null>(null);
+  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   // Copy feedback state
   const [copiedDocId, setCopiedDocId] = useState<string | null>(null);
@@ -665,8 +668,31 @@ export const InvoicesView: React.FC = () => {
               </div>
             </div>
 
-            {/* Left: Action Buttons (طباعة، إنشاء PDF، صورة، مشاركة) */}
+            {/* Left: Action Buttons (تعديل السند، طباعة، إنشاء PDF، صورة، مشاركة) */}
             <div className="flex items-center gap-1.5 justify-end w-full lg:w-auto">
+              {/* زر تعديل الدفعة عند عرض سند قبض */}
+              {selectedDocType === 'receipt' && (
+                <button
+                  onClick={() => {
+                    const p = payments.find(pay =>
+                      String(pay.id) === selectedItemId ||
+                      pay.receiptNumber === activeDocData.docNumber ||
+                      pay.paymentNumber === activeDocData.docNumber ||
+                      (activeDocData.order && pay.orderId === activeDocData.order.id)
+                    ) || payments[0];
+                    if (p) {
+                      setEditingPayment(p);
+                      setIsPaymentModalOpen(true);
+                    }
+                  }}
+                  className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-black flex items-center gap-1.5 transition-colors shadow-2xs"
+                  title="تعديل بيانات أو مبلغ سند القبض"
+                >
+                  <Edit className="w-3.5 h-3.5 text-amber-700" />
+                  <span>تعديل السند</span>
+                </button>
+              )}
+
               <button
                 onClick={handlePrint}
                 className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"

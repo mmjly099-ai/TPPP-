@@ -158,14 +158,24 @@ interface StoreContextType {
     courierCustodyAmount?: number;
   }) => Payment;
   cancelPayment: (paymentId: number, reason?: string) => void;
-  updatePayment: (paymentId: number, data: {
-    amount?: number;
-    accountId?: number;
-    paymentMethod?: string;
-    paymentType?: string;
-    statement?: string;
-    notes?: string;
-  }) => void;
+  updatePayment: (
+    paymentId: number,
+    data: {
+      amount?: number;
+      accountId?: number;
+      paymentMethod?: string;
+      paymentType?: string;
+      paymentDate?: string;
+      receiptNumber?: string;
+      statement?: string;
+      notes?: string;
+      customerId?: number;
+      orderId?: number | null;
+      courierId?: number | null;
+      deliveryPaymentMethod?: 'cash_to_courier' | 'transfer_to_wallet' | null;
+      deliveryFee?: number;
+    }
+  ) => Payment | void;
   deletePayment: (paymentId: number, options?: { deleteJournal?: boolean }) => void;
   
   addExpense: (expense: {
@@ -2308,63 +2318,167 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       accountId?: number;
       paymentMethod?: string;
       paymentType?: string;
+      paymentDate?: string;
+      receiptNumber?: string;
       statement?: string;
       notes?: string;
+      customerId?: number;
+      orderId?: number | null;
+      courierId?: number | null;
+      deliveryPaymentMethod?: 'cash_to_courier' | 'transfer_to_wallet' | null;
+      deliveryFee?: number;
     }
-  ) => {
+  ): Payment | void => {
+    let resultingPayment: Payment | null = null;
     setData(prev => {
       const existing = prev.tables.payments.find(p => p.id === paymentId);
       if (!existing) return prev;
 
-      const newAmount = data.amount !== undefined ? Number(data.amount) : Number(existing.amount);
-      const newAccountId = data.accountId !== undefined ? data.accountId : existing.accountId;
-      const acc = accounts.find(a => a.id === newAccountId);
+      const oldAmount = Number(existing.amount) || 0;
+      const newAmount = data.amount !== undefined ? Number(data.amount) : oldAmount;
+      const amountDiff = newAmount - oldAmount;
 
-      const updatedPayments = prev.tables.payments.map(p => {
-        if (p.id === paymentId) {
-          return {
-            ...p,
-            ...data,
-            amount: newAmount,
-            accountId: newAccountId,
-            updatedAt: new Date().toISOString()
-          };
+      const oldAccountId = existing.accountId;
+      const newAccountId = data.accountId !== undefined ? data.accountId : oldAccountId;
+      const acc = accounts.find(a => a.id === newAccountId) || accounts[0];
+
+      const oldCustomerId = existing.customerId;
+      const newCustomerId = data.customerId !== undefined ? data.customerId : oldCustomerId;
+      const customer = prev.tables.customers.find(c => c.id === newCustomerId);
+
+      const oldOrderId = existing.orderId;
+      const newOrderId = data.orderId !== undefined ? data.orderId : oldOrderId;
+
+      const newDate = data.paymentDate || existing.paymentDate || new Date().toISOString().split('T')[0];
+      const newReceiptNumber = data.receiptNumber || existing.receiptNumber;
+
+      const selectedCourier = data.courierId !== undefined
+        ? couriers.find(c => c.id === data.courierId)
+        : (existing.courierId ? couriers.find(c => c.id === existing.courierId) : undefined);
+
+      const updatedPayment: Payment = {
+        ...existing,
+        ...data,
+        amount: newAmount,
+        accountId: newAccountId,
+        customerId: newCustomerId,
+        orderId: newOrderId || null,
+        paymentDate: newDate,
+        receiptNumber: newReceiptNumber,
+        courierId: data.courierId !== undefined ? (data.courierId || null) : existing.courierId,
+        courierName: selectedCourier ? selectedCourier.name : (data.courierId === null ? undefined : existing.courierName),
+        updatedAt: new Date().toISOString()
+      };
+      resultingPayment = updatedPayment;
+
+      const updatedPayments = prev.tables.payments.map(p => (p.id === paymentId ? updatedPayment : p));
+
+      // 1. Update linked orders (reconcile paidAmount and remainingAmount)
+      let updatedOrders = prev.tables.orders;
+      if (oldOrderId && newOrderId && oldOrderId === newOrderId) {
+        // Same order: adjust paidAmount and remainingAmount by amountDiff
+        updatedOrders = updatedOrders.map(o => {
+          if (o.id === oldOrderId) {
+            const nextPaid = Math.max(0, (o.paidAmount || 0) + amountDiff);
+            const nextRemaining = Math.max(0, (o.totalAmount || 0) - nextPaid);
+            const isDelivered = Boolean(nextRemaining === 0 && (data.courierId || o.courierId));
+            return {
+              ...o,
+              paidAmount: nextPaid,
+              remainingAmount: nextRemaining,
+              paid: String(nextPaid),
+              paymentStatus: nextRemaining === 0 ? 'paid' : nextPaid > 0 ? 'partial' : 'unpaid',
+              status: isDelivered ? ('delivered' as const) : o.status,
+              courierId: data.courierId !== undefined ? (data.courierId || undefined) : o.courierId
+            };
+          }
+          return o;
+        });
+      } else {
+        // Order changed or detached:
+        if (oldOrderId) {
+          updatedOrders = updatedOrders.map(o => {
+            if (o.id === oldOrderId) {
+              const nextPaid = Math.max(0, (o.paidAmount || 0) - oldAmount);
+              const nextRemaining = Math.max(0, (o.totalAmount || 0) - nextPaid);
+              return {
+                ...o,
+                paidAmount: nextPaid,
+                remainingAmount: nextRemaining,
+                paid: String(nextPaid),
+                paymentStatus: nextRemaining === 0 ? 'paid' : nextPaid > 0 ? 'partial' : 'unpaid'
+              };
+            }
+            return o;
+          });
         }
-        return p;
-      });
+        if (newOrderId) {
+          updatedOrders = updatedOrders.map(o => {
+            if (o.id === newOrderId) {
+              const nextPaid = Math.max(0, (o.paidAmount || 0) + newAmount);
+              const nextRemaining = Math.max(0, (o.totalAmount || 0) - nextPaid);
+              return {
+                ...o,
+                paidAmount: nextPaid,
+                remainingAmount: nextRemaining,
+                paid: String(nextPaid),
+                paymentStatus: nextRemaining === 0 ? 'paid' : nextPaid > 0 ? 'partial' : 'unpaid',
+                courierId: data.courierId !== undefined ? (data.courierId || undefined) : o.courierId
+              };
+            }
+            return o;
+          });
+        }
+      }
 
-      // Update linked transaction
+      // 2. Update linked transaction
       const updatedTrx = prev.tables.financialTransactions.map(t => {
         if (t.id === paymentId + 1 || t.id === paymentId + 10 || (t.type === 'payment' && t.paymentId === paymentId)) {
           return {
             ...t,
             amount: newAmount,
-            accountId: newAccountId
+            accountId: newAccountId,
+            customerId: newCustomerId,
+            orderId: newOrderId || undefined,
+            transactionDate: newDate,
+            description: `سند قبض #${newReceiptNumber || existing.receiptNumber} من ${customer?.name || 'العميل'}`
           };
         }
         return t;
       });
 
-      // Update linked journal entry
+      // 3. Update linked journal entry
+      const payAccChart = resolveChartAccount(acc?.name || 'الصندوق', 'debit', newAccountId);
+      const payCustChart = resolveChartAccount(`حـ/ العميل: ${customer?.name || 'العميل'}`, 'credit');
+
       const updatedJournals = prev.tables.journalEntries.map(je => {
-        const isLinked = (je.sourceType === 'payment' && (je.sourceId === paymentId || je.sourceId === String(paymentId))) ||
-                         (je.id === paymentId + 2 || je.id === paymentId + 20) ||
-                         (existing.receiptNumber && je.description?.includes(existing.receiptNumber));
+        const isLinked =
+          (je.sourceType === 'payment' && (je.sourceId === paymentId || String(je.sourceId) === String(paymentId))) ||
+          (je.id === paymentId + 2 || je.id === paymentId + 20) ||
+          (existing.receiptNumber && je.description?.includes(existing.receiptNumber));
         if (isLinked) {
           return {
             ...je,
+            description: `سند قبض #${newReceiptNumber || existing.receiptNumber} من العميل: ${customer?.name || 'العميل'}${newOrderId ? ` (طلب رقم #${newOrderId})` : ''}`,
             lines: je.lines.map(l => {
               if (l.side === 'debit') {
                 return {
                   ...l,
                   accountId: newAccountId,
                   accountName: acc?.name || l.accountName,
-                  amount: newAmount
+                  chartAccountId: payAccChart.id,
+                  chartAccountCode: payAccChart.code,
+                  amount: newAmount,
+                  baseAmount: newAmount
                 };
               } else {
                 return {
                   ...l,
-                  amount: newAmount
+                  accountName: `حـ/ العميل: ${customer?.name || 'العميل'}`,
+                  chartAccountId: payCustChart.id,
+                  chartAccountCode: payCustChart.code,
+                  amount: newAmount,
+                  baseAmount: newAmount
                 };
               }
             })
@@ -2380,16 +2494,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         performedBy: 'المدير العام',
         entityType: 'payment',
         entityId: paymentId,
-        description: `تعديل بيانات سند القبض ${existing.receiptNumber || existing.paymentNumber} وتحديث قيده المحاسبي`,
-        notes: `تعديل بيانات سند القبض ${existing.receiptNumber || existing.paymentNumber}`,
-        oldValue: `${existing.amount} ريال`,
-        newValue: `${newAmount} ريال`
+        description: `تعديل بيانات سند القبض ${newReceiptNumber || existing.receiptNumber || existing.paymentNumber} بمبلغ ${newAmount.toLocaleString()} ريال وتحديث قيده المحاسبي وأرصدة العميل`,
+        notes: data.notes || `تعديل بيانات سند القبض ${newReceiptNumber || existing.receiptNumber}`,
+        oldValue: `${oldAmount.toLocaleString()} ريال (${existing.paymentMethod})`,
+        newValue: `${newAmount.toLocaleString()} ريال (${data.paymentMethod || existing.paymentMethod})`
       };
 
       return {
         ...prev,
         tables: {
           ...prev.tables,
+          orders: updatedOrders,
           payments: updatedPayments,
           financialTransactions: updatedTrx,
           journalEntries: updatedJournals,
@@ -2397,7 +2512,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
       };
     });
-    showNotification(`تم تعديل سند القبض وتحديث قيده المحاسبي بنجاح`, 'success');
+    showNotification(`تم حفظ تعديلات سند القبض رقم #${data.receiptNumber || 'المحدد'} وتحديث القيد والأرصدة بنجاح`, 'success');
+    return resultingPayment || undefined;
   };
 
   const deletePayment = (paymentId: number, options?: { deleteJournal?: boolean }) => {
