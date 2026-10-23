@@ -17,7 +17,8 @@ import {
   ShoppingBag,
   Truck,
   Layers,
-  ShieldCheck
+  ShieldCheck,
+  Edit
 } from 'lucide-react';
 import { Customer, Order, Payment } from '../../types';
 import { useStore } from '../../context/StoreContext';
@@ -31,6 +32,7 @@ interface CustomerStatementModalProps {
   onOpenPaymentForCustomer?: (customer: Customer) => void;
   onOpenOrderInvoice?: (order: Order) => void;
   onOpenReceipt?: (payment: Payment) => void;
+  onEditPayment?: (payment: Payment) => void;
 }
 
 interface StatementEntry {
@@ -55,7 +57,8 @@ export const CustomerStatementModal: React.FC<CustomerStatementModalProps> = ({
   onClose,
   onOpenPaymentForCustomer,
   onOpenOrderInvoice,
-  onOpenReceipt
+  onOpenReceipt,
+  onEditPayment
 }) => {
   const { settings, orders, payments, getCustomerBalance } = useStore();
   
@@ -684,14 +687,29 @@ ${filteredEntries.slice(-5).map(e => `• ${e.date} | ${e.typeLabel} (${e.operat
                             >
                               {entry.operationNumber}
                             </button>
-                          ) : entry.type === 'payment' && entry.rawPayment && onOpenReceipt ? (
-                            <button
-                              onClick={() => onOpenReceipt(entry.rawPayment!)}
-                              className="text-emerald-700 hover:underline cursor-pointer font-bold"
-                              title="عرض سند القبض"
-                            >
-                              {entry.operationNumber}
-                            </button>
+                          ) : entry.type === 'payment' && entry.rawPayment ? (
+                            <div className="flex items-center gap-1.5">
+                              {onOpenReceipt ? (
+                                <button
+                                  onClick={() => onOpenReceipt(entry.rawPayment!)}
+                                  className="text-emerald-700 hover:underline cursor-pointer font-bold"
+                                  title="عرض سند القبض"
+                                >
+                                  {entry.operationNumber}
+                                </button>
+                              ) : (
+                                <span>{entry.operationNumber}</span>
+                              )}
+                              {onEditPayment && (
+                                <button
+                                  onClick={() => onEditPayment(entry.rawPayment!)}
+                                  className="w-5 h-5 rounded hover:bg-amber-100 text-amber-700 inline-flex items-center justify-center transition-colors print:hidden"
+                                  title="تعديل بيانات أو مبلغ سند القبض"
+                                >
+                                  <Edit className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
                           ) : (
                             entry.operationNumber
                           )}

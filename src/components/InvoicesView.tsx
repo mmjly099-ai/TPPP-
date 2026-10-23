@@ -997,6 +997,27 @@ export const InvoicesView: React.FC = () => {
                                 <Printer className="w-3.5 h-3.5" />
                               </button>
 
+                              {/* تعديل سند القبض / الدفعة */}
+                              {doc.documentType === 'receipt' && !isCancelled && (
+                                <button
+                                  onClick={() => {
+                                    const p = payments.find(pay =>
+                                      pay.receiptNumber === doc.documentNumber ||
+                                      pay.paymentNumber === doc.documentNumber ||
+                                      `pay-${pay.id}` === doc.id
+                                    );
+                                    if (p) {
+                                      setEditingPayment(p);
+                                      setIsPaymentModalOpen(true);
+                                    }
+                                  }}
+                                  className="w-7 h-7 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 flex items-center justify-center transition-all"
+                                  title="تعديل بيانات ومبلغ سند القبض"
+                                >
+                                  <Edit className="w-3.5 h-3.5 text-amber-700" />
+                                </button>
+                              )}
+
                               {/* إلغاء / حذف آمن */}
                               {!isCancelled && (
                                 <button
@@ -1043,6 +1064,15 @@ export const InvoicesView: React.FC = () => {
         document={cancelModalDoc}
         onClose={() => setCancelModalDoc(null)}
         onConfirmCancel={handleConfirmCancelDocument}
+      />
+
+      <PaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => {
+          setIsPaymentModalOpen(false);
+          setEditingPayment(null);
+        }}
+        paymentToEdit={editingPayment}
       />
     </div>
   );

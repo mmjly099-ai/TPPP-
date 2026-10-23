@@ -21,7 +21,8 @@ import {
   FileText,
   CalendarDays,
   Bike,
-  Activity
+  Activity,
+  Banknote
 } from 'lucide-react';
 import { NavTab } from '../Navigation';
 import { useStore } from '../../context/StoreContext';
@@ -42,7 +43,7 @@ export const MobileAllSectionsSheet: React.FC<MobileAllSectionsSheetProps> = ({
   onSelectTab,
   onOpenBackup
 }) => {
-  const { orders, accounts, otherReceivables, customers } = useStore();
+  const { orders, accounts, otherReceivables, customers, payments } = useStore();
   const [searchTerm, setSearchTerm] = useState('');
 
   if (!isOpen) return null;
@@ -50,6 +51,21 @@ export const MobileAllSectionsSheet: React.FC<MobileAllSectionsSheetProps> = ({
   const pendingOrdersCount = orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length;
   const unsettledReceivables = otherReceivables.filter(r => r.status !== 'settled').length;
   const activeAccountsCount = accounts.filter(a => a.status === 'active').length;
+
+  const duplicatePaymentsCount = React.useMemo(() => {
+    const seen = new Set<string>();
+    let dupes = 0;
+    (payments || []).forEach(p => {
+      if (p.status === 'cancelled') return;
+      const k = `${p.customerId}_${p.orderId || 'gen'}_${p.amount}_${p.paymentDate || p.createdAt?.split('T')[0]}_${p.accountId}`;
+      if (seen.has(k)) {
+        dupes++;
+      } else {
+        seen.add(k);
+      }
+    });
+    return dupes;
+  }, [payments]);
 
   const sections: {
     category: string;
@@ -79,6 +95,14 @@ export const MobileAllSectionsSheet: React.FC<MobileAllSectionsSheetProps> = ({
           icon: ShoppingBag,
           badge: pendingOrdersCount > 0 ? `${pendingOrdersCount} قيد التنفيذ` : undefined,
           color: 'bg-emerald-50 text-emerald-700 border-emerald-200'
+        },
+        {
+          id: 'payments',
+          label: 'الدفعات والتحصيلات',
+          description: 'سجل الدفعات المباشر، التعديل الفوري، وتنظيف الدفعات المكررة',
+          icon: Banknote,
+          badge: duplicatePaymentsCount > 0 ? `${duplicatePaymentsCount} مكررة!` : payments?.length || undefined,
+          color: duplicatePaymentsCount > 0 ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
         },
         {
           id: 'couriers',

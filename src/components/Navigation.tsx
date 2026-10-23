@@ -21,7 +21,8 @@ import {
   FileText,
   CalendarDays,
   Bike,
-  Activity
+  Activity,
+  Banknote
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 
@@ -29,6 +30,7 @@ export type NavTab =
   | 'dashboard'
   | 'analytics'
   | 'orders'
+  | 'payments'
   | 'installments'
   | 'couriers'
   | 'invoices'
@@ -59,7 +61,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   onSelectTab,
   setActiveTab
 }) => {
-  const { customers, orders, accounts, expenses, shipments, otherReceivables, purchaseBatches, marketingCampaigns, installmentPlans, couriers, deliveryTrips, deliveryOrders, journalEntries, workers } = useStore();
+  const { customers, orders, payments, accounts, expenses, shipments, otherReceivables, purchaseBatches, marketingCampaigns, installmentPlans, couriers, deliveryTrips, deliveryOrders, journalEntries, workers } = useStore();
   const [isFullMenuOpen, setIsFullMenuOpen] = useState(false);
 
   const selectedTab: NavTab = activeTab || currentTab || 'dashboard';
@@ -75,6 +77,21 @@ export const Navigation: React.FC<NavigationProps> = ({
   const unsettledReceivables = otherReceivables.filter(r => r.status !== 'settled').length;
   const activeInstallmentsCount = installmentPlans.filter(p => p.status === 'active' || p.status === 'overdue').length;
   const activeTripsCount = (deliveryTrips || []).filter(t => t.status === 'in_progress').length;
+
+  const duplicatePaymentsCount = React.useMemo(() => {
+    const seen = new Set<string>();
+    let dupes = 0;
+    (payments || []).forEach(p => {
+      if (p.status === 'cancelled') return;
+      const k = `${p.customerId}_${p.orderId || 'gen'}_${p.amount}_${p.paymentDate || p.createdAt?.split('T')[0]}_${p.accountId}`;
+      if (seen.has(k)) {
+        dupes++;
+      } else {
+        seen.add(k);
+      }
+    });
+    return dupes;
+  }, [payments]);
 
   const tabs: {
     id: NavTab;
@@ -105,6 +122,14 @@ export const Navigation: React.FC<NavigationProps> = ({
       icon: ShoppingBag,
       badge: pendingOrdersCount > 0 ? pendingOrdersCount : undefined,
       color: 'emerald'
+    },
+    {
+      id: 'payments',
+      label: 'الدفعات والتحصيلات',
+      description: 'سجل الدفعات المباشر، التعديل الفوري، واكتشاف وتنظيف الدفعات المكررة',
+      icon: Banknote,
+      badge: duplicatePaymentsCount > 0 ? `${duplicatePaymentsCount} مكررة!` : payments.length > 0 ? payments.length : undefined,
+      color: duplicatePaymentsCount > 0 ? 'rose' : 'emerald'
     },
     {
       id: 'couriers',

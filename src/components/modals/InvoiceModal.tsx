@@ -19,7 +19,8 @@ import {
   ShieldCheck,
   MapPin,
   Phone,
-  QrCode
+  QrCode,
+  Edit
 } from 'lucide-react';
 import { Order, Customer, Payment } from '../../types';
 import { useStore } from '../../context/StoreContext';
@@ -35,6 +36,7 @@ interface InvoiceModalProps {
   onClose: () => void;
   onOpenReceipt?: (payment: Payment) => void;
   onOpenNewOrder?: () => void;
+  onEditPayment?: (payment: Payment) => void;
 }
 
 export const InvoiceModal: React.FC<InvoiceModalProps> = ({
@@ -42,7 +44,8 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
   isOpen,
   onClose,
   onOpenReceipt,
-  onOpenNewOrder
+  onOpenNewOrder,
+  onEditPayment
 }) => {
   const { settings, customers, orders, payments, shipments } = useStore();
 
@@ -842,14 +845,25 @@ ${activeOrder.shipmentNumber ? `🔹 *رقم الشحنة:* #${activeOrder.shipm
                             <span className="font-mono font-bold text-emerald-700 text-xs">
                               {p.amount.toLocaleString()} ريال
                             </span>
-                            {onOpenReceipt && (
-                              <button
-                                onClick={() => onOpenReceipt(p)}
-                                className="px-2 py-0.5 rounded-md text-[10px] bg-white hover:bg-emerald-50 text-emerald-800 font-bold transition-colors cursor-pointer border border-emerald-200 print:hidden"
-                              >
-                                عرض السند
-                              </button>
-                            )}
+                            <div className="flex items-center gap-1">
+                              {onOpenReceipt && (
+                                <button
+                                  onClick={() => onOpenReceipt(p)}
+                                  className="px-2 py-0.5 rounded-md text-[10px] bg-white hover:bg-emerald-50 text-emerald-800 font-bold transition-colors cursor-pointer border border-emerald-200 print:hidden"
+                                >
+                                  عرض السند
+                                </button>
+                              )}
+                              {onEditPayment && (
+                                <button
+                                  onClick={() => onEditPayment(p)}
+                                  className="px-2 py-0.5 rounded-md text-[10px] bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold transition-colors cursor-pointer border border-amber-200 print:hidden inline-flex items-center gap-1"
+                                >
+                                  <Edit className="w-2.5 h-2.5" />
+                                  <span>تعديل</span>
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       ))}

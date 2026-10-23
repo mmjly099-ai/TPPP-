@@ -16,6 +16,7 @@ import { AssistantView } from './components/AssistantView';
 import { SettingsView } from './components/SettingsView';
 import { MarketingView } from './components/MarketingView';
 import { PurchaseBatchesView } from './components/PurchaseBatchesView';
+import { PaymentsView } from './components/PaymentsView';
 import { InstallmentsView } from './components/InstallmentsView';
 import { CouriersView } from './components/CouriersView';
 import { DataImportView } from './components/import/DataImportView';
@@ -120,18 +121,26 @@ const MainApp: React.FC = () => {
   const [receiptPayment, setReceiptPayment] = useState<Payment | null>(null);
   const [paymentCustomer, setPaymentCustomer] = useState<Customer | null>(null);
   const [paymentOrder, setPaymentOrder] = useState<Order | null>(null);
+  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
   const [transferFromAccountId, setTransferFromAccountId] = useState<number | undefined>(undefined);
 
   // Handlers
   const handleOpenPaymentForCustomer = (customer: Customer, order?: Order) => {
+    setEditingPayment(null);
     setPaymentCustomer(customer);
     setPaymentOrder(order || null);
     setIsPaymentOpen(true);
   };
 
   const handleOpenPaymentForOrder = (order: Order) => {
+    setEditingPayment(null);
     setPaymentOrder(order);
     setPaymentCustomer(null);
+    setIsPaymentOpen(true);
+  };
+
+  const handleEditPayment = (payment: Payment) => {
+    setEditingPayment(payment);
     setIsPaymentOpen(true);
   };
 
@@ -254,6 +263,20 @@ const MainApp: React.FC = () => {
             />
           )}
 
+          {activeTab === 'payments' && (
+            <PaymentsView
+              onEditPayment={handleEditPayment}
+              onOpenReceipt={handleOpenReceipt}
+              onOpenNewPayment={() => {
+                setEditingPayment(null);
+                setPaymentOrder(null);
+                setPaymentCustomer(null);
+                setIsPaymentOpen(true);
+              }}
+              onNavigate={setActiveTab}
+            />
+          )}
+
           {activeTab === 'couriers' && <CouriersView />}
 
           {activeTab === 'installments' && <InstallmentsView />}
@@ -342,9 +365,11 @@ const MainApp: React.FC = () => {
           setIsPaymentOpen(false);
           setPaymentCustomer(null);
           setPaymentOrder(null);
+          setEditingPayment(null);
         }}
         preSelectedCustomer={paymentCustomer}
         preSelectedOrder={paymentOrder}
+        paymentToEdit={editingPayment}
         onPaymentSuccess={handleOpenReceipt}
       />
 
@@ -389,6 +414,7 @@ const MainApp: React.FC = () => {
         onOpenPaymentForCustomer={handleOpenPaymentForCustomer}
         onOpenOrderInvoice={handleOpenOrderInvoice}
         onOpenReceipt={handleOpenReceipt}
+        onEditPayment={handleEditPayment}
       />
 
       <InvoiceModal
@@ -400,12 +426,14 @@ const MainApp: React.FC = () => {
         }}
         onOpenReceipt={handleOpenReceipt}
         onOpenNewOrder={() => setIsNewOrderOpen(true)}
+        onEditPayment={handleEditPayment}
       />
 
       <ReceiptModal
         isOpen={!!receiptPayment}
         payment={receiptPayment}
         onClose={() => setReceiptPayment(null)}
+        onEditPayment={handleEditPayment}
       />
 
       <ExportBackupModal

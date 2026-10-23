@@ -176,7 +176,8 @@ interface StoreContextType {
       deliveryFee?: number;
     }
   ) => Payment | void;
-  deletePayment: (paymentId: number, options?: { deleteJournal?: boolean }) => void;
+  deletePayment: (paymentId: number, options?: { deleteJournal?: boolean; permanent?: boolean }) => void;
+  cleanDuplicatePayments: () => { removedCount: number };
   
   addExpense: (expense: {
     category: string;
@@ -2516,13 +2517,140 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return resultingPayment || undefined;
   };
 
-  const deletePayment = (paymentId: number, options?: { deleteJournal?: boolean }) => {
+  const deletePayment = (paymentId: number, options?: { deleteJournal?: boolean; permanent?: boolean }) => {
     const payment = data.tables.payments.find(p => p.id === paymentId);
     if (!payment) return;
+
+    if (options?.permanent) {
+      setData(prev => {
+        let updatedOrders = prev.tables.orders;
+        if (payment.orderId) {
+          updatedOrders = updatedOrders.map(o => {
+            if (o.id === payment.orderId) {
+              const paid = Math.max(0, (o.paidAmount || 0) - payment.amount);
+              const remaining = Math.max(0, (o.totalAmount || 0) - paid);
+              return {
+                ...o,
+                paidAmount: paid,
+                remainingAmount: remaining,
+                paid: String(paid),
+                paymentStatus: remaining === 0 ? 'paid' : paid > 0 ? 'partial' : 'unpaid'
+              };
+            }
+            return o;
+          });
+        }
+        return {
+          ...prev,
+          tables: {
+            ...prev.tables,
+            orders: updatedOrders,
+            payments: prev.tables.payments.filter(p => p.id !== paymentId),
+            financialTransactions: (prev.tables.financialTransactions || []).filter(
+              t => t.paymentId !== paymentId && t.id !== paymentId + 1
+            ),
+            journalEntries: (prev.tables.journalEntries || []).filter(
+              j => !(j.sourceType === 'payment' && (Number(j.sourceId) === paymentId || String(j.sourceId) === String(paymentId)))
+            )
+          }
+        };
+      });
+      showNotification(`تم حذف الدفعة #${payment.receiptNumber || payment.paymentNumber} المكررة وتصحيح رصيد الطلب بنجاح`, 'success');
+      return;
+    }
 
     // Financial ASVS Security Rule: Convert deletion of payment into cancelPayment (reversal entry)
     cancelPayment(paymentId, 'إلغاء وعكس معتمد لسند القبض');
     showNotification(`تطبيق معايير التدقيق: تم إلغاء سند القبض عبر قيد عكسي رسمي (Reversal Entry) للحفاظ على تسلسل الدفاتر.`, 'warning');
+  };
+
+  const cleanDuplicatePayments = (): { removedCount: number } => {
+    let removedCount = 0;
+    setData(prev => {
+      const existingPayments = prev.tables.payments || [];
+      const seenKeys = new Map<string, Payment>();
+      const duplicateIds = new Set<number>();
+      const deductionsByOrder: Record<number, number> = {};
+
+      existingPayments.forEach(p => {
+        if (p.status === 'cancelled') return;
+        // Key for duplicate: same customer, orderId, amount, and date
+        const key = `${p.customerId}_${p.orderId || 'general'}_${p.amount}_${p.paymentDate || p.createdAt?.split('T')[0]}_${p.accountId}`;
+        if (seenKeys.has(key)) {
+          duplicateIds.add(p.id);
+          if (p.orderId) {
+            deductionsByOrder[p.orderId] = (deductionsByOrder[p.orderId] || 0) + Number(p.amount);
+          }
+        } else {
+          seenKeys.set(key, p);
+        }
+      });
+
+      if (duplicateIds.size === 0) return prev;
+      removedCount = duplicateIds.size;
+
+      // Adjust orders to eliminate duplicate amounts
+      const updatedOrders = prev.tables.orders.map(o => {
+        const deduct = deductionsByOrder[o.id] || 0;
+        if (deduct > 0) {
+          const nextPaid = Math.max(0, (o.paidAmount || 0) - deduct);
+          const nextRemaining = Math.max(0, (o.totalAmount || 0) - nextPaid);
+          return {
+            ...o,
+            paidAmount: nextPaid,
+            remainingAmount: nextRemaining,
+            paid: String(nextPaid),
+            paymentStatus: nextRemaining === 0 ? 'paid' : nextPaid > 0 ? 'partial' : 'unpaid'
+          };
+        }
+        return o;
+      });
+
+      // Filter out duplicate payments
+      const updatedPayments = existingPayments.filter(p => !duplicateIds.has(p.id));
+
+      // Remove duplicate financial transactions
+      const updatedTrx = (prev.tables.financialTransactions || []).filter(
+        t => !duplicateIds.has(Number(t.paymentId)) && !duplicateIds.has(Number(t.id) - 1)
+      );
+
+      // Remove duplicate journal entries
+      const updatedJournals = (prev.tables.journalEntries || []).filter(
+        j => !(j.sourceType === 'payment' && duplicateIds.has(Number(j.sourceId)))
+      );
+
+      const auditLog: AuditLog = {
+        id: Date.now(),
+        createdAt: new Date().toISOString(),
+        action: 'تنظيف الدفعات المكررة',
+        performedBy: 'المدير العام',
+        entityType: 'payment',
+        entityId: Date.now(),
+        description: `تم تنظيف وحذف ${duplicateIds.size} دفعة مكررة وإعادة ضبط أرصدة الطلبات بدقة`,
+        notes: `حذف المعرفات: ${Array.from(duplicateIds).join(', ')}`,
+        oldValue: `${existingPayments.length} دفعة`,
+        newValue: `${updatedPayments.length} دفعة`
+      };
+
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          orders: updatedOrders,
+          payments: updatedPayments,
+          financialTransactions: updatedTrx,
+          journalEntries: updatedJournals,
+          auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
+        }
+      };
+    });
+
+    if (removedCount > 0) {
+      showNotification(`تم كشف وحذف ${removedCount} دفعة مكررة وتصحيح أرصدة الطلبات بنجاح`, 'success');
+    } else {
+      showNotification('لم يتم العثور على دفعات مكررة متطابقة في النظام', 'warning');
+    }
+    return { removedCount };
   };
 
   const addExpense = (exp: {
@@ -7700,6 +7828,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         cancelPayment,
         updatePayment,
         deletePayment,
+        cleanDuplicatePayments,
         addExpense,
         updateExpense,
         deleteExpense,
