@@ -16,7 +16,6 @@ import { AssistantView } from './components/AssistantView';
 import { SettingsView } from './components/SettingsView';
 import { MarketingView } from './components/MarketingView';
 import { PurchaseBatchesView } from './components/PurchaseBatchesView';
-import { PaymentsView } from './components/PaymentsView';
 import { InstallmentsView } from './components/InstallmentsView';
 import { CouriersView } from './components/CouriersView';
 import { DataImportView } from './components/import/DataImportView';
@@ -263,23 +262,14 @@ const MainApp: React.FC = () => {
             />
           )}
 
-          {activeTab === 'payments' && (
-            <PaymentsView
-              onEditPayment={handleEditPayment}
-              onOpenReceipt={handleOpenReceipt}
-              onOpenNewPayment={() => {
-                setEditingPayment(null);
-                setPaymentOrder(null);
-                setPaymentCustomer(null);
-                setIsPaymentOpen(true);
-              }}
-              onNavigate={setActiveTab}
-            />
-          )}
-
           {activeTab === 'couriers' && <CouriersView />}
 
-          {activeTab === 'installments' && <InstallmentsView />}
+          {activeTab === 'installments' && (
+            <InstallmentsView
+              onEditPayment={handleEditPayment}
+              onOpenReceipt={handleOpenReceipt}
+            />
+          )}
 
           {activeTab === 'invoices' && <InvoicesView />}
 

@@ -97,14 +97,6 @@ export const MobileAllSectionsSheet: React.FC<MobileAllSectionsSheetProps> = ({
           color: 'bg-emerald-50 text-emerald-700 border-emerald-200'
         },
         {
-          id: 'payments',
-          label: 'الدفعات والتحصيلات',
-          description: 'سجل الدفعات المباشر، التعديل الفوري، وتنظيف الدفعات المكررة',
-          icon: Banknote,
-          badge: duplicatePaymentsCount > 0 ? `${duplicatePaymentsCount} مكررة!` : payments?.length || undefined,
-          color: duplicatePaymentsCount > 0 ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-        },
-        {
           id: 'couriers',
           label: 'الموصلين والتوزيع',
           description: 'إدارة مناديب التوصيل، إنشاء رحلات التوزيع، تحصيلات COD وتصفية العهد',

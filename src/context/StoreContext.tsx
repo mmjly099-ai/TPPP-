@@ -178,6 +178,7 @@ interface StoreContextType {
   ) => Payment | void;
   deletePayment: (paymentId: number, options?: { deleteJournal?: boolean; permanent?: boolean }) => void;
   cleanDuplicatePayments: () => { removedCount: number };
+  fixDuplicateOrder9: () => { success: boolean; message: string };
   
   addExpense: (expense: {
     category: string;
@@ -2651,6 +2652,149 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       showNotification('لم يتم العثور على دفعات مكررة متطابقة في النظام', 'warning');
     }
     return { removedCount };
+  };
+
+  const fixDuplicateOrder9 = (): { success: boolean; message: string } => {
+    let resultMessage = '';
+    setData(prev => {
+      const cust = prev.tables.customers.find(
+        c => c.id === 540003 || c.name?.includes('اسماء') || c.name?.includes('أسماء')
+      );
+      const custId = cust?.id || 540003;
+      const custName = cust?.name || 'اسماء ابراهيم عبد القوي';
+
+      const ordersForCust = prev.tables.orders.filter(
+        o => o.customerId === custId || (cust?.name && o.customerName?.trim() === cust.name.trim())
+      );
+      const order9s = ordersForCust.filter(
+        o => String(o.orderNumber) === '9' || o.id === 990005 || o.internalNumber === '9'
+      );
+
+      const primaryOrder = order9s.find(o => o.id === 990005) || order9s[0];
+      const otherOrder9Ids = new Set(order9s.filter(o => o.id !== (primaryOrder?.id || 990005)).map(o => o.id));
+
+      const fixedMasterOrder: Order = {
+        ...(primaryOrder || {}),
+        id: primaryOrder?.id || 990005,
+        orderNumber: '9',
+        customerOrderNumber: '9',
+        internalNumber: '9',
+        customerId: custId,
+        customerName: custName,
+        customerCode: cust?.code || 'TOP 017',
+        site: primaryOrder?.site || 'SHEIN',
+        itemsCount: primaryOrder?.itemsCount || 31,
+        subtotal: 49800,
+        discount: 3000,
+        totalAmount: 46800,
+        paidAmount: 22000,
+        remainingAmount: 24800,
+        paid: '22000',
+        paymentStatus: 'partial',
+        status: primaryOrder?.status || 'pending',
+        deliveryFee: primaryOrder?.deliveryFee || 0,
+        createdAt: primaryOrder?.createdAt || '2026-09-28T01:35:45.000Z'
+      };
+
+      const updatedOrders = prev.tables.orders
+        .filter(o => !otherOrder9Ids.has(o.id))
+        .map(o => (o.id === fixedMasterOrder.id ? fixedMasterOrder : o));
+
+      if (!updatedOrders.some(o => o.id === fixedMasterOrder.id)) {
+        updatedOrders.push(fixedMasterOrder);
+      }
+
+      // Re-point and deduplicate payments for this order
+      const existingPayments = prev.tables.payments || [];
+      const seenPaymentKeys = new Set<string>();
+      const updatedPayments: Payment[] = [];
+
+      existingPayments.forEach(p => {
+        let currentPmt = { ...p };
+        if (otherOrder9Ids.has(Number(p.orderId))) {
+          currentPmt.orderId = fixedMasterOrder.id;
+        }
+        if (currentPmt.orderId === fixedMasterOrder.id && currentPmt.status !== 'cancelled') {
+          const key = `${currentPmt.amount}_${currentPmt.receiptNumber || currentPmt.paymentNumber || currentPmt.id}`;
+          if (seenPaymentKeys.has(key)) {
+            return; // skip duplicate payment
+          }
+          seenPaymentKeys.add(key);
+        }
+        updatedPayments.push(currentPmt);
+      });
+
+      // Ensure 21,000 YER (RCT-2026-041) and 1,000 YER (RCT-2026-043) exist
+      const has21k = updatedPayments.some(
+        p => p.orderId === fixedMasterOrder.id && Number(p.amount) === 21000 && p.status !== 'cancelled'
+      );
+      const has1k = updatedPayments.some(
+        p => p.orderId === fixedMasterOrder.id && Number(p.amount) === 1000 && p.status !== 'cancelled'
+      );
+
+      if (!has21k) {
+        updatedPayments.push({
+          id: 1790793407727,
+          paymentNumber: 'PAY-407727',
+          receiptNumber: 'RCT-2026-041',
+          orderId: fixedMasterOrder.id,
+          customerId: custId,
+          accountId: 10,
+          amount: 21000,
+          paymentDate: '2026-09-23',
+          paymentMethod: 'نقدي',
+          paymentType: 'دفعة أولى',
+          statement: 'سند قبض تلقائي للطلب 9',
+          status: 'approved',
+          createdByName: 'أمين الصندوق',
+          createdAt: '2026-09-30T18:36:47.727Z'
+        });
+      }
+
+      if (!has1k) {
+        updatedPayments.push({
+          id: 1790793658089,
+          paymentNumber: 'PAY-658089',
+          receiptNumber: 'RCT-2026-043',
+          customerId: custId,
+          orderId: fixedMasterOrder.id,
+          accountId: 2,
+          amount: 1000,
+          paymentDate: '2026-09-30',
+          paymentMethod: 'جيب',
+          paymentType: 'دفعة لاحقة',
+          statement: 'سداد دفعة لاحقة للطلب 9 (SHEIN)',
+          status: 'approved',
+          createdByName: 'أحمد الإدريسي (أمين الصندوق)',
+          createdAt: '2026-09-30T18:40:58.089Z'
+        });
+      }
+
+      resultMessage = `تم تصحيح الطلب رقم 9 للعميل (${custName}): تثبيت المبلغ الأصلي 46,800 ر.ي، واعتماد الدفعات المسددة 22,000 ر.ي، والمتبقي 24,800 ر.ي بنجاح.`;
+
+      const auditLog: AuditLog = {
+        id: Date.now(),
+        createdAt: new Date().toISOString(),
+        action: 'تصحيح طلب مكرر واعتماد الدفعات والمبلغ الأصلي',
+        performedBy: 'المدير العام',
+        entityType: 'order',
+        entityId: fixedMasterOrder.id,
+        description: resultMessage
+      };
+
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          orders: updatedOrders,
+          payments: updatedPayments,
+          auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
+        }
+      };
+    });
+
+    showNotification(resultMessage || 'تم تصحيح طلب العميل واعتماد المبلغ الأصلي والدفعات بنجاح', 'success');
+    return { success: true, message: resultMessage };
   };
 
   const addExpense = (exp: {
@@ -7829,6 +7973,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         updatePayment,
         deletePayment,
         cleanDuplicatePayments,
+        fixDuplicateOrder9,
         addExpense,
         updateExpense,
         deleteExpense,

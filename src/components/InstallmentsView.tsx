@@ -26,14 +26,27 @@ import {
   Sparkles,
   Building2,
   Banknote,
-  Bike
+  Bike,
+  Edit,
+  Trash2,
+  Save,
+  X,
+  RotateCcw
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { Order, Payment, Customer, Account } from '../types';
 import { numberToArabicWords } from '../utils/tafqeet';
 import { ReceiptModal } from './modals/ReceiptModal';
 
-export const InstallmentsView: React.FC = () => {
+interface InstallmentsViewProps {
+  onEditPayment?: (payment: Payment) => void;
+  onOpenReceipt?: (payment: Payment) => void;
+}
+
+export const InstallmentsView: React.FC<InstallmentsViewProps> = ({
+  onEditPayment,
+  onOpenReceipt
+}) => {
   const {
     orders,
     payments,
@@ -43,16 +56,32 @@ export const InstallmentsView: React.FC = () => {
     couriers = [],
     deliveryOrders = [],
     recordPayment,
+    updatePayment,
+    deletePayment,
+    fixDuplicateOrder9,
+    cleanDuplicatePayments,
     getCustomerBalance,
     getAccountBalance,
     addAccount,
-    consolidateOrders
+    consolidateOrders,
+    showNotification
   } = useStore();
 
   // Selected Customer & Selected Order
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [customerSearchQuery, setCustomerSearchQuery] = useState<string>('');
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+
+  // Payment Edit Mode State (وضع تعديل الدفعات)
+  const [isEditPaymentsMode, setIsEditPaymentsMode] = useState<boolean>(true);
+  const [editingPaymentItem, setEditingPaymentItem] = useState<Payment | null>(null);
+  const [editPaymentAmount, setEditPaymentAmount] = useState<string>('');
+  const [editPaymentAccountId, setEditPaymentAccountId] = useState<number>(1);
+  const [editPaymentDate, setEditPaymentDate] = useState<string>('');
+  const [editPaymentType, setEditPaymentType] = useState<string>('سداد دفعة');
+  const [editReceiptNumber, setEditReceiptNumber] = useState<string>('');
+  const [editPaymentNotes, setEditPaymentNotes] = useState<string>('');
+  const [isSavingEdit, setIsSavingEdit] = useState<boolean>(false);
 
   // Consolidation / Merge duplicate orders state
   const [isMergeOrdersModalOpen, setIsMergeOrdersModalOpen] = useState<boolean>(false);
@@ -451,6 +480,102 @@ export const InstallmentsView: React.FC = () => {
     }
   };
 
+  // Handler: Start editing payment
+  const handleOpenEditPayment = (pmt: Payment) => {
+    if (onEditPayment) {
+      onEditPayment(pmt);
+      return;
+    }
+    setEditingPaymentItem(pmt);
+    setEditPaymentAmount(String(pmt.amount));
+    setEditPaymentAccountId(pmt.accountId || 1);
+    setEditPaymentDate(pmt.paymentDate ? pmt.paymentDate.split('T')[0] : (pmt.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0]));
+    setEditPaymentType(pmt.paymentType || 'سداد دفعة');
+    setEditReceiptNumber(pmt.receiptNumber || pmt.paymentNumber || '');
+    setEditPaymentNotes(pmt.notes || pmt.statement || '');
+  };
+
+  // Handler: Save payment edit
+  const handleSavePaymentEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingPaymentItem) return;
+    const numAmt = parseFloat(editPaymentAmount);
+    if (!numAmt || numAmt <= 0) {
+      showNotification('يرجى إدخال مبلغ صحيح للدفعة', 'error');
+      return;
+    }
+    setIsSavingEdit(true);
+    try {
+      updatePayment(editingPaymentItem.id, {
+        amount: numAmt,
+        accountId: editPaymentAccountId,
+        paymentDate: editPaymentDate,
+        paymentType: editPaymentType,
+        receiptNumber: editReceiptNumber,
+        notes: editPaymentNotes
+      });
+      setEditingPaymentItem(null);
+    } catch (err: any) {
+      showNotification(err?.message || 'حدث خطأ أثناء حفظ تعديل الدفعة', 'error');
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  // Handler: Delete duplicate payment
+  const handleDeleteDuplicatePayment = (pmt: Payment) => {
+    if (window.confirm(`هل أنت متأكد من حذف هذه الدفعة المكررة (#${pmt.receiptNumber || pmt.paymentNumber}) بمبلغ ${Number(pmt.amount).toLocaleString()} ر.ي واستعادة رصيد الطلب؟`)) {
+      deletePayment(pmt.id, { permanent: true });
+    }
+  };
+
+  // Check if current customer or order is "اسماء ابراهيم عبد القوي" or order 9
+  const isAsmaaCustomerOrOrder9 = useMemo(() => {
+    return Boolean(
+      selectedCustomer?.name?.includes('اسماء') ||
+      selectedCustomer?.id === 540003 ||
+      selectedOrder?.customerName?.includes('اسماء') ||
+      selectedOrder?.customerId === 540003 ||
+      String(selectedOrder?.orderNumber) === '9' ||
+      selectedOrder?.id === 990005
+    );
+  }, [selectedCustomer, selectedOrder]);
+
+  // Asmaa Order 9 details and duplicate checking
+  const asmaaOrder9Info = useMemo(() => {
+    const custOrders = orders.filter(
+      o => o.customerId === 540003 || (o.customerName && o.customerName.includes('اسماء'))
+    );
+    const order9List = custOrders.filter(
+      o => String(o.orderNumber) === '9' || o.id === 990005 || o.internalNumber === '9'
+    );
+    const order9Payments = payments.filter(
+      p => (p.orderId === 990005 || order9List.some(o => o.id === p.orderId)) && p.status !== 'cancelled'
+    );
+    const totalPaymentsAmount = order9Payments.reduce((s, p) => s + Number(p.amount || 0), 0);
+    const hasDuplicateOrder = order9List.length > 1;
+    const hasDuplicatePayments = new Set(order9Payments.map(p => `${p.amount}_${p.receiptNumber || p.id}`)).size !== order9Payments.length;
+
+    return {
+      order9List,
+      order9Payments,
+      totalPaymentsAmount,
+      hasDuplicateOrder,
+      hasDuplicatePayments,
+      isResolved: !hasDuplicateOrder && !hasDuplicatePayments && order9List[0]?.totalAmount === 46800
+    };
+  }, [orders, payments]);
+
+  // Handler: Fix Asmaa Order 9
+  const handleFixAsmaaOrder9 = () => {
+    fixDuplicateOrder9();
+    const asmaaCust = customers.find(c => c.id === 540003 || c.name?.includes('اسماء'));
+    if (asmaaCust) {
+      setSelectedCustomerId(asmaaCust.id);
+      setSelectedOrderId(990005);
+    }
+  };
+
   return (
     <div className="space-y-6">
 
@@ -513,6 +638,56 @@ export const InstallmentsView: React.FC = () => {
           </span>
         </div>
       </div>
+
+      {/* Asmaa Abdelkawi Order 9 Reconciliation & Fix Banner */}
+      {(isAsmaaCustomerOrOrder9 || !asmaaOrder9Info.isResolved) && (
+        <div className="bg-gradient-to-r from-amber-500/15 via-blue-500/10 to-emerald-500/15 border-2 border-amber-400 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold shrink-0 shadow-xs">
+                <Sparkles className="w-6 h-6 animate-pulse" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950 font-black text-xs">
+                    عميل: اسماء ابراهيم عبد القوي
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full bg-slate-900 text-white font-mono font-bold text-xs">
+                    طلب رقم #9
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">
+                    المبلغ الأصلي: 46,800 ر.ي
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">
+                    الدفعات المعتمدة: 22,000 ر.ي
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-xs font-bold">
+                    المتبقي: 24,800 ر.ي
+                  </span>
+                </div>
+                <p className="text-xs text-slate-700 leading-relaxed">
+                  <strong>تفاصيل الطلب الأصلية:</strong> قيمة السلة 49,800 ر.ي - خصم 3,000 ر.ي = الصافي 46,800 ر.ي | الدفعات المعتمدة: 22,000 ر.ي (دفعة أولى 21,000 ر.ي + دفعة لاحقة 1,000 ر.ي) | المتبقي الدقيق: 24,800 ر.ي.
+                </p>
+                {asmaaOrder9Info.hasDuplicateOrder && (
+                  <p className="text-xs text-rose-700 font-bold flex items-center gap-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    تم رصد تكرار لسجل الطلب رقم 9 في النظام. انقر على الزر لتصحيحه فوراً واعتماد المبلغ الأصلي والدفعات.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleFixAsmaaOrder9}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-black text-xs shadow-md transition cursor-pointer shrink-0 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <CheckCircle2 className="w-4 h-4 text-emerald-200" />
+              <span>⚡ اعتماد المبلغ الأصلي والدفعات وتصحيح التكرار</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Step 1 & Step 2: Select Customer -> View All Customer Orders -> Pick Order */}
       <div className="bg-white rounded-2xl border-2 border-[#1A3668]/20 shadow-sm overflow-hidden">
@@ -940,16 +1115,31 @@ export const InstallmentsView: React.FC = () => {
 
             {/* Panel 2: سجل الدفعات السابقة للطلب (Previous Payments) */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-2">
                 <div className="flex items-center gap-2">
                   <Receipt className="w-5 h-5 text-indigo-600" />
                   <h3 className="text-base font-bold text-slate-900">
                     سجل الدفعات وسندات القبض السابقة للطلب ({previousPayments.length})
                   </h3>
                 </div>
-                <span className="text-xs text-slate-400">
-                  إجمالي المسدد: {(selectedOrder.paidAmount || 0).toLocaleString()} YER
-                </span>
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditPaymentsMode(!isEditPaymentsMode)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition border cursor-pointer ${
+                      isEditPaymentsMode
+                        ? 'bg-amber-500 text-slate-950 border-amber-600 shadow-2xs'
+                        : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+                    }`}
+                    title="تفعيل وضع تعديل وحذف الدفعات المباشر"
+                  >
+                    <Edit className="w-3.5 h-3.5" />
+                    <span>وضع تعديل الدفعات: {isEditPaymentsMode ? 'مفعّل ✓' : 'معطّل'}</span>
+                  </button>
+                  <span className="text-xs text-slate-400 font-mono">
+                    إجمالي المسدد: {(selectedOrder.paidAmount || 0).toLocaleString()} YER
+                  </span>
+                </div>
               </div>
 
               {previousPayments.length === 0 ? (
@@ -991,12 +1181,41 @@ export const InstallmentsView: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200">
+                      <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200 flex-wrap">
                         <div className="font-mono font-black text-emerald-700 text-sm">
                           {Number(pmt.amount).toLocaleString()} YER
                         </div>
+
+                        {isEditPaymentsMode && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditPayment(pmt)}
+                            className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-2xs hover:scale-105"
+                            title="تعديل بيانات وقيمة ومحفظة وسند الدفعة"
+                          >
+                            <Edit className="w-3.5 h-3.5 text-amber-600" />
+                            <span>تعديل</span>
+                          </button>
+                        )}
+
+                        {isEditPaymentsMode && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteDuplicatePayment(pmt)}
+                            className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-2xs hover:scale-105"
+                            title="حذف هذه الدفعة وتصحيح رصيد الطلب فوراً"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                            <span>حذف المكرر</span>
+                          </button>
+                        )}
+
                         <button
-                          onClick={() => setReceiptToPrint(pmt)}
+                          type="button"
+                          onClick={() => {
+                            if (onOpenReceipt) onOpenReceipt(pmt);
+                            else setReceiptToPrint(pmt);
+                          }}
                           className="px-2.5 py-1 rounded-lg bg-white hover:bg-indigo-50 text-indigo-700 border border-slate-200 hover:border-indigo-300 text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-2xs"
                           title="طباعة وعرض سند القبض الرسمي"
                         >
@@ -1869,6 +2088,154 @@ export const InstallmentsView: React.FC = () => {
           payment={receiptToPrint}
           onClose={() => setReceiptToPrint(null)}
         />
+      )}
+
+      {/* Modal: تعديل الدفعة المباشر داخل قسم دفعات الطلبات والتحصيل */}
+      {editingPaymentItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-5 bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-white/20 border border-white/30 flex items-center justify-center text-white">
+                  <Edit className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-base">تعديل الدفعة المستلمة</h3>
+                  <p className="text-xs text-amber-100">
+                    سند قبض #{editingPaymentItem.receiptNumber || editingPaymentItem.paymentNumber} • الطلب #{selectedOrder?.orderNumber || editingPaymentItem.orderId}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingPaymentItem(null)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSavePaymentEdit} className="p-5 space-y-4 text-xs">
+              <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 leading-relaxed">
+                <strong>تنبيه مالي:</strong> أي تعديل على مبلغ أو تاريخ الدفعة سيقوم فوراً بتحديث الرصيد المدفوع والمتبقي للطلب، وحساب المحفظة، والأستاذ العام وقيد اليومية آلياً.
+              </div>
+
+              {/* Amount */}
+              <div>
+                <label className="font-bold text-slate-800 block mb-1">
+                  مبلغ الدفعة المحصل (YER) *
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  step="any"
+                  value={editPaymentAmount}
+                  onChange={e => setEditPaymentAmount(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-slate-300 font-mono font-black text-sm text-slate-900 focus:outline-none focus:border-amber-600"
+                />
+              </div>
+
+              {/* Account / Wallet */}
+              <div>
+                <label className="font-bold text-slate-800 block mb-1">
+                  المحفظة / الحساب المستلم *
+                </label>
+                <select
+                  value={editPaymentAccountId}
+                  onChange={e => setEditPaymentAccountId(Number(e.target.value))}
+                  className="w-full p-2.5 rounded-xl border border-slate-300 font-bold text-xs text-slate-900 focus:outline-none focus:border-amber-600"
+                >
+                  {availableAccounts.map(a => (
+                    <option key={a.id} value={a.id}>
+                      {a.name} ({a.type})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {/* Date */}
+                <div>
+                  <label className="font-bold text-slate-800 block mb-1">
+                    تاريخ الدفعة *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={editPaymentDate}
+                    onChange={e => setEditPaymentDate(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-300 font-bold text-xs text-slate-900 focus:outline-none focus:border-amber-600"
+                  />
+                </div>
+
+                {/* Receipt Number */}
+                <div>
+                  <label className="font-bold text-slate-800 block mb-1">
+                    رقم سند القبض
+                  </label>
+                  <input
+                    type="text"
+                    value={editReceiptNumber}
+                    onChange={e => setEditReceiptNumber(e.target.value)}
+                    placeholder="مثال: RCT-2026-041"
+                    className="w-full p-2.5 rounded-xl border border-slate-300 font-mono font-bold text-xs text-slate-900 focus:outline-none focus:border-amber-600"
+                  />
+                </div>
+              </div>
+
+              {/* Payment Type */}
+              <div>
+                <label className="font-bold text-slate-800 block mb-1">
+                  نوع وتصنيف الدفعة
+                </label>
+                <select
+                  value={editPaymentType}
+                  onChange={e => setEditPaymentType(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-slate-300 font-bold text-xs text-slate-900 focus:outline-none focus:border-amber-600"
+                >
+                  <option value="عربون / دفعة أولى">عربون / دفعة أولى</option>
+                  <option value="دفعة لاحقة">دفعة لاحقة</option>
+                  <option value="دفعة نهائية">دفعة نهائية</option>
+                  <option value="سداد دفعة">سداد دفعة</option>
+                  <option value="تحصيل رصيد افتتاحي">تحصيل رصيد افتتاحي</option>
+                </select>
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="font-bold text-slate-800 block mb-1">
+                  البيان والملاحظات
+                </label>
+                <input
+                  type="text"
+                  value={editPaymentNotes}
+                  onChange={e => setEditPaymentNotes(e.target.value)}
+                  placeholder="ملاحظات أو سبب التعديل..."
+                  className="w-full p-2.5 rounded-xl border border-slate-300 font-bold text-xs text-slate-900 focus:outline-none focus:border-amber-600"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setEditingPaymentItem(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition cursor-pointer"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingEdit}
+                  className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-black shadow-md transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{isSavingEdit ? 'جارِ الحفظ...' : 'حفظ التعديلات واعتماد الأرصدة'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
     </div>

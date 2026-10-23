@@ -30,7 +30,6 @@ export type NavTab =
   | 'dashboard'
   | 'analytics'
   | 'orders'
-  | 'payments'
   | 'installments'
   | 'couriers'
   | 'invoices'
@@ -122,14 +121,6 @@ export const Navigation: React.FC<NavigationProps> = ({
       icon: ShoppingBag,
       badge: pendingOrdersCount > 0 ? pendingOrdersCount : undefined,
       color: 'emerald'
-    },
-    {
-      id: 'payments',
-      label: 'الدفعات والتحصيلات',
-      description: 'سجل الدفعات المباشر، التعديل الفوري، واكتشاف وتنظيف الدفعات المكررة',
-      icon: Banknote,
-      badge: duplicatePaymentsCount > 0 ? `${duplicatePaymentsCount} مكررة!` : payments.length > 0 ? payments.length : undefined,
-      color: duplicatePaymentsCount > 0 ? 'rose' : 'emerald'
     },
     {
       id: 'couriers',
