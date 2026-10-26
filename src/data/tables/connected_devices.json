@@ -6,13 +6,13 @@
     "browser": "جوجل كروم (Chrome)",
     "os": "ويندوز (Windows)",
     "screenResolution": "1536x864",
-    "lastSyncAt": "2026-10-17T14:26:17.753Z",
+    "lastSyncAt": "2026-10-25T13:01:18.407Z",
     "lastAction": "push",
     "recordsCount": {
-      "customers": 43,
-      "orders": 49,
-      "expenses": 139,
-      "journalEntries": 283
+      "customers": 47,
+      "orders": 71,
+      "expenses": 210,
+      "journalEntries": 342
     }
   }
 }

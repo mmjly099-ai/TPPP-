@@ -58,7 +58,6 @@ export const InstallmentsView: React.FC<InstallmentsViewProps> = ({
     recordPayment,
     updatePayment,
     deletePayment,
-    fixDuplicateOrder9,
     cleanDuplicatePayments,
     getCustomerBalance,
     getAccountBalance,
@@ -529,53 +528,6 @@ export const InstallmentsView: React.FC<InstallmentsViewProps> = ({
     }
   };
 
-  // Check if current customer or order is "اسماء ابراهيم عبد القوي" or order 9
-  const isAsmaaCustomerOrOrder9 = useMemo(() => {
-    return Boolean(
-      selectedCustomer?.name?.includes('اسماء') ||
-      selectedCustomer?.id === 540003 ||
-      selectedOrder?.customerName?.includes('اسماء') ||
-      selectedOrder?.customerId === 540003 ||
-      String(selectedOrder?.orderNumber) === '9' ||
-      selectedOrder?.id === 990005
-    );
-  }, [selectedCustomer, selectedOrder]);
-
-  // Asmaa Order 9 details and duplicate checking
-  const asmaaOrder9Info = useMemo(() => {
-    const custOrders = orders.filter(
-      o => o.customerId === 540003 || (o.customerName && o.customerName.includes('اسماء'))
-    );
-    const order9List = custOrders.filter(
-      o => String(o.orderNumber) === '9' || o.id === 990005 || o.internalNumber === '9'
-    );
-    const order9Payments = payments.filter(
-      p => (p.orderId === 990005 || order9List.some(o => o.id === p.orderId)) && p.status !== 'cancelled'
-    );
-    const totalPaymentsAmount = order9Payments.reduce((s, p) => s + Number(p.amount || 0), 0);
-    const hasDuplicateOrder = order9List.length > 1;
-    const hasDuplicatePayments = new Set(order9Payments.map(p => `${p.amount}_${p.receiptNumber || p.id}`)).size !== order9Payments.length;
-
-    return {
-      order9List,
-      order9Payments,
-      totalPaymentsAmount,
-      hasDuplicateOrder,
-      hasDuplicatePayments,
-      isResolved: !hasDuplicateOrder && !hasDuplicatePayments && order9List[0]?.totalAmount === 46800
-    };
-  }, [orders, payments]);
-
-  // Handler: Fix Asmaa Order 9
-  const handleFixAsmaaOrder9 = () => {
-    fixDuplicateOrder9();
-    const asmaaCust = customers.find(c => c.id === 540003 || c.name?.includes('اسماء'));
-    if (asmaaCust) {
-      setSelectedCustomerId(asmaaCust.id);
-      setSelectedOrderId(990005);
-    }
-  };
-
   return (
     <div className="space-y-6">
 
@@ -638,56 +590,6 @@ export const InstallmentsView: React.FC<InstallmentsViewProps> = ({
           </span>
         </div>
       </div>
-
-      {/* Asmaa Abdelkawi Order 9 Reconciliation & Fix Banner */}
-      {(isAsmaaCustomerOrOrder9 || !asmaaOrder9Info.isResolved) && (
-        <div className="bg-gradient-to-r from-amber-500/15 via-blue-500/10 to-emerald-500/15 border-2 border-amber-400 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div className="flex items-start gap-3.5">
-              <div className="w-11 h-11 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold shrink-0 shadow-xs">
-                <Sparkles className="w-6 h-6 animate-pulse" />
-              </div>
-              <div className="space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950 font-black text-xs">
-                    عميل: اسماء ابراهيم عبد القوي
-                  </span>
-                  <span className="px-2.5 py-0.5 rounded-full bg-slate-900 text-white font-mono font-bold text-xs">
-                    طلب رقم #9
-                  </span>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">
-                    المبلغ الأصلي: 46,800 ر.ي
-                  </span>
-                  <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">
-                    الدفعات المعتمدة: 22,000 ر.ي
-                  </span>
-                  <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-xs font-bold">
-                    المتبقي: 24,800 ر.ي
-                  </span>
-                </div>
-                <p className="text-xs text-slate-700 leading-relaxed">
-                  <strong>تفاصيل الطلب الأصلية:</strong> قيمة السلة 49,800 ر.ي - خصم 3,000 ر.ي = الصافي 46,800 ر.ي | الدفعات المعتمدة: 22,000 ر.ي (دفعة أولى 21,000 ر.ي + دفعة لاحقة 1,000 ر.ي) | المتبقي الدقيق: 24,800 ر.ي.
-                </p>
-                {asmaaOrder9Info.hasDuplicateOrder && (
-                  <p className="text-xs text-rose-700 font-bold flex items-center gap-1.5">
-                    <AlertTriangle className="w-3.5 h-3.5" />
-                    تم رصد تكرار لسجل الطلب رقم 9 في النظام. انقر على الزر لتصحيحه فوراً واعتماد المبلغ الأصلي والدفعات.
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleFixAsmaaOrder9}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-black text-xs shadow-md transition cursor-pointer shrink-0 hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <CheckCircle2 className="w-4 h-4 text-emerald-200" />
-              <span>⚡ اعتماد المبلغ الأصلي والدفعات وتصحيح التكرار</span>
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Step 1 & Step 2: Select Customer -> View All Customer Orders -> Pick Order */}
       <div className="bg-white rounded-2xl border-2 border-[#1A3668]/20 shadow-sm overflow-hidden">

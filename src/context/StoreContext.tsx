@@ -482,18 +482,20 @@ interface StoreContextType {
   processAssistantMessage: (text: string) => { reply: string; actionTaken?: string };
 }
 
-const STORAGE_KEY = 'top_store_app_data_v2_clean';
+const STORAGE_KEY = 'top_store_app_data_v4_clean';
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [data, setData] = useState<TopStoreBackup>(() => {
-    // Purge old v1 demo cache if present so users start with clean data as requested
+    // Purge legacy caches so users start with the clean audited dataset as requested
     try {
       if (typeof window !== 'undefined' && window.localStorage) {
-        if (localStorage.getItem('top_store_app_data_v1')) {
-          localStorage.removeItem('top_store_app_data_v1');
-        }
+        ['top_store_app_data_v1', 'top_store_app_data_v2', 'top_store_app_data_v2_clean', 'top_store_app_data_v3_clean'].forEach(k => {
+          if (localStorage.getItem(k)) {
+            localStorage.removeItem(k);
+          }
+        });
       }
     } catch (e) {
       console.warn('Could not clear legacy storage', e);
@@ -510,6 +512,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
+        // If saved data is from an older dataset, discard and re-initialize from audited INITIAL_DATA
+        if (parsed.datasetId !== 'top-store-audited-clean-2026-10-25' || (parsed.version || 0) < 4) {
+          console.info('Discovered older dataset cache in localStorage. Resetting to clean audited INITIAL_DATA.');
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_DATA));
+          } catch (_) {}
+          return sanitizeAndReconcileJournalEntries(INITIAL_DATA);
+        }
         if (parsed.tables && parsed.tables.accounts) {
           // Reconcile and heal any purchase batch or financial transaction that mistakenly used 120001 instead of 120002
           const healedBatches = (Array.isArray(parsed.tables.purchaseBatches) ? parsed.tables.purchaseBatches : (INITIAL_DATA.tables.purchaseBatches || [])).map((b: any) => {
@@ -1098,12 +1108,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Total debits from non-cancelled orders
     const totalOrdersDebit = orders
       .filter(ord => ord.customerId === customerId && ord.status !== 'cancelled')
-      .reduce((sum, ord) => sum + (ord.totalAmount || 0), 0);
+      .reduce((sum, ord) => sum + (Number(ord.totalAmount) || 0), 0);
 
     // Total credits from approved, non-cancelled payments
     const totalPaymentsCredit = payments
       .filter(pay => pay.customerId === customerId && pay.status !== 'cancelled')
-      .reduce((sum, pay) => sum + (pay.amount || 0), 0);
+      .reduce((sum, pay) => sum + (Number(pay.amount) || 0), 0);
 
     return roundCurrency(opening + totalOrdersDebit - totalPaymentsCredit);
   };
@@ -1510,55 +1520,202 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (!oldOrder) return prev;
 
       const cleanNum = String(updatedOrder.orderNumber || oldOrder.orderNumber).trim().replace(/^ORD-/, '').trim();
+      const targetCustomerId = Number(updatedOrder.customerId) || oldOrder.customerId;
+      const targetCustomer = prev.tables.customers.find(c => c.id === targetCustomerId) || {
+        id: targetCustomerId,
+        name: updatedOrder.customerName || oldOrder.customerName || 'عميل غير محدد',
+        code: updatedOrder.customerCode || oldOrder.customerCode || '',
+        phone: '',
+        governorate: '',
+        city: '',
+        pickupLocation: ''
+      };
+
+      const customerChanged = Number(oldOrder.customerId) !== Number(targetCustomerId);
+      const oldCustomer = prev.tables.customers.find(c => c.id === oldOrder.customerId);
+      const oldCustomerName = oldCustomer?.name || oldOrder.customerName || '';
+
       const finalOrder: Order = {
         ...updatedOrder,
         orderNumber: cleanNum,
         customerOrderNumber: cleanNum,
         internalNumber: cleanNum,
-        invoiceNumber: `INV-${cleanNum}`
+        invoiceNumber: `INV-${cleanNum}`,
+        customerId: targetCustomer.id,
+        customerName: targetCustomer.name,
+        customerCode: targetCustomer.code
       };
 
-      // Update linked sales journal entry if amount or customer or orderNumber changed
-      const updatedJournals = prev.tables.journalEntries.map(je => {
-        const isLinkedOrder =
-          (je.sourceType === 'order' && (je.sourceId === updatedOrder.id || je.sourceId === String(updatedOrder.id))) ||
-          (oldOrder.orderNumber && je.description?.includes(String(oldOrder.orderNumber)) && je.entryNumber?.startsWith('JE-ORD-'));
+      // 1. Find all payments linked to this order
+      const linkedPaymentIds = new Set(
+        prev.tables.payments
+          .filter(p => Number(p.orderId) === Number(finalOrder.id))
+          .map(p => p.id)
+      );
 
-        if (isLinkedOrder) {
+      // 2. Cascade update payments
+      const updatedPayments = prev.tables.payments.map(p => {
+        if (linkedPaymentIds.has(p.id)) {
+          let updatedStatement = p.statement;
+          let updatedNotes = p.notes;
+          if (customerChanged && oldCustomerName) {
+            if (updatedStatement?.includes(oldCustomerName)) {
+              updatedStatement = updatedStatement.split(oldCustomerName).join(targetCustomer.name);
+            }
+            if (updatedNotes?.includes(oldCustomerName)) {
+              updatedNotes = updatedNotes.split(oldCustomerName).join(targetCustomer.name);
+            }
+          }
+          return {
+            ...p,
+            customerId: targetCustomer.id,
+            statement: updatedStatement,
+            notes: updatedNotes
+          };
+        }
+        return p;
+      });
+
+      // 3. Cascade update financial transactions
+      const updatedTransactions = prev.tables.financialTransactions.map(t => {
+        const isLinkedToOrder = Number(t.orderId) === Number(finalOrder.id);
+        const isLinkedToPayment = t.paymentId && linkedPaymentIds.has(Number(t.paymentId));
+        if (isLinkedToOrder || isLinkedToPayment) {
+          let updatedDesc = t.description;
+          if (customerChanged && oldCustomerName && updatedDesc?.includes(oldCustomerName)) {
+            updatedDesc = updatedDesc.split(oldCustomerName).join(targetCustomer.name);
+          }
+          return {
+            ...t,
+            customerId: targetCustomer.id,
+            description: updatedDesc
+          };
+        }
+        return t;
+      });
+
+      // 4. Cascade update journal entries (order JEs and payment JEs)
+      const updatedJournals = prev.tables.journalEntries.map(je => {
+        const isOrderJE =
+          (je.sourceType === 'order' && Number(je.sourceId) === Number(finalOrder.id)) ||
+          (oldOrder.orderNumber && je.entryNumber?.startsWith('JE-ORD-') && (je.sourceId === finalOrder.id || je.description?.includes(`الطلب #${oldOrder.orderNumber}`) || je.description?.includes(`الطلب ${oldOrder.orderNumber}`)));
+
+        const isPaymentJE =
+          (je.sourceType === 'payment' && (linkedPaymentIds.has(Number(je.sourceId)) || (je.transactionId && linkedPaymentIds.has(Number(je.transactionId)))));
+
+        if (isOrderJE) {
           return {
             ...je,
             sourceNumber: cleanNum,
-            entryNumber: `JE-ORD-${cleanNum.padStart(4, '0')}`,
-            description: `إثبات فاتورة الطلب #${cleanNum} - ${finalOrder.customerName || 'العميل'}`,
+            entryNumber: `JE-ORD-${cleanNum.padStart(4, '0')}-${finalOrder.id}`,
+            description: `فاتورة مبيعات للطلب #${cleanNum} - العميل: ${targetCustomer.name}`,
             lines: je.lines.map(l => {
-              if (l.side === 'debit') {
+              if (l.chartAccountCode === '110' || l.side === 'debit') {
                 return {
                   ...l,
-                  accountName: `حـ/ العميل: ${finalOrder.customerName || 'العميل'}`,
-                  amount: finalOrder.totalAmount
+                  accountName: `حـ/ العميل: ${targetCustomer.name}`,
+                  amount: finalOrder.totalAmount,
+                  baseAmount: finalOrder.totalAmount
                 };
               } else {
                 return {
                   ...l,
-                  amount: finalOrder.totalAmount
+                  amount: finalOrder.totalAmount,
+                  baseAmount: finalOrder.totalAmount
                 };
               }
             })
           };
         }
+
+        if (isPaymentJE) {
+          let updatedDesc = je.description;
+          if (customerChanged && oldCustomerName && updatedDesc?.includes(oldCustomerName)) {
+            updatedDesc = updatedDesc.split(oldCustomerName).join(targetCustomer.name);
+          }
+          return {
+            ...je,
+            description: updatedDesc,
+            lines: je.lines.map(l => {
+              if (l.chartAccountCode === '110' || l.side === 'credit') {
+                return {
+                  ...l,
+                  accountName: `حـ/ العميل: ${targetCustomer.name}`
+                };
+              }
+              return l;
+            })
+          };
+        }
+
         return je;
       });
+
+      // 5. Sync journalLines table
+      const allLines: JournalLine[] = [];
+      for (const je of updatedJournals) {
+        if (Array.isArray(je.lines)) {
+          allLines.push(...je.lines);
+        }
+      }
+
+      // 6. Cascade update delivery orders
+      const updatedDeliveryOrders = (prev.tables.deliveryOrders || []).map(d => {
+        if (Number(d.orderId) === Number(finalOrder.id)) {
+          return {
+            ...d,
+            customerId: targetCustomer.id,
+            customerName: targetCustomer.name,
+            customerPhone: targetCustomer.phone || d.customerPhone,
+            governorate: targetCustomer.governorate || d.governorate,
+            address: targetCustomer.pickupLocation || targetCustomer.city || d.address,
+            orderOriginalValue: finalOrder.totalAmount,
+            notes: (d.notes && oldCustomerName) ? d.notes.split(oldCustomerName).join(targetCustomer.name) : d.notes
+          };
+        }
+        return d;
+      });
+
+      // 7. Cascade update installment plans
+      const updatedInstallmentPlans = (prev.tables.installmentPlans || []).map(plan => {
+        if (Number(plan.orderId) === Number(finalOrder.id)) {
+          return {
+            ...plan,
+            customerId: targetCustomer.id,
+            customerName: targetCustomer.name,
+            customerPhone: targetCustomer.phone || plan.customerPhone
+          };
+        }
+        return plan;
+      });
+
+      // 8. Cascade update returns
+      const updatedReturns = (prev.tables.returns || []).map((ret: any) => {
+        if (Number(ret.orderId) === Number(finalOrder.id)) {
+          return {
+            ...ret,
+            customerId: targetCustomer.id,
+            customerName: targetCustomer.name
+          };
+        }
+        return ret;
+      });
+
+      // 9. Audit Log
+      const changeDesc = customerChanged
+        ? `تعديل الطلب #${finalOrder.orderNumber}: تم نقل الطلب وجميع دفعاته وسندات قبضه من [${oldCustomerName}] إلى [${targetCustomer.name}] وتحديث القيود والحركات المحاسبية المتزامنة`
+        : `تعديل الطلب #${finalOrder.orderNumber}: تحديث المبلغ إلى ${finalOrder.totalAmount} ريال وتحديث قيد اليومية المرتبط`;
 
       const auditLog: AuditLog = {
         id: Date.now(),
         createdAt: new Date().toISOString(),
-        action: 'تعديل طلب وتحديث قيده المحاسبي',
+        action: customerChanged ? 'نقل الطلب وسنداته لعميل جديد' : 'تعديل طلب وتحديث قيده المحاسبي',
         performedBy: 'الإدارة المالية',
         entityType: 'order',
         entityId: finalOrder.id,
-        description: `تعديل الطلب #${finalOrder.orderNumber} - تحديث المبلغ إلى ${finalOrder.totalAmount} ريال وتحديث قيد اليومية المرتبط`,
-        oldValue: `${oldOrder.totalAmount} ريال`,
-        newValue: `${finalOrder.totalAmount} ريال`
+        description: changeDesc,
+        oldValue: customerChanged ? oldCustomerName : `${oldOrder.totalAmount} ريال`,
+        newValue: customerChanged ? targetCustomer.name : `${finalOrder.totalAmount} ريال`
       };
 
       return {
@@ -1566,12 +1723,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         tables: {
           ...prev.tables,
           orders: prev.tables.orders.map(o => o.id === finalOrder.id ? finalOrder : o),
+          payments: updatedPayments,
+          financialTransactions: updatedTransactions,
           journalEntries: updatedJournals,
+          journalLines: allLines,
+          deliveryOrders: updatedDeliveryOrders,
+          installmentPlans: updatedInstallmentPlans,
+          returns: updatedReturns,
           auditLogs: [auditLog, ...(prev.tables.auditLogs || [])]
         }
       };
     });
-    showNotification(`تم تعديل الطلب #${updatedOrder.orderNumber} وتحديث قيد اليومية المرتبط بنجاح`, 'success');
+
+    if (updatedOrder.customerId && updatedOrder.customerName) {
+      showNotification(`تم حفظ التعديلات ونقل الطلب #${updatedOrder.orderNumber} وكافة متعلقاته بنجاح`, 'success');
+    } else {
+      showNotification(`تم تعديل الطلب #${updatedOrder.orderNumber} بنجاح`, 'success');
+    }
   };
 
   const deleteOrder = (orderId: number, options?: { deleteJournal?: boolean; deletePayments?: boolean }) => {
@@ -2687,11 +2855,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         subtotal: 49800,
         discount: 3000,
         totalAmount: 46800,
-        paidAmount: 22000,
-        remainingAmount: 24800,
-        paid: '22000',
+        paidAmount: 36900,
+        remainingAmount: 9900,
+        paid: '36900',
         paymentStatus: 'partial',
-        status: primaryOrder?.status || 'pending',
+        status: primaryOrder?.status || 'purchased',
         deliveryFee: primaryOrder?.deliveryFee || 0,
         createdAt: primaryOrder?.createdAt || '2026-09-28T01:35:45.000Z'
       };
@@ -2724,12 +2892,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         updatedPayments.push(currentPmt);
       });
 
-      // Ensure 21,000 YER (RCT-2026-041) and 1,000 YER (RCT-2026-043) exist
+      // Ensure 21,000 YER (RCT-2026-041), 1,000 YER (RCT-2026-043), and 14,900 YER (RCT-2026-063) exist
       const has21k = updatedPayments.some(
         p => p.orderId === fixedMasterOrder.id && Number(p.amount) === 21000 && p.status !== 'cancelled'
       );
       const has1k = updatedPayments.some(
         p => p.orderId === fixedMasterOrder.id && Number(p.amount) === 1000 && p.status !== 'cancelled'
+      );
+      const has14k9 = updatedPayments.some(
+        p => p.orderId === fixedMasterOrder.id && Number(p.amount) === 14900 && p.status !== 'cancelled'
       );
 
       if (!has21k) {
@@ -2770,7 +2941,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         });
       }
 
-      resultMessage = `تم تصحيح الطلب رقم 9 للعميل (${custName}): تثبيت المبلغ الأصلي 46,800 ر.ي، واعتماد الدفعات المسددة 22,000 ر.ي، والمتبقي 24,800 ر.ي بنجاح.`;
+      if (!has14k9) {
+        updatedPayments.push({
+          id: 1791581959055,
+          paymentNumber: 'PAY-RCT-2026-063',
+          receiptNumber: 'RCT-2026-063',
+          customerId: custId,
+          orderId: fixedMasterOrder.id,
+          accountId: 90001,
+          amount: 14900,
+          paymentDate: '2026-10-09',
+          paymentMethod: 'الصندوق',
+          paymentType: 'دفعة لاحقة',
+          statement: 'سداد دفعة للطلب 9 - اسماء ابراهيم عبد القوي',
+          status: 'approved',
+          createdByName: 'أحمد الإدريسي (أمين الصندوق)',
+          createdAt: '2026-10-09T21:39:19.055Z'
+        });
+      }
+
+      resultMessage = `تم تصحيح الطلب رقم 9 للعميل (${custName}): تثبيت المبلغ الأصلي 46,800 ر.ي، واعتماد الدفعات المسددة 36,900 ر.ي (21,000 + 1,000 + 14,900)، والمتبقي 9,900 ر.ي بنجاح.`;
 
       const auditLog: AuditLog = {
         id: Date.now(),

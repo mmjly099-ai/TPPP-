@@ -14,6 +14,8 @@ import {
   Edit2,
   Trash2,
   ShieldAlert,
+  User,
+  Calendar,
   X
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
@@ -482,7 +484,18 @@ interface EditOrderModalProps {
 }
 
 const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, onClose, onSave }) => {
+  const { customers } = useStore();
+
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number>(order.customerId);
+  const [customerSearch, setCustomerSearch] = useState<string>('');
   const [orderNumber, setOrderNumber] = useState<string>(String(order.orderNumber || '').replace(/^ORD-/, '').trim());
+  const [orderDate, setOrderDate] = useState<string>(() => {
+    if (!order.orderDate) return new Date().toISOString().split('T')[0];
+    return order.orderDate.includes('T') ? order.orderDate.split('T')[0] : order.orderDate;
+  });
+  const [recipientName, setRecipientName] = useState<string>(order.recipientName || '');
+  const [recipientPhone, setRecipientPhone] = useState<string>(order.recipientPhone || '');
+  const [pickupLocation, setPickupLocation] = useState<string>(order.pickupLocation || '');
   const [subtotal, setSubtotal] = useState<number>(order.subtotal || 0);
   const [shippingFee, setShippingFee] = useState<number>(order.shippingFee || 0);
   const [discount, setDiscount] = useState<number>(order.discount || 0);
@@ -496,14 +509,38 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, onClose, onSave 
   const paid = order.paidAmount || 0;
   const remaining = Math.max(0, computedTotal - paid);
 
+  const currentCustomer = customers.find(c => c.id === order.customerId);
+  const newSelectedCustomer = customers.find(c => c.id === Number(selectedCustomerId));
+  const isCustomerChanged = Number(selectedCustomerId) !== Number(order.customerId);
+
+  // Filtered customer list for quick search
+  const filteredCustomers = customers.filter(c => {
+    if (!customerSearch.trim()) return true;
+    const term = customerSearch.toLowerCase().trim();
+    return (
+      c.name.toLowerCase().includes(term) ||
+      c.code.toLowerCase().includes(term) ||
+      (c.phone && c.phone.includes(term))
+    );
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanNum = orderNumber.trim().replace(/^ORD-/, '').trim() || String(order.orderNumber);
+    const targetCustomer = newSelectedCustomer || currentCustomer;
+
     onSave({
       ...order,
+      customerId: targetCustomer ? targetCustomer.id : order.customerId,
+      customerName: targetCustomer ? targetCustomer.name : order.customerName,
+      customerCode: targetCustomer ? targetCustomer.code : order.customerCode,
       orderNumber: cleanNum,
       customerOrderNumber: cleanNum,
       internalNumber: cleanNum,
+      orderDate: orderDate || order.orderDate,
+      recipientName: recipientName.trim() || null,
+      recipientPhone: recipientPhone.trim() || null,
+      pickupLocation: pickupLocation.trim() || null,
       subtotal,
       shippingFee,
       discount,
@@ -519,41 +556,118 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, onClose, onSave 
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+      <div className="bg-white rounded-2xl max-w-xl w-full p-6 space-y-4 shadow-2xl border border-slate-200 max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
-            <Edit2 className="w-5 h-5 text-amber-600" />
-            <h3 className="text-base font-bold text-slate-900">تعديل الطلب #{order.orderNumber}</h3>
+            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
+              <Edit2 className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-900">تعديل الطلب #{order.orderNumber}</h3>
+              <p className="text-[11px] text-slate-500">تعديل بيانات الطلب ونقله إلى عميل آخر مع كافة دفعاته</p>
+            </div>
           </div>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600">
+          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3 text-xs">
-          <div className="space-y-1 bg-amber-50/70 p-2.5 rounded-xl border border-amber-200/80">
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          {/* CUSTOMER SELECTION SECTION */}
+          <div className="p-3.5 bg-gradient-to-r from-blue-50/70 to-indigo-50/70 rounded-xl border border-blue-200 space-y-2.5">
             <div className="flex items-center justify-between">
-              <label className="font-bold text-amber-900">رقم الطلب (أرقام فقط):</label>
-              <span className="text-[10px] text-amber-700">رقم الطلب الصافي المسجل</span>
+              <label className="font-bold text-blue-950 flex items-center gap-1.5 text-xs">
+                <User className="w-4 h-4 text-blue-600" />
+                العميل صاحب الطلب (يمكن نقله لعميل آخر):
+              </label>
+              <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                العميل الحالي: {order.customerName} ({order.customerCode || 'بدون كود'})
+              </span>
             </div>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={orderNumber}
-              onChange={e => setOrderNumber(e.target.value.replace(/[^\d]/g, ''))}
-              placeholder="مثال: 7 أو 1001"
-              className="w-full border border-amber-300 rounded-lg p-2 font-mono font-bold text-amber-950 bg-white focus:ring-2 focus:ring-amber-500/30"
-              required
-            />
+
+            <div className="space-y-1.5">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="بحث سريع بالاسم، الكود أو الهاتف..."
+                  value={customerSearch}
+                  onChange={e => setCustomerSearch(e.target.value)}
+                  className="w-1/2 border border-blue-200 rounded-lg px-2.5 py-1.5 text-xs bg-white focus:ring-2 focus:ring-blue-500/20"
+                />
+                <select
+                  value={selectedCustomerId}
+                  onChange={e => {
+                    const newId = Number(e.target.value);
+                    setSelectedCustomerId(newId);
+                    const cust = customers.find(c => c.id === newId);
+                    if (cust && !pickupLocation) {
+                      setPickupLocation(cust.pickupLocation || cust.city || '');
+                    }
+                  }}
+                  className="w-1/2 border border-blue-300 rounded-lg px-2.5 py-1.5 font-bold text-slate-900 bg-white focus:ring-2 focus:ring-blue-500/30"
+                  required
+                >
+                  {filteredCustomers.map(c => (
+                    <option key={c.id} value={c.id}>
+                      [{c.code}] {c.name} {c.phone ? `(${c.phone})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Informative Transfer Notice when customer changed */}
+              {isCustomerChanged && newSelectedCustomer && (
+                <div className="p-2.5 bg-amber-50 border border-amber-300 rounded-lg text-amber-950 text-[11px] flex items-start gap-2 shadow-xs animate-in fade-in">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold block text-amber-900">
+                      سيتم تحويل هذا الطلب وجميع متعلقاته تلقائياً:
+                    </span>
+                    <span>
+                      سيتم نقل الطلب #{order.orderNumber} وجميع سندات القبض والدفعات المسجلة له (
+                      <strong>{paid.toLocaleString()} ريال</strong>) وتحديث القيود المحاسبية وحركات التوصيل من{' '}
+                      <span className="font-bold line-through text-rose-700">{order.customerName}</span> إلى{' '}
+                      <span className="font-bold text-emerald-800">
+                        {newSelectedCustomer.name} [{newSelectedCustomer.code}]
+                      </span>.
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          {/* BASIC ORDER INFO */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700">رقم الطلب (أرقام فقط):</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={orderNumber}
+                onChange={e => setOrderNumber(e.target.value.replace(/[^\d]/g, ''))}
+                placeholder="مثال: 7 أو 1001"
+                className="w-full border border-slate-200 rounded-lg p-2 font-mono font-bold text-slate-900 bg-white focus:ring-2 focus:ring-amber-500/30"
+                required
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700">تاريخ الطلب:</label>
+              <input
+                type="date"
+                value={orderDate}
+                onChange={e => setOrderDate(e.target.value)}
+                className="w-full border border-slate-200 rounded-lg p-2 font-mono bg-white"
+              />
+            </div>
+
             <div className="space-y-1">
               <label className="font-bold text-slate-700">موقع الشراء:</label>
               <select
                 value={site}
                 onChange={e => setSite(e.target.value)}
-                className="w-full border border-slate-200 rounded-lg p-2 font-bold"
+                className="w-full border border-slate-200 rounded-lg p-2 font-bold bg-white"
               >
                 <option value="SHEIN">SHEIN</option>
                 <option value="AliExpress">AliExpress</option>
@@ -561,8 +675,49 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, onClose, onSave 
                 <option value="أخرى">أخرى</option>
               </select>
             </div>
+          </div>
+
+          {/* RECIPIENT & DELIVERY DETAILS */}
+          <div className="p-3 bg-slate-50/80 rounded-xl border border-slate-200 space-y-2">
+            <span className="font-bold text-slate-800 block text-[11px]">بيانات المستلم والتوصيل (اختياري):</span>
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <label className="text-[10px] text-slate-500 block mb-0.5">اسم المستلم:</label>
+                <input
+                  type="text"
+                  placeholder="اسم المستلم إن اختلف"
+                  value={recipientName}
+                  onChange={e => setRecipientName(e.target.value)}
+                  className="w-full border border-slate-200 rounded-lg p-1.5 bg-white text-xs"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500 block mb-0.5">هاتف المستلم:</label>
+                <input
+                  type="text"
+                  placeholder="هاتف المستلم"
+                  value={recipientPhone}
+                  onChange={e => setRecipientPhone(e.target.value)}
+                  className="w-full border border-slate-200 rounded-lg p-1.5 bg-white text-xs"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500 block mb-0.5">نقطة الاستلام / العنوان:</label>
+                <input
+                  type="text"
+                  placeholder="نقطة الاستلام أو التوصيل"
+                  value={pickupLocation}
+                  onChange={e => setPickupLocation(e.target.value)}
+                  className="w-full border border-slate-200 rounded-lg p-1.5 bg-white text-xs"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* FINANCIAL VALUES */}
+          <div className="grid grid-cols-4 gap-2.5">
             <div className="space-y-1">
-              <label className="font-bold text-slate-700">قيمة المنتجات (Subtotal):</label>
+              <label className="font-bold text-slate-700">قيمة المنتجات:</label>
               <input
                 type="number"
                 min="0"
@@ -571,9 +726,6 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, onClose, onSave 
                 className="w-full border border-slate-200 rounded-lg p-2 font-mono font-bold"
               />
             </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1">
               <label className="font-bold text-slate-700">أجور الشحن:</label>
               <input
@@ -595,7 +747,7 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, onClose, onSave 
               />
             </div>
             <div className="space-y-1">
-              <label className="font-bold text-slate-700">رسوم التوصيل:</label>
+              <label className="font-bold text-slate-700">أجرة التوصيل:</label>
               <input
                 type="number"
                 min="0"
@@ -606,6 +758,7 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, onClose, onSave 
             </div>
           </div>
 
+          {/* STATUS & PURCHASE COST */}
           <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
             <div className="space-y-1">
               <label className="font-bold text-slate-700">حالة الطلب:</label>
@@ -645,13 +798,26 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, onClose, onSave 
               value={notes}
               onChange={e => setNotes(e.target.value)}
               className="w-full border border-slate-200 rounded-lg p-2"
+              placeholder="أي ملاحظات إضافية حول الطلب أو عملية نقله..."
             />
           </div>
 
-          {/* Real-time calculated total */}
-          <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 flex items-center justify-between font-mono font-bold">
-            <span className="font-sans text-amber-900">الإجمالي الجديد للفاتورة والقيد المحاسبي:</span>
-            <span className="text-base text-amber-900">{computedTotal.toLocaleString()} ريال</span>
+          {/* SUMMARY BOX */}
+          <div className="p-3 bg-amber-50/80 rounded-xl border border-amber-200 space-y-1 font-mono text-xs">
+            <div className="flex items-center justify-between font-bold">
+              <span className="font-sans text-amber-900">إجمالي الفاتورة وقيد المبيعات:</span>
+              <span className="text-sm text-amber-950 font-bold">{computedTotal.toLocaleString()} ريال</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px] text-slate-600">
+              <span className="font-sans">إجمالي المسدد حتى الآن:</span>
+              <span className="font-bold text-emerald-700">{paid.toLocaleString()} ريال</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px] text-slate-700 font-bold pt-1 border-t border-amber-200/60">
+              <span className="font-sans">المبلغ المتبقي على العميل:</span>
+              <span className={remaining > 0 ? 'text-rose-700 font-bold' : 'text-emerald-700'}>
+                {remaining.toLocaleString()} ريال
+              </span>
+            </div>
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
@@ -664,9 +830,10 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ order, onClose, onSave 
             </button>
             <button
               type="submit"
-              className="px-5 py-2 font-bold bg-amber-600 hover:bg-amber-700 text-white rounded-xl transition shadow-xs cursor-pointer"
+              className="px-5 py-2 font-bold bg-amber-600 hover:bg-amber-700 text-white rounded-xl transition shadow-xs cursor-pointer flex items-center gap-1.5"
             >
-              حفظ وتحديث القيد المحاسبي
+              <CheckCircle className="w-4 h-4" />
+              حفظ التعديلات وتحديث العميل والقيود
             </button>
           </div>
         </form>

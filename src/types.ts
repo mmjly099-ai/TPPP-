@@ -95,6 +95,10 @@ export interface Order {
   customerOrderNumber?: string | number | null;
   internalNumber?: string | null;
   shippingFeeRecipient?: string | null;
+  recipientName?: string | null;
+  recipientPhone?: string | null;
+  recipientAlternatePhone?: string | null;
+  pickupLocation?: string | null;
   marketingCampaignId?: number | null;
   marketingChannelId?: number | null;
   marketingCode?: string | null;
@@ -112,6 +116,8 @@ export interface Order {
   terms?: string;
   items?: InvoiceItem[];
   customerTaxNumber?: string;
+  courierId?: number | null;
+  transferAccount?: string | null;
   createdAt: string;
 }
 
@@ -532,7 +538,16 @@ export interface Worker {
   role: string;
   phone?: string;
   dailyWage?: number;
+  qatTotal?: number;
+  dinnerTotal?: number;
+  transportTotal?: number;
+  internetTotal?: number;
+  otherTotal?: number;
+  expensesList?: any[];
   status: 'active' | 'inactive';
+  expensesCount?: number;
+  totalPaidExpenses?: number;
+  totalSpent?: number;
   notes?: string;
   createdAt: string;
 }
@@ -600,6 +615,8 @@ export interface AuditLog {
   oldValue?: string | null;
   previousValue?: string | null;
   newValue?: string | null;
+  beforeData?: any;
+  afterData?: any;
   createdAt: string;
 }
 
@@ -715,7 +732,7 @@ export interface PurchaseBatch {
   purchaseFees: string | number; // رسوم الشراء
   transferFees: string | number; // عمولات التحويل البنكي
   exchangeRateDiff?: string | number; // فروق الصرف
-  totalCost: string | number;
+  totalCost?: string | number;
   orderIds?: number[];
   notes?: string | null;
   status: 'active' | 'cancelled';
@@ -726,6 +743,7 @@ export interface PurchaseBatch {
 export interface TopStoreBackup {
   format: string;
   version: number;
+  datasetId?: string;
   createdAt: string;
   tables: {
     appSettings: AppSetting[];
@@ -737,6 +755,7 @@ export interface TopStoreBackup {
     purchaseBatches?: PurchaseBatch[];
     purchaseBatchOrders?: any[];
     shipments: Shipment[];
+    shipmentItems?: any[];
     financialTransactions: FinancialTransaction[];
     journalEntries: any[];
     journalLines: JournalLine[];

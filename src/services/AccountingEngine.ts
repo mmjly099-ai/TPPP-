@@ -580,20 +580,20 @@ export function generateYearEndClosingEntry(params: {
     if (jeYear !== fiscalYear) continue;
 
     for (const l of je.lines || []) {
-      const code = l.chartAccountCode || String(l.chartAccountId || '');
       const amt = Number(l.amount) || 0;
-      if (!accountBalances[code]) {
-        const resolved = resolveChartAccount(l.accountName, l.side, l.accountId);
-        accountBalances[resolved.code] = {
+      const resolved = resolveChartAccount(l.accountName, l.side, l.accountId);
+      const targetCode = l.chartAccountCode || resolved.code;
+      if (!accountBalances[targetCode]) {
+        accountBalances[targetCode] = {
           debit: 0,
           credit: 0,
           name: resolved.name,
-          code: resolved.code,
+          code: targetCode,
           category: resolved.category
         };
       }
-      if (l.side === 'debit') accountBalances[code].debit += amt;
-      else if (l.side === 'credit') accountBalances[code].credit += amt;
+      if (l.side === 'debit') accountBalances[targetCode].debit += amt;
+      else if (l.side === 'credit') accountBalances[targetCode].credit += amt;
     }
   }
 
