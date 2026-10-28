@@ -27,7 +27,7 @@ import { useFirebase } from '../firebase/FirebaseContext';
 
 import { NavTab } from './Navigation';
 import { PWAInstallButton } from './common/PWAInstallButton';
-import topStoreLogo from '../assets/images/regenerated_image_1791812410862.webp';
+import topStoreLogo from '../assets/images/top_store_new_logo_1793194494754.jpg';
 
 import { BookOpen } from 'lucide-react';
 

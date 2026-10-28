@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { Order, Payment, Customer, Expense, OtherReceivable, PurchaseBatch } from '../../types';
 import { numberToArabicWords } from '../../utils/tafqeet';
-import topStoreDocumentLogo from '../../assets/images/regenerated_image_1791812456699.webp';
+import topStoreDocumentLogo from '../../assets/images/top_store_new_logo_1793194494754.jpg';
 
 export interface TopStoreDocumentCardProps {
   documentType:
@@ -177,7 +177,7 @@ export const TopStoreDocumentCard: React.FC<TopStoreDocumentCardProps> = ({
 
         {/* Left in RTL: Brand Slogan */}
         <div className="text-left text-xs font-medium">
-          <span className="text-[#C5A059] font-bold text-xs sm:text-sm block">أسواق العالم بين يديك</span>
+          <span className="text-[#C5A059] font-bold text-xs sm:text-sm block">سلتك اكيد TOP</span>
           <span className="text-[10px] text-slate-300 font-mono hidden sm:block">وثيقة معتمدة ومسجلة</span>
         </div>
       </div>

@@ -907,7 +907,7 @@ ${activeOrder.shipmentNumber ? `🔹 *رقم الشحنة:* #${activeOrder.shipm
                 <div className="text-center text-[10px] text-slate-400 pt-1 border-t border-slate-100 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
                   <span className="font-bold text-[#1A3668]">TOP STORE – توب ستور</span>
                   <span>•</span>
-                  <span>شكراً لتعاملكم معنا</span>
+                  <span className="text-[#C5A059] font-bold">سلتك اكيد TOP</span>
                   <span>•</span>
                   <span className="font-mono">واتساب: {whatsapp}</span>
                 </div>
