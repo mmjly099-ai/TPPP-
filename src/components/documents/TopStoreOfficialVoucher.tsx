@@ -157,13 +157,9 @@ export const TopStoreOfficialVoucher: React.FC<TopStoreOfficialVoucherProps> = (
               </h1>
             </div>
 
-            {/* Slogan Pill: سرعة ثقة أمان */}
+            {/* Slogan Pill: سلتك اكيد TOP */}
             <div className="bg-[#0c1e3d] border border-[#C5A059]/50 px-4 sm:px-7 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[11px] font-bold text-white tracking-wider flex items-center justify-center gap-2 sm:gap-4 shadow-inner mt-1 print:text-[9px]">
-              <span>سرعة</span>
-              <span className="text-[#C5A059] font-bold">•</span>
-              <span>ثقة</span>
-              <span className="text-[#C5A059] font-bold">•</span>
-              <span>أمان</span>
+              <span className="text-[#C5A059]">سلتك اكيد TOP</span>
             </div>
           </div>
 

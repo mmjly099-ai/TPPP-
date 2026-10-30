@@ -127,13 +127,9 @@ export const TopStoreOfficialStatement: React.FC<TopStoreOfficialStatementProps>
               </h1>
             </div>
 
-            {/* Slogan Pill: سرعة ثقة أمان */}
+            {/* Slogan Pill: سلتك اكيد TOP */}
             <div className="bg-[#0c1e3d] border border-[#C5A059]/50 px-5 sm:px-7 py-1 rounded-full text-[10px] sm:text-[11px] font-bold text-white tracking-wider flex items-center justify-center gap-3 sm:gap-4 shadow-inner mt-1">
-              <span>سرعة</span>
-              <span className="text-[#C5A059] font-bold">•</span>
-              <span>ثقة</span>
-              <span className="text-[#C5A059] font-bold">•</span>
-              <span>أمان</span>
+              <span className="text-[#C5A059]">سلتك اكيد TOP</span>
             </div>
           </div>
 
