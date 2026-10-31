@@ -1,5 +1,5 @@
-// Top Store PWA Service Worker - v4.0
-const CACHE_NAME = 'topstore-cache-v4';
+// Top Store PWA Service Worker - v5.0
+const CACHE_NAME = 'topstore-cache-v5';
 
 const PRECACHE_ASSETS = [
   '/',

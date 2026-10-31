@@ -20,6 +20,7 @@ import {
 import { Customer, Order, Payment } from '../../types';
 import { numberToArabicWords } from '../../utils/tafqeet';
 import { useStore } from '../../context/StoreContext';
+import topStoreLogo from '../../assets/logo';
 
 export interface StatementEntry {
   id: string;
@@ -146,7 +147,7 @@ export const TopStoreOfficialStatement: React.FC<TopStoreOfficialStatementProps>
             </div>
             <div className="w-14 h-14 sm:w-16 sm:h-16 print:w-14 print:h-14 rounded-2xl bg-white p-1 shadow-md border-2 border-[#C5A059] flex items-center justify-center shrink-0 overflow-hidden">
               <img
-                src="/top_store_logo.jpg"
+                src={topStoreLogo}
                 alt="شعار توب ستور TOP STORE"
                 className="w-full h-full object-contain"
               />
@@ -606,7 +607,7 @@ export const TopStoreOfficialStatement: React.FC<TopStoreOfficialStatementProps>
 
           <div className="flex items-center gap-2.5 text-center sm:text-left justify-center sm:justify-start">
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white p-0.5 border border-[#112952]/20 shadow-2xs shrink-0 overflow-hidden flex items-center justify-center">
-              <img src="/top_store_logo.jpg" alt="TOP STORE" className="w-full h-full object-contain" />
+              <img src={topStoreLogo} alt="TOP STORE" className="w-full h-full object-contain" />
             </div>
             <div>
               <h4 className="text-sm font-black text-slate-900">متجر توب ستور</h4>
