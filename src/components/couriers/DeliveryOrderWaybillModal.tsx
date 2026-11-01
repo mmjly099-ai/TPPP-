@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Printer, Bike, Phone, MapPin, Package, Calendar, DollarSign, CheckCircle2 } from 'lucide-react';
 import { DeliveryOrder, Courier } from '../../types';
+import topStoreLogo from '../../assets/logo';
 
 interface DeliveryOrderWaybillModalProps {
   order: DeliveryOrder | null;
@@ -57,7 +58,7 @@ export const DeliveryOrderWaybillModal: React.FC<DeliveryOrderWaybillModalProps>
             <div className="flex items-center gap-3">
               <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl bg-white p-1 border-2 border-[#C5A059] shadow-md flex items-center justify-center shrink-0 overflow-hidden">
                 <img
-                  src="/top_store_logo.jpg"
+                  src={topStoreLogo}
                   alt="شعار توب ستور TOP STORE"
                   className="w-full h-full object-contain"
                 />

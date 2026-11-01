@@ -3,6 +3,7 @@ import { Lock, KeyRound, Eye, EyeOff, ShieldCheck, ArrowLeft, Store, Smartphone,
 import { PWAInstallButton } from '../common/PWAInstallButton';
 
 import { useStore } from '../../context/StoreContext';
+import topStoreLogo from '../../assets/logo';
 
 interface SystemLockScreenProps {
   onUnlock: () => void;
@@ -77,7 +78,7 @@ export const SystemLockScreen: React.FC<SystemLockScreenProps> = ({ onUnlock, sy
           <div className="text-center space-y-2">
             <div className="w-20 h-20 rounded-2xl bg-white p-1 border-2 border-amber-500 shadow-xl mx-auto overflow-hidden flex items-center justify-center">
               <img
-                src="/top_store_logo.jpg"
+                src={topStoreLogo}
                 alt="شعار توب ستور TOP STORE"
                 className="w-full h-full object-contain"
               />

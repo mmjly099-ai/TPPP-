@@ -23,6 +23,7 @@ import {
   Printer
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
+import topStoreLogo from '../assets/logo';
 import { Worker, Expense } from '../types';
 
 export const WorkersView: React.FC = () => {
@@ -861,7 +862,7 @@ const WorkerStatementModal: React.FC<WorkerStatementModalProps> = ({
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-white p-1 border-2 border-amber-400 shadow-xs flex items-center justify-center shrink-0 overflow-hidden">
               <img
-                src="/top_store_logo.jpg"
+                src={topStoreLogo}
                 alt="شعار توب ستور TOP STORE"
                 className="w-full h-full object-contain"
               />

@@ -18,6 +18,7 @@ import {
 import { useStore } from '../context/StoreContext';
 import { SignaturePad } from './common/SignaturePad';
 import { PWAInstallButton } from './common/PWAInstallButton';
+import topStoreLogo from '../assets/logo';
 
 export const SettingsView: React.FC = () => {
   const {
@@ -124,7 +125,7 @@ export const SettingsView: React.FC = () => {
 
           <div className="flex flex-col sm:flex-row items-center gap-4 p-3.5 bg-slate-50 border border-slate-200 rounded-xl mb-4">
             <div className="w-16 h-16 rounded-2xl bg-white p-1 border-2 border-[#C5A059] shadow-sm flex items-center justify-center shrink-0 overflow-hidden">
-              <img src="/top_store_logo.jpg" alt="شعار توب ستور TOP STORE" className="w-full h-full object-contain" />
+              <img src={topStoreLogo} alt="شعار توب ستور TOP STORE" className="w-full h-full object-contain" />
             </div>
             <div className="text-center sm:text-right">
               <h4 className="text-xs font-bold text-slate-900">الشعار الرسمي المعتمد لمتجر توب ستور</h4>

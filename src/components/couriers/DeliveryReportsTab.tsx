@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useStore } from '../../context/StoreContext';
+import topStoreLogo from '../../assets/logo';
 import { DeliveryOrder, Courier, CourierSettlement } from '../../types';
 
 export const DeliveryReportsTab: React.FC = () => {
@@ -457,7 +458,7 @@ export const DeliveryReportsTab: React.FC = () => {
         <div className="flex items-center gap-3">
           <div className="w-13 h-13 rounded-2xl bg-white p-1 border-2 border-[#C5A059] shadow-sm flex items-center justify-center shrink-0 overflow-hidden">
             <img
-              src="/top_store_logo.jpg"
+              src={topStoreLogo}
               alt="شعار توب ستور TOP STORE"
               className="w-full h-full object-contain"
             />

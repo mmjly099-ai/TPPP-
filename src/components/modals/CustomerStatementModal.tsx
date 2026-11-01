@@ -24,6 +24,7 @@ import { Customer, Order, Payment } from '../../types';
 import { useStore } from '../../context/StoreContext';
 import { numberToArabicWords } from '../../utils/tafqeet';
 import { TopStoreOfficialStatement } from '../documents/TopStoreOfficialStatement';
+import topStoreLogo from '../../assets/logo';
 
 interface CustomerStatementModalProps {
   customer: Customer | null;
@@ -489,7 +490,7 @@ ${filteredEntries.slice(-5).map(e => `• ${e.date} | ${e.typeLabel} (${e.operat
             <div className="flex items-center gap-3">
               <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl bg-white p-1 border-2 border-[#C5A059] shadow-md flex items-center justify-center shrink-0 overflow-hidden">
                 <img
-                  src="/top_store_logo.jpg"
+                  src={topStoreLogo}
                   alt="شعار توب ستور TOP STORE"
                   className="w-full h-full object-contain"
                 />

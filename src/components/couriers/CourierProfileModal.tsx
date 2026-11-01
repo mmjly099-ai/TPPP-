@@ -20,6 +20,7 @@ import {
   Package
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
+import topStoreLogo from '../../assets/logo';
 import { Courier, DeliveryOrder, CourierSettlement, DeliveryCashCollection } from '../../types';
 
 interface CourierProfileModalProps {
@@ -137,7 +138,7 @@ export const CourierProfileModal: React.FC<CourierProfileModalProps> = ({
           <div className="flex items-center gap-3.5">
             <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-2xl bg-white p-1 border-2 border-[#C5A059] shadow-md flex items-center justify-center shrink-0 overflow-hidden">
               <img
-                src="/top_store_logo.jpg"
+                src={topStoreLogo}
                 alt="شعار توب ستور TOP STORE"
                 className="w-full h-full object-contain"
               />

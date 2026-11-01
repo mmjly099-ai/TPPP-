@@ -22,6 +22,7 @@ import {
   Filter
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
+import topStoreLogo from '../assets/logo';
 import { Shipment, Order, DeliveryOrder } from '../types';
 import { CouriersView } from './CouriersView';
 import { NewDeliveryOrderModal } from './modals/NewDeliveryOrderModal';
@@ -608,7 +609,7 @@ export const ShipmentsView: React.FC<ShipmentsViewProps> = ({
                 <div className="flex items-center gap-3">
                   <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-1 border-2 border-purple-900 shadow-md flex items-center justify-center shrink-0 overflow-hidden">
                     <img
-                      src="/top_store_logo.jpg"
+                      src={topStoreLogo}
                       alt="شعار توب ستور TOP STORE"
                       className="w-full h-full object-contain"
                     />

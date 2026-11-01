@@ -41,6 +41,7 @@ import {
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useStore } from '../context/StoreContext';
+import topStoreLogo from '../assets/logo';
 import { JournalEntry, JournalLine, ChartAccount, AccountCategory, AuditLog, FiscalPeriod, FiscalYear } from '../types';
 import { isEntryActiveInLedger, resolveChartAccount } from '../services/AccountingEngine';
 
@@ -695,7 +696,7 @@ export const JournalView: React.FC = () => {
         <div className="flex items-center gap-3">
           <div className="w-14 h-14 rounded-2xl bg-white p-1 border border-slate-300 shadow-xs flex items-center justify-center shrink-0 overflow-hidden">
             <img
-              src="/top_store_logo.jpg"
+              src={topStoreLogo}
               alt="TOP STORE"
               className="w-full h-full object-contain"
             />
