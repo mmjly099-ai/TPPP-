@@ -16,10 +16,12 @@ import {
   Trash2,
   ShieldAlert,
   X,
-  Users
+  Users,
+  BarChart3
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { Expense } from '../types';
+import { ExpenseAnalyticsTab } from './expenses/ExpenseAnalyticsTab';
 
 interface ExpensesViewProps {
   onOpenNewExpense: () => void;
@@ -27,7 +29,8 @@ interface ExpensesViewProps {
 }
 
 export const ExpensesView: React.FC<ExpensesViewProps> = ({ onOpenNewExpense, onNavigate }) => {
-  const { expenses, accounts, totalExpenses, shipments, updateExpense, deleteExpense } = useStore();
+  const { expenses, accounts, orders, totalExpenses, shipments, updateExpense, deleteExpense } = useStore();
+  const [activeViewMode, setActiveViewMode] = useState<'list' | 'analytics'>('analytics');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
 
@@ -94,13 +97,13 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({ onOpenNewExpense, on
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-slate-900">سجل المصاريف والتشغيل اللوجستي</h2>
+            <h2 className="text-xl font-bold text-slate-900">سجل ومحلل المصاريف والتشغيل</h2>
             <span className="bg-rose-100 text-rose-800 text-xs font-bold px-2.5 py-0.5 rounded-full">
               تخصم من الأرباح
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            متابعة مصاريف الشحن اللوجستي، التسويق، الإنترنت، التغليف، المصاريف اليومية والرسوم
+            متابعة وتحليل مصاريف الشحن اللوجستي، التسويق، الإنترنت، التغليف، المصاريف اليومية والرسوم
           </p>
         </div>
 
@@ -126,10 +129,58 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({ onOpenNewExpense, on
         </div>
       </div>
 
-      {/* KPI & Summary Ribbon */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
-          <span className="text-xs text-slate-500">إجمالي المصروفات الكلية</span>
+      {/* Sub-navigation Switcher: Analytics vs Table List */}
+      <div className="flex items-center justify-between border-b border-slate-200 pb-3 gap-3 flex-wrap print:hidden">
+        <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200">
+          <button
+            onClick={() => setActiveViewMode('analytics')}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              activeViewMode === 'analytics'
+                ? 'bg-rose-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <BarChart3 className="w-3.5 h-3.5" />
+            <span>تحليل المصروفات الشامل والبياني</span>
+            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${activeViewMode === 'analytics' ? 'bg-white/25 text-white' : 'bg-rose-100 text-rose-700 font-bold'}`}>
+              محلل ذكي
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveViewMode('list')}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              activeViewMode === 'list'
+                ? 'bg-white text-slate-900 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Receipt className="w-3.5 h-3.5 text-rose-600" />
+            <span>جدول وبنود المصروفات ({expenses.length})</span>
+          </button>
+        </div>
+
+        <div className="text-xs text-slate-500 font-mono">
+          إجمالي المصاريف: <strong className="text-rose-600 font-bold text-sm">{metrics.total.toLocaleString()} ريال</strong>
+        </div>
+      </div>
+
+      {activeViewMode === 'analytics' ? (
+        <ExpenseAnalyticsTab
+          expenses={expenses}
+          orders={orders}
+          accounts={accounts}
+          onOpenNewExpense={onOpenNewExpense}
+          onFilterByCategory={(cat) => {
+            setSelectedCategory(cat);
+            setActiveViewMode('list');
+          }}
+        />
+      ) : (
+        <>
+          {/* KPI & Summary Ribbon */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+              <span className="text-xs text-slate-500">إجمالي المصروفات الكلية</span>
           <div className="text-xl font-black font-mono text-rose-600 mt-1">
             {metrics.total.toLocaleString()} <span className="text-xs text-slate-500 font-sans">ريال</span>
           </div>
@@ -338,6 +389,8 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({ onOpenNewExpense, on
           </div>
         )}
       </div>
+      </>
+      )}
 
       {/* Edit Expense Modal */}
       {editingExpense && (
