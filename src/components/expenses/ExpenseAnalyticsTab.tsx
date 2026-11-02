@@ -10,7 +10,9 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
-  Legend
+  Legend,
+  AreaChart,
+  Area
 } from 'recharts';
 import {
   Receipt,
@@ -32,7 +34,12 @@ import {
   TrendingUp,
   Percent,
   Layers,
-  Award
+  Award,
+  ChevronDown,
+  ChevronUp,
+  Eye,
+  Search,
+  X
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Expense, Order, Account } from '../../types';
@@ -76,6 +83,8 @@ export const ExpenseAnalyticsTab: React.FC<ExpenseAnalyticsTabProps> = ({
 }) => {
   const [timeRange, setTimeRange] = useState<TimeRangeFilter>('ALL');
   const [selectedAccountFilter, setSelectedAccountFilter] = useState<string>('ALL');
+  const [inspectingCategory, setInspectingCategory] = useState<string | null>(null);
+  const [inspectingCategorySearch, setInspectingCategorySearch] = useState<string>('');
 
   // Filter expenses by time and account
   const filteredExpenses = useMemo(() => {
@@ -93,7 +102,7 @@ export const ExpenseAnalyticsTab: React.FC<ExpenseAnalyticsTabProps> = ({
 
       if (timeRange === 'ALL') return true;
 
-      const dateStr = e.expenseDate || e.date;
+      const dateStr = e.createdAt || e.expenseDate || e.date;
       if (!dateStr) return true;
 
       const expDate = new Date(dateStr);
@@ -164,6 +173,43 @@ export const ExpenseAnalyticsTab: React.FC<ExpenseAnalyticsTabProps> = ({
       expenseToSalesRatio
     };
   }, [filteredExpenses, orders]);
+
+  // Monthly spending progression (trend)
+  const monthlyTrend = useMemo(() => {
+    const map: Record<string, { monthKey: string; monthName: string; total: number; count: number; logistics: number; operations: number }> = {};
+    const monthNamesAr: Record<string, string> = {
+      '01': 'يناير', '02': 'فبراير', '03': 'مارس', '04': 'أبريل',
+      '05': 'مايو', '06': 'يونيو', '07': 'يوليو', '08': 'أغسطس',
+      '09': 'سبتمبر', '10': 'أكتوبر', '11': 'نوفمبر', '12': 'ديسمبر'
+    };
+
+    expenses.forEach(e => {
+      if (e.status === 'cancelled') return;
+      const dateStr = e.createdAt || e.expenseDate || e.date;
+      if (!dateStr) return;
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return;
+
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const mNum = String(d.getMonth() + 1).padStart(2, '0');
+      const mLabel = `${monthNamesAr[mNum] || mNum} ${d.getFullYear()}`;
+
+      if (!map[key]) {
+        map[key] = { monthKey: key, monthName: mLabel, total: 0, count: 0, logistics: 0, operations: 0 };
+      }
+      const amt = parseFloat(String(e.amount)) || 0;
+      map[key].total += amt;
+      map[key].count += 1;
+      const cat = e.category || '';
+      if (cat === 'شحن ونقل لوجستي' || cat === 'شحن' || String(e.expenseNumber || '').startsWith('EXP-SHP-')) {
+        map[key].logistics += amt;
+      } else {
+        map[key].operations += amt;
+      }
+    });
+
+    return Object.values(map).sort((a, b) => a.monthKey.localeCompare(b.monthKey));
+  }, [expenses]);
 
   // Category Breakdown
   const categoryBreakdown = useMemo(() => {
@@ -575,6 +621,83 @@ export const ExpenseAnalyticsTab: React.FC<ExpenseAnalyticsTabProps> = ({
 
       </div>
 
+      {/* Monthly Trend Progression Card */}
+      {monthlyTrend.length > 0 && (
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 rounded-lg bg-emerald-50 text-emerald-700">
+                <TrendingUp className="w-4 h-4" />
+              </span>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">
+                  تطور مسار الإنفاق الشهري (مقارنة وتيرة الصرف)
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  مقارنة النفقات الإجمالية عبر الشهور وملاحظة حركة التكاليف
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 text-xs font-mono">
+              <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-bold">
+                {monthlyTrend.length} أشهر نشطة
+              </span>
+            </div>
+          </div>
+
+          <div className="h-56 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={monthlyTrend} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+                <defs>
+                  <linearGradient id="expenseTrendGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#e11d48" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#e11d48" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="monthName" stroke="#64748b" fontSize={11} tickLine={false} />
+                <YAxis
+                  stroke="#64748b"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={val => `${(val / 1000).toFixed(0)}k`}
+                />
+                <Tooltip
+                  formatter={(val: any) => [`${Number(val).toLocaleString()} ريال`, 'إجمالي المصروفات']}
+                  contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '12px', direction: 'rtl' }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="total"
+                  stroke="#e11d48"
+                  strokeWidth={2.5}
+                  fillOpacity={1}
+                  fill="url(#expenseTrendGradient)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Monthly Summary Badges */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-slate-100 mt-2">
+            {monthlyTrend.map(m => (
+              <div key={m.monthKey} className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs">
+                <div>
+                  <span className="font-bold text-slate-800 block">{m.monthName}</span>
+                  <span className="text-[10px] text-slate-400">{m.count} عملية مسجلة</span>
+                </div>
+                <div className="text-left font-mono">
+                  <strong className="text-rose-700 text-sm font-black">{m.total.toLocaleString()}</strong>
+                  <span className="text-[10px] text-slate-500 mr-1">ريال</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* 4. Category Deep-Dive Table */}
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
         <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
@@ -638,14 +761,28 @@ export const ExpenseAnalyticsTab: React.FC<ExpenseAnalyticsTabProps> = ({
                     )}
                   </td>
                   <td className="py-3 px-4 text-center print:hidden">
-                    {onFilterByCategory && (
+                    <div className="flex items-center justify-center gap-2">
                       <button
-                        onClick={() => onFilterByCategory(cat.name)}
-                        className="text-[11px] font-bold text-rose-600 hover:text-rose-800 hover:underline cursor-pointer"
+                        onClick={() => {
+                          setInspectingCategory(cat.name);
+                          setInspectingCategorySearch('');
+                        }}
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg transition cursor-pointer"
+                        title="معاينة تفاصيل البنود مباشرة"
                       >
-                        عرض البنود
+                        <Eye className="w-3.5 h-3.5 text-slate-500" />
+                        <span>معاينة</span>
                       </button>
-                    )}
+                      {onFilterByCategory && (
+                        <button
+                          onClick={() => onFilterByCategory(cat.name)}
+                          className="text-[11px] font-bold text-rose-600 hover:text-rose-800 hover:underline cursor-pointer"
+                          title="تصفية في جدول المصروفات"
+                        >
+                          تصفية
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -758,6 +895,93 @@ export const ExpenseAnalyticsTab: React.FC<ExpenseAnalyticsTabProps> = ({
         </div>
 
       </div>
+
+      {/* Category Drill-down Modal */}
+      {inspectingCategory && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto" dir="rtl">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-5 sm:p-6 space-y-4 shadow-2xl border border-slate-200 my-6">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <span className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[inspectingCategory] || DEFAULT_COLOR }} />
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    تفاصيل وسجلات تصنيف: {inspectingCategory}
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    استعراض كافة العمليات المسجلة تحت هذا التصنيف
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setInspectingCategory(null)}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Search within inspecting category */}
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-400 absolute right-3 top-3" />
+              <input
+                type="text"
+                placeholder="بحث في البيان، المستفيد، أو رقم المصروف داخل هذا التصنيف..."
+                value={inspectingCategorySearch}
+                onChange={e => setInspectingCategorySearch(e.target.value)}
+                className="w-full pr-9 pl-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-hidden focus:border-rose-500"
+              />
+            </div>
+
+            {/* List */}
+            <div className="max-h-96 overflow-y-auto space-y-2 divide-y divide-slate-100">
+              {filteredExpenses
+                .filter(e => e.category === inspectingCategory)
+                .filter(e => {
+                  if (!inspectingCategorySearch.trim()) return true;
+                  const term = inspectingCategorySearch.toLowerCase();
+                  return (
+                    String(e.description || '').toLowerCase().includes(term) ||
+                    String(e.vendorName || '').toLowerCase().includes(term) ||
+                    String(e.expenseNumber || '').toLowerCase().includes(term)
+                  );
+                })
+                .map(item => (
+                  <div key={item.id} className="pt-2 flex items-center justify-between text-xs gap-3 hover:bg-slate-50/50 p-1.5 rounded-lg transition-colors">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-[10px] text-slate-400 font-bold">{item.expenseNumber}</span>
+                        <strong className="text-slate-900">{item.description}</strong>
+                      </div>
+                      <div className="text-[11px] text-slate-500 flex items-center gap-2 flex-wrap">
+                        {item.vendorName && <span>المستفيد: <b className="text-slate-700">{item.vendorName}</b></span>}
+                        <span>•</span>
+                        <span>{item.expenseDate || (item.createdAt ? item.createdAt.split('T')[0] : '-')}</span>
+                        <span>•</span>
+                        <span className="bg-slate-100 text-slate-700 px-1.5 py-0.2 rounded font-mono text-[10px] font-bold">{item.paymentMethod || 'نقدي'}</span>
+                      </div>
+                    </div>
+                    <div className="text-left font-mono shrink-0">
+                      <strong className="text-rose-700 text-sm font-black">{Number(item.amount).toLocaleString()}</strong>
+                      <span className="text-[10px] text-slate-500 mr-1">ريال</span>
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+              <span className="text-slate-600">
+                إجمالي تصنيف {inspectingCategory}: <strong className="font-mono font-black text-rose-700 text-sm">{filteredExpenses.filter(e => e.category === inspectingCategory).reduce((s, e) => s + (Number(e.amount) || 0), 0).toLocaleString()} ريال</strong>
+              </span>
+              <button
+                onClick={() => setInspectingCategory(null)}
+                className="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition cursor-pointer"
+              >
+                إغلاق
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

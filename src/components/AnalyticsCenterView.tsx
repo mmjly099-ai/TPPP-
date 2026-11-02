@@ -46,7 +46,8 @@ import {
   MapPin,
   Flame,
   Award,
-  CircleDot
+  CircleDot,
+  RotateCcw
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import topStoreLogo from '../assets/logo';
@@ -57,7 +58,7 @@ interface AnalyticsCenterViewProps {
   onNavigate?: (tab: NavTab) => void;
 }
 
-type TimeRangeFilter = 'ALL' | 'THIS_MONTH' | 'LAST_30_DAYS' | 'THIS_QUARTER' | 'THIS_YEAR';
+type TimeRangeFilter = 'ALL' | 'TODAY' | 'THIS_WEEK' | 'THIS_MONTH' | 'LAST_MONTH' | 'LAST_30_DAYS' | 'THIS_QUARTER' | 'THIS_YEAR' | 'CUSTOM';
 type AnalyticsDomain = 'OVERVIEW' | 'FINANCIAL' | 'SALES' | 'EXPENSES' | 'CUSTOMERS' | 'LOGISTICS' | 'MARKETING' | 'HEALTH_SCORE';
 
 export const AnalyticsCenterView: React.FC<AnalyticsCenterViewProps> = ({ onNavigate }) => {
@@ -79,7 +80,84 @@ export const AnalyticsCenterView: React.FC<AnalyticsCenterViewProps> = ({ onNavi
   } = useStore();
 
   const [timeRange, setTimeRange] = useState<TimeRangeFilter>('ALL');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
   const [activeDomain, setActiveDomain] = useState<AnalyticsDomain>('OVERVIEW');
+
+  // Quick preset helper
+  const setPresetRange = (preset: TimeRangeFilter) => {
+    setTimeRange(preset);
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    const formatDate = (d: Date) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    if (preset === 'ALL') {
+      setStartDate('');
+      setEndDate('');
+    } else if (preset === 'TODAY') {
+      const todayStr = formatDate(now);
+      setStartDate(todayStr);
+      setEndDate(todayStr);
+    } else if (preset === 'THIS_WEEK') {
+      const startOfWeek = new Date(now);
+      const day = now.getDay();
+      const diff = now.getDate() - day + (day === 6 ? 0 : -1);
+      startOfWeek.setDate(diff);
+      setStartDate(formatDate(startOfWeek));
+      setEndDate(formatDate(now));
+    } else if (preset === 'THIS_MONTH') {
+      const startOfMonth = new Date(currentYear, currentMonth, 1);
+      const endOfMonth = new Date(currentYear, currentMonth + 1, 0);
+      setStartDate(formatDate(startOfMonth));
+      setEndDate(formatDate(endOfMonth));
+    } else if (preset === 'LAST_MONTH') {
+      const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+      const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+      const startOfLastMonth = new Date(lastMonthYear, lastMonth, 1);
+      const endOfLastMonth = new Date(lastMonthYear, lastMonth + 1, 0);
+      setStartDate(formatDate(startOfLastMonth));
+      setEndDate(formatDate(endOfLastMonth));
+    } else if (preset === 'LAST_30_DAYS') {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      setStartDate(formatDate(thirtyDaysAgo));
+      setEndDate(formatDate(now));
+    } else if (preset === 'THIS_QUARTER') {
+      const quarterStartMonth = Math.floor(currentMonth / 3) * 3;
+      const startOfQuarter = new Date(currentYear, quarterStartMonth, 1);
+      const endOfQuarter = new Date(currentYear, quarterStartMonth + 3, 0);
+      setStartDate(formatDate(startOfQuarter));
+      setEndDate(formatDate(endOfQuarter));
+    } else if (preset === 'THIS_YEAR') {
+      const startOfYear = new Date(currentYear, 0, 1);
+      const endOfYear = new Date(currentYear, 11, 31);
+      setStartDate(formatDate(startOfYear));
+      setEndDate(formatDate(endOfYear));
+    }
+  };
+
+  const handleStartDateChange = (val: string) => {
+    setStartDate(val);
+    setTimeRange('CUSTOM');
+  };
+
+  const handleEndDateChange = (val: string) => {
+    setEndDate(val);
+    setTimeRange('CUSTOM');
+  };
+
+  const handleResetFilter = () => {
+    setStartDate('');
+    setEndDate('');
+    setTimeRange('ALL');
+  };
 
   // Time-filtered data calculations
   const filteredData = useMemo(() => {
@@ -89,26 +167,47 @@ export const AnalyticsCenterView: React.FC<AnalyticsCenterViewProps> = ({ onNavi
 
     const isDateInRange = (dateStr?: string | null) => {
       if (!dateStr) return false;
+      const cleanDate = String(dateStr).slice(0, 10);
       const d = new Date(dateStr);
       if (isNaN(d.getTime())) return false;
 
+      // When specific start or end dates are active
+      if (startDate && cleanDate < startDate) return false;
+      if (endDate && cleanDate > endDate) return false;
+      if (startDate || endDate) return true;
+
+      // When using predefined preset without explicit date inputs
       if (timeRange === 'ALL') return true;
 
+      const todayStr = now.toISOString().split('T')[0];
+      if (timeRange === 'TODAY') {
+        return cleanDate === todayStr;
+      }
+      if (timeRange === 'THIS_WEEK') {
+        const startOfWeek = new Date(now);
+        const day = now.getDay();
+        const diff = now.getDate() - day + (day === 6 ? 0 : -1);
+        startOfWeek.setDate(diff);
+        startOfWeek.setHours(0, 0, 0, 0);
+        return d >= startOfWeek && d <= now;
+      }
       if (timeRange === 'THIS_MONTH') {
         return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
       }
-
+      if (timeRange === 'LAST_MONTH') {
+        const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+        const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+        return d.getFullYear() === lastMonthYear && d.getMonth() === lastMonth;
+      }
       if (timeRange === 'LAST_30_DAYS') {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         return d >= thirtyDaysAgo && d <= now;
       }
-
       if (timeRange === 'THIS_QUARTER') {
         const quarterStartMonth = Math.floor(currentMonth / 3) * 3;
         return d.getFullYear() === currentYear && d.getMonth() >= quarterStartMonth && d.getMonth() <= quarterStartMonth + 2;
       }
-
       if (timeRange === 'THIS_YEAR') {
         return d.getFullYear() === currentYear;
       }
@@ -120,14 +219,18 @@ export const AnalyticsCenterView: React.FC<AnalyticsCenterViewProps> = ({ onNavi
     const periodExpenses = expenses.filter(e => isDateInRange(e.expenseDate || e.createdAt));
     const periodTransactions = transactions.filter(t => isDateInRange(t.transactionDate || t.createdAt));
     const periodShipments = shipments.filter(s => isDateInRange(s.createdAt));
+    const periodBatches = purchaseBatches.filter(b => isDateInRange(b.purchaseDate || b.createdAt));
+    const periodCampaigns = marketingCampaigns.filter(c => isDateInRange(c.startDate || c.createdAt));
 
     return {
       orders: periodOrders,
       expenses: periodExpenses,
       transactions: periodTransactions,
-      shipments: periodShipments
+      shipments: periodShipments,
+      purchaseBatches: periodBatches,
+      marketingCampaigns: periodCampaigns
     };
-  }, [orders, expenses, transactions, shipments, timeRange]);
+  }, [orders, expenses, transactions, shipments, purchaseBatches, marketingCampaigns, timeRange, startDate, endDate]);
 
   // Executive KPI summary calculations
   const kpis = useMemo(() => {
@@ -142,7 +245,6 @@ export const AnalyticsCenterView: React.FC<AnalyticsCenterViewProps> = ({ onNavi
     // Purchase costs
     const totalPurchaseCost = ords.reduce((sum, o) => {
       const cost = parseFloat(String(o.purchaseCost || 0));
-      // If purchase cost is recorded use it, else approximate 82% of subtotal as purchase cost
       return sum + (cost > 0 ? cost : (parseFloat(String(o.subtotal || 0)) * 0.82));
     }, 0);
 
@@ -161,7 +263,10 @@ export const AnalyticsCenterView: React.FC<AnalyticsCenterViewProps> = ({ onNavi
     const collectionRate = totalSales > 0 ? Math.round((totalPaid / totalSales) * 100) : 0;
 
     // Marketing ad spend & attributed revenue
-    const totalAdSpend = marketingCampaigns.reduce((sum, c) => sum + (parseFloat(String(c.spentAmount || c.actualSpend || c.budget || 0)) || 0), 0);
+    const totalAdSpend = filteredData.marketingCampaigns.reduce(
+      (sum, c) => sum + (parseFloat(String(c.spentAmount || c.actualSpend || c.budget || 0)) || 0),
+      0
+    );
     const marketingAttributedSales = ords
       .filter(o => o.marketingCampaignId || o.marketingChannelId || o.marketingCode)
       .reduce((sum, o) => sum + (parseFloat(String(o.totalAmount || 0)) || 0), 0);
@@ -186,59 +291,115 @@ export const AnalyticsCenterView: React.FC<AnalyticsCenterViewProps> = ({ onNavi
       marketingAttributedSales,
       roas
     };
-  }, [filteredData, marketingCampaigns]);
+  }, [filteredData]);
 
-  // Monthly Sales & Expenses Trend (Recharts Area/Bar)
+  // Dynamic Timeline Sales & Expenses Trend (Recharts Area/Bar)
   const monthlyTrendData = useMemo(() => {
-    const monthMap: Record<string, { month: string; sales: number; expenses: number; profit: number; orderCount: number }> = {};
+    const ords = filteredData.orders;
+    const exps = filteredData.expenses;
     const monthNamesAr = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
 
-    // Fill last 6 months
-    const now = new Date();
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      monthMap[key] = {
-        month: monthNamesAr[d.getMonth()],
-        sales: 0,
-        expenses: 0,
-        profit: 0,
-        orderCount: 0
-      };
+    // Determine if we should show Daily or Monthly grouping
+    let isDaily = false;
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays <= 35) isDaily = true;
+    } else if (timeRange === 'TODAY' || timeRange === 'THIS_WEEK' || timeRange === 'LAST_30_DAYS') {
+      isDaily = true;
     }
 
-    orders.forEach(o => {
-      const d = new Date(o.orderDate || o.createdAt);
-      if (!isNaN(d.getTime())) {
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        if (monthMap[key]) {
-          const amt = parseFloat(String(o.totalAmount || 0)) || 0;
-          monthMap[key].sales += amt;
-          monthMap[key].orderCount += 1;
-        }
+    const intervalMap: Record<string, { label: string; sales: number; expenses: number; profit: number; orderCount: number }> = {};
+
+    ords.forEach(o => {
+      const dateStr = o.orderDate || o.createdAt;
+      if (!dateStr) return;
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return;
+
+      const key = isDaily
+        ? String(dateStr).slice(0, 10)
+        : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      
+      const label = isDaily
+        ? `${d.getDate()} ${monthNamesAr[d.getMonth()]}`
+        : `${monthNamesAr[d.getMonth()]} ${d.getFullYear()}`;
+
+      if (!intervalMap[key]) {
+        intervalMap[key] = { label, sales: 0, expenses: 0, profit: 0, orderCount: 0 };
       }
+      const amt = parseFloat(String(o.totalAmount || 0)) || 0;
+      intervalMap[key].sales += amt;
+      intervalMap[key].orderCount += 1;
     });
 
-    expenses.forEach(e => {
-      const d = new Date(e.expenseDate || e.createdAt);
-      if (!isNaN(d.getTime())) {
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        if (monthMap[key]) {
-          const amt = parseFloat(String(e.amount || 0)) || 0;
-          monthMap[key].expenses += amt;
+    exps.forEach(e => {
+      const dateStr = e.expenseDate || e.createdAt;
+      if (!dateStr) return;
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return;
+
+      const key = isDaily
+        ? String(dateStr).slice(0, 10)
+        : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      
+      const label = isDaily
+        ? `${d.getDate()} ${monthNamesAr[d.getMonth()]}`
+        : `${monthNamesAr[d.getMonth()]} ${d.getFullYear()}`;
+
+      if (!intervalMap[key]) {
+        intervalMap[key] = { label, sales: 0, expenses: 0, profit: 0, orderCount: 0 };
+      }
+      const amt = parseFloat(String(e.amount || 0)) || 0;
+      intervalMap[key].expenses += amt;
+    });
+
+    // If no data in intervalMap, generate empty placeholders from the range
+    if (Object.keys(intervalMap).length === 0) {
+      if (isDaily && startDate && endDate) {
+        const curr = new Date(startDate);
+        const end = new Date(endDate);
+        while (curr <= end) {
+          const key = curr.toISOString().split('T')[0];
+          const label = `${curr.getDate()} ${monthNamesAr[curr.getMonth()]}`;
+          intervalMap[key] = { label, sales: 0, expenses: 0, profit: 0, orderCount: 0 };
+          curr.setDate(curr.getDate() + 1);
+        }
+      } else {
+        const now = new Date();
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+          intervalMap[key] = {
+            label: `${monthNamesAr[d.getMonth()]} ${d.getFullYear()}`,
+            sales: 0,
+            expenses: 0,
+            profit: 0,
+            orderCount: 0
+          };
         }
       }
-    });
+    }
 
     // Compute estimated net profit
-    Object.keys(monthMap).forEach(k => {
-      const item = monthMap[k];
+    Object.keys(intervalMap).forEach(k => {
+      const item = intervalMap[k];
       const estimatedCost = item.sales * 0.80; // approximate
       item.profit = Math.max(0, item.sales - estimatedCost - item.expenses);
     });
 
-    return Object.values(monthMap);
-  }, [orders, expenses]);
+    // Sort chronologically by key
+    return Object.entries(intervalMap)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, v]) => ({
+        month: v.label,
+        sales: v.sales,
+        expenses: v.expenses,
+        profit: v.profit,
+        orderCount: v.orderCount
+      }));
+  }, [filteredData.orders, filteredData.expenses, startDate, endDate, timeRange]);
 
   // Expenses Category Breakdown
   const expensesByCategory = useMemo(() => {
@@ -304,7 +465,7 @@ export const AnalyticsCenterView: React.FC<AnalyticsCenterViewProps> = ({ onNavi
       govMap[gov].count += 1;
     });
 
-    orders.forEach(o => {
+    filteredData.orders.forEach(o => {
       const cust = customers.find(c => c.id === o.customerId);
       const gov = cust?.governorate || 'صنعاء';
       if (govMap[gov]) {
@@ -320,7 +481,7 @@ export const AnalyticsCenterView: React.FC<AnalyticsCenterViewProps> = ({ onNavi
       }))
       .sort((a, b) => b.sales - a.sales);
 
-    // Top 5 VIP Customers by purchase amount
+    // Top 5 VIP Customers by purchase amount in the selected period
     const customerSalesMap: Record<number, { customer: Customer; totalSpent: number; ordersCount: number; debt: number }> = {};
     customers.forEach(c => {
       customerSalesMap[c.id] = {
@@ -331,7 +492,7 @@ export const AnalyticsCenterView: React.FC<AnalyticsCenterViewProps> = ({ onNavi
       };
     });
 
-    orders.forEach(o => {
+    filteredData.orders.forEach(o => {
       if (customerSalesMap[o.customerId]) {
         customerSalesMap[o.customerId].totalSpent += parseFloat(String(o.totalAmount || 0)) || 0;
         customerSalesMap[o.customerId].ordersCount += 1;
@@ -339,17 +500,21 @@ export const AnalyticsCenterView: React.FC<AnalyticsCenterViewProps> = ({ onNavi
     });
 
     const topCustomers = Object.values(customerSalesMap)
+      .filter(item => item.ordersCount > 0 || timeRange === 'ALL')
       .sort((a, b) => b.totalSpent - a.totalSpent)
       .slice(0, 6);
+
+    const activeCustomersInPeriod = Object.values(customerSalesMap).filter(item => item.ordersCount > 0).length;
 
     return {
       totalCusts,
       debtCustomersCount,
       totalCustomerDebt,
       topGovernorates,
-      topCustomers
+      topCustomers,
+      activeCustomersInPeriod
     };
-  }, [customers, orders, getCustomerBalance]);
+  }, [customers, filteredData.orders, getCustomerBalance, timeRange]);
 
   // Liquidity by Account Type & Distribution
   const liquidityBreakdown = useMemo(() => {
@@ -455,6 +620,9 @@ export const AnalyticsCenterView: React.FC<AnalyticsCenterViewProps> = ({ onNavi
         </div>
         <div className="text-left font-mono text-xs">
           <div className="font-bold text-slate-900">تقرير تحليلي مالي رسمي</div>
+          <div className="text-slate-600 text-[11px] mt-0.5 font-bold">
+            الفترة: {startDate && endDate ? `من ${startDate} إلى ${endDate}` : (timeRange === 'ALL' ? 'كافة الفترات' : timeRange)}
+          </div>
           <div className="text-slate-500 text-[10px]">تاريخ الاستخراج: {new Date().toLocaleDateString('ar-YE')}</div>
         </div>
       </div>
@@ -482,58 +650,14 @@ export const AnalyticsCenterView: React.FC<AnalyticsCenterViewProps> = ({ onNavi
             </div>
           </div>
 
-          {/* Time Range Selector & Action Controls */}
-          <div className="flex flex-wrap items-center gap-2.5 print:hidden">
-            <div className="bg-slate-800/90 border border-slate-700 p-1 rounded-xl flex items-center text-xs">
-              <button
-                onClick={() => setTimeRange('ALL')}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                  timeRange === 'ALL'
-                    ? 'bg-amber-500 text-slate-950 shadow-sm'
-                    : 'text-slate-300 hover:text-white'
-                }`}
-              >
-                الكل
-              </button>
-              <button
-                onClick={() => setTimeRange('THIS_MONTH')}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                  timeRange === 'THIS_MONTH'
-                    ? 'bg-amber-500 text-slate-950 shadow-sm'
-                    : 'text-slate-300 hover:text-white'
-                }`}
-              >
-                هذا الشهر
-              </button>
-              <button
-                onClick={() => setTimeRange('LAST_30_DAYS')}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                  timeRange === 'LAST_30_DAYS'
-                    ? 'bg-amber-500 text-slate-950 shadow-sm'
-                    : 'text-slate-300 hover:text-white'
-                }`}
-              >
-                آخر 30 يوم
-              </button>
-              <button
-                onClick={() => setTimeRange('THIS_YEAR')}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                  timeRange === 'THIS_YEAR'
-                    ? 'bg-amber-500 text-slate-950 shadow-sm'
-                    : 'text-slate-300 hover:text-white'
-                }`}
-              >
-                هذا العام
-              </button>
-            </div>
-
+          <div className="flex items-center gap-2.5 print:hidden self-start md:self-auto">
             <button
               onClick={handlePrintReport}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 text-xs font-bold transition-all cursor-pointer shadow-xs"
-              title="طباعة التقرير التحليلي"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-all cursor-pointer shadow-md"
+              title="طباعة التقرير التحليلي الرسمي"
             >
-              <Printer className="w-3.5 h-3.5 text-amber-400" />
-              <span>طباعة التقرير</span>
+              <Printer className="w-4 h-4 text-slate-950" />
+              <span>طباعة التقرير A4</span>
             </button>
           </div>
         </div>
@@ -569,6 +693,110 @@ export const AnalyticsCenterView: React.FC<AnalyticsCenterViewProps> = ({ onNavi
           })}
         </div>
       </div>
+
+      {/* Dynamic Date Range Filter Panel (من تاريخ - إلى تاريخ) */}
+      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs print:hidden space-y-4">
+        
+        {/* Top Controls Row */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          
+          {/* Quick Preset Buttons Bar */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1">
+              <Calendar className="w-3.5 h-3.5 text-slate-400" />
+              فترة سريعة:
+            </span>
+            {[
+              { id: 'ALL', label: 'كافة الفترات' },
+              { id: 'TODAY', label: 'اليوم' },
+              { id: 'THIS_WEEK', label: 'هذا الأسبوع' },
+              { id: 'THIS_MONTH', label: 'هذا الشهر' },
+              { id: 'LAST_MONTH', label: 'الشهر السابق' },
+              { id: 'LAST_30_DAYS', label: 'آخر 30 يوم' },
+              { id: 'THIS_QUARTER', label: 'هذا الربع' },
+              { id: 'THIS_YEAR', label: 'هذا العام' }
+            ].map(preset => (
+              <button
+                key={preset.id}
+                onClick={() => setPresetRange(preset.id as TimeRangeFilter)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  timeRange === preset.id
+                    ? 'bg-[#1A3668] text-white shadow-xs'
+                    : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
+                }`}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Dynamic Date Inputs: من تاريخ - إلى تاريخ */}
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap bg-slate-50 p-2 rounded-xl border border-slate-200 self-start lg:self-auto">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-bold text-slate-700 whitespace-nowrap">من:</span>
+              <input
+                type="date"
+                value={startDate}
+                onChange={e => handleStartDateChange(e.target.value)}
+                className="px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white text-slate-900 font-mono font-bold focus:outline-hidden focus:border-[#1A3668] focus:ring-1 focus:ring-[#1A3668]/30 shadow-2xs"
+                title="تاريخ البداية (من)"
+              />
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-bold text-slate-700 whitespace-nowrap">إلى:</span>
+              <input
+                type="date"
+                value={endDate}
+                onChange={e => handleEndDateChange(e.target.value)}
+                className="px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white text-slate-900 font-mono font-bold focus:outline-hidden focus:border-[#1A3668] focus:ring-1 focus:ring-[#1A3668]/30 shadow-2xs"
+                title="تاريخ النهاية (إلى)"
+              />
+            </div>
+
+            {(startDate || endDate || timeRange !== 'ALL') && (
+              <button
+                onClick={handleResetFilter}
+                className="px-2.5 py-1.5 text-xs font-bold text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+                title="إعادة ضبط الفلترة وعرض كافة الفترات"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>إلغاء التحديد</span>
+              </button>
+            )}
+          </div>
+
+        </div>
+
+        {/* Live Filter Indicator Bar */}
+        <div className="flex items-center justify-between text-xs pt-3 border-t border-slate-100 flex-wrap gap-2">
+          <div className="flex items-center gap-2 text-slate-700">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-semibold">النطاق الزمني المفعل:</span>
+            <strong className="font-mono text-slate-900 bg-amber-50 px-2.5 py-0.5 rounded-lg border border-amber-200">
+              {startDate && endDate
+                ? `من ${startDate} إلى ${endDate}`
+                : startDate
+                ? `من ${startDate} حتى الآن`
+                : endDate
+                ? `حتى تاريخ ${endDate}`
+                : 'كافة الفترات المسجلة في النظام'}
+            </strong>
+          </div>
+
+          <div className="flex items-center gap-3 font-mono text-[11px] text-slate-500">
+            <span>الطلبيات: <b className="text-emerald-700 font-bold">{filteredData.orders.length}</b></span>
+            <span>•</span>
+            <span>المصروفات: <b className="text-rose-700 font-bold">{filteredData.expenses.length}</b></span>
+            <span>•</span>
+            <span>الشحنات: <b className="text-purple-700 font-bold">{filteredData.shipments.length}</b></span>
+            <span>•</span>
+            <span>المبيعات: <b className="text-slate-900 font-bold">{kpis.totalSales.toLocaleString()} ريال</b></span>
+          </div>
+        </div>
+
+      </div>
+
 
       {/* Top 4 Executive KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
