@@ -16,7 +16,12 @@ import {
   Layers,
   Search,
   CheckCircle2,
-  FileText
+  FileText,
+  SlidersHorizontal,
+  Scale,
+  RotateCcw,
+  AlertCircle,
+  X
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { Account, FinancialTransaction } from '../types';
@@ -33,7 +38,15 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   onOpenTransfer,
   onOpenAddAccount
 }) => {
-  const { accounts, transactions, getAccountBalance, totalCashAndBanks, runningBalancesMap } = useStore();
+  const {
+    accounts,
+    transactions,
+    getAccountBalance,
+    totalCashAndBanks,
+    runningBalancesMap,
+    reconcileAccountBalance,
+    reconcileAllAccountsBalances
+  } = useStore();
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(2);
   const [modalAccount, setModalAccount] = useState<Account | null>(null);
   const [typeFilter, setTypeFilter] = useState<string>('ALL');
@@ -41,6 +54,15 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   // Ledger filters
   const [ledgerFilter, setLedgerFilter] = useState<'ALL' | 'IN' | 'OUT' | 'TRANSFER'>('ALL');
   const [ledgerSearch, setLedgerSearch] = useState<string>('');
+
+  // Reconcile Balances Modals State (بدون صادر أو وارد)
+  const [isReconcileAllOpen, setIsReconcileAllOpen] = useState(false);
+  const [reconcileBalances, setReconcileBalances] = useState<Record<number, number>>({});
+  const [reconciliationNotes, setReconciliationNotes] = useState('');
+
+  const [singleReconcileAccount, setSingleReconcileAccount] = useState<Account | null>(null);
+  const [singleTargetBalance, setSingleTargetBalance] = useState<number>(0);
+  const [singleReconcileNotes, setSingleReconcileNotes] = useState<string>('');
 
   // Record Inflow/Outflow modal state
   const [recordModalConfig, setRecordModalConfig] = useState<{
@@ -58,6 +80,22 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       type,
       accountId
     });
+  };
+
+  const handleOpenReconcileAll = () => {
+    const initialMap: Record<number, number> = {};
+    accounts.filter(a => a.type !== 'حقوق ملكية' && a.status === 'active').forEach(a => {
+      initialMap[a.id] = getAccountBalance(a.id);
+    });
+    setReconcileBalances(initialMap);
+    setReconciliationNotes('');
+    setIsReconcileAllOpen(true);
+  };
+
+  const handleOpenReconcileSingle = (acc: Account) => {
+    setSingleReconcileAccount(acc);
+    setSingleTargetBalance(getAccountBalance(acc.id));
+    setSingleReconcileNotes('');
   };
 
   const filteredAccounts = accounts.filter(a => {
@@ -204,6 +242,16 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
           >
             <ArrowUpRight className="w-4 h-4" />
             <span>سند صادر (سحب)</span>
+          </button>
+
+          {/* Direct Balance Reconciliation (تسوية الرصيد بدون صادر أو وارد) */}
+          <button
+            onClick={handleOpenReconcileAll}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white text-xs font-bold transition-all shadow-sm shadow-amber-600/20 cursor-pointer"
+            title="تسوية وتعديل الأرصدة الفعلية لكافة المحافظ دون تسجيل أي حركة صادر أو وارد"
+          >
+            <SlidersHorizontal className="w-4 h-4" />
+            <span>تسوية أرصدة المحافظ (بدون صادر/وارد)</span>
           </button>
 
           {/* Transfer between accounts */}
@@ -403,7 +451,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 </div>
 
                 {/* Direct Action Buttons on Card */}
-                <div className="grid grid-cols-4 gap-1">
+                <div className="grid grid-cols-5 gap-1">
                   <button
                     onClick={e => {
                       e.stopPropagation();
@@ -438,6 +486,18 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   >
                     <ArrowLeftRight className="w-3.5 h-3.5" />
                     <span>تحويل</span>
+                  </button>
+
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      handleOpenReconcileSingle(account);
+                    }}
+                    className="py-1 px-1 rounded-lg bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-800 text-[10px] font-bold transition-colors flex flex-col items-center justify-center gap-0.5 cursor-pointer border border-amber-200"
+                    title="تسوية ومطابقة الرصيد الفعلي مباشرة دون تسجيل صادر أو وارد"
+                  >
+                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                    <span>تسوية</span>
                   </button>
 
                   <button
@@ -717,13 +777,234 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         />
       )}
 
-      {/* Record Inflow/Outflow Modal */}
-      <RecordAccountTransactionModal
-        isOpen={recordModalConfig.isOpen}
-        onClose={() => setRecordModalConfig(prev => ({ ...prev, isOpen: false }))}
-        initialType={recordModalConfig.type}
-        initialAccountId={recordModalConfig.accountId}
-      />
+      {/* Reconcile All Wallets Modal (بدون صادر أو وارد) */}
+      {isReconcileAllOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs" dir="rtl">
+          <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
+            <div className="bg-[#1A3668] text-white p-5 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center">
+                  <SlidersHorizontal className="w-5 h-5 text-amber-300" />
+                </div>
+                <div>
+                  <h3 className="font-black text-base">تسوية ومطابقة أرصدة كافة المحافظ والحسابات</h3>
+                  <p className="text-xs text-blue-200">تعديل الأرصدة الفعلية مباشرة دون تسجيل أي عمليات في الصادر أو الوارد</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsReconcileAllOpen(false)}
+                className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-5 sm:p-6 space-y-4 overflow-y-auto text-xs">
+              {/* Educational Notice Banner */}
+              <div className="p-3.5 bg-amber-50 rounded-2xl border border-amber-200 text-amber-950 space-y-1.5">
+                <div className="font-bold flex items-center gap-1.5 text-amber-900">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <span>تعديل مباشر للأرصدة (بدون التأثير على الوارد والصادر):</span>
+                </div>
+                <p className="text-[11px] leading-relaxed text-amber-900/90">
+                  هذه النافذة مخصصة لمطابقة أرصدة النظام مع رصيدك الحقيقي في التطبيقات (الكريمي، جيب، ون كاش، أو درج النقدية).
+                  سيتم تعديل الرصيد الفعلي فوراً <strong>دون إنشاء أي سند صادر (سحب) أو سند وارد (إيداع)</strong>، مما يحافظ على دقة تقارير التدفق النقدي وإيرادات المبيعات ومصروفات التشغيل دون أي تضخيم.
+                </p>
+              </div>
+
+              {/* Accounts List for Reconciliation */}
+              <div className="space-y-2.5">
+                <span className="font-bold text-slate-700 block">حدد الرصيد الفعلي لكل محفظة / حساب:</span>
+                
+                <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/50">
+                  {accounts.filter(a => a.type !== 'حقوق ملكية' && a.status === 'active').map(acc => {
+                    const currentBal = getAccountBalance(acc.id);
+                    const targetBal = reconcileBalances[acc.id] !== undefined ? reconcileBalances[acc.id] : currentBal;
+                    const diff = Number(targetBal || 0) - currentBal;
+
+                    return (
+                      <div key={acc.id} className="p-3 sm:p-3.5 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/80 transition-colors">
+                        <div className="min-w-[160px]">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-900 text-xs">{acc.name}</span>
+                            <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-medium">
+                              {acc.type}
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-slate-500 font-mono mt-0.5">
+                            الرصيد الحالي بالنظام: <span className="font-bold text-slate-800">{currentBal.toLocaleString()} ريال</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1.5">
+                            <label className="text-[11px] font-bold text-slate-600 whitespace-nowrap">الرصيد الفعلي:</label>
+                            <input
+                              type="number"
+                              value={targetBal}
+                              onChange={e => {
+                                const val = Number(e.target.value);
+                                setReconcileBalances(prev => ({ ...prev, [acc.id]: val }));
+                              }}
+                              className="w-32 px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-xl font-mono font-bold text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#1A3668]"
+                            />
+                            <span className="text-[11px] text-slate-400 font-medium">ريال</span>
+                          </div>
+
+                          <div className="min-w-[100px] text-left">
+                            {diff === 0 ? (
+                              <span className="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md font-bold">
+                                مطابق ✓
+                              </span>
+                            ) : diff > 0 ? (
+                              <span className="text-[10px] text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-md font-bold font-mono">
+                                +{diff.toLocaleString()}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-rose-800 bg-rose-100 border border-rose-300 px-2 py-0.5 rounded-md font-bold font-mono">
+                                {diff.toLocaleString()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">ملاحظات التسوية والمطابقة (اختياري):</label>
+                <input
+                  type="text"
+                  placeholder="مثال: مطابقة الأرصدة مع تطبيقات البنوك بنهاية اليوم..."
+                  value={reconciliationNotes}
+                  onChange={e => setReconciliationNotes(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#1A3668]"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsReconcileAllOpen(false)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl cursor-pointer"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const adjustments = Object.entries(reconcileBalances).map(([id, targetBalance]) => ({
+                      accountId: Number(id),
+                      targetBalance: Number(targetBalance)
+                    }));
+                    reconcileAllAccountsBalances(adjustments, reconciliationNotes.trim() || undefined);
+                    setIsReconcileAllOpen(false);
+                  }}
+                  className="px-5 py-2 bg-[#1A3668] hover:bg-[#234885] text-white font-bold rounded-xl cursor-pointer shadow-md flex items-center gap-1.5"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>تطبيق تسوية الأرصدة لكافة المحافظ</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reconcile Single Account Modal (بدون صادر أو وارد) */}
+      {singleReconcileAccount && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs" dir="rtl">
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="bg-[#1A3668] text-white p-5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="w-5 h-5 text-amber-300" />
+                <h3 className="font-black text-base">تسوية رصيد: {singleReconcileAccount.name}</h3>
+              </div>
+              <button
+                onClick={() => setSingleReconcileAccount(null)}
+                className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-5 sm:p-6 space-y-4 text-xs">
+              <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-amber-950 space-y-1">
+                <div className="font-bold">تعديل مباشر دون تسجيل صادر أو وارد</div>
+                <div className="text-[11px] text-amber-900/90 leading-relaxed">
+                  سيتم تعديل رصيد هذه المحفظة ليصبح تماماً بالمبلغ المحدد دون التأثير على إحصائيات المقبوضات أو المدفوعات.
+                </div>
+              </div>
+
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500 font-bold">الرصيد الحالي بالنظام:</span>
+                  <span className="font-black font-mono text-slate-800 text-sm">
+                    {getAccountBalance(singleReconcileAccount.id).toLocaleString()} ريال
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  الرصيد الفعلي الجديد المراد تسويته إليه (ريال) <span className="text-rose-500">*</span>:
+                </label>
+                <input
+                  type="number"
+                  required
+                  value={singleTargetBalance}
+                  onChange={e => setSingleTargetBalance(Number(e.target.value))}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-mono font-bold text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A3668]"
+                />
+                <div className="text-[11px] font-mono mt-1 text-slate-500">
+                  فارق التسوية: {
+                    singleTargetBalance - getAccountBalance(singleReconcileAccount.id) === 0
+                      ? 'لا يوجد فارق'
+                      : singleTargetBalance - getAccountBalance(singleReconcileAccount.id) > 0
+                        ? `+${(singleTargetBalance - getAccountBalance(singleReconcileAccount.id)).toLocaleString()} ريال (زيادة رصيد)`
+                        : `${(singleTargetBalance - getAccountBalance(singleReconcileAccount.id)).toLocaleString()} ريال (نقصان رصيد)`
+                  }
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">ملاحظات التسوية (اختياري):</label>
+                <input
+                  type="text"
+                  placeholder="مثال: مطابقة الرصيد الفعلي في تطبيق البنك..."
+                  value={singleReconcileNotes}
+                  onChange={e => setSingleReconcileNotes(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#1A3668]"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setSingleReconcileAccount(null)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl cursor-pointer"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    reconcileAccountBalance(singleReconcileAccount.id, singleTargetBalance, singleReconcileNotes.trim() || undefined);
+                    setSingleReconcileAccount(null);
+                  }}
+                  className="px-5 py-2 bg-[#1A3668] hover:bg-[#234885] text-white font-bold rounded-xl cursor-pointer shadow-md flex items-center gap-1.5"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>تأكيد وحفظ تسوية الرصيد</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -39,6 +39,7 @@ export const DeliveryOrdersTab: React.FC<DeliveryOrdersTabProps> = ({
     couriers = [],
     accounts = [],
     updateDeliveryOrderStatus,
+    updateDeliveryOrder,
     recordDeliveryCashToCourier,
     recordDeliveryTransferToWallet,
     deleteDeliveryOrder,
@@ -57,6 +58,10 @@ export const DeliveryOrdersTab: React.FC<DeliveryOrdersTabProps> = ({
 
   // Status Change Dialog state
   const [statusModalOrder, setStatusModalOrder] = useState<DeliveryOrder | null>(null);
+  const [statusCustomerName, setStatusCustomerName] = useState('');
+  const [statusCustomerPhone, setStatusCustomerPhone] = useState('');
+  const [statusGovernorate, setStatusGovernorate] = useState('صنعاء');
+  const [statusAddress, setStatusAddress] = useState('');
   const [targetStatus, setTargetStatus] = useState<DeliveryOrderStatus>('delivered');
   const [statusCourierId, setStatusCourierId] = useState<number>(couriers[0]?.id || 0);
   const [statusDeliveryFee, setStatusDeliveryFee] = useState<number>(1500);
@@ -64,6 +69,9 @@ export const DeliveryOrdersTab: React.FC<DeliveryOrdersTabProps> = ({
   const [statusCollectionMethod, setStatusCollectionMethod] = useState<'cash_to_courier' | 'transfer_to_wallet' | 'waived'>('cash_to_courier');
   const [statusWalletId, setStatusWalletId] = useState<number>(accounts.find(a => a.type === 'محفظة')?.id || accounts[0]?.id || 0);
   const [statusWalletRef, setStatusWalletRef] = useState('');
+
+  // Delete Order state
+  const [orderToDelete, setOrderToDelete] = useState<DeliveryOrder | null>(null);
 
   // Wallet Transfer Quick Modal state
   const [walletTransferModalOrder, setWalletTransferModalOrder] = useState<DeliveryOrder | null>(null);
@@ -174,23 +182,43 @@ export const DeliveryOrdersTab: React.FC<DeliveryOrdersTabProps> = ({
 
   const handleOpenStatusModal = (order: DeliveryOrder) => {
     setStatusModalOrder(order);
+    setStatusCustomerName(order.customerName || '');
+    setStatusCustomerPhone(order.customerPhone || '');
+    setStatusGovernorate(order.governorate || 'صنعاء');
+    setStatusAddress(order.address || '');
     setTargetStatus(order.status === 'pending_dispatch' ? 'delivered' : order.status);
     setStatusCourierId(order.courierId || couriers[0]?.id || 0);
     setStatusDeliveryFee(Number(order.deliveryFee) || 1500);
     setStatusCollectionMethod(order.collectionMethod === 'unassigned' ? 'cash_to_courier' : (order.collectionMethod as any));
     setStatusWalletId(order.walletId || accounts.find(a => a.type === 'محفظة')?.id || accounts[0]?.id || 0);
     setStatusWalletRef(order.walletReference || '');
-    setStatusNotes(order.failedReason || '');
+    setStatusNotes(order.failedReason || order.notes || '');
   };
 
   const handleConfirmStatusChange = (e: React.FormEvent) => {
     e.preventDefault();
     if (!statusModalOrder) return;
 
+    const courierObj = couriers.find(c => c.id === statusCourierId);
+
+    // Update customer and basic details
+    updateDeliveryOrder({
+      ...statusModalOrder,
+      customerName: statusCustomerName.trim() || statusModalOrder.customerName,
+      customerPhone: statusCustomerPhone.trim() || statusModalOrder.customerPhone,
+      governorate: statusGovernorate.trim() || statusModalOrder.governorate,
+      address: statusAddress.trim() || statusModalOrder.address,
+      courierId: statusCourierId,
+      courierName: courierObj ? courierObj.name : statusModalOrder.courierName,
+      deliveryFee: Number(statusDeliveryFee) || 1500,
+      notes: statusNotes.trim() || statusModalOrder.notes
+    });
+
+    // Update operational and financial status
     updateDeliveryOrderStatus(statusModalOrder.id, targetStatus, {
       courierId: statusCourierId,
       deliveryFee: Number(statusDeliveryFee) || 1500,
-      failedReason: targetStatus === 'delivery_failed' || targetStatus === 'returned' ? statusNotes : undefined,
+      failedReason: targetStatus === 'delivery_failed' || targetStatus === 'returned' || targetStatus === 'cancelled' ? statusNotes : undefined,
       deliveredAt: targetStatus === 'delivered' ? new Date().toISOString().split('T')[0] : undefined,
       collectionMethod: statusCollectionMethod,
       walletId: statusCollectionMethod === 'transfer_to_wallet' ? statusWalletId : undefined,
@@ -519,12 +547,8 @@ export const DeliveryOrdersTab: React.FC<DeliveryOrdersTabProps> = ({
 
                         {userRole === 'admin' && (
                           <button
-                            onClick={() => {
-                              if (window.confirm(`هل أنت متأكد من حذف طلب التوصيل #${order.deliveryNumber}؟`)) {
-                                deleteDeliveryOrder(order.id);
-                              }
-                            }}
-                            title="حذف الطلب"
+                            onClick={() => setOrderToDelete(order)}
+                            title="حذف طلب التوصيل نهائياً"
                             className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-700 flex items-center justify-center transition cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -559,14 +583,14 @@ export const DeliveryOrdersTab: React.FC<DeliveryOrdersTabProps> = ({
         />
       )}
 
-      {/* Status & Collection Update Modal */}
+      {/* Edit Delivery Order & Status Modal */}
       {statusModalOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs" dir="rtl">
-          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="bg-[#1A3668] text-white p-4 sm:p-5 flex items-center justify-between">
+          <div className="bg-white w-full max-w-xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
+            <div className="bg-[#1A3668] text-white p-4 sm:p-5 flex items-center justify-between shrink-0">
               <div>
-                <h3 className="font-black text-sm sm:text-base">تحديث حالة التوصيل وطريقة التحصيل</h3>
-                <p className="text-xs text-blue-200">طلب #{statusModalOrder.deliveryNumber} - العميلة: {statusModalOrder.customerName}</p>
+                <h3 className="font-black text-sm sm:text-base">تعديل بيانات وحالة طلب التوصيل</h3>
+                <p className="text-xs text-blue-200">طلب #{statusModalOrder.deliveryNumber} • طلب رقم #{statusModalOrder.orderNumber}</p>
               </div>
               <button
                 onClick={() => setStatusModalOrder(null)}
@@ -576,13 +600,58 @@ export const DeliveryOrdersTab: React.FC<DeliveryOrdersTabProps> = ({
               </button>
             </div>
 
-            <form onSubmit={handleConfirmStatusChange} className="p-5 sm:p-6 space-y-4 text-xs">
+            <form onSubmit={handleConfirmStatusChange} className="p-5 sm:p-6 space-y-4 text-xs overflow-y-auto">
               
+              {/* Customer Details Edit */}
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+                <span className="text-[11px] font-black text-[#1A3668] block">بيانات العميلة والعنوان:</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">اسم العميلة:</label>
+                    <input
+                      type="text"
+                      required
+                      value={statusCustomerName}
+                      onChange={e => setStatusCustomerName(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-bold focus:outline-none focus:ring-2 focus:ring-[#1A3668]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">هاتف العميلة:</label>
+                    <input
+                      type="text"
+                      dir="ltr"
+                      value={statusCustomerPhone}
+                      onChange={e => setStatusCustomerPhone(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-mono text-right focus:outline-none focus:ring-2 focus:ring-[#1A3668]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">المحافظة:</label>
+                    <input
+                      type="text"
+                      value={statusGovernorate}
+                      onChange={e => setStatusGovernorate(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1A3668]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">العنوان التفصيلي:</label>
+                    <input
+                      type="text"
+                      value={statusAddress}
+                      onChange={e => setStatusAddress(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1A3668]"
+                    />
+                  </div>
+                </div>
+              </div>
+
               {/* Courier Selector & Fee */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">
-                    المندوب الذي وصّل الطلب (طلب رقم #{statusModalOrder.orderNumber}):
+                    المندوب المسؤول (طلب رقم #{statusModalOrder.orderNumber}):
                   </label>
                   <select
                     value={statusCourierId}
@@ -596,6 +665,7 @@ export const DeliveryOrdersTab: React.FC<DeliveryOrdersTabProps> = ({
                     }}
                     className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1A3668]"
                   >
+                    <option value={0}>بانتظار تحديد المندوب</option>
                     {couriers.map(c => (
                       <option key={c.id} value={c.id}>
                         {c.name} ({c.zone || c.coverageZones || 'صنعاء'})
@@ -821,6 +891,70 @@ export const DeliveryOrdersTab: React.FC<DeliveryOrdersTabProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Delivery Order Modal */}
+      {orderToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs" dir="rtl">
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="bg-rose-700 text-white p-5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Trash2 className="w-5 h-5" />
+                <h3 className="font-black text-base">تأكيد حذف طلب التوصيل</h3>
+              </div>
+              <button
+                onClick={() => setOrderToDelete(null)}
+                className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-5 sm:p-6 space-y-4 text-xs">
+              <div className="p-3.5 bg-rose-50 rounded-2xl border border-rose-200 text-rose-950 space-y-1">
+                <div className="font-black text-sm">طلب توصيل: {orderToDelete.deliveryNumber} (طلب رقم #{orderToDelete.orderNumber})</div>
+                <div className="text-slate-700">العميلة: {orderToDelete.customerName} - {orderToDelete.customerPhone}</div>
+                <div className="text-slate-700">الموصل: {orderToDelete.courierName}</div>
+                <div className="text-slate-700 font-bold">أجرة التوصيل: {orderToDelete.deliveryFee.toLocaleString()} ريال</div>
+                {orderToDelete.collectionStatus === 'collected_cash' && (
+                  <div className="text-amber-800 font-bold bg-amber-100/70 p-1.5 rounded-lg border border-amber-200 mt-1">
+                    * سيتم خصم وإلغاء العهدة النقدية المسجلة على الموصل تلقائياً.
+                  </div>
+                )}
+                {orderToDelete.collectionStatus === 'transferred_to_wallet' && (
+                  <div className="text-purple-800 font-bold bg-purple-100/70 p-1.5 rounded-lg border border-purple-200 mt-1">
+                    * سيتم خصم وإلغاء استحقاق الموصل المسجل بذمة الإدارة تلقائياً.
+                  </div>
+                )}
+              </div>
+
+              <p className="text-slate-700 font-medium leading-relaxed">
+                هل أنت متأكد من رغبتك في حذف طلب التوصيل نهائياً؟ لا يمكن التراجع عن هذا الإجراء بعد تنفيذه.
+              </p>
+
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setOrderToDelete(null)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl cursor-pointer"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    deleteDeliveryOrder(orderToDelete.id);
+                    setOrderToDelete(null);
+                  }}
+                  className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl cursor-pointer shadow-md flex items-center gap-1.5"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>تأكيد حذف الطلب</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

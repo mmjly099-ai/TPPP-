@@ -17,7 +17,9 @@ import {
   FileText,
   UserCheck,
   UserX,
-  Package
+  Package,
+  RotateCcw,
+  Trash2
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import topStoreLogo from '../../assets/logo';
@@ -40,10 +42,12 @@ export const CourierProfileModal: React.FC<CourierProfileModalProps> = ({
     deliveryOrders = [],
     courierSettlements = [],
     deliveryCashCollections = [],
-    updateCourier
+    updateCourier,
+    clearCourierCustody
   } = useStore();
 
   const [activeTab, setActiveTab] = useState<'summary' | 'orders' | 'settlements' | 'cash_collections'>('summary');
+  const [showClearCustodyConfirm, setShowClearCustodyConfirm] = useState(false);
 
   if (!courier) return null;
 
@@ -308,14 +312,23 @@ export const CourierProfileModal: React.FC<CourierProfileModalProps> = ({
               <p className="text-[11px] text-amber-800 font-medium mt-1">
                 نقد استلمه من العميلات ولم يورده للإدارة بعد
               </p>
-              {metrics.currentCustody > 0 && onOpenReceiveCashFromCourier && (
+              <div className="mt-3 flex flex-col gap-1.5">
+                {metrics.currentCustody > 0 && onOpenReceiveCashFromCourier && (
+                  <button
+                    onClick={() => onOpenReceiveCashFromCourier(courier)}
+                    className="w-full py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-xs text-center"
+                  >
+                    استلام وتوريد النقدية منه ←
+                  </button>
+                )}
                 <button
-                  onClick={() => onOpenReceiveCashFromCourier(courier)}
-                  className="mt-3 w-full py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-xs"
+                  onClick={() => setShowClearCustodyConfirm(true)}
+                  className="w-full py-1.5 bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  استلام وتوريد النقدية منه ←
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>تصفير وحذف العهدة فوراً</span>
                 </button>
-              )}
+              </div>
             </div>
 
             {/* Total Settled to Him from Wallets */}
@@ -532,6 +545,61 @@ export const CourierProfileModal: React.FC<CourierProfileModalProps> = ({
         </div>
 
       </div>
+
+      {/* Clear Custody Confirmation Modal */}
+      {showClearCustodyConfirm && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs" dir="rtl">
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="bg-amber-600 text-white p-5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <RotateCcw className="w-5 h-5" />
+                <h3 className="font-black text-base">تأكيد تصفير وحذف العهدة</h3>
+              </div>
+              <button
+                onClick={() => setShowClearCustodyConfirm(false)}
+                className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-5 sm:p-6 space-y-4 text-xs">
+              <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-amber-950 space-y-1">
+                <div className="font-black text-sm">{courier.name} ({courier.code})</div>
+                <div className="text-base font-black text-amber-800">
+                  العهدة الحالية المسجلة: {metrics.currentCustody.toLocaleString()} ريال
+                </div>
+              </div>
+
+              <p className="text-slate-700 font-medium leading-relaxed">
+                هل أنت متأكد من تصفير وحذف العهدة النقدية للموصل {courier.name} ليصبح رصيده <span className="font-black text-emerald-700">0 ريال</span>؟
+              </p>
+
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowClearCustodyConfirm(false)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl cursor-pointer"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearCourierCustody(courier.id, 'حذف وتصفير العهدة من كشف حساب الموصل');
+                    setShowClearCustodyConfirm(false);
+                  }}
+                  className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl cursor-pointer shadow-md flex items-center gap-1.5"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>تأكيد تصفير العهدة الآن</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

@@ -255,6 +255,8 @@ interface StoreContextType {
   
   addAccount: (account: Omit<Account, 'id' | 'createdAt'>) => Account;
   updateAccount: (account: Account) => void;
+  reconcileAccountBalance: (accountId: number, targetBalance: number, notes?: string) => void;
+  reconcileAllAccountsBalances: (adjustments: { accountId: number; targetBalance: number }[], notes?: string) => void;
   
   addShipment: (shipment: {
     shipmentNumber: string;
@@ -307,6 +309,8 @@ interface StoreContextType {
   addCourier: (courier: Omit<Courier, 'id' | 'code' | 'createdAt' | 'currentCustodyBalance' | 'deliveredOrdersCount'>) => Courier;
   updateCourier: (courier: Courier) => void;
   deleteCourier: (id: number) => void;
+  clearCourierCustody: (courierId: number, reason?: string) => void;
+  clearAllCourierCustodies: (reason?: string) => void;
   createDeliveryTrip: (tripData: {
     courierId: number;
     date: string;
@@ -393,6 +397,7 @@ interface StoreContextType {
     notes?: string;
   }) => CourierSettlement;
   cancelCourierSettlement: (settlementId: number, reason?: string) => void;
+  deleteDeliveryCashCollection: (collectionId: number) => void;
   
   // Workers Management (قسم العمال والصرفيات)
   addWorker: (worker: Omit<Worker, 'id' | 'createdAt'>) => Worker;
@@ -620,7 +625,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               purchaseBatches: healedBatches,
               installmentPlans: Array.isArray(parsed.tables.installmentPlans) ? parsed.tables.installmentPlans : [],
               otherReceivables: Array.isArray(parsed.tables.otherReceivables) && parsed.tables.otherReceivables.length > 0 ? parsed.tables.otherReceivables : (INITIAL_DATA.tables.otherReceivables || []),
-              couriers: Array.isArray(parsed.tables.couriers) && parsed.tables.couriers.length > 0 ? parsed.tables.couriers : (INITIAL_DATA.tables.couriers || []),
+              couriers: (Array.isArray(parsed.tables.couriers) && parsed.tables.couriers.length > 0 ? parsed.tables.couriers : (INITIAL_DATA.tables.couriers || [])).map((c: any) => ({
+                ...c,
+                currentCustodyBalance: 0
+              })),
               deliveryTrips: Array.isArray(parsed.tables.deliveryTrips) ? parsed.tables.deliveryTrips : [],
               deliveryOrders: Array.isArray(parsed.tables.deliveryOrders) && parsed.tables.deliveryOrders.length > 0 ? parsed.tables.deliveryOrders : (INITIAL_DATA.tables.deliveryOrders || []),
               courierSettlements: Array.isArray(parsed.tables.courierSettlements) && parsed.tables.courierSettlements.length > 0 ? parsed.tables.courierSettlements : (INITIAL_DATA.tables.courierSettlements || []),
@@ -5042,6 +5050,102 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }));
   };
 
+  const reconcileAccountBalance = (accountId: number, targetBalance: number, notes?: string) => {
+    const acc = accounts.find(a => Number(a.id) === Number(accountId));
+    if (!acc) return;
+
+    // Calculate net transactions for this account
+    const netTransactions = transactions.reduce((sum, trx) => {
+      if (Number(trx.accountId) === Number(accountId)) {
+        const amt = parseFloat(String(trx.amount || 0)) || 0;
+        if (trx.type === 'deposit' || trx.type === 'transfer_in' || trx.type === 'payment') {
+          return sum + amt;
+        } else if (trx.type === 'withdrawal' || trx.type === 'transfer_out' || trx.type === 'expense') {
+          return sum - amt;
+        }
+      }
+      return sum;
+    }, 0);
+
+    const oldBalance = getAccountBalance(accountId);
+    const newOpeningBalance = targetBalance - netTransactions;
+
+    setData(prev => ({
+      ...prev,
+      tables: {
+        ...prev.tables,
+        accounts: prev.tables.accounts.map(a => {
+          if (Number(a.id) !== Number(accountId)) return a;
+          return {
+            ...a,
+            openingBalance: newOpeningBalance,
+            openingBalanceNotes: notes || `تسوية رصيد مباشرة إلى ${targetBalance.toLocaleString()} ريال (بدون قيد صادر أو وارد)`
+          };
+        })
+      }
+    }));
+
+    addAuditLog(
+      'UPDATE',
+      'account',
+      `تسوية رصيد محفظة ${acc.name} من ${oldBalance.toLocaleString()} إلى ${targetBalance.toLocaleString()} ريال (تسوية رصيد مباشرة دون تسجيل صادر أو وارد) - ${notes || 'مطابقة الرصيد الفعلي'}`,
+      accountId
+    );
+    showNotification(`تمت تسوية رصيد ${acc.name} إلى ${targetBalance.toLocaleString()} ريال بنجاح دون تسجيل صادر أو وارد`, 'success');
+  };
+
+  const reconcileAllAccountsBalances = (adjustments: { accountId: number; targetBalance: number }[], notes?: string) => {
+    if (!adjustments || adjustments.length === 0) return;
+
+    const adjustmentsMap = new Map<number, number>();
+    adjustments.forEach(adj => {
+      adjustmentsMap.set(Number(adj.accountId), Number(adj.targetBalance));
+    });
+
+    setData(prev => {
+      const updatedAccounts = prev.tables.accounts.map(a => {
+        const accId = Number(a.id);
+        if (!adjustmentsMap.has(accId)) return a;
+
+        const targetBal = adjustmentsMap.get(accId)!;
+        const netTransactions = transactions.reduce((sum, trx) => {
+          if (Number(trx.accountId) === accId) {
+            const amt = parseFloat(String(trx.amount || 0)) || 0;
+            if (trx.type === 'deposit' || trx.type === 'transfer_in' || trx.type === 'payment') {
+              return sum + amt;
+            } else if (trx.type === 'withdrawal' || trx.type === 'transfer_out' || trx.type === 'expense') {
+              return sum - amt;
+            }
+          }
+          return sum;
+        }, 0);
+
+        const newOpeningBalance = targetBal - netTransactions;
+
+        return {
+          ...a,
+          openingBalance: newOpeningBalance,
+          openingBalanceNotes: notes || `تسوية رصيد شاملة إلى ${targetBal.toLocaleString()} ريال (بدون قيد صادر أو وارد)`
+        };
+      });
+
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          accounts: updatedAccounts
+        }
+      };
+    });
+
+    addAuditLog(
+      'UPDATE',
+      'account',
+      `تسوية شاملة لأرصدة ${adjustments.length} محافظ/حسابات بدون تسجيل صادر أو وارد - ${notes || 'مطابقة الأرصدة الفعلية للمحافظ'}`
+    );
+    showNotification(`تمت تسوية أرصدة ${adjustments.length} محافظ بنجاح دون تسجيل أي صادر أو وارد`, 'success');
+  };
+
   const addShipment = (s: {
     shipmentNumber: string;
     carrier: string;
@@ -5894,25 +5998,114 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const updateCourier = (updated: Courier) => {
-    setData(prev => ({
-      ...prev,
-      tables: {
-        ...prev.tables,
-        couriers: (prev.tables.couriers || []).map(c => c.id === updated.id ? updated : c)
-      }
-    }));
+    setData(prev => {
+      const updatedCouriers = (prev.tables.couriers || []).map(c => c.id === updated.id ? updated : c);
+      const updatedDeliveryOrders = (prev.tables.deliveryOrders || []).map(d =>
+        d.courierId === updated.id ? { ...d, courierName: updated.name } : d
+      );
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          couriers: updatedCouriers,
+          deliveryOrders: updatedDeliveryOrders
+        }
+      };
+    });
     addAuditLog('UPDATE', 'courier', `تم تحديث بيانات الموصل: ${updated.name}`, updated.id);
+    showNotification(`تم تحديث بيانات الموصل ${updated.name} بنجاح`, 'success');
   };
 
   const deleteCourier = (id: number) => {
-    setData(prev => ({
-      ...prev,
-      tables: {
-        ...prev.tables,
-        couriers: (prev.tables.couriers || []).filter(c => c.id !== id)
-      }
-    }));
-    addAuditLog('DELETE', 'courier', `تم حذف الموصل #${id}`, id);
+    const courier = (data.tables.couriers || []).find(c => c.id === id);
+    setData(prev => {
+      const updatedCouriers = (prev.tables.couriers || []).filter(c => c.id !== id);
+      const updatedDeliveryOrders = (prev.tables.deliveryOrders || []).map(d =>
+        d.courierId === id ? { ...d, courierId: 0, courierName: 'بانتظار تحديد المندوب' } : d
+      );
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          couriers: updatedCouriers,
+          deliveryOrders: updatedDeliveryOrders
+        }
+      };
+    });
+    addAuditLog('DELETE', 'courier', `تم حذف الموصل ${courier?.name || `#${id}`}`, id);
+    showNotification(`تم حذف الموصل ${courier?.name || ''} بنجاح`, 'success');
+  };
+
+  const clearCourierCustody = (courierId: number, reason?: string) => {
+    const courier = (data.tables.couriers || []).find(c => c.id === courierId);
+    if (!courier) return;
+    const oldBalance = Number(courier.currentCustodyBalance) || 0;
+
+    setData(prev => {
+      const updatedCouriers = (prev.tables.couriers || []).map(c =>
+        c.id === courierId ? { ...c, currentCustodyBalance: 0 } : c
+      );
+      const updatedOrders = (prev.tables.deliveryOrders || []).map(d => {
+        if (d.courierId === courierId && d.collectionMethod === 'cash_to_courier') {
+          return {
+            ...d,
+            custodyRecordedAmount: 0,
+            collectionStatus: 'settled' as const,
+            notes: (d.notes ? `${d.notes} | ` : '') + (reason || 'تم تصفير وحذف العهدة')
+          };
+        }
+        return d;
+      });
+
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          couriers: updatedCouriers,
+          deliveryOrders: updatedOrders
+        }
+      };
+    });
+
+    addAuditLog('UPDATE', 'courier', `تم تصفير وحذف عهدة الموصل ${courier.name} (المبلغ الملغى: ${oldBalance.toLocaleString()} ريال) - ${reason || 'حذف عهدة الموصل'}`, courierId);
+    showNotification(`تم تصفير وحذف عهدة الموصل ${courier.name} بنجاح`, 'success');
+  };
+
+  const clearAllCourierCustodies = (reason?: string) => {
+    setData(prev => {
+      let totalAmountCleared = 0;
+      const updatedCouriers = (prev.tables.couriers || []).map(c => {
+        totalAmountCleared += Number(c.currentCustodyBalance) || 0;
+        return {
+          ...c,
+          currentCustodyBalance: 0
+        };
+      });
+
+      const updatedOrders = (prev.tables.deliveryOrders || []).map(d => {
+        if (d.collectionMethod === 'cash_to_courier') {
+          return {
+            ...d,
+            custodyRecordedAmount: 0,
+            collectionStatus: 'settled' as const,
+            notes: (d.notes ? `${d.notes} | ` : '') + (reason || 'تم تصفير وحذف كافة العهد')
+          };
+        }
+        return d;
+      });
+
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          couriers: updatedCouriers,
+          deliveryOrders: updatedOrders
+        }
+      };
+    });
+
+    addAuditLog('UPDATE', 'courier', `تم تصفير وحذف كافة العهد النقدية لجميع الموصلين - ${reason || 'حذف شامل للعهد'}`);
+    showNotification('تم تصفير وحذف كافة العهد النقدية لدى جميع الموصلين بنجاح', 'success');
   };
 
   // Workers Operations
@@ -6585,39 +6778,69 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const updateDeliveryOrder = (updated: DeliveryOrder) => {
+    const courier = couriers.find(c => c.id === updated.courierId);
+    const enrichedOrder: DeliveryOrder = {
+      ...updated,
+      courierName: courier ? courier.name : updated.courierName
+    };
+
     setData(prev => ({
       ...prev,
       tables: {
         ...prev.tables,
-        deliveryOrders: (prev.tables.deliveryOrders || []).map(d => d.id === updated.id ? updated : d)
+        deliveryOrders: (prev.tables.deliveryOrders || []).map(d => d.id === updated.id ? enrichedOrder : d)
       }
     }));
     addAuditLog('UPDATE', 'deliveryOrder', `تعديل بيانات طلب التوصيل #${updated.deliveryNumber}`, updated.id);
+    showNotification(`تم تعديل بيانات طلب التوصيل #${updated.deliveryNumber} بنجاح`, 'success');
   };
 
   const deleteDeliveryOrder = (deliveryId: number) => {
     const delivery = (data.tables.deliveryOrders || []).find(d => d.id === deliveryId);
     if (!delivery) return;
 
-    // If courier held cash custody, deduct it safely
-    let custodyAdjustment = 0;
-    if (delivery.collectionStatus === 'collected_cash') {
-      custodyAdjustment = -delivery.deliveryFee;
-    }
+    const custodyAdjustment = delivery.collectionStatus === 'collected_cash'
+      ? -(Number(delivery.custodyRecordedAmount) || Number(delivery.finalPaymentAmount) || Number(delivery.deliveryFee) || 0)
+      : 0;
+
+    const payableAdjustment = delivery.collectionStatus === 'transferred_to_wallet'
+      ? -(Number(delivery.payableRecordedAmount) || Number(delivery.deliveryFee) || 0)
+      : 0;
 
     setData(prev => ({
       ...prev,
       tables: {
         ...prev.tables,
-        couriers: custodyAdjustment !== 0
-          ? (prev.tables.couriers || []).map(c => c.id === delivery.courierId ? { ...c, currentCustodyBalance: Math.max(0, (c.currentCustodyBalance || 0) + custodyAdjustment) } : c)
-          : prev.tables.couriers,
+        couriers: (prev.tables.couriers || []).map(c => {
+          if (c.id !== delivery.courierId) return c;
+          return {
+            ...c,
+            currentCustodyBalance: Math.max(0, (Number(c.currentCustodyBalance) || 0) + custodyAdjustment),
+            currentPayableBalance: Math.max(0, (Number(c.currentPayableBalance) || 0) + payableAdjustment)
+          };
+        }),
         deliveryOrders: (prev.tables.deliveryOrders || []).filter(d => d.id !== deliveryId)
       }
     }));
 
     addAuditLog('DELETE', 'deliveryOrder', `حذف طلب التوصيل #${delivery.deliveryNumber}`, deliveryId);
-    showNotification(`تم حذف طلب التوصيل بنجاح`, 'success');
+    showNotification(`تم حذف طلب التوصيل #${delivery.deliveryNumber} بنجاح`, 'success');
+  };
+
+  const deleteDeliveryCashCollection = (collectionId: number) => {
+    const coll = (data.tables.deliveryCashCollections || []).find(c => c.id === collectionId);
+    if (!coll) return;
+
+    setData(prev => ({
+      ...prev,
+      tables: {
+        ...prev.tables,
+        deliveryCashCollections: (prev.tables.deliveryCashCollections || []).filter(c => c.id !== collectionId)
+      }
+    }));
+
+    addAuditLog('DELETE', 'deliveryCashCollection', `تم حذف سند توريد العهدة #${coll.receiptNumber} للموصل ${coll.courierName} (${coll.amount.toLocaleString()} ريال)`, collectionId);
+    showNotification(`تم حذف سند توريد النقدية #${coll.receiptNumber} بنجاح`, 'success');
   };
 
   const recordDeliveryCashToCourier = (deliveryId: number, notes?: string) => {
@@ -8192,6 +8415,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         recordAccountTransaction,
         addAccount,
         updateAccount,
+        reconcileAccountBalance,
+        reconcileAllAccountsBalances,
         addShipment,
         updateShipmentStatus,
         updateShipment,
@@ -8206,6 +8431,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         addCourier,
         updateCourier,
         deleteCourier,
+        clearCourierCustody,
+        clearAllCourierCustodies,
         addWorker,
         updateWorker,
         deleteWorker,
@@ -8226,6 +8453,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         receiveCashFromCourier,
         settleCourierPayable,
         cancelCourierSettlement,
+        deleteDeliveryCashCollection,
         addMarketingCampaign,
         updateMarketingCampaign,
         deleteMarketingCampaign,
