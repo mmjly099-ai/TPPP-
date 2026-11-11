@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Scale, Wallet, AlertCircle } from 'lucide-react';
+import { X, HandCoins, Calendar, Wallet, FileText, User, Phone } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 
 interface NewReceivableModalProps {
@@ -8,45 +8,39 @@ interface NewReceivableModalProps {
 }
 
 export const NewReceivableModal: React.FC<NewReceivableModalProps> = ({ isOpen, onClose }) => {
-  const { addOtherReceivable, accounts } = useStore();
+  const { accounts, addOtherReceivable } = useStore();
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [entityType, setEntityType] = useState('سلفة شخصية');
   const [reason, setReason] = useState('');
-  const [openingBalance, setOpeningBalance] = useState<number>(0);
+  const [amount, setAmount] = useState<string>('');
+  const [accountId, setAccountId] = useState<string>(accounts[0]?.id ? String(accounts[0].id) : '');
   const [openingDate, setOpeningDate] = useState(new Date().toISOString().split('T')[0]);
   const [dueDate, setDueDate] = useState('');
-  const [fromAccountId, setFromAccountId] = useState<string>('');
   const [notes, setNotes] = useState('');
-  const [formError, setFormError] = useState('');
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
-      setFormError('يرجى إدخال اسم المدين أو الجهة');
-      return;
-    }
-    if (openingBalance <= 0) {
-      setFormError('يرجى إدخال مبلغ صحيح أكبر من الصفر');
-      return;
-    }
-    setFormError('');
+    const parsedAmount = parseFloat(amount);
+    if (!name.trim() || isNaN(parsedAmount) || parsedAmount <= 0) return;
 
-    const fromAcc = fromAccountId ? accounts.find(a => a.id === Number(fromAccountId)) : undefined;
+    const selectedAcc = accounts.find(a => String(a.id) === accountId);
 
     addOtherReceivable({
       name: name.trim(),
       phone: phone.trim() || undefined,
       entityType,
-      reason: reason.trim() || 'سلفة / قرض مالي',
-      openingBalance: Number(openingBalance),
+      reason: reason.trim() || 'سلفة / مستحق',
+      openingBalance: parsedAmount,
+      remainingBalance: parsedAmount,
+      paidAmount: 0,
       openingDate,
       dueDate: dueDate || undefined,
-      fromAccountId: fromAccountId ? Number(fromAccountId) : undefined,
-      sourceAccountName: fromAcc?.name,
+      fromAccountId: selectedAcc ? selectedAcc.id : undefined,
+      sourceAccountName: selectedAcc ? selectedAcc.name : undefined,
       notes: notes.trim() || undefined
     });
 
@@ -54,177 +48,176 @@ export const NewReceivableModal: React.FC<NewReceivableModalProps> = ({ isOpen, 
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 my-8">
-        
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center">
-              <Scale className="w-4 h-4" />
+    <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <HandCoins className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900">تسجيل سلفة / ذمة مدينة</h3>
-              <p className="text-xs text-slate-500">إقراض مالي أو مديونية على شخص أو مندوب أو جهة</p>
+              <h3 className="font-black text-slate-900 text-sm">إضافة سلفة أو ذمة جديدة</h3>
+              <p className="text-xs text-slate-500">تسجيل مستحقات مالية للغير أو سلف شخصية وعائلية</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 cursor-pointer"
+            className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
-          
-          <div className="grid grid-cols-2 gap-3">
+        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="font-bold text-slate-700 block mb-1">اسم المقترض / الطرف *</label>
-              <input
-                type="text"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="مثال: أحمد تمام"
-                className="w-full border border-slate-200 rounded-lg p-2.5 font-medium"
-                required
-              />
+              <label className="block text-xs font-bold text-slate-700 mb-1">اسم الشخص أو الجهة *</label>
+              <div className="relative">
+                <User className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  required
+                  placeholder="مثال: محمد سعيد"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  className="w-full pr-9 pl-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:border-amber-400"
+                />
+              </div>
             </div>
 
             <div>
-              <label className="font-bold text-slate-700 block mb-1">رقم الهاتف</label>
-              <input
-                type="text"
-                value={phone}
-                onChange={e => setPhone(e.target.value)}
-                placeholder="77XXXXXXX"
-                className="w-full border border-slate-200 rounded-lg p-2.5 font-mono"
-              />
+              <label className="block text-xs font-bold text-slate-700 mb-1">رقم الهاتف</label>
+              <div className="relative">
+                <Phone className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="770000000"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  className="w-full pr-9 pl-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:border-amber-400"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="font-bold text-slate-700 block mb-1">نوع الذمة / الصفة</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">تصنيف الذمة / السلفة</label>
               <select
                 value={entityType}
                 onChange={e => setEntityType(e.target.value)}
-                className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-medium"
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:border-amber-400 text-slate-700"
               >
                 <option value="سلفة شخصية">سلفة شخصية</option>
                 <option value="سلفة موظف">سلفة موظف</option>
                 <option value="عهدة مندوب توصيل">عهدة مندوب توصيل</option>
-                <option value="مصمم أنظمة">مصمم أنظمة / تقني</option>
-                <option value="سلف عائلي / بيت">بيت / سلف عائلي</option>
-                <option value="مورد">مورد</option>
-                <option value="أخرى">جهة أخرى</option>
+                <option value="مورد">مورد / مورد بضاعة</option>
+                <option value="شريك">شريك عمل</option>
+                <option value="مصمم">مصمم / مبرمج</option>
+                <option value="بيت / عائلي">مصروف عائلي / بيت</option>
+                <option value="جهة أخرى">جهة أخرى</option>
               </select>
             </div>
 
             <div>
-              <label className="font-bold text-slate-700 block mb-1">المبلغ المسلف (ريال) *</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">المبلغ المطلوب (ر.ي) *</label>
               <input
                 type="number"
-                min="1"
-                value={openingBalance || ''}
-                onChange={e => setOpeningBalance(Number(e.target.value))}
-                placeholder="0"
-                className="w-full border border-slate-200 rounded-lg p-2.5 font-mono font-bold text-blue-700 text-sm"
                 required
+                min="1"
+                placeholder="0"
+                value={amount}
+                onChange={e => setAmount(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:border-amber-400 font-mono font-bold"
               />
             </div>
           </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">تاريخ السلفة</label>
+              <div className="relative">
+                <Calendar className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="date"
+                  value={openingDate}
+                  onChange={e => setOpeningDate(e.target.value)}
+                  className="w-full pr-9 pl-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:border-amber-400"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">تاريخ الاستحقاق (اختياري)</label>
+              <div className="relative">
+                <Calendar className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="date"
+                  value={dueDate}
+                  onChange={e => setDueDate(e.target.value)}
+                  className="w-full pr-9 pl-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:border-amber-400"
+                />
+              </div>
+            </div>
+          </div>
+
           <div>
-            <label className="font-bold text-slate-700 block mb-1">مصدر خروج المبلغ (المحفظة / الصندوق)</label>
-            <select
-              value={fromAccountId}
-              onChange={e => setFromAccountId(e.target.value)}
-              className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-medium"
-            >
-              <option value="">-- بدون خصم فوري (ذمة سابقة مسجلة) --</option>
-              {accounts
-                .filter(a => a.status === 'active' && a.type !== 'حقوق ملكية')
-                .map(acc => (
+            <label className="block text-xs font-bold text-slate-700 mb-1">خصم المبلغ من الحساب (المحفظة/البنك)</label>
+            <div className="relative">
+              <Wallet className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+              <select
+                value={accountId}
+                onChange={e => setAccountId(e.target.value)}
+                className="w-full pr-9 pl-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:border-amber-400 text-slate-700"
+              >
+                <option value="">بدون خصم من حساب محدد</option>
+                {accounts.map(acc => (
                   <option key={acc.id} value={acc.id}>
-                    خصم وصرف من: {acc.name} ({acc.type})
+                    {acc.name} ({acc.type})
                   </option>
                 ))}
-            </select>
-            <span className="text-[10px] text-slate-400 mt-1 block">
-              عند اختيار محفظة، سيتم تسجيل حركة سحب ونقصان رصيد المحفظة مع إثبات قيد يومية محاسبي تلقائي.
-            </span>
+              </select>
+            </div>
           </div>
 
           <div>
-            <label className="font-bold text-slate-700 block mb-1">السبب / بيان السلفة *</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">سبب أو بيان السلفة</label>
             <input
               type="text"
+              placeholder="مثال: سلفة لحساب شراء معدات"
               value={reason}
               onChange={e => setReason(e.target.value)}
-              placeholder="مثال: سلفة مؤقتة، عطل المتر، عهدة مصاريف..."
-              className="w-full border border-slate-200 rounded-lg p-2.5"
-              required
+              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:border-amber-400"
             />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="font-bold text-slate-700 block mb-1">تاريخ الإقراض</label>
-              <input
-                type="date"
-                value={openingDate}
-                onChange={e => setOpeningDate(e.target.value)}
-                className="w-full border border-slate-200 rounded-lg p-2.5 font-mono"
-              />
-            </div>
-
-            <div>
-              <label className="font-bold text-slate-700 block mb-1">تاريخ الاستحقاق المتوقع</label>
-              <input
-                type="date"
-                value={dueDate}
-                onChange={e => setDueDate(e.target.value)}
-                className="w-full border border-slate-200 rounded-lg p-2.5 font-mono"
-              />
-            </div>
           </div>
 
           <div>
-            <label className="font-bold text-slate-700 block mb-1">ملاحظات إضافية</label>
-            <input
-              type="text"
+            <label className="block text-xs font-bold text-slate-700 mb-1">ملاحظات إضافية</label>
+            <textarea
+              rows={2}
+              placeholder="أي تفاصيل أو شروط خاصة بالسداد..."
               value={notes}
               onChange={e => setNotes(e.target.value)}
-              placeholder="طريقة المحاسبة المتفق عليها، أقساط السداد..."
-              className="w-full border border-slate-200 rounded-lg p-2.5"
+              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:border-amber-400"
             />
           </div>
-
-          {formError && (
-            <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-bold flex items-center gap-1.5">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{formError}</span>
-            </div>
-          )}
 
           <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold transition-colors cursor-pointer"
+              className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
             >
               إلغاء
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-colors cursor-pointer shadow-xs"
+              className="px-5 py-2 text-xs font-bold text-white bg-amber-500 hover:bg-amber-600 rounded-xl shadow-xs transition-colors cursor-pointer"
             >
-              حفظ وتوثيق السلفة
+              حفظ السلفة
             </button>
           </div>
-
         </form>
-
       </div>
     </div>
   );

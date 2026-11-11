@@ -1,325 +1,142 @@
 import * as XLSX from 'xlsx';
-import { TopStoreBackup } from '../types';
+import JSZip from 'jszip';
 
 /**
- * Export data to Excel XLSX with multiple sheets
+ * Triggers a file download in the browser from a Blob or URL
  */
-export function exportToXlsx(data: TopStoreBackup, customFilename?: string): { filename: string; sizeKb: number } {
-  const wb = XLSX.utils.book_new();
-
-  const tables = data.tables;
-
-  // Sheet 1: Customers
-  if (tables.customers && tables.customers.length > 0) {
-    const rows = tables.customers.map(c => ({
-      'رقم العميل': c.code,
-      'اسم العميل': c.name,
-      'رقم الهاتف': c.phone,
-      'هاتف إضافي': c.alternatePhone || '',
-      'المحافظة': c.governorate,
-      'العنوان / موقع الاستلام': c.pickupLocation || '',
-      'الرصيد الافتتاحي': c.openingBalance,
-      'الحالة': c.status === 'active' ? 'نشط' : 'غير نشط',
-      'تاريخ التسجيل': c.createdAt,
-      'الملاحظات': c.notes || ''
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, 'العملاء');
-  }
-
-  // Sheet 2: Orders
-  if (tables.orders && tables.orders.length > 0) {
-    const rows = tables.orders.map(o => ({
-      'رقم الطلب': o.orderNumber,
-      'اسم العميل': o.customerName || '',
-      'كود العميل': o.customerCode || '',
-      'الموقع / المتجر': o.site,
-      'رقم التتبع': o.shipmentNumber || '',
-      'عدد المنتجات': o.itemsCount,
-      'المبلغ الإجمالي': o.totalAmount,
-      'الخصم': o.discount,
-      'المبلغ المدفوع': o.paidAmount,
-      'المتبقي': o.remainingAmount,
-      'رسوم التوصيل': o.deliveryFee,
-      'حالة الطلب': o.status,
-      'تاريخ الطلب': o.orderDate,
-      'الملاحظات': o.notes || ''
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, 'الطلبات');
-  }
-
-  // Sheet 3: Payments
-  if (tables.payments && tables.payments.length > 0) {
-    const rows = tables.payments.map(p => ({
-      'رقم السند': p.paymentNumber,
-      'رقم العميل': p.customerId,
-      'المبلغ': p.amount,
-      'طريقة الدفع': p.paymentMethod,
-      'تاريخ السند': p.paymentDate,
-      'الملاحظات': p.notes || ''
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, 'المدفوعات');
-  }
-
-  // Sheet 4: Expenses
-  if (tables.expenses && tables.expenses.length > 0) {
-    const rows = tables.expenses.map(e => ({
-      'رقم السند': e.expenseNumber,
-      'البند / النوع': e.category,
-      'المبلغ': e.amount,
-      'طريقة الدفع': e.paymentMethod,
-      'البيان': e.description,
-      'المورد / المستفيد': e.vendorName || '',
-      'تاريخ الصرف': e.createdAt,
-      'الملاحظات': e.notes || ''
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, 'المصروفات');
-  }
-
-  // Sheet 5: Accounts & Wallets
-  if (tables.accounts && tables.accounts.length > 0) {
-    const rows = tables.accounts.map(a => ({
-      'اسم المحفظة / البنك': a.name,
-      'نوع الحساب': a.type,
-      'الرصيد الافتتاحي': a.openingBalance,
-      'الحالة': a.status === 'active' ? 'نشط' : 'معطل',
-      'الملاحظات': a.notes || ''
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, 'المحافظ والبنوك');
-  }
-
-  // Sheet 6: Purchase Batches
-  if (tables.purchaseBatches && tables.purchaseBatches.length > 0) {
-    const rows = tables.purchaseBatches.map(b => ({
-      'رقم الدفعة': b.batchNumber,
-      'الموقع': b.source,
-      'حساب الدفع': b.accountName || '',
-      'التكلفة الإجمالية (ريال)': b.totalCost,
-      'تاريخ الشراء': b.purchaseDate,
-      'الملاحظات': b.notes || ''
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, 'دفعات المشتريات');
-  }
-
-  // Sheet 7: Receivables
-  if (tables.otherReceivables && tables.otherReceivables.length > 0) {
-    const rows = tables.otherReceivables.map(r => ({
-      'الطرف / الاسم': r.name,
-      'التصنيف': r.entityType,
-      'البيان': r.reason,
-      'المبلغ': r.openingBalance,
-      'الحالة': r.status === 'settled' ? 'مسدد' : 'غير مسدد',
-      'الملاحظات': r.notes || ''
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, 'الذمم المدينة والأصول');
-  }
-
-  // Sheet 8: Installment Plans (نظام الدفعات والأقساط)
-  if (tables.installmentPlans && tables.installmentPlans.length > 0) {
-    const rows = tables.installmentPlans.map(p => ({
-      'رقم الخطة': p.planNumber,
-      'عنوان الخطة': p.title,
-      'اسم العميل': p.customerName,
-      'رقم الطلب': p.orderNumber || '',
-      'إجمالي الخطة': p.totalAmount,
-      'المبلغ المسدد': p.paidAmount,
-      'المبلغ المتبقي': p.remainingAmount,
-      'عدد الدفعات': p.installments?.length || 0,
-      'الحالة': p.status === 'completed' ? 'مكتملة' : p.status === 'overdue' ? 'متأخرة' : 'نشطة',
-      'تاريخ الإنشاء': p.createdAt
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, 'نظام الدفعات والأقساط');
-  }
-
-  // Sheet 9: Couriers (الموصلين ومناديب التوصيل)
-  if (tables.couriers && tables.couriers.length > 0) {
-    const rows = tables.couriers.map(c => ({
-      'كود الموصل': c.code,
-      'الاسم': c.name,
-      'رقم الهاتف': c.phone,
-      'وسيلة النقل': c.vehicleType || '',
-      'نطاق التغطية': c.coverageZones,
-      'أجرة التوصيل الافتراضية': c.defaultDeliveryFee || 0,
-      'الحالة': c.status === 'available' ? 'متاح' : c.status === 'on_delivery' ? 'في رحلة توصيل' : 'غير نشط',
-      'العهدة النقدية الحالية': c.currentCustodyBalance || 0,
-      'عدد الطلبات المسلمة': c.deliveredOrdersCount || 0,
-      'ملاحظات': c.notes || ''
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, 'الموصلين والمناديب');
-  }
-
-  // Sheet 10: Delivery Trips (رحلات التوصيل)
-  if (tables.deliveryTrips && tables.deliveryTrips.length > 0) {
-    const rows = tables.deliveryTrips.map(t => ({
-      'رقم الرحلة': t.tripNumber,
-      'الموصل': t.courierName,
-      'التاريخ': t.date,
-      'الحالة': t.status === 'settled' ? 'تمت التصفية والتوريد' : t.status === 'cancelled' ? 'ملغاة' : 'جارية',
-      'إجمالي الطلبات': t.totalOrdersCount,
-      'تم التسليم': t.deliveredCount,
-      'المرتجع': t.returnedCount,
-      'المبلغ المتوقع': t.totalExpectedCash,
-      'المبلغ المحصل': t.totalCollectedCash,
-      'أجور الموصل': t.courierCommissionTotal,
-      'الصافي المورد للمتجر': t.netDepositedToStore,
-      'الحساب المودع فيه': t.depositAccountName || '',
-      'تاريخ التصفية': t.settledAt || ''
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, 'رحلات التوصيل');
-  }
-
-  const now = new Date();
-  const dateStr = now.toISOString().split('T')[0];
-  const filename = customFilename || `top_store_full_export_${dateStr}.xlsx`;
-
-  // Write file
-  XLSX.writeFile(wb, filename);
-
-  return {
-    filename,
-    sizeKb: 50
-  };
+export function triggerDownload(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 /**
- * Export permanent ZIP package containing JSON backup, Excel sheets, and README
+ * Exports data to an Excel (.xlsx) file with multiple sheets for tables
  */
-export async function exportToZip(
-  data: TopStoreBackup,
-  customFilename?: string
-): Promise<{ filename: string; sizeKb: number }> {
-  const JSZip = (await import('jszip')).default;
-  const zip = new JSZip();
-
-  // 1. JSON file
-  const jsonString = JSON.stringify(data, null, 2);
-  zip.file('top-store-accounting-permanent.json', jsonString);
-
-  // 2. Excel workbook
+export function exportToXlsx(data: any, customFilename?: string): void {
   const wb = XLSX.utils.book_new();
-  const tables = data.tables;
+  const tables = data?.tables || data || {};
 
-  if (tables.customers?.length) {
-    const ws = XLSX.utils.json_to_sheet(tables.customers);
-    XLSX.utils.book_append_sheet(wb, ws, 'العملاء');
-  }
-  if (tables.orders?.length) {
-    const ws = XLSX.utils.json_to_sheet(tables.orders);
-    XLSX.utils.book_append_sheet(wb, ws, 'الطلبات');
-  }
-  if (tables.payments?.length) {
-    const ws = XLSX.utils.json_to_sheet(tables.payments);
-    XLSX.utils.book_append_sheet(wb, ws, 'المدفوعات');
-  }
-  if (tables.expenses?.length) {
-    const ws = XLSX.utils.json_to_sheet(tables.expenses);
-    XLSX.utils.book_append_sheet(wb, ws, 'المصروفات');
-  }
-  if (tables.accounts?.length) {
-    const ws = XLSX.utils.json_to_sheet(tables.accounts);
-    XLSX.utils.book_append_sheet(wb, ws, 'المحافظ');
-  }
-  if (tables.purchaseBatches?.length) {
-    const ws = XLSX.utils.json_to_sheet(tables.purchaseBatches);
-    XLSX.utils.book_append_sheet(wb, ws, 'دفعات_المشتريات');
-  }
-  if (tables.otherReceivables?.length) {
-    const ws = XLSX.utils.json_to_sheet(tables.otherReceivables);
-    XLSX.utils.book_append_sheet(wb, ws, 'السلف_والذمم');
-  }
-  if (tables.installmentPlans?.length) {
-    const ws = XLSX.utils.json_to_sheet(tables.installmentPlans);
-    XLSX.utils.book_append_sheet(wb, ws, 'نظام_الدفعات');
-  }
-  if (tables.couriers?.length) {
-    const ws = XLSX.utils.json_to_sheet(tables.couriers);
-    XLSX.utils.book_append_sheet(wb, ws, 'الموصلين_والمناديب');
-  }
-  if (tables.deliveryTrips?.length) {
-    const ws = XLSX.utils.json_to_sheet(tables.deliveryTrips);
-    XLSX.utils.book_append_sheet(wb, ws, 'رحلات_التوصيل');
+  const sheetConfigs: { key: string; name: string }[] = [
+    { key: 'customers', name: 'العملاء' },
+    { key: 'orders', name: 'الطلبات' },
+    { key: 'payments', name: 'سندات_القبض' },
+    { key: 'expenses', name: 'المصروفات' },
+    { key: 'accounts', name: 'المحافظ_والبنوك' },
+    { key: 'financialTransactions', name: 'الحركات_المالية' },
+    { key: 'couriers', name: 'الموصلين' },
+    { key: 'deliveryOrders', name: 'طلبات_التوصيل' },
+    { key: 'deliveryCashCollections', name: 'تحصيلات_التوصيل' },
+    { key: 'otherReceivables', name: 'مستحقات_أخرى' }
+  ];
+
+  let addedSheets = 0;
+  for (const conf of sheetConfigs) {
+    const list = tables[conf.key];
+    if (Array.isArray(list) && list.length > 0) {
+      // Flatten complex objects if necessary
+      const cleanRows = list.map((item: any) => {
+        const flat: Record<string, any> = {};
+        for (const [k, v] of Object.entries(item)) {
+          if (v !== null && typeof v === 'object') {
+            flat[k] = JSON.stringify(v);
+          } else {
+            flat[k] = v;
+          }
+        }
+        return flat;
+      });
+      const ws = XLSX.utils.json_to_sheet(cleanRows);
+      XLSX.utils.book_append_sheet(wb, ws, conf.name);
+      addedSheets++;
+    }
   }
 
-  const excelArray = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-  zip.file('top_store_database.xlsx', excelArray);
-
-  // 3. Info text
-  const readmeText = `TOP STORE ACCOUNTING - PERMANENT ARCHIVE BACKUP
-==================================================
-تاريخ التصدير: ${new Date().toLocaleString('ar-YE')}
-هذا الملف المضغوط (ZIP) يمثل الأرشيف المحاسبي الدائم الكامل لنظام TOP STORE.
-يحتوي الملف على:
-1. top-store-accounting-permanent.json: قاعدة البيانات المحاسبية المتكاملة مع كافة السجلات.
-2. top_store_database.xlsx: جداول البيانات مهيأة للعرض والتعديل في مايكروسوفت إكسل.
-
-طريقة الاستعادة:
-يمكنك استعادة هذا الملف في أي وقت عبر الدخول إلى قسم (استيراد البيانات) واختيار ملف ZIP مباشرة،
-أو سحب وإفلات ملف top-store-accounting-permanent.zip في النظام ليتم استعادة كافة العمليات والبيانات فوراً.
-`;
-  zip.file('README.txt', readmeText);
-
-  // Generate zip blob
-  const zipBlob = await zip.generateAsync({ type: 'blob' });
-  const filename = customFilename || 'top-store-accounting-permanent.zip';
-
-  // Trigger download
-  const url = URL.createObjectURL(zipBlob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-
-  return {
-    filename,
-    sizeKb: Math.round(zipBlob.size / 1024)
-  };
-}
-
-/**
- * Export specific table to CSV with UTF-8 BOM for perfect Arabic display in Excel
- */
-export function exportToCsv(
-  rows: Record<string, any>[],
-  tableNameArabic: string,
-  customFilename?: string
-): { filename: string; sizeKb: number } {
-  if (!rows || rows.length === 0) {
-    throw new Error('لا توجد بيانات متاحة للتصدير في هذا القسم.');
+  // If no predefined tables matched, try to create from raw data
+  if (addedSheets === 0) {
+    const defaultData = Array.isArray(data) ? data : [data];
+    const ws = XLSX.utils.json_to_sheet(defaultData);
+    XLSX.utils.book_append_sheet(wb, ws, 'البيانات');
   }
-
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const csv = XLSX.utils.sheet_to_csv(ws);
-
-  // Prepend UTF-8 BOM so Excel opens Arabic correctly without garbling
-  const bom = '\uFEFF';
-  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
 
   const dateStr = new Date().toISOString().split('T')[0];
-  const filename = customFilename || `top_store_${tableNameArabic}_${dateStr}.csv`;
+  const filename = customFilename || `TOP_STORE_EXPORT_${dateStr}.xlsx`;
+  XLSX.writeFile(wb, filename);
+}
 
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+/**
+ * Exports an array of objects to a UTF-8 CSV file with BOM for Arabic excel compatibility
+ */
+export function exportToCsv(rows: Record<string, any>[], filenamePrefix: string): void {
+  if (!rows || rows.length === 0) {
+    throw new Error('لا توجد بيانات متاحة للتصدير');
+  }
 
-  return {
-    filename,
-    sizeKb: Math.round(blob.size / 1024)
+  const headers = Object.keys(rows[0]);
+  const csvLines: string[] = [];
+
+  // Header line
+  csvLines.push(headers.map(h => `"${String(h).replace(/"/g, '""')}"`).join(','));
+
+  // Data rows
+  for (const row of rows) {
+    const values = headers.map(header => {
+      const val = row[header];
+      if (val === undefined || val === null) return '""';
+      const strVal = typeof val === 'object' ? JSON.stringify(val) : String(val);
+      return `"${strVal.replace(/"/g, '""')}"`;
+    });
+    csvLines.push(values.join(','));
+  }
+
+  // Prepend UTF-8 BOM (\uFEFF) for proper Arabic rendering in Excel
+  const csvContent = '\uFEFF' + csvLines.join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const dateStr = new Date().toISOString().split('T')[0];
+  triggerDownload(blob, `${filenamePrefix}_${dateStr}.csv`);
+}
+
+/**
+ * Exports the full application store into a structured permanent ZIP archive
+ */
+export async function exportToZip(data: any, customFilename?: string): Promise<void> {
+  const zip = new JSZip();
+  const dateStr = new Date().toISOString().replace(/[:.]/g, '-');
+  const filename = customFilename || `TOP_STORE_FULL_BACKUP_${dateStr}.zip`;
+
+  // 1. Store complete JSON snapshot
+  zip.file('backup.json', JSON.stringify(data, null, 2));
+
+  // 2. Separate core tables for granular recovery
+  const tables = data?.tables || {};
+  const tablesFolder = zip.folder('tables');
+
+  if (tablesFolder) {
+    for (const [tableName, tableRows] of Object.entries(tables)) {
+      if (Array.isArray(tableRows)) {
+        tablesFolder.file(`${tableName}.json`, JSON.stringify(tableRows, null, 2));
+      }
+    }
+  }
+
+  // 3. Metadata summary
+  const metadata = {
+    exportDate: new Date().toISOString(),
+    system: 'TOP STORE Management System',
+    schemaVersion: data?.schemaVersion || '1.0',
+    tableCounts: Object.entries(tables).reduce((acc, [k, v]) => {
+      acc[k] = Array.isArray(v) ? v.length : 0;
+      return acc;
+    }, {} as Record<string, number>)
   };
+  zip.file('metadata.json', JSON.stringify(metadata, null, 2));
+
+  // Generate zip file and download
+  const blob = await zip.generateAsync({ type: 'blob' });
+  triggerDownload(blob, filename);
 }

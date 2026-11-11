@@ -21,7 +21,8 @@ import {
   Copy,
   Check,
   Cpu,
-  Code
+  Code,
+  Info
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import {
@@ -30,6 +31,7 @@ import {
   testSupabaseConnection,
   getActiveSupabaseConfig,
   setRuntimeSupabaseConfig,
+  loadServerSupabaseConfig,
   sanitizeSupabaseUrl,
   migrateLocalDataToSupabase
 } from '../lib/supabase';
@@ -71,6 +73,8 @@ export const SupabaseMonitorView: React.FC = () => {
   const [isEditingConfig, setIsEditingConfig] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
   const [copiedSql, setCopiedSql] = useState(false);
+  const [uiNotice, setUiNotice] = useState<{ type: 'error' | 'success' | 'info'; text: string } | null>(null);
+  const [isConfirmMigrationOpen, setIsConfirmMigrationOpen] = useState(false);
   const [migrationStatus, setMigrationStatus] = useState<{
     running: boolean;
     result?: { success: boolean; insertedCounts: Record<string, number>; errors: string[] };
@@ -120,6 +124,16 @@ export const SupabaseMonitorView: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    // Attempt to load server-persisted config if available
+    loadServerSupabaseConfig().then(cfg => {
+      if (cfg && cfg.url) {
+        setSupabaseConfig(getActiveSupabaseConfig());
+        setEditUrl(cfg.url);
+        setEditAnonKey(cfg.anonKey);
+        checkSupabaseHealth();
+      }
+    });
+
     fetchActiveDevices();
     checkSupabaseHealth();
 
@@ -139,20 +153,29 @@ export const SupabaseMonitorView: React.FC = () => {
     const updated = getActiveSupabaseConfig();
     setSupabaseConfig(updated);
     setIsEditingConfig(false);
+    setUiNotice({
+      type: 'success',
+      text: 'تم حفظ وتحديث إعدادات Supabase بنجاح، جاري التحقق من الاتصال...'
+    });
     setTimeout(() => {
       checkSupabaseHealth();
-    }, 150);
+    }, 200);
+  };
+
+  const handleStartMigration = () => {
+    if (!isSupabaseConfigured()) {
+      setUiNotice({
+        type: 'error',
+        text: 'يرجى إدخال رابط ومفتاح Supabase أولاً للتمكن من رفع ومزامنة البيانات.'
+      });
+      return;
+    }
+    setIsConfirmMigrationOpen(true);
   };
 
   // Run full data upload/migration to Supabase
-  const handleMigrateToSupabase = async () => {
-    if (!isSupabaseConfigured()) {
-      alert('يرجى ضبط رابط ومفتاح Supabase أولاً للتمكن من رفع البيانات.');
-      return;
-    }
-    if (!confirm('هل تريد رفع كافة بيانات المتجر الحالية (العملاء، الطلبيات، قيود اليومية) إلى جداول Supabase السحابية؟')) {
-      return;
-    }
+  const executeMigrateToSupabase = async () => {
+    setIsConfirmMigrationOpen(false);
     setMigrationStatus({ running: true });
     try {
       const fullStoreData = {
@@ -178,6 +201,17 @@ export const SupabaseMonitorView: React.FC = () => {
       };
       const result = await migrateLocalDataToSupabase(fullStoreData as any);
       setMigrationStatus({ running: false, result });
+      if (result.success) {
+        setUiNotice({
+          type: 'success',
+          text: `تم رفع البيانات بنجاح: ${result.insertedCounts.customers} عميل، ${result.insertedCounts.orders} طلبية، ${result.insertedCounts.journalEntries} قيد يومية.`
+        });
+      } else {
+        setUiNotice({
+          type: 'error',
+          text: `حدثت تنبيهات أثناء الرفع: ${result.errors.join(' | ')}`
+        });
+      }
       checkSupabaseHealth();
     } catch (e: any) {
       setMigrationStatus({
@@ -187,6 +221,10 @@ export const SupabaseMonitorView: React.FC = () => {
           insertedCounts: {},
           errors: [e?.message || 'خطأ غير متوقع أثناء الرفع']
         }
+      });
+      setUiNotice({
+        type: 'error',
+        text: e?.message || 'فشل رفع البيانات إلى Supabase'
       });
     }
   };
@@ -276,6 +314,36 @@ export const SupabaseMonitorView: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* UI Notice Banner */}
+      {uiNotice && (
+        <div
+          className={`p-4 rounded-2xl border text-xs flex items-center justify-between gap-3 ${
+            uiNotice.type === 'success'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+              : uiNotice.type === 'error'
+              ? 'bg-rose-50 border-rose-200 text-rose-900'
+              : 'bg-blue-50 border-blue-200 text-blue-900'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {uiNotice.type === 'success' ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            ) : uiNotice.type === 'error' ? (
+              <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+            ) : (
+              <Info className="w-4 h-4 text-blue-600 shrink-0" />
+            )}
+            <span>{uiNotice.text}</span>
+          </div>
+          <button
+            onClick={() => setUiNotice(null)}
+            className="text-xs font-bold underline opacity-80 hover:opacity-100 cursor-pointer"
+          >
+            إغلاق
+          </button>
+        </div>
+      )}
 
       {/* Top Cards: Status Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -598,7 +666,7 @@ export const SupabaseMonitorView: React.FC = () => {
 
             <button
               type="button"
-              onClick={handleMigrateToSupabase}
+              onClick={handleStartMigration}
               disabled={migrationStatus.running || !supabaseConfig.url}
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
             >
@@ -825,6 +893,40 @@ export const SupabaseMonitorView: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Migration Confirmation Modal */}
+      {isConfirmMigrationOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 text-center space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
+              <Zap className="w-6 h-6" />
+            </div>
+            <div>
+              <h4 className="text-base font-black text-slate-900 mb-1">تأكيد رفع البيانات إلى Supabase</h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                سيتم رفع وتحديث كافة بيانات المتجر الحالية (العملاء، الطلبيات، قيود اليومية، والبيانات المالية) إلى جداول Supabase السحابية وربطها بالمزامنة الفورية. هل ترغب بالاستمرار؟
+              </p>
+            </div>
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsConfirmMigrationOpen(false)}
+                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+              >
+                إلغاء
+              </button>
+              <button
+                type="button"
+                onClick={executeMigrateToSupabase}
+                className="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+              >
+                <Zap className="w-4 h-4" />
+                <span>نعم، رفع البيانات السحابية</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

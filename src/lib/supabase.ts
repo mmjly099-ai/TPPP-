@@ -51,10 +51,39 @@ export function setRuntimeSupabaseConfig(url: string, anonKey: string) {
 
     if (runtimeAnonKey) localStorage.setItem('topstore_supabase_anon_key', runtimeAnonKey);
     else localStorage.removeItem('topstore_supabase_anon_key');
+
+    // Also persist to server endpoint in background
+    fetch('/api/config/supabase', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: runtimeUrl, anonKey: runtimeAnonKey })
+    }).catch(() => {});
   } catch (e) {
     // ignore
   }
   supabaseClientInstance = null; // reset client to reinitialize
+}
+
+export async function loadServerSupabaseConfig(): Promise<{ url: string; anonKey: string } | null> {
+  try {
+    const res = await fetch('/api/config/supabase');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.url && data.anonKey) {
+        runtimeUrl = sanitizeSupabaseUrl(data.url);
+        runtimeAnonKey = String(data.anonKey).trim();
+        try {
+          localStorage.setItem('topstore_supabase_url', runtimeUrl);
+          localStorage.setItem('topstore_supabase_anon_key', runtimeAnonKey);
+        } catch (e) {}
+        supabaseClientInstance = null;
+        return { url: runtimeUrl, anonKey: runtimeAnonKey };
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+  return null;
 }
 
 export function getActiveSupabaseConfig(): { url: string; anonKey: string; source: 'env' | 'custom' | 'none' } {

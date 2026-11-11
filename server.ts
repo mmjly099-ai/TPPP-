@@ -58,6 +58,35 @@ async function startServer() {
     return res.status(401).json({ success: false, message: 'كلمة المرور غير صحيحة' });
   });
 
+  const SUPABASE_CONFIG_FILE = path.resolve(DATA_DIR, 'supabase_config.json');
+
+  app.get('/api/config/supabase', (req, res) => {
+    try {
+      if (fs.existsSync(SUPABASE_CONFIG_FILE)) {
+        const conf = JSON.parse(fs.readFileSync(SUPABASE_CONFIG_FILE, 'utf-8'));
+        return res.json({ success: true, url: conf.url || '', anonKey: conf.anonKey || '' });
+      }
+      return res.json({
+        success: true,
+        url: process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '',
+        anonKey: process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || ''
+      });
+    } catch (e: any) {
+      res.status(500).json({ success: false, error: e.message });
+    }
+  });
+
+  app.post('/api/config/supabase', (req, res) => {
+    try {
+      const { url, anonKey } = req.body || {};
+      const conf = { url: url || '', anonKey: anonKey || '', updatedAt: new Date().toISOString() };
+      fs.writeFileSync(SUPABASE_CONFIG_FILE, JSON.stringify(conf, null, 2), 'utf-8');
+      res.json({ success: true });
+    } catch (e: any) {
+      res.status(500).json({ success: false, error: e.message });
+    }
+  });
+
   const DEVICES_FILE = path.resolve(DATA_DIR, 'connected_devices.json');
   let deviceRecords: Record<string, any> = {};
 
