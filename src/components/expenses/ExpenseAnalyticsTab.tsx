@@ -59,12 +59,33 @@ export const ExpenseAnalyticsTab: React.FC<ExpenseAnalyticsTabProps> = ({
   const [toDate, setToDate] = useState('');
   const [selectedAccountFilter, setSelectedAccountFilter] = useState('all');
 
+  // Robust numeric extractor
+  const getExpenseAmount = (e: Expense): number => {
+    return parseFloat(String(e.amount || 0)) || 0;
+  };
+
+  // Robust date extractor (YYYY-MM-DD)
+  const getExpenseDate = (e: Expense): string => {
+    const raw = (e as any).expenseDate || (e as any).date || e.createdAt || '';
+    return raw ? String(raw).split('T')[0] : '';
+  };
+
+  const getOrderAmount = (o: Order): number => {
+    return parseFloat(String(o.totalAmount || 0)) || 0;
+  };
+
+  const getOrderDate = (o: Order): string => {
+    const raw = o.orderDate || o.createdAt || '';
+    return raw ? String(raw).split('T')[0] : '';
+  };
+
   // Filtered Expenses by Date Range and Account
   const filteredExpenses = useMemo(() => {
     return expenses.filter(e => {
-      const d = e.date ? e.date.split('T')[0] : '';
-      if (fromDate && d < fromDate) return false;
-      if (toDate && d > toDate) return false;
+      if (e.status === 'cancelled') return false;
+      const d = getExpenseDate(e);
+      if (fromDate && d && d < fromDate) return false;
+      if (toDate && d && d > toDate) return false;
       if (selectedAccountFilter !== 'all' && String(e.accountId) !== selectedAccountFilter) {
         return false;
       }
@@ -72,39 +93,40 @@ export const ExpenseAnalyticsTab: React.FC<ExpenseAnalyticsTabProps> = ({
     });
   }, [expenses, fromDate, toDate, selectedAccountFilter]);
 
-  // Overall metrics
+  // Overall metrics - strictly numeric summation
   const totalExpenseSum = useMemo(() => {
-    return filteredExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+    return filteredExpenses.reduce((sum, e) => sum + getExpenseAmount(e), 0);
   }, [filteredExpenses]);
 
-  // Category breakdown
+  // Category breakdown - strictly numeric addition
   const categoryData = useMemo(() => {
     const map: Record<string, { count: number; total: number }> = {};
     for (const e of filteredExpenses) {
       const cat = e.category || 'غير محدد';
       if (!map[cat]) map[cat] = { count: 0, total: 0 };
       map[cat].count++;
-      map[cat].total += e.amount || 0;
+      map[cat].total += getExpenseAmount(e);
     }
     return Object.entries(map)
       .map(([name, val]) => ({
         name,
         count: val.count,
-        total: val.total,
+        total: Math.round(val.total),
         percentage: totalExpenseSum > 0 ? (val.total / totalExpenseSum) * 100 : 0
       }))
       .sort((a, b) => b.total - a.total);
   }, [filteredExpenses, totalExpenseSum]);
 
-  // Monthly / Period Trends
+  // Monthly / Period Trends - strictly numeric
   const trendData = useMemo(() => {
     const map: Record<string, number> = {};
     for (const e of filteredExpenses) {
-      const month = (e.date || '').substring(0, 7) || 'غير محدد';
-      map[month] = (map[month] || 0) + (e.amount || 0);
+      const d = getExpenseDate(e);
+      const month = d ? d.substring(0, 7) : 'عام';
+      map[month] = (map[month] || 0) + getExpenseAmount(e);
     }
     return Object.entries(map)
-      .map(([month, amount]) => ({ month, amount }))
+      .map(([month, amount]) => ({ month, amount: Math.round(amount) }))
       .sort((a, b) => a.month.localeCompare(b.month));
   }, [filteredExpenses]);
 
@@ -112,12 +134,13 @@ export const ExpenseAnalyticsTab: React.FC<ExpenseAnalyticsTabProps> = ({
   const totalSalesInRange = useMemo(() => {
     return orders
       .filter(o => {
-        const d = (o.date || '').split('T')[0];
-        if (fromDate && d < fromDate) return false;
-        if (toDate && d > toDate) return false;
+        if (o.status === 'cancelled') return false;
+        const d = getOrderDate(o);
+        if (fromDate && d && d < fromDate) return false;
+        if (toDate && d && d > toDate) return false;
         return true;
       })
-      .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+      .reduce((sum, o) => sum + getOrderAmount(o), 0);
   }, [orders, fromDate, toDate]);
 
   const expenseRatio = totalSalesInRange > 0 ? (totalExpenseSum / totalSalesInRange) * 100 : 0;
@@ -203,14 +226,14 @@ export const ExpenseAnalyticsTab: React.FC<ExpenseAnalyticsTabProps> = ({
             {categoryData[0]?.name || 'لا يوجد'}
           </div>
           <span className="text-[11px] text-rose-600 font-mono font-bold mt-1 block">
-            {categoryData[0] ? `${categoryData[0].total.toLocaleString()} ر.ي (${categoryData[0].percentage.toFixed(1)}%)` : '-'}
+            {categoryData[0] ? `${categoryData[0].total.toLocaleString()} ر.ي (${Number.isFinite(categoryData[0].percentage) ? categoryData[0].percentage.toFixed(1) : '0.0'}%)` : '-'}
           </span>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
           <span className="text-xs text-slate-500 block mb-1">نسبة المصروفات من المبيعات</span>
           <div className="text-2xl font-black font-mono text-amber-600">
-            {expenseRatio.toFixed(1)}%
+            {Number.isFinite(expenseRatio) ? expenseRatio.toFixed(1) : '0.0'}%
           </div>
           <span className="text-[11px] text-slate-400 mt-1 block">
             مبيعات الفترة: {totalSalesInRange.toLocaleString()} ر.ي
@@ -281,7 +304,7 @@ export const ExpenseAnalyticsTab: React.FC<ExpenseAnalyticsTabProps> = ({
                   </span>
                 </div>
                 <span className="text-xs font-mono text-slate-500">
-                  {cat.percentage.toFixed(1)}%
+                  {Number.isFinite(cat.percentage) ? cat.percentage.toFixed(1) : '0.0'}%
                 </span>
               </button>
             ))}

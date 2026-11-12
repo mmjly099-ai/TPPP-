@@ -30,7 +30,7 @@ interface ExpensesViewProps {
 
 export const ExpensesView: React.FC<ExpensesViewProps> = ({ onOpenNewExpense, onNavigate }) => {
   const { expenses, accounts, orders, totalExpenses, shipments, updateExpense, deleteExpense } = useStore();
-  const [activeViewMode, setActiveViewMode] = useState<'list' | 'analytics'>('analytics');
+  const [activeViewMode, setActiveViewMode] = useState<'list' | 'analytics'>('list');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
 
@@ -129,9 +129,20 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({ onOpenNewExpense, on
         </div>
       </div>
 
-      {/* Sub-navigation Switcher: Analytics vs Table List */}
+      {/* Sub-navigation Switcher: Original List vs Analytics */}
       <div className="flex items-center justify-between border-b border-slate-200 pb-3 gap-3 flex-wrap print:hidden">
         <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200">
+          <button
+            onClick={() => setActiveViewMode('list')}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              activeViewMode === 'list'
+                ? 'bg-white text-slate-900 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Receipt className="w-3.5 h-3.5 text-rose-600" />
+            <span>جدول وبنود المصروفات ({expenses.length})</span>
+          </button>
           <button
             onClick={() => setActiveViewMode('analytics')}
             className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
@@ -145,17 +156,6 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({ onOpenNewExpense, on
             <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${activeViewMode === 'analytics' ? 'bg-white/25 text-white' : 'bg-rose-100 text-rose-700 font-bold'}`}>
               محلل ذكي
             </span>
-          </button>
-          <button
-            onClick={() => setActiveViewMode('list')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              activeViewMode === 'list'
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Receipt className="w-3.5 h-3.5 text-rose-600" />
-            <span>جدول وبنود المصروفات ({expenses.length})</span>
           </button>
         </div>
 
