@@ -145,14 +145,99 @@ export const ExpenseAnalyticsTab: React.FC<ExpenseAnalyticsTabProps> = ({
 
   const expenseRatio = totalSalesInRange > 0 ? (totalExpenseSum / totalSalesInRange) * 100 : 0;
 
+  // Date preset helper
+  const handlePreset = (preset: 'ALL' | 'THIS_MONTH' | 'LAST_30_DAYS' | 'THIS_WEEK') => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    const formatDate = (d: Date) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    if (preset === 'ALL') {
+      setFromDate('');
+      setToDate('');
+    } else if (preset === 'THIS_MONTH') {
+      const startOfMonth = new Date(currentYear, currentMonth, 1);
+      const endOfMonth = new Date(currentYear, currentMonth + 1, 0);
+      setFromDate(formatDate(startOfMonth));
+      setToDate(formatDate(endOfMonth));
+    } else if (preset === 'LAST_30_DAYS') {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      setFromDate(formatDate(thirtyDaysAgo));
+      setToDate(formatDate(now));
+    } else if (preset === 'THIS_WEEK') {
+      const startOfWeek = new Date(now);
+      const day = now.getDay();
+      const diff = now.getDate() - day + (day === 6 ? 0 : -1);
+      startOfWeek.setDate(diff);
+      setFromDate(formatDate(startOfWeek));
+      setToDate(formatDate(now));
+    }
+  };
+
+  const isAllSelected = !fromDate && !toDate;
+
   return (
     <div className="space-y-6">
       {/* Date Filter & Control Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 text-xs">
-            <Calendar className="w-4 h-4 text-slate-400" />
-            <span className="text-slate-500 font-bold">من:</span>
+      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+        {/* Quick Date Presets */}
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+            <button
+              type="button"
+              onClick={() => handlePreset('ALL')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                isAllSelected
+                  ? 'bg-rose-600 text-white shadow-xs'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+              }`}
+            >
+              كافة الفترات
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePreset('THIS_MONTH')}
+              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all cursor-pointer whitespace-nowrap"
+            >
+              هذا الشهر
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePreset('LAST_30_DAYS')}
+              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all cursor-pointer whitespace-nowrap"
+            >
+              آخر 30 يوم
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePreset('THIS_WEEK')}
+              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all cursor-pointer whitespace-nowrap"
+            >
+              هذا الأسبوع
+            </button>
+          </div>
+
+          <button
+            onClick={onOpenNewExpense}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer mr-auto"
+          >
+            <Plus className="w-4 h-4" />
+            <span>تسجيل مصروف جديد</span>
+          </button>
+        </div>
+
+        {/* Detailed Date Picker & Account Filter */}
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 text-xs">
+          <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200">
+            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+            <span className="text-slate-500 font-bold text-[11px]">من:</span>
             <input
               type="date"
               value={fromDate}
@@ -161,9 +246,9 @@ export const ExpenseAnalyticsTab: React.FC<ExpenseAnalyticsTabProps> = ({
             />
           </div>
 
-          <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 text-xs">
-            <Calendar className="w-4 h-4 text-slate-400" />
-            <span className="text-slate-500 font-bold">إلى:</span>
+          <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200">
+            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+            <span className="text-slate-500 font-bold text-[11px]">إلى:</span>
             <input
               type="date"
               value={toDate}
@@ -175,7 +260,7 @@ export const ExpenseAnalyticsTab: React.FC<ExpenseAnalyticsTabProps> = ({
           <select
             value={selectedAccountFilter}
             onChange={e => setSelectedAccountFilter(e.target.value)}
-            className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700"
+            className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-slate-700 font-bold"
           >
             <option value="all">كافة الحسابات والمحافظ</option>
             {accounts.map(acc => (
@@ -192,20 +277,12 @@ export const ExpenseAnalyticsTab: React.FC<ExpenseAnalyticsTabProps> = ({
                 setToDate('');
                 setSelectedAccountFilter('all');
               }}
-              className="text-xs text-rose-600 hover:underline cursor-pointer font-bold"
+              className="text-xs text-rose-600 hover:underline cursor-pointer font-bold px-2 py-1"
             >
               إلغاء التصفية
             </button>
           )}
         </div>
-
-        <button
-          onClick={onOpenNewExpense}
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>تسجيل مصروف جديد</span>
-        </button>
       </div>
 
       {/* KPI Cards */}
@@ -263,52 +340,61 @@ export const ExpenseAnalyticsTab: React.FC<ExpenseAnalyticsTabProps> = ({
             <span className="text-xs text-slate-400">النسبة المئوية</span>
           </div>
 
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={categoryData}
-                  dataKey="total"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  innerRadius={45}
-                  paddingAngle={3}
-                >
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(val: any) => [`${Number(val).toLocaleString()} ر.ي`, 'المبلغ']}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto pt-2 border-t border-slate-100">
-            {categoryData.map((cat, idx) => (
-              <button
-                key={cat.name}
-                onClick={() => onFilterByCategory(cat.name)}
-                className="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 text-right transition-colors cursor-pointer group"
-              >
-                <div className="flex items-center gap-2">
-                  <span
-                    className="w-2.5 h-2.5 rounded-full shrink-0"
-                    style={{ backgroundColor: COLORS[idx % COLORS.length] }}
+          {categoryData.length === 0 ? (
+            <div className="h-64 flex flex-col items-center justify-center text-slate-400 text-xs bg-slate-50 rounded-xl">
+              <PieIcon className="w-8 h-8 text-slate-300 mb-2" />
+              <span>لا توجد بيانات مصروفات للفترة المحددة</span>
+            </div>
+          ) : (
+            <div className="h-64 min-h-[260px] w-full">
+              <ResponsiveContainer width="100%" height="100%" minHeight={240}>
+                <PieChart>
+                  <Pie
+                    data={categoryData}
+                    dataKey="total"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    innerRadius={45}
+                    paddingAngle={3}
+                  >
+                    {categoryData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(val: any) => [`${Number(val).toLocaleString()} ر.ي`, 'المبلغ']}
                   />
-                  <span className="text-xs font-bold text-slate-700 group-hover:text-rose-600 truncate">
-                    {cat.name}
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {categoryData.length > 0 && (
+            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto pt-2 border-t border-slate-100">
+              {categoryData.map((cat, idx) => (
+                <button
+                  key={cat.name}
+                  onClick={() => onFilterByCategory(cat.name)}
+                  className="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 text-right transition-colors cursor-pointer group"
+                >
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: COLORS[idx % COLORS.length] }}
+                    />
+                    <span className="text-xs font-bold text-slate-700 group-hover:text-rose-600 truncate">
+                      {cat.name}
+                    </span>
+                  </div>
+                  <span className="text-xs font-mono text-slate-500">
+                    {Number.isFinite(cat.percentage) ? cat.percentage.toFixed(1) : '0.0'}%
                   </span>
-                </div>
-                <span className="text-xs font-mono text-slate-500">
-                  {Number.isFinite(cat.percentage) ? cat.percentage.toFixed(1) : '0.0'}%
-                </span>
-              </button>
-            ))}
-          </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Expense Trend Area Chart */}
@@ -321,23 +407,30 @@ export const ExpenseAnalyticsTab: React.FC<ExpenseAnalyticsTabProps> = ({
             <span className="text-xs text-slate-400">حجم الإنفاق</span>
           </div>
 
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trendData}>
-                <defs>
-                  <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#f43f5e" stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(val: any) => [`${Number(val).toLocaleString()} ر.ي`, 'إجمالي الإنفاق']} />
-                <Area type="monotone" dataKey="amount" stroke="#f43f5e" strokeWidth={2} fillOpacity={1} fill="url(#expenseGradient)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+          {trendData.length === 0 ? (
+            <div className="h-64 flex flex-col items-center justify-center text-slate-400 text-xs bg-slate-50 rounded-xl">
+              <BarChart3 className="w-8 h-8 text-slate-300 mb-2" />
+              <span>لا توجد بيانات اتجاهات للفترة المحددة</span>
+            </div>
+          ) : (
+            <div className="h-64 min-h-[260px] w-full">
+              <ResponsiveContainer width="100%" height="100%" minHeight={240}>
+                <AreaChart data={trendData}>
+                  <defs>
+                    <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#f43f5e" stopOpacity={0.0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip formatter={(val: any) => [`${Number(val).toLocaleString()} ر.ي`, 'إجمالي الإنفاق']} />
+                  <Area type="monotone" dataKey="amount" stroke="#f43f5e" strokeWidth={2} fillOpacity={1} fill="url(#expenseGradient)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          )}
 
           <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 flex items-center justify-between text-xs text-slate-600">
             <span>إجمالي الفترات الممثلة: <strong>{trendData.length} شهور</strong></span>
