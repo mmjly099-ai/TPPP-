@@ -51,20 +51,21 @@ export const NewDocumentWizardModal: React.FC<NewDocumentWizardModalProps> = ({
   
   // New Order / Amounts state
   const [isCreatingNewOrder, setIsCreatingNewOrder] = useState<boolean>(false);
-  const [orderTotalAmount, setOrderTotalAmount] = useState<string>('8300');
+  const [orderTotalAmount, setOrderTotalAmount] = useState<string>('0');
   const [orderDiscount, setOrderDiscount] = useState<string>('0');
   const [deliveryFee, setDeliveryFee] = useState<string>('0');
-  const [customerOrderNumber, setCustomerOrderNumber] = useState<string>('1');
+  const [customerOrderNumber, setCustomerOrderNumber] = useState<string>('');
   const [shipmentTracking, setShipmentTracking] = useState<string>('');
   const [purchaseSite, setPurchaseSite] = useState<string>('SHEIN');
   const [orderNotes, setOrderNotes] = useState<string>('');
 
   // Payment State
-  const [includePayment, setIncludePayment] = useState<boolean>(true);
-  const [paymentAmount, setPaymentAmount] = useState<string>('4300');
+  const [includePayment, setIncludePayment] = useState<boolean>(false);
+  const [paymentAmount, setPaymentAmount] = useState<string>('0');
   const [selectedAccountId, setSelectedAccountId] = useState<number>(accounts[0]?.id || 1);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('تحويل');
   const [paymentType, setPaymentType] = useState<string>('دفعة أولى');
+  const [wizardError, setWizardError] = useState<string>('');
 
   // Quick Customer Creation
   const [showQuickCustomer, setShowQuickCustomer] = useState(false);
@@ -116,21 +117,27 @@ export const NewDocumentWizardModal: React.FC<NewDocumentWizardModalProps> = ({
       const deliveryFeeNum = parseFloat(deliveryFee) || 0;
       const payAmountNum = includePayment ? (parseFloat(paymentAmount) || 0) : 0;
 
-      const cleanCustOrderNum = (customerOrderNumber ? String(customerOrderNumber).trim() : '').replace(/[^\d]/g, '') || '1';
+      const existingNums = orders
+        .map(o => parseInt(String(o.orderNumber).replace(/\D/g, ''), 10))
+        .filter(n => !isNaN(n) && n > 0);
+      const nextNum = existingNums.length > 0 ? String(Math.max(...existingNums) + 1) : '1';
+      const cleanCustOrderNum = (customerOrderNumber ? String(customerOrderNumber).trim() : '').replace(/[^\d]/g, '') || nextNum;
       const createdOrder = addOrder(
         {
           customerId: selectedCustomer.id,
           orderNumber: cleanCustOrderNum,
           customerOrderNumber: cleanCustOrderNum,
-          purchaseSite: purchaseSite || 'SHEIN',
+          site: purchaseSite || 'SHEIN',
+          shipmentNumber: shipmentTracking.trim() || undefined,
           itemsCount: 1,
-          orderPrice: orderAmountNum,
+          subtotal: orderAmountNum,
           discount: orderDiscountNum,
+          shippingFee: 0,
           deliveryFee: deliveryFeeNum,
           deliveryFeeCollectionStatus: 'unpaid',
           status: 'pending',
           orderDate: new Date().toISOString().split('T')[0],
-          notes: orderNotes,
+          notes: orderNotes.trim() || undefined,
           invoiceNumber: `INV-${cleanCustOrderNum}`,
           invoiceStatus: 'approved'
         },
@@ -159,7 +166,7 @@ export const NewDocumentWizardModal: React.FC<NewDocumentWizardModalProps> = ({
       }
     }
 
-    onDocumentCreated(docType, finalOrder ? `INV-${finalOrder.id}` : undefined);
+    onDocumentCreated(docType, docType === 'order_invoice' && finalOrder ? String(finalOrder.id) : undefined);
     onClose();
   };
 
@@ -405,9 +412,10 @@ export const NewDocumentWizardModal: React.FC<NewDocumentWizardModalProps> = ({
                           onClick={() => {
                             setSelectedOrderId(o.id);
                             setIsCreatingNewOrder(false);
-                            setOrderTotalAmount(String(o.totalAmount || 0));
+                            setOrderTotalAmount(String(o.subtotal || o.totalAmount || 0));
                             setOrderDiscount(String(o.discount || 0));
                             setDeliveryFee(String(o.deliveryFee || 0));
+                            setShipmentTracking(o.shipmentNumber || '');
                           }}
                           className={`w-full text-right p-3 rounded-xl border transition-all flex items-center justify-between ${
                             isSelected
@@ -417,7 +425,7 @@ export const NewDocumentWizardModal: React.FC<NewDocumentWizardModalProps> = ({
                         >
                           <div>
                             <div className="font-black text-xs">
-                              طلب رقم #{o.customerOrderNumber || o.id} ({o.purchaseSite})
+                              طلب رقم #{o.customerOrderNumber || o.orderNumber || o.id} ({o.site || (o as any).purchaseSite || 'SHEIN'})
                             </div>
                             <div className={`text-[11px] font-mono mt-0.5 ${isSelected ? 'text-[#C5A059]' : 'text-slate-500'}`}>
                               الإجمالي: {o.totalAmount?.toLocaleString()} ريال | المدفوع: {o.paidAmount?.toLocaleString()} ريال | المتبقي: {o.remainingAmount?.toLocaleString()} ريال
@@ -629,55 +637,68 @@ export const NewDocumentWizardModal: React.FC<NewDocumentWizardModalProps> = ({
 
               {/* Document Live Preview */}
               <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm scale-95 origin-top">
-                <TopStoreDocumentCard
-                  documentType={docType}
-                  docNumber={docType === 'receipt' ? 'PAY-50409065-8' : 'INV-870001'}
-                  date={new Date().toLocaleDateString('ar-YE')}
-                  customer={selectedCustomer}
-                  order={
-                    selectedOrder || {
-                      id: 1,
-                      customerId: selectedCustomer?.id || 1,
-                      orderNumber: 'ORD-001',
-                      customerOrderNumber: customerOrderNumber || '1',
-                      totalAmount: parseFloat(orderTotalAmount) || 8300,
-                      discount: parseFloat(orderDiscount) || 0,
-                      deliveryFee: parseFloat(deliveryFee) || 0,
-                      paidAmount: includePayment ? (parseFloat(paymentAmount) || 4300) : 0,
-                      remainingAmount: Math.max(
-                        0,
-                        (parseFloat(orderTotalAmount) || 8300) -
-                          (parseFloat(orderDiscount) || 0) +
-                          (parseFloat(deliveryFee) || 0) -
-                          (includePayment ? (parseFloat(paymentAmount) || 4300) : 0)
-                      ),
-                      status: 'pending',
-                      orderDate: new Date().toLocaleDateString('ar-YE'),
-                      purchaseSite: purchaseSite,
-                      itemsCount: 1,
-                      orderPrice: parseFloat(orderTotalAmount) || 8300,
-                      deliveryFeeCollectionStatus: 'unpaid',
-                      createdAt: new Date().toISOString()
-                    }
-                  }
-                  payment={
-                    includePayment
-                      ? {
-                          id: 1,
-                          paymentNumber: 'PAY-50409065-8',
-                          receiptNumber: 'PAY-50409065-8',
-                          customerId: selectedCustomer?.id || 1,
-                          accountId: selectedAccountId,
-                          amount: parseFloat(paymentAmount) || 4300,
-                          paymentDate: new Date().toLocaleDateString('ar-YE'),
-                          paymentMethod: selectedPaymentMethod,
-                          paymentType: paymentType,
+                {(() => {
+                  const previewTotal = parseFloat(orderTotalAmount) || 0;
+                  const previewDiscount = parseFloat(orderDiscount) || 0;
+                  const previewDelivery = parseFloat(deliveryFee) || 0;
+                  const previewPayAmt = includePayment ? (parseFloat(paymentAmount) || 0) : 0;
+                  const existingOrderPayments = selectedOrder
+                    ? payments.filter(p => p.orderId === selectedOrder.id && p.status !== 'cancelled')
+                    : [];
+
+                  return (
+                    <TopStoreDocumentCard
+                      documentType={docType}
+                      docNumber={
+                        docType === 'receipt'
+                          ? 'معاينة سند قبض'
+                          : selectedOrder?.invoiceNumber || `INV-${customerOrderNumber || 'جديد'}`
+                      }
+                      date={new Date().toISOString().split('T')[0]}
+                      customer={selectedCustomer}
+                      order={
+                        selectedOrder || {
+                          id: 0,
+                          customerId: selectedCustomer?.id || 0,
+                          orderNumber: customerOrderNumber || 'جديد',
+                          customerOrderNumber: customerOrderNumber || 'جديد',
+                          site: purchaseSite || 'SHEIN',
+                          shipmentNumber: shipmentTracking.trim() || undefined,
+                          subtotal: previewTotal,
+                          shippingFee: 0,
+                          totalAmount: Math.max(0, previewTotal - previewDiscount),
+                          discount: previewDiscount,
+                          deliveryFee: previewDelivery,
+                          paidAmount: previewPayAmt,
+                          remainingAmount: Math.max(0, previewTotal - previewDiscount - previewPayAmt),
+                          status: 'pending',
+                          orderDate: new Date().toISOString().split('T')[0],
+                          itemsCount: 1,
+                          deliveryFeeCollectionStatus: 'unpaid',
                           createdAt: new Date().toISOString()
                         }
-                      : null
-                  }
-                  accountName={accounts.find(a => a.id === selectedAccountId)?.name || 'أم فلوس'}
-                />
+                      }
+                      payment={
+                        includePayment && previewPayAmt > 0
+                          ? {
+                              id: 0,
+                              paymentNumber: 'معاينة',
+                              receiptNumber: 'معاينة',
+                              customerId: selectedCustomer?.id || 0,
+                              accountId: selectedAccountId,
+                              amount: previewPayAmt,
+                              paymentDate: new Date().toISOString().split('T')[0],
+                              paymentMethod: selectedPaymentMethod,
+                              paymentType: paymentType,
+                              createdAt: new Date().toISOString()
+                            }
+                          : existingOrderPayments[0] || null
+                      }
+                      customerPayments={existingOrderPayments}
+                      accountName={accounts.find(a => a.id === selectedAccountId)?.name || '—'}
+                    />
+                  );
+                })()}
               </div>
             </div>
           )}
@@ -704,14 +725,21 @@ export const NewDocumentWizardModal: React.FC<NewDocumentWizardModalProps> = ({
             </button>
           )}
 
+          {wizardError && (
+            <div className="mx-1 mb-2 p-2.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold rounded-xl text-center">
+              {wizardError}
+            </div>
+          )}
+
           {currentStep < 6 ? (
             <button
               type="button"
               onClick={() => {
                 if (currentStep === 2 && !selectedCustomerId) {
-                  alert('يرجى اختيار عميل للمتابعة');
+                  setWizardError('يرجى اختيار عميل للمتابعة');
                   return;
                 }
+                setWizardError('');
                 setCurrentStep(prev => prev + 1);
               }}
               className="px-5 py-2.5 bg-[#1A3668] text-white text-xs font-black rounded-xl hover:bg-[#112952] flex items-center gap-1.5 shadow-md transition-all"

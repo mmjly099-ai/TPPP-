@@ -97,7 +97,7 @@ export const InvoicesView: React.FC = () => {
         orderId: o.id,
         orderNumber: o.orderNumber || o.id,
         customerOrderNumber: o.customerOrderNumber || o.id,
-        shipmentNumber: o.trackingNumber,
+        shipmentNumber: o.shipmentNumber || (o as any).trackingNumber,
         date: o.orderDate || new Date().toISOString().split('T')[0],
         amount: o.totalAmount || 0,
         paidAmount: o.paidAmount || 0,
@@ -129,7 +129,7 @@ export const InvoicesView: React.FC = () => {
         orderId: p.orderId,
         orderNumber: ord?.orderNumber || p.orderId,
         customerOrderNumber: ord?.customerOrderNumber || ord?.id || '—',
-        shipmentNumber: ord?.trackingNumber,
+        shipmentNumber: ord?.shipmentNumber || (ord as any)?.trackingNumber,
         date: p.paymentDate || new Date().toISOString().split('T')[0],
         amount: p.amount,
         paidAmount: p.amount,
@@ -272,10 +272,11 @@ export const InvoicesView: React.FC = () => {
           customerId: demoCust.id,
           orderNumber: '1',
           customerOrderNumber: '1',
-          purchaseSite: 'SHEIN',
+          site: 'SHEIN',
           itemsCount: 1,
-          orderPrice: 8300,
+          subtotal: 8300,
           discount: 0,
+          shippingFee: 0,
           deliveryFee: 0,
           deliveryFeeCollectionStatus: 'unpaid',
           status: 'pending',
@@ -344,84 +345,50 @@ export const InvoicesView: React.FC = () => {
   const activeDocData = useMemo(() => {
     // 1. Try finding actual linked item
     if (selectedDocType === 'receipt') {
-      const p = payments.find(item => String(item.id) === selectedItemId) || payments[0];
-      const ord = p ? orders.find(o => o.id === p.orderId) : orders[0];
-      const cust = p ? customers.find(c => c.id === p.customerId) : (ord ? customers.find(c => c.id === ord.customerId) : customers[0]);
-      const acc = p ? accounts.find(a => a.id === p.accountId) : accounts[0];
+      const p = payments.find(item => String(item.id) === selectedItemId) || payments[0] || null;
+      const ord = p ? (orders.find(o => o.id === p.orderId) || null) : null;
+      const cust = p
+        ? (customers.find(c => c.id === p.customerId) || null)
+        : (customers[0] || null);
+      const acc = p ? (accounts.find(a => a.id === p.accountId) || null) : null;
 
       return {
-        docNumber: p ? (p.receiptNumber || p.paymentNumber || `PAY-${p.id}`) : 'PAY-50409065-8',
-        date: p ? p.paymentDate : '2026/9/25',
-        customer: cust || { id: 1, name: 'امال عامر احمد العمري', code: 'TOP 037', phone: '736974902', governorate: 'مأرب', address: 'مأرب' },
-        order: ord || {
-          id: 1,
-          customerId: 1,
-          orderNumber: 'ORD-001',
-          customerOrderNumber: '1',
-          totalAmount: 8300,
-          paidAmount: 4300,
-          remainingAmount: 4000,
-          discount: 0,
-          deliveryFee: 0,
-          deliveryFeeCollectionStatus: 'unpaid',
-          status: 'pending',
-          orderDate: '2026/9/18',
-          createdAt: new Date().toISOString()
-        },
-        payment: p || {
-          id: 1,
-          paymentNumber: 'PAY-50409065-8',
-          receiptNumber: 'PAY-50409065-8',
-          customerId: 1,
-          accountId: 1,
-          amount: 4300,
-          paymentDate: '2026/9/25',
-          paymentMethod: 'تحويل',
-          paymentType: 'first',
-          createdAt: new Date().toISOString()
-        },
-        accountName: acc?.name || 'أم فلوس'
+        docNumber: p ? (p.receiptNumber || p.paymentNumber || `PAY-${p.id}`) : 'PAY-000',
+        date: p ? p.paymentDate : new Date().toISOString().split('T')[0],
+        customer: cust,
+        order: ord,
+        payment: p,
+        customerPayments: ord ? payments.filter(pay => pay.orderId === ord.id && pay.status !== 'cancelled') : [],
+        accountName: acc?.name || p?.paymentMethod || '—'
       };
     }
 
     if (selectedDocType === 'order_invoice') {
-      const ord = orders.find(item => String(item.id) === selectedItemId) || orders[0];
-      const cust = ord ? customers.find(c => c.id === ord.customerId) : customers[0];
-      const p = ord ? payments.find(pay => pay.orderId === ord.id) : payments[0];
-      const acc = p ? accounts.find(a => a.id === p.accountId) : accounts[0];
+      const ord = orders.find(item => String(item.id) === selectedItemId) || orders[0] || null;
+      if (!ord) {
+        return {
+          docNumber: 'INV-000',
+          date: new Date().toISOString().split('T')[0],
+          customer: customers[0] || null,
+          order: null,
+          payment: null,
+          customerPayments: [],
+          accountName: '—'
+        };
+      }
+      const cust = customers.find(c => c.id === ord.customerId) || null;
+      const ordPayments = payments.filter(pay => pay.orderId === ord.id && pay.status !== 'cancelled');
+      const p = ordPayments[0] || null;
+      const acc = p ? accounts.find(a => a.id === p.accountId) : null;
 
       return {
-        docNumber: ord ? (ord.invoiceNumber || `INV-${870000 + ord.id}`) : 'INV-870001',
-        date: ord ? ord.orderDate : '2026/9/25',
-        customer: cust || { id: 1, name: 'امال عامر احمد العمري', code: 'TOP 037', phone: '736974902', governorate: 'مأرب', address: 'مأرب' },
-        order: ord || {
-          id: 1,
-          customerId: 1,
-          orderNumber: 'ORD-001',
-          customerOrderNumber: '1',
-          totalAmount: 8300,
-          paidAmount: 4300,
-          remainingAmount: 4000,
-          discount: 0,
-          deliveryFee: 0,
-          deliveryFeeCollectionStatus: 'unpaid',
-          status: 'pending',
-          orderDate: '2026/9/18',
-          createdAt: new Date().toISOString()
-        },
-        payment: p || {
-          id: 1,
-          paymentNumber: 'PAY-50409065-8',
-          receiptNumber: 'PAY-50409065-8',
-          customerId: 1,
-          accountId: 1,
-          amount: 4300,
-          paymentDate: '2026/9/17',
-          paymentMethod: 'تحويل',
-          paymentType: 'first',
-          createdAt: new Date().toISOString()
-        },
-        accountName: acc?.name || 'أم فلوس'
+        docNumber: ord.invoiceNumber || `INV-${ord.orderNumber || ord.id}`,
+        date: ord.orderDate,
+        customer: cust,
+        order: ord,
+        payment: p,
+        customerPayments: ordPayments,
+        accountName: acc?.name || p?.paymentMethod || '—'
       };
     }
 
@@ -1053,8 +1020,11 @@ export const InvoicesView: React.FC = () => {
       <NewDocumentWizardModal
         isOpen={isWizardOpen}
         onClose={() => setIsWizardOpen(false)}
-        onDocumentCreated={(createdType) => {
+        onDocumentCreated={(createdType, docId) => {
           setSelectedDocType(createdType);
+          if (docId) {
+            setSelectedItemId(docId);
+          }
           setViewMode('document');
         }}
       />

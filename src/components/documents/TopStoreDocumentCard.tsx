@@ -127,11 +127,13 @@ export const TopStoreDocumentCard: React.FC<TopStoreDocumentCardProps> = ({
   const orderDiscount = order?.discount || 0;
   const deliveryFee = order?.deliveryFee || 0;
   const orderFinalTotal = Math.max(0, orderTotal - orderDiscount) + deliveryFee;
-  const orderPaid = order ? order.paidAmount : (payment ? payment.amount : 0);
-  const orderRemaining = order ? order.remainingAmount : 0;
+  const orderPaid = order ? (Number(order.paidAmount) || 0) : (payment ? (Number(payment.amount) || 0) : 0);
+  const orderRemaining = order ? (Number(order.remainingAmount) || 0) : 0;
 
   // Payments related to order
-  const relatedPayments = customerPayments.filter(p => order && p.orderId === order.id);
+  const relatedPayments = customerPayments.filter(
+    p => order && p.orderId === order.id && p.status !== 'cancelled'
+  );
 
   // Consolidated customer stats
   const totalCustomerOrdersSum = customerOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
@@ -357,7 +359,7 @@ export const TopStoreDocumentCard: React.FC<TopStoreDocumentCardProps> = ({
               <div>
                 <span className="text-[10px] text-slate-400 block font-medium">رقم الشحنة</span>
                 <span className="text-xs sm:text-sm font-bold text-slate-700 font-mono">
-                  {order?.trackingNumber || '—'}
+                  {order?.shipmentNumber || (order as any)?.trackingNumber || '—'}
                 </span>
               </div>
               <div>
@@ -430,7 +432,7 @@ export const TopStoreDocumentCard: React.FC<TopStoreDocumentCardProps> = ({
               <div>
                 <span className="text-[10px] text-slate-400 block font-medium">رقم الشحنة</span>
                 <span className="text-xs sm:text-sm font-bold text-slate-700 font-mono">
-                  {order?.trackingNumber || '—'}
+                  {order?.shipmentNumber || (order as any)?.trackingNumber || '—'}
                 </span>
               </div>
               <div>
@@ -492,23 +494,29 @@ export const TopStoreDocumentCard: React.FC<TopStoreDocumentCardProps> = ({
                         <td className="p-2 px-3 font-mono font-bold text-[#1A3668]">
                           {p.receiptNumber || p.paymentNumber || `PAY-${p.id}`}
                         </td>
-                        <td className="p-2 text-slate-600">{p.paymentType || 'first'}</td>
+                        <td className="p-2 text-slate-600">{p.paymentType || 'دفعة'}</td>
                         <td className="p-2 font-mono font-bold text-emerald-700">{fmt(p.amount)} ريال</td>
                         <td className="p-2 font-mono text-slate-600">{p.paymentDate}</td>
                         <td className="p-2 text-slate-700">{p.paymentMethod}</td>
-                        <td className="p-2 text-slate-700">{accountName || 'أم فلوس'}</td>
+                        <td className="p-2 text-slate-700">{accountName || p.paymentMethod || '—'}</td>
                       </tr>
                     ))
-                  ) : (
+                  ) : payment && Number(payment.amount) > 0 && (!order || !payment.orderId || payment.orderId === order.id) ? (
                     <tr className="font-medium">
                       <td className="p-2 px-3 font-mono font-bold text-[#1A3668]">
-                        {payment?.receiptNumber || payment?.paymentNumber || (order ? `PAY-${order.id}-1` : 'PAY-50409065-8')}
+                        {payment.receiptNumber || payment.paymentNumber || `PAY-${payment.id}`}
                       </td>
-                      <td className="p-2 text-slate-600">{payment?.paymentType || 'first'}</td>
-                      <td className="p-2 font-mono font-bold text-emerald-700">{fmt(orderPaid || 4300)} ريال</td>
-                      <td className="p-2 font-mono text-slate-600">{payment?.paymentDate || date}</td>
-                      <td className="p-2 text-slate-700">{payment?.paymentMethod || 'تحويل'}</td>
-                      <td className="p-2 text-slate-700">{accountName || 'أم فلوس'}</td>
+                      <td className="p-2 text-slate-600">{payment.paymentType || 'دفعة'}</td>
+                      <td className="p-2 font-mono font-bold text-emerald-700">{fmt(payment.amount)} ريال</td>
+                      <td className="p-2 font-mono text-slate-600">{payment.paymentDate || date}</td>
+                      <td className="p-2 text-slate-700">{payment.paymentMethod || '—'}</td>
+                      <td className="p-2 text-slate-700">{accountName || payment.paymentMethod || '—'}</td>
+                    </tr>
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="p-3 text-center text-slate-400 text-xs font-medium">
+                        لا توجد دفعات مسجلة على هذه الفاتورة حتى الآن
+                      </td>
                     </tr>
                   )}
                 </tbody>
@@ -542,7 +550,7 @@ export const TopStoreDocumentCard: React.FC<TopStoreDocumentCardProps> = ({
                       <td className="p-2 px-3 font-mono font-bold text-slate-900">
                         {o.customerOrderNumber || o.orderNumber || o.id}
                       </td>
-                      <td className="p-2 font-mono text-slate-500">{o.trackingNumber || '—'}</td>
+                      <td className="p-2 font-mono text-slate-500">{o.shipmentNumber || (o as any)?.trackingNumber || '—'}</td>
                       <td className="p-2 font-mono text-slate-600">{o.orderDate}</td>
                       <td className="p-2 text-slate-600">{fmt(o.deliveryFee)} للموصل</td>
                       <td className="p-2 font-mono font-bold text-slate-900">{fmt(o.totalAmount)}</td>
@@ -551,14 +559,10 @@ export const TopStoreDocumentCard: React.FC<TopStoreDocumentCardProps> = ({
                     </tr>
                   ))
                 ) : (
-                  <tr className="font-medium">
-                    <td className="p-2 px-3 font-mono font-bold text-slate-900">1</td>
-                    <td className="p-2 font-mono text-slate-500">—</td>
-                    <td className="p-2 font-mono text-slate-600">{date}</td>
-                    <td className="p-2 text-slate-600">0 للموصل</td>
-                    <td className="p-2 font-mono font-bold text-slate-900">8,300</td>
-                    <td className="p-2 font-mono font-bold text-emerald-700">4,300</td>
-                    <td className="p-2 font-mono font-bold text-rose-700">4,000</td>
+                  <tr>
+                    <td colSpan={7} className="p-3 text-center text-slate-400 text-xs font-medium">
+                      لا توجد طلبات مسجلة لهذا العميل
+                    </td>
                   </tr>
                 )}
               </tbody>
@@ -570,19 +574,19 @@ export const TopStoreDocumentCard: React.FC<TopStoreDocumentCardProps> = ({
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
               <span className="text-[11px] text-slate-500 block font-medium">إجمالي الطلبات</span>
               <span className="text-sm sm:text-base font-black text-slate-900 font-mono">
-                {fmt(totalCustomerOrdersSum || 8300)} ريال
+                {fmt(totalCustomerOrdersSum)} ريال
               </span>
             </div>
             <div className="bg-emerald-50/50 border border-emerald-200 rounded-xl p-3 text-center">
               <span className="text-[11px] text-emerald-700 block font-medium">إجمالي المدفوع</span>
               <span className="text-sm sm:text-base font-black text-emerald-800 font-mono">
-                {fmt(totalCustomerPaidSum || 4300)} ريال
+                {fmt(totalCustomerPaidSum)} ريال
               </span>
             </div>
             <div className="bg-rose-50/50 border border-rose-200 rounded-xl p-3 text-center">
               <span className="text-[11px] text-rose-700 block font-medium">إجمالي المتبقي</span>
               <span className="text-sm sm:text-base font-black text-rose-800 font-mono">
-                {fmt(totalCustomerRemainingSum || 4000)} ريال
+                {fmt(totalCustomerRemainingSum)} ريال
               </span>
             </div>
           </div>
@@ -597,7 +601,7 @@ export const TopStoreDocumentCard: React.FC<TopStoreDocumentCardProps> = ({
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-center">
               <span className="text-[10px] text-slate-500 block font-medium">إجمالي المبيعات</span>
               <span className="text-xs sm:text-sm font-black text-slate-900 font-mono">
-                {fmt(totalCustomerOrdersSum || 8300)} ريال
+                {fmt(totalCustomerOrdersSum)} ريال
               </span>
             </div>
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-center">
@@ -609,13 +613,13 @@ export const TopStoreDocumentCard: React.FC<TopStoreDocumentCardProps> = ({
             <div className="bg-emerald-50/50 border border-emerald-200 rounded-xl p-2.5 text-center">
               <span className="text-[10px] text-emerald-700 block font-medium">إجمالي المدفوع</span>
               <span className="text-xs sm:text-sm font-black text-emerald-800 font-mono">
-                {fmt(totalCustomerPaidSum || 4300)} ريال
+                {fmt(totalCustomerPaidSum)} ريال
               </span>
             </div>
             <div className="bg-rose-50/50 border border-rose-200 rounded-xl p-2.5 text-center">
               <span className="text-[10px] text-rose-700 block font-medium">المتبقي</span>
               <span className="text-xs sm:text-sm font-black text-rose-800 font-mono">
-                {fmt(totalCustomerRemainingSum || 4000)} ريال
+                {fmt(totalCustomerRemainingSum)} ريال
               </span>
             </div>
           </div>
@@ -644,22 +648,11 @@ export const TopStoreDocumentCard: React.FC<TopStoreDocumentCardProps> = ({
                     </tr>
                   ))
                 ) : (
-                  <>
-                    <tr className="font-medium">
-                      <td className="p-2 px-3 font-mono text-slate-600">2026/9/18</td>
-                      <td className="p-2 text-slate-800 font-bold">طلب</td>
-                      <td className="p-2 font-mono text-slate-700">1</td>
-                      <td className="p-2 font-mono font-bold text-slate-900">8,300</td>
-                      <td className="p-2 font-mono text-slate-400">—</td>
-                    </tr>
-                    <tr className="font-medium bg-slate-50/40">
-                      <td className="p-2 px-3 font-mono text-slate-600">2026/9/21</td>
-                      <td className="p-2 text-slate-800 font-bold">دفعة</td>
-                      <td className="p-2 font-mono text-slate-700">1</td>
-                      <td className="p-2 font-mono text-slate-400">—</td>
-                      <td className="p-2 font-mono font-bold text-emerald-700">4,300</td>
-                    </tr>
-                  </>
+                  <tr>
+                    <td colSpan={5} className="p-3 text-center text-slate-400 text-xs font-medium">
+                      لا توجد حركات مسجلة في كشف الحساب
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
