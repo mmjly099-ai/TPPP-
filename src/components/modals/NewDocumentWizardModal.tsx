@@ -550,17 +550,35 @@ export const NewDocumentWizardModal: React.FC<NewDocumentWizardModalProps> = ({
           {/* STEP 5: الدفعة والتحصيل */}
           {currentStep === 5 && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <h3 className="text-sm font-black text-slate-800">توثيق واستلام دفعة مالية (سند قبض):</h3>
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={includePayment}
-                    onChange={e => setIncludePayment(e.target.checked)}
-                    className="w-4 h-4 text-[#1A3668] rounded"
-                  />
-                  <span>تسجيل دفعة مع المستند</span>
-                </label>
+                <div className="grid grid-cols-2 gap-1.5 bg-slate-200/70 p-1 rounded-xl text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIncludePayment(false);
+                      setPaymentAmount('0');
+                    }}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                      !includePayment
+                        ? 'bg-[#1A3668] text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    بدون دفعات
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIncludePayment(true)}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                      includePayment
+                        ? 'bg-emerald-700 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    تسجيل دفعة
+                  </button>
+                </div>
               </div>
 
               {includePayment ? (

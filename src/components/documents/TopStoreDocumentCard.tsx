@@ -472,57 +472,53 @@ export const TopStoreDocumentCard: React.FC<TopStoreDocumentCardProps> = ({
             </div>
           </div>
 
-          {/* Related Payments Table */}
-          <div className="space-y-1.5 pt-1">
-            <div className="text-xs font-bold text-slate-700">الدفعات المرتبطة بالطلب</div>
-            <div className="border border-slate-200 rounded-xl overflow-hidden">
-              <table className="w-full text-right text-xs">
-                <thead className="bg-[#1A3668] text-white text-[11px] font-bold">
-                  <tr>
-                    <th className="p-2 px-3">رقم الدفعة</th>
-                    <th className="p-2">النوع</th>
-                    <th className="p-2">المبلغ</th>
-                    <th className="p-2">التاريخ</th>
-                    <th className="p-2">طريقة الدفع</th>
-                    <th className="p-2">الحساب</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 bg-white">
-                  {relatedPayments.length > 0 ? (
-                    relatedPayments.map((p, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50 font-medium">
-                        <td className="p-2 px-3 font-mono font-bold text-[#1A3668]">
-                          {p.receiptNumber || p.paymentNumber || `PAY-${p.id}`}
-                        </td>
-                        <td className="p-2 text-slate-600">{p.paymentType || 'دفعة'}</td>
-                        <td className="p-2 font-mono font-bold text-emerald-700">{fmt(p.amount)} ريال</td>
-                        <td className="p-2 font-mono text-slate-600">{p.paymentDate}</td>
-                        <td className="p-2 text-slate-700">{p.paymentMethod}</td>
-                        <td className="p-2 text-slate-700">{accountName || p.paymentMethod || '—'}</td>
-                      </tr>
-                    ))
-                  ) : payment && Number(payment.amount) > 0 && (!order || !payment.orderId || payment.orderId === order.id) ? (
-                    <tr className="font-medium">
-                      <td className="p-2 px-3 font-mono font-bold text-[#1A3668]">
-                        {payment.receiptNumber || payment.paymentNumber || `PAY-${payment.id}`}
-                      </td>
-                      <td className="p-2 text-slate-600">{payment.paymentType || 'دفعة'}</td>
-                      <td className="p-2 font-mono font-bold text-emerald-700">{fmt(payment.amount)} ريال</td>
-                      <td className="p-2 font-mono text-slate-600">{payment.paymentDate || date}</td>
-                      <td className="p-2 text-slate-700">{payment.paymentMethod || '—'}</td>
-                      <td className="p-2 text-slate-700">{accountName || payment.paymentMethod || '—'}</td>
-                    </tr>
-                  ) : (
+          {/* Related Payments Table — hidden completely when order has no payments */}
+          {(relatedPayments.length > 0 || (payment && Number(payment.amount) > 0 && (!order || !payment.orderId || payment.orderId === order.id))) && (
+            <div className="space-y-1.5 pt-1">
+              <div className="text-xs font-bold text-slate-700">الدفعات المرتبطة بالطلب</div>
+              <div className="border border-slate-200 rounded-xl overflow-hidden">
+                <table className="w-full text-right text-xs">
+                  <thead className="bg-[#1A3668] text-white text-[11px] font-bold">
                     <tr>
-                      <td colSpan={6} className="p-3 text-center text-slate-400 text-xs font-medium">
-                        لا توجد دفعات مسجلة على هذه الفاتورة حتى الآن
-                      </td>
+                      <th className="p-2 px-3">رقم الدفعة</th>
+                      <th className="p-2">النوع</th>
+                      <th className="p-2">المبلغ</th>
+                      <th className="p-2">التاريخ</th>
+                      <th className="p-2">طريقة الدفع</th>
+                      <th className="p-2">الحساب</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 bg-white">
+                    {relatedPayments.length > 0 ? (
+                      relatedPayments.map((p, idx) => (
+                        <tr key={idx} className="hover:bg-slate-50 font-medium">
+                          <td className="p-2 px-3 font-mono font-bold text-[#1A3668]">
+                            {p.receiptNumber || p.paymentNumber || `PAY-${p.id}`}
+                          </td>
+                          <td className="p-2 text-slate-600">{p.paymentType || 'دفعة'}</td>
+                          <td className="p-2 font-mono font-bold text-emerald-700">{fmt(p.amount)} ريال</td>
+                          <td className="p-2 font-mono text-slate-600">{p.paymentDate}</td>
+                          <td className="p-2 text-slate-700">{p.paymentMethod}</td>
+                          <td className="p-2 text-slate-700">{accountName || p.paymentMethod || '—'}</td>
+                        </tr>
+                      ))
+                    ) : payment && Number(payment.amount) > 0 && (!order || !payment.orderId || payment.orderId === order.id) ? (
+                      <tr className="font-medium">
+                        <td className="p-2 px-3 font-mono font-bold text-[#1A3668]">
+                          {payment.receiptNumber || payment.paymentNumber || `PAY-${payment.id}`}
+                        </td>
+                        <td className="p-2 text-slate-600">{payment.paymentType || 'دفعة'}</td>
+                        <td className="p-2 font-mono font-bold text-emerald-700">{fmt(payment.amount)} ريال</td>
+                        <td className="p-2 font-mono text-slate-600">{payment.paymentDate || date}</td>
+                        <td className="p-2 text-slate-700">{payment.paymentMethod || '—'}</td>
+                        <td className="p-2 text-slate-700">{accountName || payment.paymentMethod || '—'}</td>
+                      </tr>
+                    ) : null}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 

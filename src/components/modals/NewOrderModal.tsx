@@ -39,7 +39,7 @@ export const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose })
   const [selectedDiscountCode, setSelectedDiscountCode] = useState<string>('');
 
   // Downpayment & Delivery
-  const [hasDownPayment, setHasDownPayment] = useState<boolean>(true);
+  const [hasDownPayment, setHasDownPayment] = useState<boolean>(false);
   const [downPaymentAmount, setDownPaymentAmount] = useState<number>(0);
   const [accountId, setAccountId] = useState<number>(() => {
     const defaultAcc = accounts.find(a => a.status === 'active' && a.type !== 'حقوق ملكية');
@@ -486,22 +486,42 @@ export const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose })
 
             {/* Downpayment Section */}
             <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-800 text-xs sm:text-sm">
-                  <input
-                    type="checkbox"
-                    checked={hasDownPayment}
-                    onChange={e => setHasDownPayment(e.target.checked)}
-                    className="w-4 h-4 rounded text-[#183661] focus:ring-[#183661]"
-                  />
-                  <span>تسجيل دفعة أولى (مقدم) الآن</span>
-                </label>
-                {hasDownPayment && (
-                  <span className="text-[11px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 font-bold">
-                    سند قبض آلي
-                  </span>
-                )}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <span className="font-bold text-slate-800 text-xs sm:text-sm">حالة الدفعة المقدمة:</span>
+                <div className="grid grid-cols-2 gap-1.5 bg-slate-200/70 p-1 rounded-xl text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setHasDownPayment(false);
+                      setDownPaymentAmount(0);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                      !hasDownPayment
+                        ? 'bg-[#183661] text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    بدون دفعات
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setHasDownPayment(true)}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                      hasDownPayment
+                        ? 'bg-emerald-700 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    تسجيل دفعة أولى
+                  </button>
+                </div>
               </div>
+
+              {!hasDownPayment && (
+                <div className="text-[11px] text-slate-500 bg-white border border-slate-200/80 rounded-xl px-3 py-2 text-center font-medium">
+                  سيتم تسجيل الطلب بدون أي دفعات ولن تظهر أي دفعة في الفاتورة
+                </div>
+              )}
 
               {hasDownPayment && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 text-xs">
