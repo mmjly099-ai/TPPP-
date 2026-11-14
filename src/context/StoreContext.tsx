@@ -485,6 +485,13 @@ interface StoreContextType {
   setRawStoreData: (newData: TopStoreBackup) => void;
   
   processAssistantMessage: (text: string) => { reply: string; actionTaken?: string };
+  addAssistantLog: (log: {
+    userMessage: string;
+    intent: string;
+    action?: string;
+    result?: string;
+    status?: string;
+  }) => void;
 }
 
 const STORAGE_KEY = 'top_store_app_data_v4_clean';
@@ -8324,6 +8331,32 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return { reply, actionTaken };
   };
 
+  const addAssistantLog = (log: {
+    userMessage: string;
+    intent: string;
+    action?: string;
+    result?: string;
+    status?: string;
+  }) => {
+    const newLog: AssistantLog = {
+      id: Date.now(),
+      userMessage: log.userMessage,
+      intent: log.intent || 'general_query',
+      action: log.action || log.intent || 'تحليل ذكي',
+      result: log.result || '',
+      status: log.status || 'success',
+      createdAt: new Date().toISOString()
+    };
+
+    setData(prev => ({
+      ...prev,
+      tables: {
+        ...prev.tables,
+        assistantLogs: [newLog, ...(prev.tables.assistantLogs || [])].slice(0, 100)
+      }
+    }));
+  };
+
   return (
     <StoreContext.Provider
       value={{
@@ -8479,7 +8512,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         exportBackupJson,
         downloadBackupFile,
         setRawStoreData: setData,
-        processAssistantMessage
+        processAssistantMessage,
+        addAssistantLog
       }}
     >
       {children}

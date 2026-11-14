@@ -1,4 +1,11 @@
-import { TopStoreBackup, Order, Payment, Customer, Account, Expense, Shipment, OtherReceivable, JournalEntry, MarketingCampaign, PurchaseBatch } from '../types';
+import { TopStoreBackup } from '../types';
+import {
+  buildComprehensiveStoreSnapshot,
+  extractQuerySpecificDetails,
+  LiveStoreInputs,
+  num,
+  SystemGroundTruthSnapshot
+} from './systemSnapshotBuilder';
 
 export interface InsightItem {
   id: string;
@@ -48,802 +55,699 @@ export interface AssistantAnswer {
   };
   anomalies?: AnomalyItem[];
   intent: string;
+  engineSource?: 'gemini' | 'deterministic';
+  generatedAt?: string;
+  notice?: string;
+}
+
+export interface ChatHistoryItem {
+  sender: 'user' | 'assistant';
+  text: string;
 }
 
 /**
  * AI Analytics Service for TOP STORE
- * Reads genuine store data, computes exact financial formulas, audits accounting entries,
- * and formulates natural Arabic answers with explainable calculations.
+ * Computes 100% verified StoreContext snapshots and routes queries through
+ * the server-side Gemini endpoint (/api/assistant/chat) with full deterministic fallback.
  */
 export class AIAnalyticsService {
-  /**
-   * Helper to format Yemeni Rial currency
-   */
-  static fmt(num: number | string | undefined | null): string {
-    const val = typeof num === 'string' ? parseFloat(num) : num;
-    if (val === undefined || val === null || isNaN(val)) return '0 ر.ي';
+  static fmt(value: number | string | undefined | null): string {
+    const val = num(value);
     return `${Math.round(val).toLocaleString('en-US')} ر.ي`;
   }
 
-  static fmtNum(num: number | string | undefined | null): string {
-    const val = typeof num === 'string' ? parseFloat(num) : num;
-    if (val === undefined || val === null || isNaN(val)) return '0';
+  static fmtNum(value: number | string | undefined | null): string {
+    const val = num(value);
     return Math.round(val).toLocaleString('en-US');
   }
 
-  /**
-   * Compute actual live account balance from ledger transactions
-   */
-  static getAccountBalance(account: Account, data: TopStoreBackup): number {
-    let bal = Number(account.openingBalance) || 0;
-    (data.tables.payments || []).forEach(p => {
-      if (p.accountId === account.id) bal += (p.amount || 0);
-    });
-    (data.tables.expenses || []).forEach(e => {
-      if (e.accountId === account.id && e.status !== 'cancelled') bal -= (Number(e.amount) || 0);
-    });
-    (data.tables.financialTransactions || []).forEach(t => {
-      if (t.accountId === account.id) {
-        if ((t as any).type === 'inflow') bal += (Number(t.amount) || 0);
-        else if ((t as any).type === 'outflow') bal -= (Number(t.amount) || 0);
+  static getAccountBalance(account: { id: number; openingBalance?: any }, data: TopStoreBackup): number {
+    let bal = num(account.openingBalance);
+    (data.tables.financialTransactions || []).forEach(trx => {
+      if (Number(trx.accountId) === Number(account.id)) {
+        const amt = num(trx.amount);
+        if (trx.type === 'deposit' || trx.type === 'transfer_in' || trx.type === 'payment') {
+          bal += amt;
+        } else if (trx.type === 'withdrawal' || trx.type === 'transfer_out' || trx.type === 'expense') {
+          bal -= amt;
+        }
       }
     });
     return bal;
   }
 
   // =========================================================================
-  // 1. Proactive Pulse: "ماذا يحدث في TOP STORE؟"
+  // 1. Live Proactive Pulse ("ماذا يحدث في TOP STORE؟")
   // =========================================================================
-  static getProactiveInsights(data: TopStoreBackup): InsightItem[] {
+  static getProactiveInsightsFromSnapshot(snap: SystemGroundTruthSnapshot): InsightItem[] {
     const insights: InsightItem[] = [];
-    const orders = data.tables.orders || [];
-    const expenses = data.tables.expenses || [];
-    const customers = data.tables.customers || [];
-    const accounts = data.tables.accounts || [];
 
-    // 1. Sales & Growth
-    const totalSalesAmount = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+    // 1. Liquidity
+    const activeAccounts = snap.liquidity.accounts
+      .filter(a => a.status === 'active' && !a.isEquity)
+      .sort((a, b) => b.currentBalance - a.currentBalance);
+    const topAcc = activeAccounts[0];
+    insights.push({
+      id: 'liquidity-pulse',
+      type: 'positive',
+      title: 'السيولة النقدية المتاحة',
+      text: `إجمالي السيولة الفعلية الآن ${this.fmt(snap.liquidity.totalCashAndBanks)} عبر ${snap.liquidity.activeLiquidityAccountsCount} حسابات نشطة${topAcc ? ` (أعلاها "${topAcc.name}": ${this.fmt(topAcc.currentBalance)})` : ''}.`,
+      actionLabel: 'الصناديق والمحافظ',
+      actionTab: 'accounts'
+    });
 
-    // 2. Pending orders needing delivery or processing
-    const activeOrders = orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled');
-    if (activeOrders.length > 0) {
+    // 2. Sales & Net Profit
+    const sp = snap.salesAndProfit.allTime;
+    insights.push({
+      id: 'profit-pulse',
+      type: sp.netProfit >= 0 ? 'positive' : 'critical',
+      title: 'المبيعات وصافي الربح التقديري',
+      text: `المبيعات ${this.fmt(sp.totalSales)} (${sp.activeOrdersCount} طلب) وصافي الربح ${this.fmt(sp.netProfit)} بهامش ${sp.netProfitMarginPercent}% بعد خصم المصروفات (${this.fmt(sp.totalExpenses)}).`,
+      actionLabel: 'مركز التحليلات',
+      actionTab: 'analytics'
+    });
+
+    // 3. Customer Debts & Credits
+    const cl = snap.customersLedger;
+    if (cl.debtorsCount > 0) {
+      const topDebtor = cl.allCustomers.find(c => c.currentBalance > 0);
       insights.push({
-        id: 'open-orders',
-        type: 'info',
-        title: '📦 طلبيات قيد التنفيذ والمتابعة',
-        text: `لديك ${activeOrders.length} طلبات قيد التجهيز والشحن بقيمة ${this.fmt(activeOrders.reduce((s, o) => s + (o.totalAmount || 0), 0))}.`,
-        actionLabel: 'عرض الطلبات',
-        actionTab: 'orders'
-      });
-    }
-
-    // 3. Debtors Analysis
-    const debtors = customers
-      .map(c => {
-        const cOrders = orders.filter(o => o.customerId === c.id);
-        const rem = cOrders.reduce((sum, o) => sum + (o.remainingAmount || 0), 0);
-        return { ...c, remainingDebt: rem };
-      })
-      .filter(c => c.remainingDebt > 0)
-      .sort((a, b) => b.remainingDebt - a.remainingDebt);
-
-    if (debtors.length > 0) {
-      const topDebtor = debtors[0];
-      const totalDebts = debtors.reduce((s, d) => s + d.remainingDebt, 0);
-      insights.push({
-        id: 'debtors-alert',
+        id: 'debtors-pulse',
         type: 'warning',
-        title: '👥 مديونيات وذمم عملاء مستحقة',
-        text: `لديك ${debtors.length} عميلاً لديهم مبالغ متبقية بإجمالي ${this.fmt(totalDebts)}. أكبر مدين هو ${topDebtor.name} بمبلغ ${this.fmt(topDebtor.remainingDebt)}.`,
-        actionLabel: 'كشف مديونيات العملاء',
+        title: 'ذمم ومديونيات العملاء',
+        text: `لك عند ${cl.debtorsCount} عملاء مبلغ ${this.fmt(cl.totalPositiveCustomerDebts)}، وعندك أرصدة دائنة للعملاء بقيمة ${this.fmt(cl.totalNegativeCustomerCredits)} (الصافي: ${this.fmt(cl.netCustomerBalances)})${topDebtor ? `. أعلى مدين: ${topDebtor.name} (${this.fmt(topDebtor.currentBalance)})` : ''}.`,
+        actionLabel: 'كشف العملاء',
         actionTab: 'customers'
       });
     }
 
-    // 4. Liquidity & Primary Cash Source
-    const activeAccounts = accounts.filter(a => a.status === 'active');
-    const totalLiquidity = activeAccounts.reduce((sum, a) => sum + this.getAccountBalance(a, data), 0);
-    const sortedAccounts = [...activeAccounts].sort((a, b) => this.getAccountBalance(b, data) - this.getAccountBalance(a, data));
-    const topAccount = sortedAccounts[0];
-
-    if (topAccount) {
+    // 4. Pending / Shipped Orders
+    if (sp.pendingOrPurchasedCount + sp.shippedCount > 0) {
       insights.push({
-        id: 'liquidity-pulse',
-        type: 'positive',
-        title: '💰 جاهزية السيولة والمحافظ',
-        text: `إجمالي السيولة النقدية المتاحة الآن هو ${this.fmt(totalLiquidity)}. أكبر مصدر للسيولة هو "${topAccount.name}" برصيد ${this.fmt(this.getAccountBalance(topAccount, data))}.`,
-        actionLabel: 'إدارة الحسابات',
-        actionTab: 'accounts'
-      });
-    }
-
-    // 5. VISA Card Balances
-    const visaAccounts = activeAccounts.filter(a => a.type === 'بطاقة' || a.name.toLowerCase().includes('visa') || a.name.toLowerCase().includes('بطاقة'));
-    if (visaAccounts.length > 0) {
-      const visaTotal = visaAccounts.reduce((sum, a) => sum + this.getAccountBalance(a, data), 0);
-      insights.push({
-        id: 'visa-pulse',
+        id: 'active-orders-pulse',
         type: 'info',
-        title: '💳 أرصدة بطاقات VISA للشراء الخارجي',
-        text: `رصيد بطاقات الشراء الدولية المتاح: ${this.fmt(visaTotal)} عبر ${visaAccounts.map(v => `${v.name} (${this.fmt(this.getAccountBalance(v, data))})`).join(' و ')}.`,
-        actionLabel: 'دفعات الشراء',
-        actionTab: 'purchase-batches'
+        title: 'طلبات قيد التنفيذ والشحن',
+        text: `يوجد ${sp.pendingOrPurchasedCount} طلب قيد الشراء والتجهيز و${sp.shippedCount} طلب قيد الشحن تحتاج متابعة التسليم.`,
+        actionLabel: 'سجل الطلبات',
+        actionTab: 'orders'
       });
     }
 
-    // 6. Expenses vs Revenue comparison
-    const totalExpenses = expenses.filter(e => e.status !== 'cancelled').reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-    if (totalSalesAmount > 0) {
-      const expenseRatio = ((totalExpenses / totalSalesAmount) * 100).toFixed(1);
+    // 5. Courier custody or payables
+    if (snap.couriersSummary.totalCustodyBalance > 0 || snap.couriersSummary.totalPayableBalance > 0) {
       insights.push({
-        id: 'expense-ratio',
-        type: Number(expenseRatio) > 40 ? 'warning' : 'info',
-        title: '📊 نسبة المصروفات إلى المبيعات',
-        text: `المصروفات التشغيلية الإجمالية تبلغ ${this.fmt(totalExpenses)}، وتشكل نسبة ${expenseRatio}% من إجمالي المبيعات.`,
-        actionLabel: 'سجل المصروفات',
-        actionTab: 'expenses'
+        id: 'couriers-pulse',
+        type: snap.couriersSummary.totalCustodyBalance > 0 ? 'warning' : 'info',
+        title: 'عهد ومستحقات الموصّلين',
+        text: `عهدة نقدية لدى الموصلين: ${this.fmt(snap.couriersSummary.totalCustodyBalance)} | مستحقات توصيل لهم: ${this.fmt(snap.couriersSummary.totalPayableBalance)}.`,
+        actionLabel: 'إدارة الموصلين',
+        actionTab: 'couriers'
       });
     }
+
+    // 6. Accounting Audit Status
+    insights.push({
+      id: 'audit-pulse',
+      type: snap.accountingAudit.passed && snap.customersLedger.reconciliation.mismatchedCount === 0 ? 'positive' : 'warning',
+      title: 'سلامة النظام والمطابقة المحاسبية',
+      text: `تم اجتياز ${snap.accountingAudit.passedChecks}/${snap.accountingAudit.totalChecks} فحوصات، ونسبة مطابقة حسابات العملاء ${snap.customersLedger.reconciliation.matchRate}%.`,
+      actionLabel: 'دفتر اليومية',
+      actionTab: 'journal'
+    });
 
     return insights;
   }
 
-  // =========================================================================
-  // 2. Accounting Anomaly Detection & Financial Auditor
-  // =========================================================================
-  static detectAccountingAnomalies(data: TopStoreBackup): AnomalyItem[] {
-    const anomalies: AnomalyItem[] = [];
+  static getProactiveInsights(data: TopStoreBackup): InsightItem[] {
     const orders = data.tables.orders || [];
-    const payments = data.tables.payments || [];
+    const accounts = data.tables.accounts || [];
+    const expenses = (data.tables.expenses || []).filter(e => e.status !== 'cancelled');
     const customers = data.tables.customers || [];
-    const journalEntries = data.tables.journalEntries || [];
-    const expenses = data.tables.expenses || [];
 
-    // 1. Check unbalanced journal entries
-    journalEntries.forEach(entry => {
-      const lines = entry.lines || [];
-      const totalDebit = lines.reduce((s: number, l: any) => s + (Number(l.debit) || 0), 0);
-      const totalCredit = lines.reduce((s: number, l: any) => s + (Number(l.credit) || 0), 0);
-      if (Math.abs(totalDebit - totalCredit) > 0.01) {
-        anomalies.push({
-          id: `unbalanced-entry-${entry.id}`,
-          severity: 'high',
-          title: `قيد محاسبي غير متوازن #${entry.entryNumber}`,
-          description: `إجمالي المدين (${this.fmt(totalDebit)}) لا يساوي إجمالي الدائن (${this.fmt(totalCredit)}).`,
-          date: entry.date,
-          amount: Math.abs(totalDebit - totalCredit),
-          suspectReason: 'خلل في توازن القيد المحاسبي المزدوج',
-          actionType: 'journal',
-          actionTargetId: entry.id
-        });
+    const activeOrders = orders.filter(o => o.status !== 'cancelled');
+    const totalSales = activeOrders.reduce((s, o) => s + num(o.totalAmount), 0);
+    const totalExp = expenses.reduce((s, e) => s + num(e.amount), 0);
+    const activeAccs = accounts.filter(a => a.status === 'active' && a.type !== 'حقوق ملكية');
+    const totalCash = activeAccs.reduce((s, a) => s + this.getAccountBalance(a, data), 0);
+
+    return [
+      {
+        id: 'liq-fallback',
+        type: 'positive',
+        title: 'السيولة النقدية المتاحة',
+        text: `إجمالي السيولة ${this.fmt(totalCash)} عبر ${activeAccs.length} حسابات نشطة.`,
+        actionLabel: 'الحسابات والمحافظ',
+        actionTab: 'accounts'
+      },
+      {
+        id: 'sales-fallback',
+        type: 'info',
+        title: 'ملخص المبيعات والمصروفات',
+        text: `إجمالي المبيعات ${this.fmt(totalSales)} (${activeOrders.length} طلب) وإجمالي المصروفات ${this.fmt(totalExp)} عبر ${customers.length} عميل.`,
+        actionLabel: 'التحليلات',
+        actionTab: 'analytics'
       }
+    ];
+  }
+
+  // =========================================================================
+  // 2. Accounting Anomaly Detection (Fallback / Direct Audit)
+  // =========================================================================
+  static detectAccountingAnomaliesFromSnapshot(snap: SystemGroundTruthSnapshot): AnomalyItem[] {
+    const anomalies: AnomalyItem[] = [];
+
+    snap.accountingAudit.errors.forEach((err, i) => {
+      anomalies.push({
+        id: `audit-err-${i}`,
+        severity: 'high',
+        title: 'خطأ محاسبي في فحص النظام',
+        description: err,
+        suspectReason: 'ملاحظة من محرك التدقيق المحاسبي',
+        actionType: 'journal'
+      });
     });
 
-    // 2. Check payments with missing customers or unlinked
-    payments.forEach(p => {
-      const cust = customers.find(c => c.id === p.customerId);
-      if (!cust) {
-        anomalies.push({
-          id: `unlinked-payment-${p.id}`,
-          severity: 'high',
-          title: `دفعة غير مرتبطة بعميل #${p.receiptNumber || p.id}`,
-          description: `الدفعة بقيمة ${this.fmt(p.amount)} مسجلة لكود عميل غير موجود في قاعدة البيانات (${p.customerId}).`,
-          date: p.paymentDate,
-          amount: p.amount,
-          suspectReason: 'دفعة يتيمة بدون سجل عميل',
-          actionType: 'customers'
-        });
-      }
-    });
-
-    // 3. Check orders with amount calculation discrepancies
-    orders.forEach(o => {
-      if (o.status !== 'cancelled') {
-        const expectedFinal = Math.max(0, (o.totalAmount || 0) - (o.discount || 0)) + (o.deliveryFee || 0);
-        const actualSum = (o.paidAmount || 0) + (o.remainingAmount || 0);
-        if (Math.abs(expectedFinal - actualSum) > 1 && o.remainingAmount !== undefined) {
-          anomalies.push({
-            id: `order-mismatch-${o.id}`,
-            severity: 'medium',
-            title: `عدم تطابق مالي في الطلب #${o.orderNumber || o.id}`,
-            description: `إجمالي الطلب المتوقع (${this.fmt(expectedFinal)}) لا يتطابق مع مجموع (المدفوع + المتبقي = ${this.fmt(actualSum)}).`,
-            date: o.orderDate,
-            amount: Math.abs(expectedFinal - actualSum),
-            suspectReason: 'فارق حسابي بين إجمالي المستحق والدفعات',
-            actionType: 'orders',
-            actionTargetId: o.id
-          });
-        }
-      }
-    });
-
-    // 4. Check unclassified expenses
-    expenses.forEach(e => {
-      if (e.status !== 'cancelled' && (!e.category || e.category === 'غير مصنف' || e.category.trim() === '')) {
-        anomalies.push({
-          id: `unclassified-expense-${e.id}`,
-          severity: 'low',
-          title: `مصروف غير مصنف #${e.expenseNumber || e.id}`,
-          description: `مصروف بقيمة ${this.fmt(e.amount)} مسجل بدون تصنيف، مما يعيق دقة تقارير توزيع التكاليف.`,
-          date: (e as any).date,
-          amount: Number(e.amount),
-          suspectReason: 'بند مصروف يفتقر للتصنيف المحاسبي',
-          actionType: 'expenses',
-          actionTargetId: e.id
-        });
-      }
+    snap.customersLedger.reconciliation.mismatchedCustomers.forEach((mc, i) => {
+      anomalies.push({
+        id: `cust-rec-${mc.customerId}-${i}`,
+        severity: 'medium',
+        title: `فارق مطابقة للعميل ${mc.name} (${mc.code})`,
+        description: `الرصيد التشغيلي (${this.fmt(mc.operationalBalance)}) يختلف عن دفتر الأستاذ (${this.fmt(mc.ledgerBalance)}) بفارق ${this.fmt(mc.difference)}.`,
+        amount: Math.abs(mc.difference),
+        suspectReason: 'عدم تزامن قيد قديم مع الفواتير أو الدفعات',
+        actionType: 'customers',
+        actionTargetId: mc.customerId
+      });
     });
 
     return anomalies;
   }
 
   // =========================================================================
-  // 3. Profit & Revenue Factor Analysis ("لماذا؟")
+  // 3. Main Hybrid Entry Point (Server Gemini + Verified Snapshot + Exact Fallback)
   // =========================================================================
-  static getProfitAnalysis(data: TopStoreBackup) {
-    const orders = data.tables.orders || [];
-    const expenses = data.tables.expenses || [];
-    const batches = data.tables.purchaseBatches || [];
+  async processUserQuery(
+    query: string,
+    storeInputs: LiveStoreInputs,
+    history: ChatHistoryItem[] = []
+  ): Promise<AssistantAnswer> {
+    const trimmed = query.trim();
+    const q = trimmed.toLowerCase();
 
-    const activeOrders = orders.filter(o => o.status !== 'cancelled');
-    const activeExpenses = expenses.filter(e => e.status !== 'cancelled');
+    // Check for explicit quick expense command first ("أضف مصروف ..." / "سجل مصروف ...")
+    if (
+      (q.includes('أضف مصروف') || q.includes('اضف مصروف') || q.includes('سجل مصروف')) &&
+      !q.includes('كيف') &&
+      !q.includes('كم')
+    ) {
+      const amountMatch = trimmed.match(/\d[\d,]*/);
+      const amount = amountMatch ? num(amountMatch[0]) : 0;
+      if (amount > 0) {
+        const activeAccounts = (storeInputs.accounts || []).filter(
+          a => a.status === 'active' && a.type !== 'حقوق ملكية'
+        );
+        let matchedAcc = activeAccounts[0] || storeInputs.accounts[0];
+        activeAccounts.forEach(a => {
+          if (q.includes(a.name.toLowerCase())) {
+            matchedAcc = a;
+          }
+        });
 
-    // Total sales revenue
-    const totalSales = activeOrders.reduce((s, o) => s + (o.totalAmount || 0), 0);
-    const totalDiscounts = activeOrders.reduce((s, o) => s + (o.discount || 0), 0);
-    const netRevenue = Math.max(0, totalSales - totalDiscounts);
+        let category = 'مصاريف تشغيل';
+        if (q.includes('تسويق') || q.includes('إعلان') || q.includes('اعلان')) category = 'تسويق وإعلانات';
+        else if (q.includes('شحن') || q.includes('توصيل')) category = 'شحن ونقل لوجستي';
+        else if (q.includes('مواصلات')) category = 'مواصلات';
+        else if (q.includes('قات')) category = 'قات';
+        else if (q.includes('عشاء') || q.includes('غداء') || q.includes('وجب')) category = 'عشاء';
+        else if (q.includes('إنترنت') || q.includes('انترنت') || q.includes('نت')) category = 'إنترنت';
 
-    // Cost of goods (Purchases from Shein / AliExpress batches)
-    const batchPurchasesCost = batches.reduce((s, b) => s + (Number(b.totalCost) || Number(b.purchaseCost) || 0), 0);
-    // Estimated order cost if batches not yet mapped
-    const estimatedItemsCost = activeOrders.reduce((s, o) => s + ((o.subtotal || o.totalAmount || 0) * 0.75), 0);
-    const finalProductCost = batchPurchasesCost > 0 ? batchPurchasesCost : estimatedItemsCost;
+        return {
+          reply:
+            `تم تجهيز سند الصرف التالي بالاعتماد على الحسابات النشطة في النظام:\n` +
+            `• نوع العملية: سند صرف (مصروف)\n` +
+            `• التصنيف: ${category}\n` +
+            `• المبلغ: ${AIAnalyticsService.fmt(amount)}\n` +
+            `• الحساب المصروف منه: ${matchedAcc?.name || 'الخزينة'}\n\n` +
+            `يرجى مراجعة التفاصيل وتأكيد الحفظ من نافذة الاعتماد.`,
+          intent: 'operation_confirm_prompt',
+          engineSource: 'deterministic',
+          generatedAt: new Date().toISOString(),
+          pendingOperation: {
+            type: 'expense',
+            details: {
+              amount,
+              category,
+              accountId: matchedAcc?.id || 1,
+              accountName: matchedAcc?.name || 'الخزينة',
+              description: `مصروف مسجل عبر المساعد الذكي: ${trimmed}`
+            },
+            summaryText: `صرف مبلغ ${AIAnalyticsService.fmt(amount)} من "${matchedAcc?.name || 'الخزينة'}" تحت بند "${category}"`
+          }
+        };
+      }
+    }
 
-    // Operating expenses breakdown
-    const marketingExpenses = activeExpenses
-      .filter(e => e.category.includes('تسويق') || e.category.includes('إعلان') || e.category.includes('سوشيال'))
-      .reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    // Build 100% live verified snapshot & query-specific records directly from StoreContext
+    const snapshot = buildComprehensiveStoreSnapshot(storeInputs);
+    const queryDetails = extractQuerySpecificDetails(trimmed, storeInputs);
 
-    const shippingExpenses = activeExpenses
-      .filter(e => e.category.includes('شحن') || e.category.includes('توصيل') || e.category.includes('نقل'))
-      .reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    // Call Server-Side Gemini Endpoint (/api/assistant/chat)
+    try {
+      const response = await fetch('/api/assistant/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: trimmed,
+          history,
+          snapshot,
+          queryDetails
+        })
+      });
 
-    const generalExpenses = activeExpenses
-      .filter(e => !e.category.includes('تسويق') && !e.category.includes('شحن'))
-      .reduce((s, e) => s + (Number(e.amount) || 0), 0);
+      const json = await response.json().catch(() => null);
 
-    const totalOperationalExpenses = activeExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+      if (response.ok && json?.success && json?.data?.reply) {
+        return {
+          reply: json.data.reply,
+          intent: json.data.intent || 'gemini_analysis',
+          summaryMetrics: json.data.summaryMetrics || [],
+          suggestedActions: json.data.suggestedActions || [],
+          engineSource: 'gemini',
+          generatedAt: snapshot.meta.generatedAt
+        };
+      }
 
-    // Net Profit
-    const netProfit = netRevenue - finalProductCost - totalOperationalExpenses;
-    const profitMargin = netRevenue > 0 ? ((netProfit / netRevenue) * 100).toFixed(1) : '0';
-
-    return {
-      totalSales,
-      totalDiscounts,
-      netRevenue,
-      finalProductCost,
-      marketingExpenses,
-      shippingExpenses,
-      generalExpenses,
-      totalOperationalExpenses,
-      netProfit,
-      profitMargin
-    };
+      // If Gemini API key is missing or server error occurred, fall back to exact 100% local deterministic analyzer
+      const fallback = AIAnalyticsService.buildDeterministicAnswer(trimmed, snapshot, queryDetails);
+      const isKeyIssue = json?.errorCode === 'MISSING_API_KEY' || json?.errorCode === 'API_KEY_INVALID';
+      return {
+        ...fallback,
+        notice: isKeyIssue
+          ? 'تم التحليل من المحرك المحاسبي المحلي بدقة 100%. لتفعيل التحليل الذكي المتقدم، تأكد من ضبط مفتاح Gemini في Settings > Secrets.'
+          : 'تم التحليل من المحرك المحاسبي المحلي المتزامن بدقة 100%.'
+      };
+    } catch {
+      const fallback = AIAnalyticsService.buildDeterministicAnswer(trimmed, snapshot, queryDetails);
+      return {
+        ...fallback,
+        notice: 'تم التحليل من المحرك المحاسبي المحلي المتزامن بدقة 100%.'
+      };
+    }
   }
 
-  // =========================================================================
-  // 4. Daily Briefing: "ملخص اليوم"
-  // =========================================================================
-  static getTodaySummary(data: TopStoreBackup) {
-    const todayStr = new Date().toISOString().split('T')[0];
+  /**
+   * Backward-compatible static helper
+   */
+  static processNaturalQuery(query: string, data: TopStoreBackup): AssistantAnswer {
+    const accounts = data.tables.accounts || [];
+    const customers = data.tables.customers || [];
     const orders = data.tables.orders || [];
     const payments = data.tables.payments || [];
     const expenses = data.tables.expenses || [];
-
-    const todayOrders = orders.filter(o => o.orderDate?.includes(todayStr) || o.createdAt?.includes(todayStr));
-    const todayPayments = payments.filter(p => p.paymentDate?.includes(todayStr) || p.createdAt?.includes(todayStr));
-    const todayExpenses = expenses.filter(e => (e as any).date?.includes(todayStr) || e.createdAt?.includes(todayStr));
-
-    const todaySales = todayOrders.reduce((s, o) => s + (o.totalAmount || 0), 0);
-    const todayCashIn = todayPayments.reduce((s, p) => s + (Number(p.amount) || 0), 0);
-    const todayCashOut = todayExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
-    const todayNetCashFlow = todayCashIn - todayCashOut;
+    const activeOrders = orders.filter(o => o.status !== 'cancelled');
+    const totalSales = activeOrders.reduce((s, o) => s + num(o.totalAmount), 0);
+    const totalExp = expenses.filter(e => e.status !== 'cancelled').reduce((s, e) => s + num(e.amount), 0);
+    const totalCash = accounts
+      .filter(a => a.status === 'active' && a.type !== 'حقوق ملكية')
+      .reduce((s, a) => s + this.getAccountBalance(a, data), 0);
 
     return {
-      todayStr,
-      todayOrdersCount: todayOrders.length,
-      todaySales,
-      todayCashIn,
-      todayCashOut,
-      todayNetCashFlow,
-      todayPendingOrdersCount: todayOrders.filter(o => o.status === 'pending').length
+      reply:
+        `ملخص سريع من بيانات المتجر (${customers.length} عميل، ${activeOrders.length} طلب):\n` +
+        `• السيولة المتاحة: ${this.fmt(totalCash)}\n` +
+        `• إجمالي المبيعات: ${this.fmt(totalSales)}\n` +
+        `• إجمالي المصروفات: ${this.fmt(totalExp)}`,
+      intent: 'general_briefing',
+      engineSource: 'deterministic',
+      summaryMetrics: [
+        { label: 'السيولة', value: this.fmt(totalCash), color: 'text-emerald-700' },
+        { label: 'المبيعات', value: this.fmt(totalSales), color: 'text-blue-700' },
+        { label: 'المصروفات', value: this.fmt(totalExp), color: 'text-rose-700' }
+      ],
+      suggestedActions: [{ label: 'فتح مركز التحليلات', targetTab: 'analytics' }]
     };
   }
 
   // =========================================================================
-  // 5. Natural Language Understanding & Financial Response Generator
+  // 4. Comprehensive 100% Accurate Deterministic Analyzer (Fallback Engine)
   // =========================================================================
-  static processNaturalQuery(query: string, data: TopStoreBackup, previousContext?: string): AssistantAnswer {
+  static buildDeterministicAnswer(
+    query: string,
+    snap: SystemGroundTruthSnapshot,
+    details: Record<string, any>
+  ): AssistantAnswer {
     const q = query.trim().toLowerCase();
-    const orders = data.tables.orders || [];
-    const customers = data.tables.customers || [];
-    const accounts = data.tables.accounts || [];
-    const expenses = data.tables.expenses || [];
+    const f = (n: number) => this.fmt(n);
 
-    // 1. "كم معي؟" أو "السيولة" أو "أرصدة المحافظ"
-    if (
-      q.includes('كم معي') ||
-      q.includes('السيولة') ||
-      q.includes('فلوس') ||
-      q.includes('المحافظ') ||
-      q.includes('البنوك') ||
-      q.includes('رصيد') && (q.includes('الخزينة') || q.includes('الحسابات'))
-    ) {
-      const activeAccounts = accounts.filter(a => a.status === 'active');
-      const totalCash = activeAccounts.reduce((sum, a) => sum + this.getAccountBalance(a, data), 0);
-      const totalReceivables = customers.reduce((sum, c) => {
-        const cOrders = orders.filter(o => o.customerId === c.id);
-        return sum + cOrders.reduce((s, o) => s + (o.remainingAmount || 0), 0);
-      }, 0);
-
-      const chartData = activeAccounts.map(a => ({
-        name: a.name,
-        value: this.getAccountBalance(a, data)
-      }));
-
-      const reply = `بلغت إجمالي السيولة النقدية المتاحة حالياً في TOP STORE:\n**${this.fmt(totalCash)}**\n\nتوزيع الأرصدة عبر الحسابات والمحافظ:\n` +
-        activeAccounts.map(a => `• **${a.name}** (${a.type}): ${this.fmt(this.getAccountBalance(a, data))}`).join('\n') +
-        `\n\n⚠️ **تنويه محاسبي هام:**\nلديك ذمم مدينة مستحقة لدى العملاء بقيمة **${this.fmt(totalReceivables)}**، لكنها *ليست أموالاً سائلة متاحة حالياً* حتى يتم تحصيلها وتوريدها إلى الخزينة أو المحافظ.`;
+    // 1. Specific matched customer(s)
+    if (Array.isArray(details.matchedCustomers) && details.matchedCustomers.length > 0) {
+      const custs = details.matchedCustomers;
+      const lines = custs.map((c: any) => {
+        const balStatus =
+          c.currentBalance > 0.01
+            ? `عليه للمتجر: ${f(c.currentBalance)}`
+            : c.currentBalance < -0.01
+            ? `رصيد دائن له (مقدم): ${f(Math.abs(c.currentBalance))}`
+            : 'مسدد بالكامل (0 ر.ي)';
+        return (
+          `• العميل: ${c.name} (${c.code}) ${c.phone ? `- هاتف: ${c.phone}` : ''}\n` +
+          `  - الرصيد الافتتاحي: ${f(c.openingBalance)} | عدد الطلبات: ${c.orders.length}\n` +
+          `  - إجمالي الطلبات: ${f(c.totalOrdersDebit || c.orders.reduce((s: number, o: any) => s + o.totalAmount, 0))}\n` +
+          `  - إجمالي المدفوعات المعتمدة: ${f(c.payments.reduce((s: number, p: any) => s + p.amount, 0))}\n` +
+          `  - الصافي الحالي: ${balStatus}`
+        );
+      });
 
       return {
-        reply,
-        intent: 'liquidity_check',
-        summaryMetrics: [
-          { label: 'إجمالي السيولة المتاحة', value: this.fmt(totalCash), color: 'text-emerald-700' },
-          { label: 'الذمم المدينة (غير سائلة)', value: this.fmt(totalReceivables), color: 'text-amber-700' },
-          { label: 'عدد الحسابات النشطة', value: `${activeAccounts.length} حسابات`, color: 'text-blue-700' }
-        ],
-        calculation: {
-          metricName: 'إجمالي السيولة النقدية الفعلية',
-          formula: 'مجموع أرصدة الصناديق النقدية + الحسابات البنكية + محافظ الدفع الإلكترونية + بطاقات الشراء',
-          steps: activeAccounts.map(a => `${a.name}: ${this.fmt(this.getAccountBalance(a, data))}`),
-          finalResult: this.fmt(totalCash),
-          timeframe: 'الرصيد اللحظي الفعلي المعتمد'
-        },
-        chartData,
-        chartType: 'pie',
-        chartTitle: 'توزيع السيولة النقدية عبر المحافظ والبنوك',
+        reply: `كشف تفصيلي دقيق للعملاء المطابقين لسؤالك:\n\n${lines.join('\n\n')}`,
+        intent: 'customer_lookup',
+        engineSource: 'deterministic',
+        generatedAt: snap.meta.generatedAt,
+        summaryMetrics: custs.slice(0, 3).map((c: any) => ({
+          label: c.name,
+          value: f(c.currentBalance),
+          color: c.currentBalance > 0 ? 'text-rose-700' : 'text-emerald-700'
+        })),
         suggestedActions: [
-          { label: 'عرض الحسابات والمحافظ', targetTab: 'accounts' },
-          { label: 'تحويل بين المحافظ', targetTab: 'accounts' },
-          { label: 'كشف الذمم المدينة', targetTab: 'customers' }
-        ]
-      };
-    }
-
-    // 2. "كم ربحي؟" أو "الأرباح" أو "لماذا انخفض الربح؟"
-    if (
-      q.includes('ربح') ||
-      q.includes('الأرباح') ||
-      q.includes('أرباحي') ||
-      q.includes('صافي الربح') ||
-      q.includes('انخفض') && q.includes('الربح')
-    ) {
-      const p = this.getProfitAnalysis(data);
-
-      const reply = `بلغ صافي الربح التقديري لمتجر TOP STORE:\n**${this.fmt(p.netProfit)}** (بهامش ربح **${p.profitMargin}%**).\n\n` +
-        `📊 **تفكيك عناصر الأرباح:**\n` +
-        `• **إيرادات المبيعات المحققة:** ${this.fmt(p.netRevenue)}\n` +
-        `• **تكلفة بضاعة الطلبيات (شي إن وعلي إكسبرس):** -${this.fmt(p.finalProductCost)}\n` +
-        `• **المصروفات التشغيلية والتسويق:** -${this.fmt(p.totalOperationalExpenses)}\n` +
-        `= **صافي الربح النهائي:** ${this.fmt(p.netProfit)}\n\n` +
-        `💡 **تحليل الأسباب المؤثرة (لماذا؟):**\n` +
-        `1. تشكل تكلفة المشتريات النسبة الأكبر من الإنفاق بنسبة ${(p.netRevenue > 0 ? (p.finalProductCost / p.netRevenue * 100).toFixed(0) : 0)}%.\n` +
-        `2. المصروفات التشغيلية (${this.fmt(p.totalOperationalExpenses)}) موزعة بين تسويق (${this.fmt(p.marketingExpenses)}) وشحن (${this.fmt(p.shippingExpenses)}) وعامة (${this.fmt(p.generalExpenses)}).`;
-
-      const chartData = [
-        { name: 'إيراد المبيعات', value: p.netRevenue },
-        { name: 'تكلفة البضاعة', value: p.finalProductCost },
-        { name: 'مصاريف التشغيل', value: p.totalOperationalExpenses },
-        { name: 'صافي الربح', value: Math.max(0, p.netProfit) }
-      ];
-
-      return {
-        reply,
-        intent: 'profit_analysis',
-        summaryMetrics: [
-          { label: 'صافي الربح', value: this.fmt(p.netProfit), color: p.netProfit >= 0 ? 'text-emerald-700' : 'text-rose-700' },
-          { label: 'هامش الربح', value: `${p.profitMargin}%`, color: 'text-blue-700' },
-          { label: 'إجمالي المبيعات', value: this.fmt(p.netRevenue), color: 'text-slate-800' }
-        ],
-        calculation: {
-          metricName: 'صافي الربح التشغيلي والتجاري',
-          formula: 'إيرادات المبيعات - تكلفة شراء الطلبيات - المصروفات التشغيلية والإعلانية',
-          steps: [
-            `إيراد المبيعات الإجمالي: ${this.fmt(p.netRevenue)}`,
-            `تكلفة شراء المنتجات: -${this.fmt(p.finalProductCost)}`,
-            `مصاريف التشغيل والتسويق: -${this.fmt(p.totalOperationalExpenses)}`,
-            `الناتج = ${this.fmt(p.netProfit)}`
-          ],
-          finalResult: this.fmt(p.netProfit),
-          timeframe: 'إجمالي العمليات المعتمدة'
-        },
-        chartData,
-        chartType: 'bar',
-        chartTitle: 'مكونات الربح والإيرادات والتكاليف',
-        suggestedActions: [
-          { label: 'مركز التحليلات المتقدم', targetTab: 'analytics' },
-          { label: 'سجل الطلبات والمبيعات', targetTab: 'orders' },
-          { label: 'تفاصيل المصروفات', targetTab: 'expenses' }
-        ]
-      };
-    }
-
-    // 3. "من عليه فلوس؟" أو "الديون" أو "الذمم"
-    if (
-      q.includes('من عليه') ||
-      q.includes('ديون') ||
-      q.includes('مديونية') ||
-      q.includes('الذمم') ||
-      q.includes('متبقي') && q.includes('العملاء')
-    ) {
-      const debtors = customers
-        .map(c => {
-          const cOrders = orders.filter(o => o.customerId === c.id);
-          const rem = cOrders.reduce((sum, o) => sum + (o.remainingAmount || 0), 0);
-          const totalBought = cOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-          const paid = cOrders.reduce((sum, o) => sum + (o.paidAmount || 0), 0);
-          return { ...c, remainingDebt: rem, totalBought, paid, ordersCount: cOrders.length };
-        })
-        .filter(c => c.remainingDebt > 0)
-        .sort((a, b) => b.remainingDebt - a.remainingDebt);
-
-      const totalDebts = debtors.reduce((s, d) => s + d.remainingDebt, 0);
-
-      const top5 = debtors.slice(0, 5);
-      const listText = top5
-        .map((d, idx) => `${idx + 1}. **${d.name}** (${d.code}) — المبلغ المتبقي: **${this.fmt(d.remainingDebt)}** (هاتف: ${d.phone || '—'})`)
-        .join('\n');
-
-      const reply = `إجمالي المديونيات المستحقة على العملاء:\n**${this.fmt(totalDebts)}** على **${debtors.length} عملاء**.\n\n` +
-        `أكبر المديونيات التي تحتاج متابعة وتحصيل:\n${listText || 'لا توجد مديونيات قائمة، كافة العملاء مسددين بالكامل.'}\n\n` +
-        `💡 يمكنك فتح كشف حساب أي عميل فوراً لمراجعة تفاصيل طلباته وسندات قبضه.`;
-
-      const chartData = top5.map(d => ({
-        name: d.name.split(' ')[0] || d.code,
-        value: d.remainingDebt
-      }));
-
-      return {
-        reply,
-        intent: 'debtors_analysis',
-        summaryMetrics: [
-          { label: 'إجمالي الديون المستحقة', value: this.fmt(totalDebts), color: 'text-rose-700' },
-          { label: 'عدد العملاء المدينين', value: `${debtors.length} عميل`, color: 'text-amber-700' },
-          { label: 'أعلى مديونية فردية', value: top5[0] ? this.fmt(top5[0].remainingDebt) : '0', color: 'text-slate-800' }
-        ],
-        calculation: {
-          metricName: 'إجمالي ذمم العملاء المستحقة',
-          formula: 'مجموع المبالغ المتبقية لجميع طلبات العملاء (إجمالي الطلب - المدفوع)',
-          steps: top5.map(d => `${d.name}: متبقي ${this.fmt(d.remainingDebt)}`),
-          finalResult: this.fmt(totalDebts),
-          timeframe: 'الرصيد المستحق الفعلي'
-        },
-        chartData,
-        chartType: 'bar',
-        chartTitle: 'أعلى مديونيات العملاء المستحقة للتحصيل',
-        suggestedActions: [
-          { label: 'سجل العملاء والذمم', targetTab: 'customers' },
+          { label: 'سجل العملاء', targetTab: 'customers' },
           { label: 'سند قبض جديد', targetTab: 'invoices' }
         ]
       };
     }
 
-    // 4. "أين تذهب فلوس توب ستور؟" أو "المصروفات"
-    if (
-      q.includes('أين تذهب') ||
-      q.includes('المصروفات') ||
-      q.includes('المصاريف') ||
-      q.includes('الصرف') ||
-      q.includes('ليش المصروفات')
-    ) {
-      const activeExpenses = expenses.filter(e => e.status !== 'cancelled');
-      const totalExp = activeExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
-
-      // Categorize
-      const categoriesMap: Record<string, number> = {};
-      activeExpenses.forEach(e => {
-        const cat = e.category || 'أخرى';
-        categoriesMap[cat] = (categoriesMap[cat] || 0) + (Number(e.amount) || 0);
-      });
-
-      const sortedCategories = Object.entries(categoriesMap)
-        .map(([name, value]) => ({ name, value }))
-        .sort((a, b) => b.value - a.value);
-
-      const topCategoriesText = sortedCategories
+    // 2. Specific matched order(s)
+    if (Array.isArray(details.matchedOrders) && details.matchedOrders.length > 0 && !q.includes('كل الطلبات')) {
+      const ords = details.matchedOrders;
+      const text = ords
         .slice(0, 5)
-        .map((c, i) => `${i + 1}. **${c.name}**: ${this.fmt(c.value)} (${((c.value / (totalExp || 1)) * 100).toFixed(1)}%)`)
-        .join('\n');
-
-      const reply = `إجمالي المصروفات التشغيلية والإدارية:\n**${this.fmt(totalExp)}** عبر **${activeExpenses.length} عملية صرف**.\n\n` +
-        `توزيع أوجه الصرف (أين تذهب الفلوس):\n${topCategoriesText || 'لا توجد مصروفات مسجلة بعد.'}\n\n` +
-        `💡 **توصية المحلل:** البند الأكثر استهلاكاً هو "${sortedCategories[0]?.name || 'التشغيل'}"، يُنصح بمتابعة عقود التوصيل ورسوم التحويل لتقليل التكاليف.`;
+        .map(
+          (o: any) =>
+            `• طلب #${o.orderNumber} (${o.internalNumber || `ID:${o.id}`}) — العميل: ${o.customerName}\n` +
+            `  - الموقع: ${o.site} | الحالة: ${o.status} | التاريخ: ${o.orderDate}\n` +
+            `  - الإجمالي: ${f(o.totalAmount)} | المدفوع: ${f(o.paidAmount)} | المتبقي: ${f(o.remainingAmount)}` +
+            (o.shipmentNumber ? ` | رقم الشحنة: ${o.shipmentNumber}` : '')
+        )
+        .join('\n\n');
 
       return {
-        reply,
-        intent: 'expense_breakdown',
-        summaryMetrics: [
-          { label: 'إجمالي المصروفات', value: this.fmt(totalExp), color: 'text-rose-700' },
-          { label: 'أعلى بند مصروفات', value: sortedCategories[0]?.name || '—', color: 'text-slate-800' },
-          { label: 'عدد العمليات', value: `${activeExpenses.length} حركة`, color: 'text-blue-700' }
-        ],
-        calculation: {
-          metricName: 'إجمالي نفقات التشغيل',
-          formula: 'مجموع المبالغ المصروفة عبر الخزينة والمحافظ والحسابات البنكية المعتمدة',
-          steps: sortedCategories.slice(0, 4).map(c => `${c.name}: ${this.fmt(c.value)}`),
-          finalResult: this.fmt(totalExp),
-          timeframe: 'جميع العمليات النشطة'
-        },
-        chartData: sortedCategories,
-        chartType: 'pie',
-        chartTitle: 'توزيع المصروفات حسب البنود',
+        reply: `تفاصيل الطلبات المطابقة من السجلات الحية:\n\n${text}`,
+        intent: 'order_lookup',
+        engineSource: 'deterministic',
+        generatedAt: snap.meta.generatedAt,
         suggestedActions: [
-          { label: 'عرض المصروفات', targetTab: 'expenses' },
-          { label: 'إضافة سند صرف', targetTab: 'invoices' }
+          { label: 'إدارة الطلبات', targetTab: 'orders' },
+          { label: 'الفواتير', targetTab: 'invoices' }
         ]
       };
     }
 
-    // 5. "ملخص اليوم" أو "التقرير اليومي"
-    if (
-      q.includes('ملخص اليوم') ||
-      q.includes('اليوم') && (q.includes('تقرير') || q.includes('وضع') || q.includes('شغل'))
-    ) {
-      const today = this.getTodaySummary(data);
-      const openOrdersCount = orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length;
-
-      const reply = `📊 **ملخص TOP STORE اليوم (${today.todayStr}):**\n\n` +
-        `• **عدد الطلبات الجديدة اليوم:** ${today.todayOrdersCount} طلبات.\n` +
-        `• **قيمة مبيعات اليوم:** ${this.fmt(today.todaySales)}\n` +
-        `• **المقبوضات النقدية الواردة:** ${this.fmt(today.todayCashIn)}\n` +
-        `• **المصروفات النقدية الصادرة:** ${this.fmt(today.todayCashOut)}\n` +
-        `• **صافي التدفق النقدي اليومي:** ${this.fmt(today.todayNetCashFlow)}\n\n` +
-        `🚨 **أهم 3 أشياء تحتاج انتباهك اليوم:**\n` +
-        `1. لديك **${openOrdersCount} طلبات** قيد التجهيز والشحن تحتاج متابعة مسارها.\n` +
-        `2. تحصيل دفعات العملاء المعلقة لتوفير سيولة للشراء الجماعي القادم.\n` +
-        `3. مراجعة رصيد بطاقة VISA للتأكد من تغطية طلبيات شي إن الجديدة.`;
-
-      return {
-        reply,
-        intent: 'daily_summary',
-        summaryMetrics: [
-          { label: 'مبيعات اليوم', value: this.fmt(today.todaySales), color: 'text-slate-800' },
-          { label: 'مقبوضات اليوم', value: this.fmt(today.todayCashIn), color: 'text-emerald-700' },
-          { label: 'مصروفات اليوم', value: this.fmt(today.todayCashOut), color: 'text-rose-700' }
-        ],
-        calculation: {
-          metricName: 'صافي الحركة النقدية اليومية',
-          formula: 'المقبوضات النقدية لليوم - المصروفات النقدية لليوم',
-          steps: [
-            `مقبوضات واردة: +${this.fmt(today.todayCashIn)}`,
-            `مصروفات صادرة: -${this.fmt(today.todayCashOut)}`,
-            `الصافي اليومي = ${this.fmt(today.todayNetCashFlow)}`
-          ],
-          finalResult: this.fmt(today.todayNetCashFlow),
-          timeframe: today.todayStr
-        },
-        suggestedActions: [
-          { label: 'سجل الطلبات', targetTab: 'orders' },
-          { label: 'الفواتير وسندات القبض', targetTab: 'invoices' }
-        ]
-      };
-    }
-
-    // 6. "فحص النظام" أو "المشاكل" أو "راجع لي الحسابات"
-    if (
-      q.includes('فحص') ||
-      q.includes('مشاكل') ||
-      q.includes('راجع') ||
-      q.includes('سلامة') ||
-      q.includes('أخطاء')
-    ) {
-      const anomalies = this.detectAccountingAnomalies(data);
-
-      if (anomalies.length === 0) {
-        return {
-          reply: `✅ **فحص النظام المحاسبي مكتمل بنجاح تام!**\n\n` +
-            `• القيود المحاسبية متوازنة (المدين = الدائن).\n` +
-            `• جميع الدفعات مرتبطة بعملاء وطلبات صحيحة.\n` +
-            `• الأرصدة النقدية مطابقة لمجموع الحركات المسجلة.\n` +
-            `• لا توجد عمليات مكررة أو بيانات يتيمة في النظام.`,
-          intent: 'system_audit',
-          summaryMetrics: [
-            { label: 'حالة النظام', value: 'سليم 100%', color: 'text-emerald-700' },
-            { label: 'المشاكل المكتشفة', value: '0 مشاكل', color: 'text-emerald-700' }
-          ]
-        };
-      }
-
-      const reply = `⚠️ **تم العثور على ${anomalies.length} ملاحظات تحتاج المراجعة:**\n\n` +
-        anomalies.map((a, i) => `${i + 1}. **${a.title}** (${a.severity === 'high' ? 'عالية الأهمية' : 'تنبيه'})\n   ${a.description}\n   *السبب:* ${a.suspectReason}`).join('\n\n') +
-        `\n\n💡 يمكنك مراجعة هذه العمليات من الأقسام المخصصة دون أي تعديل تلقائي مفاجئ.`;
+    // 3. System Audit / Health Check
+    if (q.includes('فحص') || q.includes('مشكلة') || q.includes('مشاكل') || q.includes('أخطاء') || q.includes('سلامة') || q.includes('تدقيق') || q.includes('تطابق')) {
+      const au = snap.accountingAudit;
+      const rec = snap.customersLedger.reconciliation;
+      const reply =
+        `نتيجة الفحص الشامل لسلامة النظام المحاسبي:\n\n` +
+        `• الفحوصات المجتازة: ${au.passedChecks} من أصل ${au.totalChecks}\n` +
+        `• توازن دفتر الأستاذ العام: إجمالي المدين (${f(au.ledgerTotalDebit)}) مقابل إجمالي الدائن (${f(au.ledgerTotalCredit)}) — الفارق: ${f(au.ledgerDiff)}\n` +
+        `• مطابقة أرصدة العملاء (${snap.customersLedger.totalCustomersCount} عميل): متطابق ${rec.reconciledCount} | غير متطابق ${rec.mismatchedCount} (نسبة التطابق ${rec.matchRate}%)\n` +
+        (au.errors.length > 0 ? `\nأخطاء مكتشفة (${au.errors.length}):\n${au.errors.map((e, i) => `${i + 1}. ${e}`).join('\n')}` : '\n• لا توجد أخطاء حرجة في القيود أو الأكواد.') +
+        (au.warnings.length > 0 ? `\n\nتنبيهات (${au.warnings.length}):\n${au.warnings.slice(0, 6).map((w, i) => `${i + 1}. ${w}`).join('\n')}` : '');
 
       return {
         reply,
         intent: 'system_audit',
-        anomalies,
+        engineSource: 'deterministic',
+        generatedAt: snap.meta.generatedAt,
         summaryMetrics: [
-          { label: 'حالة التدقيق', value: 'تحتاج مراجعة', color: 'text-rose-700' },
-          { label: 'الملاحظات', value: `${anomalies.length} تنبيهات`, color: 'text-rose-700' }
+          { label: 'الفحوصات الناجحة', value: `${au.passedChecks}/${au.totalChecks}`, color: au.passed ? 'text-emerald-700' : 'text-amber-700' },
+          { label: 'مطابقة العملاء', value: `${rec.matchRate}%`, color: rec.mismatchedCount === 0 ? 'text-emerald-700' : 'text-amber-700' },
+          { label: 'فارق الميزان', value: f(au.ledgerDiff), color: au.ledgerDiff < 1 ? 'text-emerald-700' : 'text-rose-700' }
         ],
         suggestedActions: [
-          { label: 'دفتر اليومية والقيود', targetTab: 'journal' },
-          { label: 'مراجعة الطلبات', targetTab: 'orders' }
+          { label: 'دفتر اليومية', targetTab: 'journal' },
+          { label: 'كشف العملاء', targetTab: 'customers' }
         ]
       };
     }
 
-    // 7. "أكبر العملاء" أو "تحليل العملاء"
-    if (
-      q.includes('أكبر العملاء') ||
-      q.includes('أفضل العملاء') ||
-      q.includes('العملاء الأكثر') ||
-      q.includes('تحليل العملاء')
-    ) {
-      const rankedCustomers = customers
-        .map(c => {
-          const cOrders = orders.filter(o => o.customerId === c.id);
-          const totalSpent = cOrders.reduce((s, o) => s + (o.totalAmount || 0), 0);
-          const paid = cOrders.reduce((s, o) => s + (o.paidAmount || 0), 0);
-          const remaining = cOrders.reduce((s, o) => s + (o.remainingAmount || 0), 0);
-          return { ...c, totalSpent, paid, remaining, ordersCount: cOrders.length };
-        })
-        .sort((a, b) => b.totalSpent - a.totalSpent);
-
-      const top5 = rankedCustomers.slice(0, 5);
-      const list = top5
-        .map((c, i) => `${i + 1}. **${c.name}** (${c.code}): مبيعات ${this.fmt(c.totalSpent)} | ${c.ordersCount} طلبات | مدفوع: ${this.fmt(c.paid)}`)
+    // 4. Couriers / Delivery
+    if (q.includes('موصل') || q.includes('مندوب') || q.includes('توصيل') || q.includes('عهد')) {
+      const cs = snap.couriersSummary;
+      const list = cs.couriers
+        .map(
+          c =>
+            `• ${c.name} (${c.code}): عهدة نقدية ${f(c.currentCustodyBalance)} | مستحقات له ${f(c.currentPayableBalance)} | طلبات مسلّمة: ${c.deliveredOrdersCount}`
+        )
         .join('\n');
-
-      const chartData = top5.map(c => ({
-        name: c.name.split(' ')[0] || c.code,
-        value: c.totalSpent
-      }));
-
-      const reply = `👥 **أفضل عملاء TOP STORE من حيث حجم المشتريات:**\n\n${list}\n\n` +
-        `• **متوسط قيمة الشراء للعميل:** ${this.fmt(rankedCustomers.reduce((s, c) => s + c.totalSpent, 0) / (rankedCustomers.length || 1))}\n` +
-        `• **إجمالي العملاء المسجلين:** ${customers.length} عميل.`;
-
       return {
-        reply,
-        intent: 'customer_ranking',
+        reply:
+          `تقرير الموصلين والتوصيل:\n\n` +
+          `• إجمالي الموصلين: ${cs.couriersCount} | طلبات التوصيل: ${cs.deliveryOrdersCount} (مسلّم: ${cs.deliveredCount}، قيد التوصيل: ${cs.inProgressCount}، تعذر/راجع: ${cs.failedOrReturnedCount})\n` +
+          `• إجمالي العهد النقدية بذمة الموصلين: ${f(cs.totalCustodyBalance)}\n` +
+          `• إجمالي المستحقات للموصلين: ${f(cs.totalPayableBalance)}\n\n` +
+          `التفصيل لكل موصل:\n${list || 'لا يوجد موصلون مسجلون.'}`,
+        intent: 'couriers_analysis',
+        engineSource: 'deterministic',
+        generatedAt: snap.meta.generatedAt,
         summaryMetrics: [
-          { label: 'إجمالي العملاء', value: `${customers.length} عميل`, color: 'text-blue-700' },
-          { label: 'أعلى عميل مشتريات', value: top5[0] ? this.fmt(top5[0].totalSpent) : '0', color: 'text-emerald-700' }
+          { label: 'عهد الموصلين', value: f(cs.totalCustodyBalance), color: 'text-amber-700' },
+          { label: 'مستحقاتهم', value: f(cs.totalPayableBalance), color: 'text-blue-700' },
+          { label: 'الطلبات المسلّمة', value: `${cs.deliveredCount}`, color: 'text-emerald-700' }
         ],
-        chartData,
-        chartType: 'bar',
-        chartTitle: 'أعلى 5 عملاء حسب قيمة المشتريات',
+        suggestedActions: [{ label: 'إدارة الموصلين', targetTab: 'couriers' }]
+      };
+    }
+
+    // 5. Workers
+    if (q.includes('عامل') || q.includes('عمال') || q.includes('موظف') || q.includes('رواتب')) {
+      const ws = snap.workersSummary;
+      const list = ws.workers
+        .map(
+          w =>
+            `• ${w.name} (${w.role}): الإجمالي ${f(w.totalSpent)} (${w.expensesCount} عملية) — مواصلات: ${f(w.transportTotal)}، عشاء: ${f(w.dinnerTotal)}، قات: ${f(w.qatTotal)}، نت: ${f(w.internetTotal)}، أخرى: ${f(w.otherTotal)}`
+        )
+        .join('\n');
+      return {
+        reply: `تقرير العمال ومصروفاتهم (${ws.workersCount} عمال):\n\n• إجمالي مصروفات فريق العمل: ${f(ws.totalAllWorkerExpenses)}\n\n${list || 'لا يوجد عمال مسجلون.'}`,
+        intent: 'workers_analysis',
+        engineSource: 'deterministic',
+        generatedAt: snap.meta.generatedAt,
+        summaryMetrics: [
+          { label: 'عدد العمال', value: `${ws.workersCount}`, color: 'text-slate-800' },
+          { label: 'إجمالي منصرف العمال', value: f(ws.totalAllWorkerExpenses), color: 'text-rose-700' }
+        ],
+        suggestedActions: [{ label: 'شؤون العمال', targetTab: 'workers' }]
+      };
+    }
+
+    // 6. Shipments & Purchase Batches
+    if (q.includes('شحن') || q.includes('طرد') || q.includes('دفعات الشراء') || q.includes('دفعة')) {
+      const ss = snap.shipmentsSummary;
+      const pb = snap.purchaseBatchesSummary;
+      return {
+        reply:
+          `ملخص الشحنات ودفعات الشراء الدولية:\n\n` +
+          `• الشحنات المسجلة: ${ss.totalCount} شحنات بإجمالي تكلفة شحن ${f(ss.totalShippingCost)}\n` +
+          `${ss.shipments.map(s => `  - شحنة #${s.shipmentNumber} (${s.carrier}): ${f(s.shippingCost)} | ${s.linkedOrdersCount} طلب | الحالة: ${s.status}`).join('\n')}\n\n` +
+          `• دفعات الشراء الجماعي: ${pb.totalCount} دفعات بإجمالي تكلفة ${f(pb.grandTotalCost)} (بضاعة: ${f(pb.totalPurchaseCost)} + رسوم شراء وتحويل: ${f(pb.totalPurchaseFees + pb.totalTransferFees)})`,
+        intent: 'logistics_batches',
+        engineSource: 'deterministic',
+        generatedAt: snap.meta.generatedAt,
+        summaryMetrics: [
+          { label: 'تكلفة الشحنات', value: f(ss.totalShippingCost), color: 'text-amber-700' },
+          { label: 'إجمالي دفعات الشراء', value: f(pb.grandTotalCost), color: 'text-blue-700' }
+        ],
         suggestedActions: [
-          { label: 'سجل العملاء الكامل', targetTab: 'customers' }
+          { label: 'الشحنات', targetTab: 'shipments' },
+          { label: 'دفعات الشراء', targetTab: 'purchase-batches' }
         ]
       };
     }
 
-    // 8. "الطلبات" أو "تحليل الطلبات"
-    if (
-      q.includes('الطلبات') ||
-      q.includes('الطلبيات') ||
-      q.includes('كم طلب')
-    ) {
-      const totalCount = orders.length;
-      const completed = orders.filter(o => o.status === 'delivered').length;
-      const inTransit = orders.filter(o => o.status === 'shipped').length;
-      const pending = orders.filter(o => o.status === 'pending' || o.status === 'purchased').length;
-      const totalVal = orders.reduce((s, o) => s + (o.totalAmount || 0), 0);
-      const avgOrder = totalVal / (totalCount || 1);
-
-      const reply = `📦 **تحليل طلبيات متجر TOP STORE:**\n\n` +
-        `• **إجمالي الطلبات المسجلة:** ${totalCount} طلبات.\n` +
-        `• **إجمالي القيمة المالية:** ${this.fmt(totalVal)}\n` +
-        `• **متوسط قيمة الطلب:** ${this.fmt(avgOrder)}\n` +
-        `• **المكتملة والمسلّمة:** ${completed} طلبات.\n` +
-        `• **قيد الشحن الدولي:** ${inTransit} طلبات.\n` +
-        `• **قيد الشراء والتجهيز:** ${pending} طلبات.\n\n` +
-        `المواقع الأكثر طلباً: شي إن (SHEIN) تشكل الأغلبية الساحقة من الطلبيات.`;
+    // 7. Customers & Debts
+    if (q.includes('عميل') || q.includes('عملاء') || q.includes('دين') || q.includes('ديون') || q.includes('مديونية') || q.includes('ذمم') || q.includes('فلوس عند')) {
+      const cl = snap.customersLedger;
+      const topDebtors = cl.allCustomers.filter(c => c.currentBalance > 0).slice(0, 7);
+      const creditors = cl.allCustomers.filter(c => c.currentBalance < 0).slice(0, 5);
 
       return {
-        reply,
-        intent: 'orders_analysis',
+        reply:
+          `تقرير أرصدة وذمم العملاء الكامل (${cl.totalCustomersCount} عميل):\n\n` +
+          `• إجمالي المستحق لنا عند العملاء المدينين (${cl.debtorsCount} عملاء): ${f(cl.totalPositiveCustomerDebts)}\n` +
+          `• إجمالي الأرصدة الدائنة للعملاء (${cl.creditorsCount} عملاء لهم رصيد مقدم): ${f(cl.totalNegativeCustomerCredits)}\n` +
+          `• صافي رصيد العملاء الإجمالي: ${f(cl.netCustomerBalances)}\n` +
+          `• العملاء المسددون بالكامل (صفر): ${cl.settledCount} عميل\n\n` +
+          `أعلى العملاء مديونية:\n${topDebtors.map((d, i) => `${i + 1}. ${d.name} (${d.code}): ${f(d.currentBalance)} (${d.ordersCount} طلبات)`).join('\n') || 'لا توجد مديونيات'}` +
+          (creditors.length > 0
+            ? `\n\nأبرز العملاء ذوي الرصيد الدائن (مبالغ مقدمة لهم):\n${creditors.map(c => `• ${c.name} (${c.code}): ${f(Math.abs(c.currentBalance))}`).join('\n')}`
+            : ''),
+        intent: 'customers_ledger',
+        engineSource: 'deterministic',
+        generatedAt: snap.meta.generatedAt,
         summaryMetrics: [
-          { label: 'إجمالي الطلبات', value: `${totalCount} طلب`, color: 'text-slate-800' },
-          { label: 'متوسط قيمة الطلب', value: this.fmt(avgOrder), color: 'text-blue-700' },
-          { label: 'طلبات قيد المتابعة', value: `${pending + inTransit}`, color: 'text-amber-700' }
+          { label: 'المستحق لنا (مدينون)', value: f(cl.totalPositiveCustomerDebts), color: 'text-rose-700' },
+          { label: 'أرصدة دائنة للعملاء', value: f(cl.totalNegativeCustomerCredits), color: 'text-blue-700' },
+          { label: 'صافي أرصدة العملاء', value: f(cl.netCustomerBalances), color: 'text-slate-800' }
+        ],
+        chartData: topDebtors.slice(0, 5).map(d => ({ name: d.name.split(' ')[0] || d.code, value: d.currentBalance })),
+        chartType: 'bar',
+        chartTitle: 'أعلى 5 مديونيات عملاء',
+        suggestedActions: [
+          { label: 'كشف العملاء', targetTab: 'customers' },
+          { label: 'سند قبض', targetTab: 'invoices' }
+        ]
+      };
+    }
+
+    // 8. Liquidity / Accounts / Wallets / Visa
+    if (q.includes('سيول') || q.includes('كم معي') || q.includes('محفظ') || q.includes('صندوق') || q.includes('بنك') || q.includes('فيزا') || q.includes('حسابات')) {
+      const liq = snap.liquidity;
+      const activeList = liq.accounts.filter(a => a.status === 'active' && !a.isEquity);
+      return {
+        reply:
+          `تفصيل السيولة النقدية وأرصدة الحسابات والمحافظ:\n\n` +
+          `• إجمالي السيولة الفعلية المتاحة: ${f(liq.totalCashAndBanks)}\n` +
+          `• محافظ وبنوك: ${f(liq.walletsAndBanksTotal)} | صناديق نقدية: ${f(liq.cashBoxesTotal)} | بطاقات فيزا: ${f(liq.visaCardsTotal)}\n\n` +
+          `الأرصدة التفصيلية:\n${activeList.map(a => `• ${a.name} (${a.type}): ${f(a.currentBalance)}`).join('\n')}`,
+        intent: 'liquidity_check',
+        engineSource: 'deterministic',
+        generatedAt: snap.meta.generatedAt,
+        summaryMetrics: [
+          { label: 'إجمالي السيولة', value: f(liq.totalCashAndBanks), color: 'text-emerald-700' },
+          { label: 'بطاقات الفيزا', value: f(liq.visaCardsTotal), color: 'text-blue-700' },
+          { label: 'ذمم العملاء (غير سائلة)', value: f(snap.customersLedger.totalPositiveCustomerDebts), color: 'text-amber-700' }
+        ],
+        chartData: activeList.filter(a => a.currentBalance > 0).slice(0, 6).map(a => ({ name: a.name, value: a.currentBalance })),
+        chartType: 'pie',
+        chartTitle: 'توزيع السيولة عبر الحسابات',
+        suggestedActions: [{ label: 'الصناديق والمحافظ', targetTab: 'accounts' }]
+      };
+    }
+
+    // 9. Expenses Breakdown
+    if (q.includes('مصروف') || q.includes('مصاريف') || q.includes('صرف') || q.includes('نفقات')) {
+      const ex = snap.expensesSummary;
+      return {
+        reply:
+          `التحليل الكامل للمصروفات (${ex.activeExpensesCount} عملية معتمدة):\n\n` +
+          `• إجمالي المصروفات الكلي: ${f(ex.totalExpensesAllActive)} (بنسبة ${ex.expenseToSalesRatioPercent}% من المبيعات)\n` +
+          `• المصروفات التشغيلية: ${f(ex.operationalExpensesTotal)} | تكاليف الشحن اللوجستي: ${f(ex.shippingSyntheticTotal)}\n\n` +
+          `أعلى بنود الصرف:\n${ex.byCategory.slice(0, 6).map((c, i) => `${i + 1}. ${c.category}: ${f(c.total)} (${c.sharePercent}% - ${c.count} عملية)`).join('\n')}`,
+        intent: 'expense_breakdown',
+        engineSource: 'deterministic',
+        generatedAt: snap.meta.generatedAt,
+        summaryMetrics: [
+          { label: 'إجمالي المصروفات', value: f(ex.totalExpensesAllActive), color: 'text-rose-700' },
+          { label: 'أعلى بند', value: ex.byCategory[0]?.category || '—', color: 'text-slate-800' },
+          { label: 'نسبة من المبيعات', value: `${ex.expenseToSalesRatioPercent}%`, color: 'text-amber-700' }
+        ],
+        chartData: ex.byCategory.slice(0, 6).map(c => ({ name: c.category, value: c.total })),
+        chartType: 'pie',
+        chartTitle: 'توزيع المصروفات حسب التصنيف',
+        suggestedActions: [{ label: 'سجل المصروفات', targetTab: 'expenses' }]
+      };
+    }
+
+    // 10. Profit, Sales & Monthly Analysis
+    if (q.includes('ربح') || q.includes('أرباح') || q.includes('مبيعات') || q.includes('هذا الشهر') || q.includes('الشهر')) {
+      const sp = snap.salesAndProfit.allTime;
+      const tm = snap.salesAndProfit.thisMonth;
+      const lm = snap.salesAndProfit.lastMonth;
+      return {
+        reply:
+          `تقرير المبيعات والأرباح الدقيق:\n\n` +
+          `1. الإجمالي العام (${sp.activeOrdersCount} طلب نشط):\n` +
+          `• إجمالي المبيعات: ${f(sp.totalSales)} (متوسط الطلب: ${f(sp.aov)})\n` +
+          `• تكلفة البضاعة المقدرة/الفعلية: -${f(sp.totalPurchaseCost)}\n` +
+          `• مجمل الربح: ${f(sp.grossProfit)} (${sp.grossMarginPercent}%)\n` +
+          `• المصروفات التشغيلية واللوجستية: -${f(sp.totalExpenses)}\n` +
+          `• صافي الربح المحاسبي: ${f(sp.netProfit)} (هامش صافي: ${sp.netProfitMarginPercent}%)\n` +
+          `• المحصل من الطلبات: ${f(sp.totalPaidOnOrders)} (${sp.collectionRate}%) | المتبقي على الطلبات: ${f(sp.totalRemainingOnOrders)}\n\n` +
+          `2. هذا الشهر (${tm.monthLabel}):\n` +
+          `• الطلبات: ${tm.ordersCount} | المبيعات: ${f(tm.sales)} | المصروفات: ${f(tm.expenses)} | صافي الربح: ${f(tm.netProfit)}\n\n` +
+          `3. الشهر الماضي (${lm.monthLabel}):\n` +
+          `• الطلبات: ${lm.ordersCount} | المبيعات: ${f(lm.sales)} | المصروفات: ${f(lm.expenses)} | صافي الربح: ${f(lm.netProfit)}`,
+        intent: 'profit_analysis',
+        engineSource: 'deterministic',
+        generatedAt: snap.meta.generatedAt,
+        summaryMetrics: [
+          { label: 'إجمالي المبيعات', value: f(sp.totalSales), color: 'text-slate-800' },
+          { label: 'مجمل الربح', value: f(sp.grossProfit), color: 'text-blue-700' },
+          { label: 'صافي الربح', value: f(sp.netProfit), color: sp.netProfit >= 0 ? 'text-emerald-700' : 'text-rose-700' }
         ],
         chartData: [
-          { name: 'تم التسليم', value: completed },
-          { name: 'في الطريق', value: inTransit },
-          { name: 'قيد التجهيز', value: pending }
+          { name: 'المبيعات', value: sp.totalSales },
+          { name: 'تكلفة الشراء', value: sp.totalPurchaseCost },
+          { name: 'المصروفات', value: sp.totalExpenses },
+          { name: 'صافي الربح', value: Math.max(0, sp.netProfit) }
         ],
-        chartType: 'pie',
-        chartTitle: 'توزيع حالات الطلبات',
+        chartType: 'bar',
+        chartTitle: 'ملخص الإيرادات والتكاليف والأرباح',
         suggestedActions: [
-          { label: 'إدارة الطلبات', targetTab: 'orders' }
+          { label: 'مركز التحليلات', targetTab: 'analytics' },
+          { label: 'سجل الطلبات', targetTab: 'orders' }
         ]
       };
     }
 
-    // 9. Command Parsing: "أضف مصروف..."
-    if (q.includes('أضف مصروف') || q.includes('سجل مصروف')) {
-      // Extract amount
-      const amountMatch = q.match(/\d+[\d,]*/);
-      const amount = amountMatch ? parseFloat(amountMatch[0].replace(/,/g, '')) : 5000;
-      
-      // Determine account
-      let accountName = 'جيب';
-      let accountId = accounts[0]?.id || 1;
-      accounts.forEach(a => {
-        if (q.includes(a.name.toLowerCase())) {
-          accountName = a.name;
-          accountId = a.id;
-        }
-      });
-
-      // Category
-      let category = 'مصاريف تشغيل';
-      if (q.includes('تسويق') || q.includes('إعلان')) category = 'تسويق وإعلانات';
-      else if (q.includes('شحن') || q.includes('توصيل')) category = 'شحن ونقل';
-
+    // 11. Today Summary
+    if (q.includes('اليوم')) {
+      const td = snap.salesAndProfit.today;
       return {
-        reply: `سأقوم بتسجيل العملية المحاسبية التالية:\n\n` +
-          `• **نوع العملية:** سند صرف (مصروف)\n` +
-          `• **التصنيف:** ${category}\n` +
-          `• **المبلغ:** ${this.fmt(amount)}\n` +
-          `• **الحساب المصروف منه:** ${accountName}\n\n` +
-          `هل تريد تأكيد وحفظ هذه العملية في دفاتر الحسابات؟`,
-        intent: 'operation_confirm_prompt',
-        pendingOperation: {
-          type: 'expense',
-          details: {
-            amount,
-            category,
-            accountId,
-            accountName,
-            description: `مصروف مسجل عبر TOP STORE AI (${category})`
-          },
-          summaryText: `صرف مبلغ ${this.fmt(amount)} من ${accountName} لبند ${category}`
-        }
+        reply:
+          `ملخص حركة المتجر اليوم (${td.date}):\n\n` +
+          `• الطلبات الجديدة اليوم: ${td.ordersCount} طلب بقيمة ${f(td.sales)}\n` +
+          `• المقبوضات النقدية اليوم: +${f(td.cashIn)} (${td.paymentsCount} سندات قبض)\n` +
+          `• المصروفات اليوم: -${f(td.cashOut)} (${td.expensesCount} عمليات صرف)\n` +
+          `• صافي التدفق النقدي اليوم: ${f(td.netCashFlow)}`,
+        intent: 'daily_summary',
+        engineSource: 'deterministic',
+        generatedAt: snap.meta.generatedAt,
+        summaryMetrics: [
+          { label: 'مبيعات اليوم', value: f(td.sales), color: 'text-slate-800' },
+          { label: 'مقبوضات اليوم', value: f(td.cashIn), color: 'text-emerald-700' },
+          { label: 'مصروفات اليوم', value: f(td.cashOut), color: 'text-rose-700' }
+        ],
+        suggestedActions: [{ label: 'لوحة التحكم', targetTab: 'dashboard' }]
       };
     }
 
-    // Default Fallback with Comprehensive Store Summary
-    const p = this.getProfitAnalysis(data);
-    const activeAccounts = accounts.filter(a => a.status === 'active');
-    const totalCash = activeAccounts.reduce((sum, a) => sum + this.getAccountBalance(a, data), 0);
+    // 12. Comprehensive 360 System Executive Overview (Default)
+    const sp = snap.salesAndProfit.allTime;
+    const cl = snap.customersLedger;
+    const liq = snap.liquidity;
+    const rec = snap.receivablesAndEquity;
+    const cs = snap.couriersSummary;
 
     return {
-      reply: `مرحباً بك! أنا **TOP STORE AI — المحلل المالي والتجاري** لمتجرك.\n\n` +
-        `لقد قمت بقراءة قاعدة بيانات النظام الحقيقية، وإليك نظرة عامة سريعة:\n` +
-        `• **السيولة النقدية المتاحة:** ${this.fmt(totalCash)}\n` +
-        `• **صافي الربح التقديري:** ${this.fmt(p.netProfit)}\n` +
-        `• **عدد الطلبيات:** ${orders.length} طلبات.\n` +
-        `• **عدد العملاء المسجلين:** ${customers.length} عميل.\n\n` +
-        `يمكنك أن تسألني بأي صياغة طبيعية:\n` +
-        `«كم معي الآن؟» • «من عليه فلوس؟» • «كم ربحي هذا الشهر؟» • «أين تذهب الفلوس؟» • «فحص النظام ماليًا» • «ملخص وضع المتجر اليوم».`,
-      intent: 'general_briefing',
+      reply:
+        `ملخص تنفيذي شامل 100% لجميع قطاعات نظام TOP STORE (متزامن لحظياً):\n\n` +
+        `1. السيولة والأموال المتاحة:\n` +
+        `• إجمالي السيولة في الصناديق والمحافظ والفيزا: ${f(liq.totalCashAndBanks)}\n\n` +
+        `2. المبيعات والربحية (${sp.activeOrdersCount} طلب نشط):\n` +
+        `• إجمالي المبيعات: ${f(sp.totalSales)} | مجمل الربح: ${f(sp.grossProfit)} | صافي الربح المحاسبي: ${f(sp.netProfit)} (${sp.netProfitMarginPercent}%)\n\n` +
+        `3. العملاء والذمم (${cl.totalCustomersCount} عميل):\n` +
+        `• المستحق لنا عند العملاء المدينين (${cl.debtorsCount}): ${f(cl.totalPositiveCustomerDebts)}\n` +
+        `• الأرصدة الدائنة للعملاء (${cl.creditorsCount}): ${f(cl.totalNegativeCustomerCredits)} | الصافي: ${f(cl.netCustomerBalances)}\n\n` +
+        `4. المصروفات والتشغيل:\n` +
+        `• إجمالي المصروفات (التشغيلية + الشحن): ${f(snap.expensesSummary.totalExpensesAllActive)}\n` +
+        `• مصروفات العمال (${snap.workersSummary.workersCount} عمال): ${f(snap.workersSummary.totalAllWorkerExpenses)}\n` +
+        `• عهد الموصلين: ${f(cs.totalCustodyBalance)} | سلف وذمم أخرى غير مسددة: ${f(rec.unsettledRemainingTotal)}\n\n` +
+        `5. السلامة المحاسبية:\n` +
+        `• نسبة مطابقة حسابات العملاء: ${cl.reconciliation.matchRate}% | فحص النظام: ${snap.accountingAudit.passedChecks}/${snap.accountingAudit.totalChecks}`,
+      intent: 'comprehensive_overview',
+      engineSource: 'deterministic',
+      generatedAt: snap.meta.generatedAt,
       summaryMetrics: [
-        { label: 'السيولة المتاحة', value: this.fmt(totalCash), color: 'text-emerald-700' },
-        { label: 'صافي الربح', value: this.fmt(p.netProfit), color: 'text-blue-700' },
-        { label: 'الطلبات', value: `${orders.length}`, color: 'text-slate-800' }
+        { label: 'السيولة المتاحة', value: f(liq.totalCashAndBanks), color: 'text-emerald-700' },
+        { label: 'إجمالي المبيعات', value: f(sp.totalSales), color: 'text-slate-800' },
+        { label: 'صافي الربح', value: f(sp.netProfit), color: sp.netProfit >= 0 ? 'text-blue-700' : 'text-rose-700' },
+        { label: 'ذمم العملاء لنا', value: f(cl.totalPositiveCustomerDebts), color: 'text-amber-700' }
       ],
       suggestedActions: [
-        { label: '📊 ملخص اليوم', targetTab: 'assistant', param: 'ملخص اليوم' },
-        { label: '💰 الأرباح', targetTab: 'assistant', param: 'كم ربحي؟' },
-        { label: '💳 السيولة', targetTab: 'assistant', param: 'كم معي؟' },
-        { label: '👥 الذمم', targetTab: 'assistant', param: 'من عليه فلوس؟' },
-        { label: '⚠️ فحص النظام', targetTab: 'assistant', param: 'فحص النظام' }
+        { label: 'مركز التحليلات', targetTab: 'analytics' },
+        { label: 'كشف العملاء', targetTab: 'customers' },
+        { label: 'الحسابات والمحافظ', targetTab: 'accounts' }
       ]
     };
   }

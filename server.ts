@@ -3,6 +3,7 @@ import { createServer as createViteServer } from 'vite';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { GoogleGenAI, Type } from '@google/genai';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -253,6 +254,199 @@ async function startServer() {
       });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Server-Side Smart Assistant Endpoint (Gemini 4 Hydrogen grounded on live verified snapshot)
+  app.post('/api/assistant/chat', async (req, res) => {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey.trim() === '') {
+      return res.status(503).json({
+        success: false,
+        errorCode: 'MISSING_API_KEY',
+        message: 'مفتاح Gemini API غير مضبوط في إعدادات الخادم (Settings > Secrets).'
+      });
+    }
+
+    try {
+      const { message, history, snapshot, queryDetails } = req.body || {};
+      if (!message || typeof message !== 'string') {
+        return res.status(400).json({ success: false, message: 'يرجى إدخال نص السؤال.' });
+      }
+
+      const ai = new GoogleGenAI({
+        apiKey,
+        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
+      });
+
+      const systemInstruction = `أنت المحلل المالي والتشغيلي والرقابي الذكي المعتمد لنظام TOP STORE (متجر لوساطة الشراء والتسوق الإلكتروني والشحن من شي إن وعلي إكسبرس في اليمن، العملة الرئيسية: الريال اليمني ر.ي).
+
+قواعد الدقة المطلقة (إلزامي 100%):
+1. اعتمد حصرياً على البيانات الحقيقية المحسوبة مسبقاً في (LIVE_STORE_SNAPSHOT) و(QUERY_MATCHED_DETAILS) المرفقة في هذا الطلب.
+2. يُمنع منعاً باتاً تخمين أو اختلاق أو تعديل أي رقم أو اسم عميل أو رقم طلب أو حساب. إذا لم تجد معلومة في البيانات المرفقة فاذكر بوضوح أنها غير موجودة في السجلات الحالية.
+3. التزم حرفياً بالفروق المحاسبية التالية عند الإجابة:
+   - "إجمالي المبيعات": قيمة الطلبات النشطة (غير الملغاة) = salesAndProfit.allTime.totalSales.
+   - "مجمل الربح": المبيعات مطروحاً منها تكلفة شراء البضاعة = salesAndProfit.allTime.grossProfit.
+   - "صافي الربح المحاسبي": مجمل الربح مطروحاً منه إجمالي المصروفات المعتمدة (التشغيلية + الشحن اللوجستي) = salesAndProfit.allTime.netProfit.
+   - "السيولة النقدية الفعلية المتاحة": مجموع أرصدة الحسابات والمحافظ النشطة باستثناء حسابات حقوق الملكية = liquidity.totalCashAndBanks (وهي تختلف عن صافي الربح وتختلف عن ديون العملاء).
+   - "ديون العملاء المستحقة لنا (الموجبة)": مجموع الأرصدة الموجبة على العملاء المدينين فقط = customersLedger.totalPositiveCustomerDebts.
+   - "الأرصدة الدائنة للعملاء (لهم عندنا)": المبالغ المسددة مقدماً من العملاء = customersLedger.totalNegativeCustomerCredits.
+   - "صافي أرصدة العملاء": الموجب ناقص السالب = customersLedger.netCustomerBalances.
+   - "إجمالي المصروفات": يشمل المصروفات التشغيلية + مصروفات الشحن اللوجستي المرتبطة بالشحنات = expensesSummary.totalExpensesAllActive.
+4. يمكنك تحليل أي قطاع في النظام بشكل شامل: المبيعات والأرباح، السيولة والمحافظ وبطاقات الفيزا، العملاء والذمم، المصروفات وتصنيفاتها وشهورها، الشحنات، دفعات الشراء، الموصلين والعهد والمستحقات، العمال ومصروفاتهم، الذمم الأخرى والسلف، الشركاء ورأس المال، الأقساط، التسويق والحملات، دفتر اليومية والمطابقة المحاسبية، وفحص سلامة النظام.
+5. نسق الإجابة باللغة العربية الواضحة والمنظمة بنقاط واضحة، بدون حشو، مع إظهار المعادلات أو التفصيل عند السؤال عن سبب رقم أو كيفية حسابه.
+6. في حقل suggestedActions، اختر فقط من معرفات التبويبات الصحيحة:
+   dashboard, analytics, orders, installments, couriers, invoices, purchase-batches, marketing, customers, workers, accounts, expenses, shipments, journal, receivables.`;
+
+      const recentHistory = Array.isArray(history)
+        ? history
+            .slice(-6)
+            .filter((h: any) => h && typeof h.text === 'string' && h.text.trim())
+            .map((h: any) => ({
+              role: h.sender === 'user' ? 'user' : 'model',
+              parts: [{ text: h.text }]
+            }))
+        : [];
+
+      const groundedTurnPrompt = `سؤال المستخدم: ${message}
+
+=== LIVE_STORE_SNAPSHOT (البيانات الحقيقية المتزامنة لحظياً 100%) ===
+${JSON.stringify(snapshot || {})}
+
+=== QUERY_MATCHED_DETAILS (تفاصيل السجلات المطابقة لسؤال المستخدم) ===
+${JSON.stringify(queryDetails || {})}`;
+
+      const contents = [
+        ...recentHistory,
+        {
+          role: 'user',
+          parts: [{ text: groundedTurnPrompt }]
+        }
+      ];
+
+      const validTabs = [
+        'dashboard',
+        'analytics',
+        'orders',
+        'installments',
+        'couriers',
+        'invoices',
+        'purchase-batches',
+        'marketing',
+        'customers',
+        'workers',
+        'accounts',
+        'expenses',
+        'shipments',
+        'journal',
+        'receivables'
+      ];
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-4-hydrogen',
+        contents,
+        config: {
+          systemInstruction,
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              reply: {
+                type: Type.STRING,
+                description: 'الإجابة العربية الشاملة والدقيقة 100% المبنية حصراً على بيانات النظام المرفقة'
+              },
+              intent: {
+                type: Type.STRING,
+                description: 'تصنيف نية السؤال مثل profit_analysis أو customers_ledger أو full_audit'
+              },
+              summaryMetrics: {
+                type: Type.ARRAY,
+                description: 'من 0 إلى 4 مؤشرات رقمية مختصرة دقيقة مرتبطة بالسؤال',
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    label: { type: Type.STRING },
+                    value: { type: Type.STRING },
+                    tone: { type: Type.STRING, enum: ['positive', 'warning', 'danger', 'neutral'] }
+                  },
+                  required: ['label', 'value']
+                }
+              },
+              suggestedActions: {
+                type: Type.ARRAY,
+                description: 'من 0 إلى 3 أزرار انتقال سريعة لأقسام النظام ذات الصلة',
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    label: { type: Type.STRING },
+                    targetTab: { type: Type.STRING, enum: validTabs }
+                  },
+                  required: ['label', 'targetTab']
+                }
+              }
+            },
+            required: ['reply', 'intent']
+          }
+        }
+      });
+
+      const rawText = response.text || '';
+      let parsed: any = null;
+      try {
+        parsed = JSON.parse(rawText);
+      } catch {
+        parsed = {
+          reply: rawText || 'تم تحليل البيانات بنجاح.',
+          intent: 'ai_analysis',
+          summaryMetrics: [],
+          suggestedActions: []
+        };
+      }
+
+      const toneColorMap: Record<string, string> = {
+        positive: 'text-emerald-700',
+        warning: 'text-amber-700',
+        danger: 'text-rose-700',
+        neutral: 'text-slate-800'
+      };
+
+      return res.json({
+        success: true,
+        data: {
+          reply: String(parsed.reply || ''),
+          intent: String(parsed.intent || 'ai_analysis'),
+          summaryMetrics: Array.isArray(parsed.summaryMetrics)
+            ? parsed.summaryMetrics.slice(0, 4).map((m: any) => ({
+                label: String(m.label || ''),
+                value: String(m.value || ''),
+                color: toneColorMap[String(m.tone || 'neutral')] || 'text-slate-800'
+              }))
+            : [],
+          suggestedActions: Array.isArray(parsed.suggestedActions)
+            ? parsed.suggestedActions
+                .filter((a: any) => a && validTabs.includes(a.targetTab))
+                .slice(0, 3)
+                .map((a: any) => ({ label: String(a.label || 'عرض القسم'), targetTab: String(a.targetTab) }))
+            : []
+        }
+      });
+    } catch (err: any) {
+      const msg = String(err?.message || err || 'Unknown error');
+      const isAuthErr =
+        msg.includes('PERMISSION_DENIED') ||
+        msg.includes('API_KEY_INVALID') ||
+        msg.includes('API key') ||
+        err?.status === 403 ||
+        err?.status === 401;
+
+      console.error('[Assistant API Error]', msg);
+      return res.status(isAuthErr ? 403 : 500).json({
+        success: false,
+        errorCode: isAuthErr ? 'API_KEY_INVALID' : 'AI_EXECUTION_ERROR',
+        message: isAuthErr
+          ? 'تعذر التحقق من مفتاح Gemini API. يرجى التأكد من المفتاح في Settings > Secrets.'
+          : msg
+      });
     }
   });
 
