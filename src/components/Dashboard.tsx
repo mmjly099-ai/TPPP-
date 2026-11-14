@@ -272,26 +272,42 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
           <div className="divide-y divide-slate-100">
             {recentTransactions.map(trx => {
-              const acc = accounts.find(a => a.id === trx.accountId);
+              const acc = accounts.find(a => Number(a.id) === Number(trx.accountId));
               const isIncome = trx.type === 'deposit' || trx.type === 'transfer_in' || trx.type === 'payment';
-              const amt = parseFloat(String(trx.amount || 0));
+              const isOutflow = trx.type === 'withdrawal' || trx.type === 'transfer_out' || trx.type === 'expense';
+              const amt = parseFloat(String(trx.amount || 0)) || 0;
+              const rawDate = trx.transactionDate || trx.createdAt;
+              const parsedDate = rawDate ? new Date(rawDate) : null;
+              const formattedDate = parsedDate && !isNaN(parsedDate.getTime())
+                ? parsedDate.toLocaleDateString('ar-YE')
+                : '-';
 
               return (
                 <div key={`dash-trx-${trx.id}-${trx.transactionNumber || ''}`} className="py-3 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                        isIncome ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+                        isIncome
+                          ? 'bg-emerald-50 text-emerald-600'
+                          : isOutflow
+                            ? 'bg-rose-50 text-rose-600'
+                            : 'bg-slate-100 text-slate-500'
                       }`}
                     >
-                      {isIncome ? <ArrowDownLeft className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
+                      {isIncome ? (
+                        <ArrowDownLeft className="w-4 h-4" />
+                      ) : isOutflow ? (
+                        <ArrowUpRight className="w-4 h-4" />
+                      ) : (
+                        <Wallet className="w-4 h-4" />
+                      )}
                     </div>
                     <div>
                       <p className="text-xs font-bold text-slate-800 line-clamp-1">{trx.description}</p>
                       <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5 font-mono">
                         <span>{acc?.name || 'حساب'}</span>
                         <span>•</span>
-                        <span>{new Date(trx.transactionDate).toLocaleDateString('ar-YE')}</span>
+                        <span>{formattedDate}</span>
                       </div>
                     </div>
                   </div>
@@ -299,7 +315,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   <div className="text-left shrink-0">
                     <span
                       className={`font-black font-mono text-sm ${
-                        isIncome ? 'text-emerald-600' : 'text-rose-600'
+                        isIncome ? 'text-emerald-600' : isOutflow ? 'text-rose-600' : 'text-slate-600'
                       }`}
                     >
                       {isIncome ? `+${Math.abs(amt).toLocaleString()}` : Math.abs(amt).toLocaleString()}

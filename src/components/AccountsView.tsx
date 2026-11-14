@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Wallet,
   CreditCard,
@@ -98,6 +98,14 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     setSingleReconcileNotes('');
   };
 
+  // Ensure selectedAccountId always points to an existing active financial account when available
+  useEffect(() => {
+    const financial = accounts.filter(a => a.type !== 'حقوق ملكية' && a.status === 'active');
+    if (financial.length > 0 && !financial.some(a => Number(a.id) === Number(selectedAccountId))) {
+      setSelectedAccountId(financial[0].id);
+    }
+  }, [accounts, selectedAccountId]);
+
   const filteredAccounts = accounts.filter(a => {
     if (a.type === 'حقوق ملكية') return false; // Handled in Equity section
     if (typeFilter === 'ALL') return true;
@@ -119,10 +127,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       if (activeAccountIds.has(Number(trx.accountId))) {
         const amt = parseFloat(String(trx.amount || 0)) || 0;
         const isIncome = trx.type === 'deposit' || trx.type === 'transfer_in' || trx.type === 'payment';
+        const isOutflow = trx.type === 'withdrawal' || trx.type === 'transfer_out' || trx.type === 'expense';
         if (isIncome) {
           grandIn += amt;
           inCount += 1;
-        } else {
+        } else if (isOutflow) {
           grandOut += amt;
           outCount += 1;
         }
@@ -150,10 +159,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       if (map[accId]) {
         const amt = parseFloat(String(trx.amount || 0)) || 0;
         const isIncome = trx.type === 'deposit' || trx.type === 'transfer_in' || trx.type === 'payment';
+        const isOutflow = trx.type === 'withdrawal' || trx.type === 'transfer_out' || trx.type === 'expense';
         if (isIncome) {
           map[accId].totalIn += amt;
           map[accId].inCount += 1;
-        } else {
+        } else if (isOutflow) {
           map[accId].totalOut += amt;
           map[accId].outCount += 1;
         }
@@ -190,10 +200,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   const filteredAccountTransactions = useMemo(() => {
     return rawAccountTransactions.filter(trx => {
       const isIncome = trx.type === 'deposit' || trx.type === 'transfer_in' || trx.type === 'payment';
+      const isOutflow = trx.type === 'withdrawal' || trx.type === 'transfer_out' || trx.type === 'expense';
       const isTransfer = trx.type === 'transfer_in' || trx.type === 'transfer_out';
 
       if (ledgerFilter === 'IN' && !isIncome) return false;
-      if (ledgerFilter === 'OUT' && isIncome) return false;
+      if (ledgerFilter === 'OUT' && !isOutflow) return false;
       if (ledgerFilter === 'TRANSFER' && !isTransfer) return false;
 
       if (ledgerSearch.trim()) {
@@ -386,8 +397,8 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {filteredAccounts.map(account => {
           const balance = getAccountBalance(account.id);
-          const isSelected = selectedAccountId === account.id;
-          const stats = accountStatsMap[account.id] || { totalIn: 0, totalOut: 0, inCount: 0, outCount: 0 };
+          const isSelected = Number(selectedAccountId) === Number(account.id);
+          const stats = accountStatsMap[Number(account.id)] || { totalIn: 0, totalOut: 0, inCount: 0, outCount: 0 };
 
           return (
             <div
@@ -520,7 +531,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
       {/* Selected Account Ledger & Transactions */}
       {selectedAccount && (() => {
-        const stats = accountStatsMap[selectedAccount.id] || { totalIn: 0, totalOut: 0, inCount: 0, outCount: 0 };
+        const stats = accountStatsMap[Number(selectedAccount.id)] || { totalIn: 0, totalOut: 0, inCount: 0, outCount: 0 };
         const currentBal = getAccountBalance(selectedAccount.id);
 
         return (
@@ -690,10 +701,16 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   <tbody className="divide-y divide-slate-100">
                     {filteredAccountTransactions.map(trx => {
                       const isIncome = trx.type === 'deposit' || trx.type === 'transfer_in' || trx.type === 'payment';
-                      const amt = parseFloat(String(trx.amount || 0));
-                      const rb = runningBalancesMap.get(trx.id);
+                      const isOutflow = trx.type === 'withdrawal' || trx.type === 'transfer_out' || trx.type === 'expense';
+                      const amt = parseFloat(String(trx.amount || 0)) || 0;
+                      const rb = runningBalancesMap.get(trx.id) || runningBalancesMap.get(Number(trx.id));
+                      const rawDate = trx.transactionDate || trx.createdAt;
+                      const parsedDate = rawDate ? new Date(rawDate) : null;
+                      const formattedDate = parsedDate && !isNaN(parsedDate.getTime())
+                        ? parsedDate.toLocaleDateString('ar-YE')
+                        : '-';
 
-                      let label = 'تسوية';
+                      let label = 'تسوية / أخرى';
                       if (trx.type === 'payment') label = 'سند قبض وارد';
                       else if (trx.type === 'deposit') label = 'سند وارد (إيداع)';
                       else if (trx.type === 'transfer_in') label = 'تحويل وارد';
@@ -707,7 +724,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                             {trx.transactionNumber}
                           </td>
                           <td className="py-3 px-4 font-mono text-slate-500">
-                            {new Date(trx.transactionDate).toLocaleDateString('ar-YE')}
+                            {formattedDate}
                           </td>
                           <td className="py-3 px-4">
                             <span className="font-semibold text-slate-900 block">{trx.description}</span>
@@ -722,19 +739,23 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                               className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg font-bold text-[10px] ${
                                 isIncome
                                   ? 'bg-emerald-100/70 text-emerald-800 border border-emerald-200'
-                                  : 'bg-rose-100/70 text-rose-800 border border-rose-200'
+                                  : isOutflow
+                                    ? 'bg-rose-100/70 text-rose-800 border border-rose-200'
+                                    : 'bg-slate-100 text-slate-700 border border-slate-200'
                               }`}
                             >
                               {isIncome ? (
                                 <ArrowDownLeft className="w-3 h-3 text-emerald-600" />
-                              ) : (
+                              ) : isOutflow ? (
                                 <ArrowUpRight className="w-3 h-3 text-rose-600" />
+                              ) : (
+                                <SlidersHorizontal className="w-3 h-3 text-slate-500" />
                               )}
                               <span>{label}</span>
                             </span>
                           </td>
                           <td className="py-3 px-4 text-left font-mono font-bold whitespace-nowrap">
-                            <span className={isIncome ? 'text-emerald-600' : 'text-rose-600'}>
+                            <span className={isIncome ? 'text-emerald-600' : isOutflow ? 'text-rose-600' : 'text-slate-600'}>
                               {Math.abs(amt).toLocaleString()} ريال
                             </span>
                           </td>
@@ -1005,6 +1026,14 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* Record Inflow/Outflow Modal */}
+      <RecordAccountTransactionModal
+        isOpen={recordModalConfig.isOpen}
+        onClose={() => setRecordModalConfig(prev => ({ ...prev, isOpen: false }))}
+        initialType={recordModalConfig.type}
+        initialAccountId={recordModalConfig.accountId}
+      />
 
     </div>
   );

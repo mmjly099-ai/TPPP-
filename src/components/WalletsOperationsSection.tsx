@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Wallet,
   Building2,
@@ -43,12 +43,22 @@ export const WalletsOperationsSection: React.FC<WalletsOperationsSectionProps> =
     return accounts.filter(a => a.status === 'active' && a.type !== 'حقوق ملكية');
   }, [accounts]);
 
+  useEffect(() => {
+    if (
+      selectedAccountId !== 'ALL' &&
+      activeFinancialAccounts.length > 0 &&
+      !activeFinancialAccounts.some(a => Number(a.id) === Number(selectedAccountId))
+    ) {
+      setSelectedAccountId('ALL');
+    }
+  }, [activeFinancialAccounts, selectedAccountId]);
+
   // Compute Inflow (الوارد) and Outflow (الصادر) per account
   const accountStatsMap = useMemo(() => {
     const stats: Record<number, { totalIn: number; totalOut: number; inCount: number; outCount: number; balance: number }> = {};
 
     activeFinancialAccounts.forEach(acc => {
-      stats[acc.id] = {
+      stats[Number(acc.id)] = {
         totalIn: 0,
         totalOut: 0,
         inCount: 0,
@@ -58,15 +68,17 @@ export const WalletsOperationsSection: React.FC<WalletsOperationsSectionProps> =
     });
 
     transactions.forEach(trx => {
-      if (stats[trx.accountId]) {
+      const accId = Number(trx.accountId);
+      if (stats[accId]) {
         const amt = parseFloat(String(trx.amount || 0)) || 0;
         const isIncome = trx.type === 'deposit' || trx.type === 'transfer_in' || trx.type === 'payment';
+        const isOutflow = trx.type === 'withdrawal' || trx.type === 'transfer_out' || trx.type === 'expense';
         if (isIncome) {
-          stats[trx.accountId].totalIn += amt;
-          stats[trx.accountId].inCount += 1;
-        } else {
-          stats[trx.accountId].totalOut += amt;
-          stats[trx.accountId].outCount += 1;
+          stats[accId].totalIn += amt;
+          stats[accId].inCount += 1;
+        } else if (isOutflow) {
+          stats[accId].totalOut += amt;
+          stats[accId].outCount += 1;
         }
       }
     });
@@ -95,20 +107,20 @@ export const WalletsOperationsSection: React.FC<WalletsOperationsSectionProps> =
 
     // Filter by account
     if (selectedAccountId !== 'ALL') {
-      list = list.filter(t => t.accountId === selectedAccountId);
+      list = list.filter(t => Number(t.accountId) === Number(selectedAccountId));
     }
 
     // Filter by type (IN vs OUT)
     if (trxTypeFilter === 'IN') {
       list = list.filter(t => t.type === 'deposit' || t.type === 'transfer_in' || t.type === 'payment');
     } else if (trxTypeFilter === 'OUT') {
-      list = list.filter(t => t.type !== 'deposit' && t.type !== 'transfer_in' && t.type !== 'payment');
+      list = list.filter(t => t.type === 'withdrawal' || t.type === 'transfer_out' || t.type === 'expense');
     }
 
     return sortTransactionsChronologicalDesc(list).slice(0, 15); // Show top 15 recent operations in this dashboard section
   }, [transactions, selectedAccountId, trxTypeFilter]);
 
-  const selectedAccountObj = selectedAccountId !== 'ALL' ? accounts.find(a => a.id === selectedAccountId) : null;
+  const selectedAccountObj = selectedAccountId !== 'ALL' ? accounts.find(a => Number(a.id) === Number(selectedAccountId)) : null;
 
   const getAccountIcon = (type: Account['type']) => {
     switch (type) {
@@ -277,8 +289,8 @@ export const WalletsOperationsSection: React.FC<WalletsOperationsSectionProps> =
 
           {/* Individual Account Cards */}
           {activeFinancialAccounts.map(acc => {
-            const stats = accountStatsMap[acc.id] || { totalIn: 0, totalOut: 0, balance: 0 };
-            const isSelected = selectedAccountId === acc.id;
+            const stats = accountStatsMap[Number(acc.id)] || { totalIn: 0, totalOut: 0, balance: 0 };
+            const isSelected = Number(selectedAccountId) === Number(acc.id);
 
             return (
               <div
@@ -477,12 +489,18 @@ export const WalletsOperationsSection: React.FC<WalletsOperationsSectionProps> =
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {displayedTransactions.map(trx => {
-                  const acc = accounts.find(a => a.id === trx.accountId);
+                  const acc = accounts.find(a => Number(a.id) === Number(trx.accountId));
                   const isIncome = trx.type === 'deposit' || trx.type === 'transfer_in' || trx.type === 'payment';
-                  const amt = parseFloat(String(trx.amount || 0));
-                  const rb = runningBalancesMap.get(trx.id);
+                  const isOutflow = trx.type === 'withdrawal' || trx.type === 'transfer_out' || trx.type === 'expense';
+                  const amt = parseFloat(String(trx.amount || 0)) || 0;
+                  const rb = runningBalancesMap.get(trx.id) || runningBalancesMap.get(Number(trx.id));
+                  const rawDate = trx.transactionDate || trx.createdAt;
+                  const parsedDate = rawDate ? new Date(rawDate) : null;
+                  const formattedDate = parsedDate && !isNaN(parsedDate.getTime())
+                    ? parsedDate.toLocaleDateString('ar-YE')
+                    : '-';
 
-                  let typeLabel = 'تسوية';
+                  let typeLabel = 'تسوية / أخرى';
                   if (trx.type === 'payment') typeLabel = 'سند قبض وارد';
                   else if (trx.type === 'deposit') typeLabel = 'إيداع وارد';
                   else if (trx.type === 'transfer_in') typeLabel = 'تحويل وارد';
@@ -496,7 +514,7 @@ export const WalletsOperationsSection: React.FC<WalletsOperationsSectionProps> =
                         {trx.transactionNumber}
                       </td>
                       <td className="py-3 px-4 font-mono text-[11px] text-slate-600 whitespace-nowrap">
-                        {new Date(trx.transactionDate || trx.createdAt).toLocaleDateString('ar-YE')}
+                        {formattedDate}
                       </td>
                       <td className="py-3 px-4">
                         <button
@@ -517,19 +535,23 @@ export const WalletsOperationsSection: React.FC<WalletsOperationsSectionProps> =
                           className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold ${
                             isIncome
                               ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
-                              : 'bg-rose-50 text-rose-700 border border-rose-200/60'
+                              : isOutflow
+                                ? 'bg-rose-50 text-rose-700 border border-rose-200/60'
+                                : 'bg-slate-100 text-slate-700 border border-slate-200'
                           }`}
                         >
                           {isIncome ? (
                             <ArrowDownLeft className="w-3 h-3 text-emerald-600 shrink-0" />
-                          ) : (
+                          ) : isOutflow ? (
                             <ArrowUpRight className="w-3 h-3 text-rose-600 shrink-0" />
+                          ) : (
+                            <Filter className="w-3 h-3 text-slate-500 shrink-0" />
                           )}
                           <span>{typeLabel}</span>
                         </span>
                       </td>
                       <td className="py-3 px-4 text-left font-mono font-bold whitespace-nowrap text-sm">
-                        <span className={isIncome ? 'text-emerald-600' : 'text-rose-600'}>
+                        <span className={isIncome ? 'text-emerald-600' : isOutflow ? 'text-rose-600' : 'text-slate-600'}>
                           {Math.abs(amt).toLocaleString()}{' '}
                           <span className="text-[10px] font-normal text-slate-400">ريال</span>
                         </span>

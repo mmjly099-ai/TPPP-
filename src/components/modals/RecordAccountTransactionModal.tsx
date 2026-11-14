@@ -72,13 +72,14 @@ export const RecordAccountTransactionModal: React.FC<RecordAccountTransactionMod
     if (isOpen) {
       setType(initialType);
       if (initialAccountId) {
-        setAccountId(initialAccountId);
-      } else if (activeAccounts.length > 0 && !activeAccounts.some(a => a.id === accountId)) {
-        setAccountId(activeAccounts[0].id);
+        setAccountId(Number(initialAccountId));
+      } else if (activeAccounts.length > 0 && !activeAccounts.some(a => Number(a.id) === Number(accountId))) {
+        setAccountId(Number(activeAccounts[0].id));
       }
       setCategory(initialType === 'deposit' ? INFLOW_CATEGORIES[1] : OUTFLOW_CATEGORIES[0]);
       setCustomCategory('');
       setAmount('');
+      setTransactionDate(new Date().toLocaleDateString('en-CA'));
       setDescription('');
       setNotes('');
       setFormError(null);
@@ -98,7 +99,7 @@ export const RecordAccountTransactionModal: React.FC<RecordAccountTransactionMod
 
   if (!isOpen) return null;
 
-  const selectedAcc = accounts.find(a => a.id === accountId);
+  const selectedAcc = accounts.find(a => Number(a.id) === Number(accountId));
   const currentBalance = selectedAcc ? getAccountBalance(selectedAcc.id) : 0;
   const numAmount = parseFloat(amount) || 0;
   const simulatedBalance = type === 'deposit'
@@ -114,7 +115,7 @@ export const RecordAccountTransactionModal: React.FC<RecordAccountTransactionMod
     e.preventDefault();
     setFormError(null);
 
-    if (!accountId) {
+    if (!accountId || !selectedAcc) {
       setFormError('يرجى اختيار الصندوق أو المحفظة');
       return;
     }
@@ -126,21 +127,25 @@ export const RecordAccountTransactionModal: React.FC<RecordAccountTransactionMod
 
     const effectiveDesc = description.trim() || (isDeposit ? `إيداع نقدية (${finalCategory})` : `سحب نقدية (${finalCategory})`);
 
-    recordAccountTransaction({
-      accountId,
-      type,
-      amount: numAmount,
-      category: finalCategory,
-      description: effectiveDesc,
-      referenceNumber: referenceNumber.trim() || undefined,
-      transactionDate,
-      notes: notes.trim() || undefined
-    });
+    try {
+      recordAccountTransaction({
+        accountId: Number(accountId),
+        type,
+        amount: numAmount,
+        category: finalCategory,
+        description: effectiveDesc,
+        referenceNumber: referenceNumber.trim() || undefined,
+        transactionDate: transactionDate || new Date().toISOString().split('T')[0],
+        notes: notes.trim() || undefined
+      });
 
-    setSuccessToast(true);
-    setTimeout(() => {
-      onClose();
-    }, 600);
+      setSuccessToast(true);
+      setTimeout(() => {
+        onClose();
+      }, 450);
+    } catch (err: any) {
+      setFormError(err?.message || 'حدث خطأ أثناء تسجيل السند. يرجى التحقق من البيانات أو الفترة المالية.');
+    }
   };
 
   const handleQuickAddAmount = (addValue: number) => {

@@ -101,11 +101,17 @@ export function assertFiscalPeriodOpen(dateStr: string, periods: FiscalPeriod[])
   if (!periods || periods.length === 0) {
     return { allowed: true }; // Default open if no periods configured yet
   }
-  const targetDate = new Date(dateStr);
+  const targetIso = (() => {
+    if (/^\d{4}-\d{2}-\d{2}/.test(String(dateStr || ''))) {
+      return String(dateStr).slice(0, 10);
+    }
+    const parsed = new Date(dateStr);
+    return isNaN(parsed.getTime()) ? new Date().toISOString().slice(0, 10) : parsed.toISOString().slice(0, 10);
+  })();
   const matched = periods.find(p => {
-    const start = new Date(p.startDate);
-    const end = new Date(p.endDate);
-    return targetDate >= start && targetDate <= end;
+    const start = String(p.startDate || '').slice(0, 10);
+    const end = String(p.endDate || '').slice(0, 10);
+    return start && end && targetIso >= start && targetIso <= end;
   });
 
   if (!matched) {

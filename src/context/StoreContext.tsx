@@ -4990,6 +4990,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       };
     });
 
+    showNotification(
+      `تم تسجيل ${isDeposit ? 'سند وارد (إيداع)' : 'سند صادر (سحب)'} بقيمة ${numAmount.toLocaleString()} ريال في ${acc?.name || 'الحساب'} بنجاح`,
+      'success'
+    );
+
     return newTrx;
   };
 

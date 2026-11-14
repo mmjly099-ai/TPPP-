@@ -31,23 +31,32 @@ export const TransferModal: React.FC<TransferModalProps> = ({
   const [formError, setFormError] = useState<string>('');
 
   useEffect(() => {
+    if (!isOpen) return;
+    setFormError('');
+    setAmount(0);
     if (preSelectedFromAccountId) {
-      setFromAccountId(preSelectedFromAccountId);
-      const different = activeAccounts.find(a => a.id !== preSelectedFromAccountId);
-      if (different) setToAccountId(different.id);
+      const fromId = Number(preSelectedFromAccountId);
+      setFromAccountId(fromId);
+      const different = activeAccounts.find(a => Number(a.id) !== fromId);
+      if (different) setToAccountId(Number(different.id));
+    } else if (activeAccounts.length > 0 && !activeAccounts.some(a => Number(a.id) === Number(fromAccountId))) {
+      const firstId = Number(activeAccounts[0].id);
+      setFromAccountId(firstId);
+      const second = activeAccounts.find(a => Number(a.id) !== firstId);
+      if (second) setToAccountId(Number(second.id));
     }
   }, [preSelectedFromAccountId, isOpen]);
 
   if (!isOpen) return null;
 
-  const fromAcc = accounts.find(a => a.id === fromAccountId);
-  const toAcc = accounts.find(a => a.id === toAccountId);
+  const fromAcc = accounts.find(a => Number(a.id) === Number(fromAccountId));
+  const toAcc = accounts.find(a => Number(a.id) === Number(toAccountId));
   const fromBalance = fromAcc ? getAccountBalance(fromAcc.id) : 0;
   const toBalance = toAcc ? getAccountBalance(toAcc.id) : 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (fromAccountId === toAccountId) {
+    if (Number(fromAccountId) === Number(toAccountId)) {
       setFormError('لا يمكن التحويل لنفس الحساب أو المحفظة');
       return;
     }
@@ -57,8 +66,12 @@ export const TransferModal: React.FC<TransferModalProps> = ({
     }
     setFormError('');
 
-    transferFunds(fromAccountId, toAccountId, Number(amount), notes.trim() || undefined);
-    onClose();
+    try {
+      transferFunds(Number(fromAccountId), Number(toAccountId), Number(amount), notes.trim() || undefined);
+      onClose();
+    } catch (err: any) {
+      setFormError(err?.message || 'حدث خطأ أثناء تنفيذ التحويل المالي.');
+    }
   };
 
   return (

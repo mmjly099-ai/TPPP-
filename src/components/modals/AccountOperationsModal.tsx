@@ -42,16 +42,17 @@ export const AccountOperationsModal: React.FC<AccountOperationsModalProps> = ({
   const [filterType, setFilterType] = useState<'ALL' | 'IN' | 'OUT'>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
 
-  if (!isOpen || !account) return null;
-
-  const currentBalance = getAccountBalance(account.id);
-
   // Filter transactions for this specific account (chronologically descending)
   const accountTransactions = useMemo(() => {
+    if (!account) return [];
     return sortTransactionsChronologicalDesc(
       transactions.filter(t => Number(t.accountId) === Number(account.id))
     );
-  }, [transactions, account.id]);
+  }, [transactions, account]);
+
+  if (!isOpen || !account) return null;
+
+  const currentBalance = getAccountBalance(account.id);
 
   // Inflow (الوارد) vs Outflow (الصادر) totals
   let totalIn = 0;
@@ -62,10 +63,11 @@ export const AccountOperationsModal: React.FC<AccountOperationsModalProps> = ({
   accountTransactions.forEach(trx => {
     const amt = parseFloat(String(trx.amount || 0)) || 0;
     const isIncome = trx.type === 'deposit' || trx.type === 'transfer_in' || trx.type === 'payment';
+    const isOutflow = trx.type === 'withdrawal' || trx.type === 'transfer_out' || trx.type === 'expense';
     if (isIncome) {
       totalIn += amt;
       inCount += 1;
-    } else {
+    } else if (isOutflow) {
       totalOut += amt;
       outCount += 1;
     }
@@ -73,8 +75,9 @@ export const AccountOperationsModal: React.FC<AccountOperationsModalProps> = ({
 
   const filteredTransactions = accountTransactions.filter(trx => {
     const isIncome = trx.type === 'deposit' || trx.type === 'transfer_in' || trx.type === 'payment';
+    const isOutflow = trx.type === 'withdrawal' || trx.type === 'transfer_out' || trx.type === 'expense';
     if (filterType === 'IN' && !isIncome) return false;
-    if (filterType === 'OUT' && isIncome) return false;
+    if (filterType === 'OUT' && !isOutflow) return false;
 
     if (searchTerm.trim()) {
       const q = searchTerm.toLowerCase();
@@ -104,19 +107,19 @@ export const AccountOperationsModal: React.FC<AccountOperationsModalProps> = ({
   const getTransactionTypeName = (type: FinancialTransaction['type']) => {
     switch (type) {
       case 'payment':
-        return { label: 'سند قبض وارد', isIncome: true };
+        return { label: 'سند قبض وارد', flow: 'in' as const };
       case 'deposit':
-        return { label: 'إيداع نقدي وارد', isIncome: true };
+        return { label: 'إيداع نقدي وارد', flow: 'in' as const };
       case 'transfer_in':
-        return { label: 'تحويل وارد', isIncome: true };
+        return { label: 'تحويل وارد', flow: 'in' as const };
       case 'transfer_out':
-        return { label: 'تحويل صادر', isIncome: false };
+        return { label: 'تحويل صادر', flow: 'out' as const };
       case 'expense':
-        return { label: 'مصروف تشغيلي صادر', isIncome: false };
+        return { label: 'مصروف تشغيلي صادر', flow: 'out' as const };
       case 'withdrawal':
-        return { label: 'سحب نقدي صادر', isIncome: false };
+        return { label: 'سحب نقدي صادر', flow: 'out' as const };
       default:
-        return { label: 'تسوية رصيد', isIncome: false };
+        return { label: 'تسوية رصيد', flow: 'neutral' as const };
     }
   };
 
@@ -336,16 +339,22 @@ export const AccountOperationsModal: React.FC<AccountOperationsModalProps> = ({
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredTransactions.map(trx => {
-                  const amt = parseFloat(String(trx.amount || 0));
-                  const { label, isIncome } = getTransactionTypeName(trx.type);
-                  const rb = runningBalancesMap.get(trx.id);
-                  const dateStr = new Date(trx.transactionDate || trx.createdAt).toLocaleString('ar-YE', {
-                    year: 'numeric',
-                    month: 'numeric',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  });
+                  const amt = parseFloat(String(trx.amount || 0)) || 0;
+                  const { label, flow } = getTransactionTypeName(trx.type);
+                  const isIncome = flow === 'in';
+                  const isOutflow = flow === 'out';
+                  const rb = runningBalancesMap.get(trx.id) || runningBalancesMap.get(Number(trx.id));
+                  const rawDate = trx.transactionDate || trx.createdAt;
+                  const parsedDate = rawDate ? new Date(rawDate) : null;
+                  const dateStr = parsedDate && !isNaN(parsedDate.getTime())
+                    ? parsedDate.toLocaleString('ar-YE', {
+                        year: 'numeric',
+                        month: 'numeric',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })
+                    : '-';
 
                   return (
                     <tr key={trx.id} className="hover:bg-slate-50/80 transition-colors">
@@ -363,19 +372,23 @@ export const AccountOperationsModal: React.FC<AccountOperationsModalProps> = ({
                           className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold ${
                             isIncome
                               ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
-                              : 'bg-rose-50 text-rose-700 border border-rose-200/60'
+                              : isOutflow
+                                ? 'bg-rose-50 text-rose-700 border border-rose-200/60'
+                                : 'bg-slate-100 text-slate-700 border border-slate-200'
                           }`}
                         >
                           {isIncome ? (
                             <ArrowDownLeft className="w-3 h-3 text-emerald-600 shrink-0" />
-                          ) : (
+                          ) : isOutflow ? (
                             <ArrowUpRight className="w-3 h-3 text-rose-600 shrink-0" />
+                          ) : (
+                            <RefreshCw className="w-3 h-3 text-slate-500 shrink-0" />
                           )}
                           <span>{label}</span>
                         </span>
                       </td>
                       <td className="py-3 px-4 text-left font-mono font-bold whitespace-nowrap text-sm">
-                        <span className={isIncome ? 'text-emerald-600' : 'text-rose-600'}>
+                        <span className={isIncome ? 'text-emerald-600' : isOutflow ? 'text-rose-600' : 'text-slate-600'}>
                           {Math.abs(amt).toLocaleString()}{' '}
                           <span className="text-[10px] font-normal text-slate-400">ريال</span>
                         </span>
