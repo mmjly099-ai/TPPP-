@@ -258,13 +258,18 @@ export interface SystemGroundTruthSnapshot {
     totalPurchaseFees: number;
     totalTransferFees: number;
     grandTotalCost: number;
+    totalPaidToSuppliers: number;
+    totalRemainingToSuppliers: number;
     batches: Array<{
       id: number;
       batchNumber: string;
       supplier: string;
+      supplierName?: string | null;
       purchaseDate: string;
       accountName: string;
       totalCost: number;
+      paidAmount: number;
+      remainingSupplierAmount: number;
       linkedOrdersCount: number;
       status: string;
     }>;
@@ -628,16 +633,34 @@ export function buildComprehensiveStoreSnapshot(store: LiveStoreInputs): SystemG
     totalPurchaseFees: roundCurrency(purchaseBatches.reduce((s, b) => s + num(b.purchaseFees), 0)),
     totalTransferFees: roundCurrency(purchaseBatches.reduce((s, b) => s + num(b.transferFees), 0)),
     grandTotalCost: roundCurrency(purchaseBatches.reduce((s, b) => s + num(b.totalCost), 0)),
-    batches: purchaseBatches.map(b => ({
-      id: b.id,
-      batchNumber: b.batchNumber || `BCH-${b.id}`,
-      supplier: b.source || 'SHEIN',
-      purchaseDate: b.purchaseDate || dateOnly(b.createdAt),
-      accountName: b.accountName || 'غير محدد',
-      totalCost: num(b.totalCost),
-      linkedOrdersCount: Array.isArray(b.orderIds) ? b.orderIds.length : 0,
-      status: b.status || 'active'
-    }))
+    totalPaidToSuppliers: roundCurrency(
+      purchaseBatches
+        .filter(b => b.status !== 'cancelled')
+        .reduce((s, b) => s + (b.paidAmount !== undefined ? num(b.paidAmount) : num(b.totalCost)), 0)
+    ),
+    totalRemainingToSuppliers: roundCurrency(
+      purchaseBatches
+        .filter(b => b.status !== 'cancelled')
+        .reduce((s, b) => s + (b.remainingSupplierAmount !== undefined ? num(b.remainingSupplierAmount) : 0), 0)
+    ),
+    batches: purchaseBatches.map(b => {
+      const total = num(b.totalCost);
+      const paid = b.paidAmount !== undefined ? num(b.paidAmount) : total;
+      const remaining = b.remainingSupplierAmount !== undefined ? num(b.remainingSupplierAmount) : Math.max(0, total - paid);
+      return {
+        id: b.id,
+        batchNumber: b.batchNumber || `BCH-${b.id}`,
+        supplier: b.source || 'SHEIN',
+        supplierName: b.supplierName || null,
+        purchaseDate: b.purchaseDate || dateOnly(b.createdAt),
+        accountName: b.accountName || 'غير محدد',
+        totalCost: total,
+        paidAmount: paid,
+        remainingSupplierAmount: remaining,
+        linkedOrdersCount: Array.isArray(b.orderIds) ? b.orderIds.length : 0,
+        status: b.status || 'active'
+      };
+    })
   };
 
   // 6. Couriers & Delivery

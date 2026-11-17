@@ -43,6 +43,7 @@ export const PurchaseBatchesView: React.FC = () => {
     getAccountBalance,
     addPurchaseBatch,
     updatePurchaseBatch,
+    payPurchaseBatchRemaining,
     cancelPurchaseBatch,
     deletePurchaseBatch
   } = useStore();
@@ -50,9 +51,11 @@ export const PurchaseBatchesView: React.FC = () => {
   const [isNewBatchOpen, setIsNewBatchOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState<PurchaseBatch | null>(null);
   const [editingBatch, setEditingBatch] = useState<PurchaseBatch | null>(null);
+  const [payingBatch, setPayingBatch] = useState<PurchaseBatch | null>(null);
   const [deletingBatch, setDeletingBatch] = useState<PurchaseBatch | null>(null);
   const [completedBatchSummary, setCompletedBatchSummary] = useState<{
     source: string;
+    supplierName?: string | null;
     ordersCount: number;
     ordersSellingTotal: number;
     purchaseCost: number;
@@ -61,6 +64,8 @@ export const PurchaseBatchesView: React.FC = () => {
     exchangeRateDiff: number;
     fees: number;
     totalCost: number;
+    paidAmount: number;
+    remainingSupplierAmount: number;
     netProfit: number;
     margin: number;
     paymentMode?: 'single' | 'split';
@@ -73,12 +78,29 @@ export const PurchaseBatchesView: React.FC = () => {
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [sourceFilter, setSourceFilter] = useState<'all' | 'SHEIN' | 'AliExpress' | 'Other'>('all');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'cancelled'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'unpaid_supplier' | 'cancelled'>('all');
 
-  // Overall Statistics including Profit Calculation
+  // Overall Statistics including Profit Calculation and Supplier Payables
   const stats = useMemo(() => {
     const activeBatches = purchaseBatches.filter(b => b.status !== 'cancelled');
     const totalSpent = activeBatches.reduce((sum, b) => sum + (Number(b.totalCost) || 0), 0);
+    const totalPaidToSuppliers = activeBatches.reduce((sum, b) => {
+      const t = Number(b.totalCost) || 0;
+      const p = b.paidAmount !== undefined ? Number(b.paidAmount) : t;
+      return sum + p;
+    }, 0);
+    const totalRemainingToSuppliers = activeBatches.reduce((sum, b) => {
+      const t = Number(b.totalCost) || 0;
+      const p = b.paidAmount !== undefined ? Number(b.paidAmount) : t;
+      const r = b.remainingSupplierAmount !== undefined ? Number(b.remainingSupplierAmount) : Math.max(0, t - p);
+      return sum + r;
+    }, 0);
+    const unpaidBatchesCount = activeBatches.filter(b => {
+      const t = Number(b.totalCost) || 0;
+      const p = b.paidAmount !== undefined ? Number(b.paidAmount) : t;
+      const r = b.remainingSupplierAmount !== undefined ? Number(b.remainingSupplierAmount) : Math.max(0, t - p);
+      return r > 0;
+    }).length;
     const totalFees = activeBatches.reduce((sum, b) => sum + ((Number(b.purchaseFees) || 0) + (Number(b.transferFees) || 0) + (Number(b.exchangeRateDiff) || 0)), 0);
     const totalOrdersCovered = activeBatches.reduce((sum, b) => sum + ((b.orderIds || []).length), 0);
 
@@ -95,6 +117,9 @@ export const PurchaseBatchesView: React.FC = () => {
     return {
       batchesCount: activeBatches.length,
       totalSpent,
+      totalPaidToSuppliers,
+      totalRemainingToSuppliers,
+      unpaidBatchesCount,
       totalFees,
       totalOrdersCovered,
       totalOrdersSelling,
@@ -124,16 +149,24 @@ export const PurchaseBatchesView: React.FC = () => {
         const isCancelled = b.status === 'cancelled';
         if (statusFilter === 'active' && isCancelled) return false;
         if (statusFilter === 'cancelled' && !isCancelled) return false;
+        if (statusFilter === 'unpaid_supplier') {
+          if (isCancelled) return false;
+          const t = Number(b.totalCost) || 0;
+          const p = b.paidAmount !== undefined ? Number(b.paidAmount) : t;
+          const r = b.remainingSupplierAmount !== undefined ? Number(b.remainingSupplierAmount) : Math.max(0, t - p);
+          if (r <= 0) return false;
+        }
       }
 
       // Search Query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const matchBatch = (b.batchNumber || '').toLowerCase().includes(q);
-        const matchSupplier = (b.supplierOrderNumber || '').toLowerCase().includes(q);
+        const matchSupplierOrder = (b.supplierOrderNumber || '').toLowerCase().includes(q);
+        const matchSupplierName = (b.supplierName || '').toLowerCase().includes(q);
         const matchSource = (b.source || '').toLowerCase().includes(q);
         const matchAccount = (b.accountName || '').toLowerCase().includes(q);
-        return matchBatch || matchSupplier || matchSource || matchAccount;
+        return matchBatch || matchSupplierOrder || matchSupplierName || matchSource || matchAccount;
       }
 
       return true;
@@ -239,8 +272,8 @@ export const PurchaseBatchesView: React.FC = () => {
         </div>
       </div>
 
-      {/* KPI Stats with Profit Metric */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      {/* KPI Stats with Profit Metric & Supplier Payables */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
           <span className="text-xs text-slate-500 font-bold block mb-1">دفعات الشراء</span>
@@ -267,14 +300,35 @@ export const PurchaseBatchesView: React.FC = () => {
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-          <span className="text-xs text-slate-500 font-bold block mb-1">تكلفة الشراء والرسوم</span>
+          <span className="text-xs text-slate-500 font-bold block mb-1">تكلفة الشراء والمدفوع</span>
           <div className="text-lg sm:text-xl font-black text-slate-700 font-mono">
             {stats.totalSpent.toLocaleString()} <span className="text-[10px] font-normal text-slate-500">YER</span>
           </div>
-          <span className="text-[11px] text-slate-400">رسوم: {stats.totalFees.toLocaleString()} YER</span>
+          <span className="text-[11px] text-emerald-700 font-bold">
+            مدفوع: {stats.totalPaidToSuppliers.toLocaleString()} YER
+          </span>
         </div>
 
-        <div className="bg-gradient-to-br from-emerald-50 to-teal-50/50 p-4 rounded-2xl border border-emerald-200 shadow-xs col-span-2 sm:col-span-1">
+        <div
+          onClick={() => stats.unpaidBatchesCount > 0 && setStatusFilter(prev => prev === 'unpaid_supplier' ? 'all' : 'unpaid_supplier')}
+          className={`p-4 rounded-2xl border shadow-xs transition ${
+            stats.totalRemainingToSuppliers > 0
+              ? 'bg-gradient-to-br from-rose-50 to-amber-50/40 border-rose-200 cursor-pointer hover:border-rose-300'
+              : 'bg-white border-slate-200'
+          }`}
+        >
+          <span className={`text-xs font-bold block mb-1 ${stats.totalRemainingToSuppliers > 0 ? 'text-rose-800' : 'text-slate-500'}`}>
+            المتبقي للموردين
+          </span>
+          <div className={`text-lg sm:text-xl font-black font-mono ${stats.totalRemainingToSuppliers > 0 ? 'text-rose-700' : 'text-slate-700'}`}>
+            {stats.totalRemainingToSuppliers.toLocaleString()} <span className="text-[10px] font-normal opacity-75">YER</span>
+          </div>
+          <span className={`text-[11px] font-bold ${stats.totalRemainingToSuppliers > 0 ? 'text-rose-700' : 'text-emerald-600'}`}>
+            {stats.unpaidBatchesCount > 0 ? `${stats.unpaidBatchesCount} دفعة عليها متبقي` : 'لا توجد مستحقات آجلة'}
+          </span>
+        </div>
+
+        <div className="bg-gradient-to-br from-emerald-50 to-teal-50/50 p-4 rounded-2xl border border-emerald-200 shadow-xs">
           <span className="text-xs text-emerald-800 font-bold flex items-center gap-1 mb-1">
             <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
             صافي أرباح المشتريات
@@ -342,6 +396,7 @@ export const PurchaseBatchesView: React.FC = () => {
           >
             <option value="all">جميع الحالات</option>
             <option value="active">النشطة فقط</option>
+            <option value="unpaid_supplier">عليها متبقي للمورد ({stats.unpaidBatchesCount})</option>
             <option value="cancelled">الملغاة</option>
           </select>
         </div>
@@ -378,6 +433,10 @@ export const PurchaseBatchesView: React.FC = () => {
               const isCancelled = batch.status === 'cancelled';
               const batchOrdersSellingTotal = batchOrders.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
               const batchTotalCost = Number(batch.totalCost) || 0;
+              const batchPaidAmount = batch.paidAmount !== undefined ? Number(batch.paidAmount) : batchTotalCost;
+              const batchRemainingSupplier = batch.remainingSupplierAmount !== undefined
+                ? Number(batch.remainingSupplierAmount)
+                : Math.max(0, batchTotalCost - batchPaidAmount);
               const batchNetProfit = batchOrdersSellingTotal - batchTotalCost;
               const batchMargin = batchOrdersSellingTotal > 0 ? (batchNetProfit / batchOrdersSellingTotal) * 100 : 0;
               const avgProfitPerOrder = batchOrders.length > 0 ? Math.round(batchNetProfit / batchOrders.length) : 0;
@@ -397,11 +456,25 @@ export const PurchaseBatchesView: React.FC = () => {
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="font-bold text-sm text-slate-900">شراء مجمع من {batch.source}</span>
+                          {batch.supplierName && (
+                            <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
+                              المورد: {batch.supplierName}
+                            </span>
+                          )}
                           {isCancelled && (
                             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200">
                               ملغى
                             </span>
                           )}
+                          {!isCancelled && batchRemainingSupplier > 0 ? (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-200 font-mono">
+                              متبقي للمورد: {batchRemainingSupplier.toLocaleString()} YER
+                            </span>
+                          ) : !isCancelled ? (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                              مدفوعة بالكامل ✓
+                            </span>
+                          ) : null}
                           {batch.supplierOrderNumber && (
                             <span className="text-xs text-slate-600 font-mono bg-amber-50 text-amber-900 px-2 py-0.5 rounded border border-amber-200">
                               رقم المورد: {batch.supplierOrderNumber}
@@ -411,7 +484,11 @@ export const PurchaseBatchesView: React.FC = () => {
                         <div className="text-xs text-slate-500 mt-1 flex flex-wrap items-center gap-2">
                           <span>تاريخ الشراء: <strong className="font-mono text-slate-700">{batch.purchaseDate}</strong></span>
                           <span>•</span>
-                          {batch.paymentMode === 'split' && batch.accountId2 ? (
+                          {batchPaidAmount === 0 ? (
+                            <span className="inline-flex items-center gap-1 text-rose-800 bg-rose-50 px-2 py-0.5 rounded-md font-bold border border-rose-200">
+                              شراء بالآجل للمورد (المدفوع: 0 YER)
+                            </span>
+                          ) : batch.paymentMode === 'split' && batch.accountId2 ? (
                             <span className="inline-flex items-center gap-1.5 text-indigo-900 bg-indigo-50 px-2.5 py-0.5 rounded-lg font-medium border border-indigo-200 shadow-2xs">
                               <CreditCard className="w-3.5 h-3.5 text-indigo-600" />
                               <span className="font-bold">سحب مجزأ من فيزتين:</span>
@@ -429,6 +506,16 @@ export const PurchaseBatchesView: React.FC = () => {
                     <div className="text-left flex items-center sm:flex-col sm:items-end justify-between gap-1">
                       <div className="text-base font-black text-slate-900 font-mono">
                         {(batch.totalCost || 0).toLocaleString()} <span className="text-xs font-normal text-slate-400">YER</span>
+                      </div>
+                      <div className="flex flex-wrap items-center justify-end gap-1.5 text-[11px] font-mono">
+                        <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">
+                          المدفوع: {batchPaidAmount.toLocaleString()} YER
+                        </span>
+                        {batchRemainingSupplier > 0 && (
+                          <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-800 border border-rose-200 font-bold">
+                            المتبقي للمورد: {batchRemainingSupplier.toLocaleString()} YER
+                          </span>
+                        )}
                       </div>
                       <div className="text-[11px] text-slate-500 flex flex-wrap items-center justify-end gap-1 font-mono">
                         <span>صافي شراء: {(Number(batch.purchaseCost) || 0).toLocaleString()}</span>
@@ -551,6 +638,17 @@ export const PurchaseBatchesView: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-1.5 flex-wrap">
+                      {!isCancelled && batchRemainingSupplier > 0 && (
+                        <button
+                          onClick={() => setPayingBatch(batch)}
+                          className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                          title="سداد المبلغ المتبقي للمورد"
+                        >
+                          <Wallet className="w-3.5 h-3.5" />
+                          <span>سداد للمورد ({batchRemainingSupplier.toLocaleString()})</span>
+                        </button>
+                      )}
+
                       <button
                         onClick={() => setSelectedBatch(batch)}
                         className="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition cursor-pointer flex items-center gap-1"
@@ -632,9 +730,14 @@ export const PurchaseBatchesView: React.FC = () => {
               const selBatchOrders = orders.filter(o => (selectedBatch.orderIds || []).includes(o.id));
               const selBatchOrdersSelling = selBatchOrders.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
               const selBatchTotalCost = Number(selectedBatch.totalCost) || 0;
+              const selBatchPaidAmount = selectedBatch.paidAmount !== undefined ? Number(selectedBatch.paidAmount) : selBatchTotalCost;
+              const selBatchRemainingSupplier = selectedBatch.remainingSupplierAmount !== undefined
+                ? Number(selectedBatch.remainingSupplierAmount)
+                : Math.max(0, selBatchTotalCost - selBatchPaidAmount);
               const selBatchNetProfit = selBatchOrdersSelling - selBatchTotalCost;
               const selBatchMargin = selBatchOrdersSelling > 0 ? (selBatchNetProfit / selBatchOrdersSelling) * 100 : 0;
               const selBatchPerOrderCost = selBatchOrders.length > 0 ? Math.round(selBatchTotalCost / selBatchOrders.length) : 0;
+              const selSubPayments = Array.isArray(selectedBatch.supplierPayments) ? selectedBatch.supplierPayments : [];
 
               return (
                 <div className="space-y-3">
@@ -675,9 +778,35 @@ export const PurchaseBatchesView: React.FC = () => {
                     </div>
 
                     <div className="p-2.5 bg-amber-50 rounded-xl border border-amber-200">
-                      <span className="text-amber-900 block mb-0.5 text-[11px] font-bold">إجمالي المبلغ المسحوب</span>
+                      <span className="text-amber-900 block mb-0.5 text-[11px] font-bold">إجمالي التكلفة الكلية</span>
                       <span className="font-mono font-black text-amber-950 text-xs sm:text-sm">
                         {selBatchTotalCost.toLocaleString()} YER
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Supplier Paid vs Remaining Ribbon */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                    <div className="p-3 bg-emerald-50/80 border border-emerald-200 rounded-xl flex items-center justify-between">
+                      <span className="font-bold text-emerald-900">المبلغ المدفوع للمورد:</span>
+                      <span className="font-mono font-black text-emerald-800 text-sm">
+                        {selBatchPaidAmount.toLocaleString()} YER
+                      </span>
+                    </div>
+                    <div className={`p-3 border rounded-xl flex items-center justify-between ${
+                      selBatchRemainingSupplier > 0 ? 'bg-rose-50/90 border-rose-200' : 'bg-slate-50 border-slate-200'
+                    }`}>
+                      <span className={`font-bold ${selBatchRemainingSupplier > 0 ? 'text-rose-900' : 'text-slate-600'}`}>
+                        المبلغ المتبقي للمورد:
+                      </span>
+                      <span className={`font-mono font-black text-sm ${selBatchRemainingSupplier > 0 ? 'text-rose-700' : 'text-slate-700'}`}>
+                        {selBatchRemainingSupplier.toLocaleString()} YER
+                      </span>
+                    </div>
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+                      <span className="font-bold text-slate-700">اسم المورد:</span>
+                      <span className="font-bold text-slate-900">
+                        {selectedBatch.supplierName || selectedBatch.source}
                       </span>
                     </div>
                   </div>
@@ -726,7 +855,11 @@ export const PurchaseBatchesView: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <CreditCard className="w-4 h-4 text-slate-500" />
                         <span className="text-slate-600 font-bold">طريقة وقناة الدفع والسحب:</span>
-                        {selectedBatch.paymentMode === 'split' && selectedBatch.accountId2 ? (
+                        {selBatchPaidAmount === 0 ? (
+                          <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 font-bold text-[10px]">
+                            شراء بالآجل للمورد
+                          </span>
+                        ) : selectedBatch.paymentMode === 'split' && selectedBatch.accountId2 ? (
                           <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 font-bold text-[10px]">
                             تجزئة الدفع بين فيزتين
                           </span>
@@ -769,9 +902,28 @@ export const PurchaseBatchesView: React.FC = () => {
                       </div>
                     ) : (
                       <div>
-                        <span className="text-slate-500">الحساب المسحوب منه كامل المبلغ: </span>
+                        <span className="text-slate-500">الحساب المسحوب منه عند الشراء: </span>
                         <span className="font-bold text-slate-900">{selectedBatch.accountName}</span>
-                        <span className="font-mono text-slate-600 mr-1">({(Number(selectedBatch.totalCost) || 0).toLocaleString()} YER)</span>
+                        <span className="font-mono text-slate-600 mr-1">
+                          ({(Number(selectedBatch.card1Amount ?? selBatchPaidAmount) || 0).toLocaleString()} YER)
+                        </span>
+                      </div>
+                    )}
+
+                    {selSubPayments.length > 0 && (
+                      <div className="pt-2 border-t border-slate-200 space-y-1.5">
+                        <span className="font-bold text-slate-700 block text-[11px]">سجل دفعات سداد المتبقي للمورد:</span>
+                        {selSubPayments.map(sp => (
+                          <div key={sp.id} className="p-2 bg-white rounded-lg border border-emerald-100 flex items-center justify-between text-[11px]">
+                            <div>
+                              <span className="font-bold text-slate-800">{sp.accountName}</span>
+                              <span className="text-slate-400 mx-1.5">•</span>
+                              <span className="font-mono text-slate-500">{sp.paymentDate}</span>
+                              {sp.notes && <span className="text-slate-400 mr-2">({sp.notes})</span>}
+                            </div>
+                            <span className="font-mono font-bold text-emerald-700">+{Number(sp.amount).toLocaleString()} YER</span>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -820,8 +972,26 @@ export const PurchaseBatchesView: React.FC = () => {
               </div>
             )}
 
-            <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100 text-xs">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100 text-xs flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap">
+                {(() => {
+                  const t = Number(selectedBatch.totalCost) || 0;
+                  const p = selectedBatch.paidAmount !== undefined ? Number(selectedBatch.paidAmount) : t;
+                  const r = selectedBatch.remainingSupplierAmount !== undefined ? Number(selectedBatch.remainingSupplierAmount) : Math.max(0, t - p);
+                  return selectedBatch.status !== 'cancelled' && r > 0 ? (
+                    <button
+                      onClick={() => {
+                        const b = selectedBatch;
+                        setSelectedBatch(null);
+                        setPayingBatch(b);
+                      }}
+                      className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black transition cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                    >
+                      <Wallet className="w-3.5 h-3.5" />
+                      <span>سداد المتبقي للمورد ({r.toLocaleString()} YER)</span>
+                    </button>
+                  ) : null;
+                })()}
                 <button
                   onClick={() => {
                     const b = selectedBatch;
@@ -871,10 +1041,12 @@ export const PurchaseBatchesView: React.FC = () => {
             const pFees = Number(batchData.purchaseFees) || 0;
             const fxDiff = Number(batchData.exchangeRateDiff) || 0;
             const totalSpent = pCost + tFees + pFees + fxDiff;
+            const paidAmt = batchData.paidAmount !== undefined ? Math.max(0, Math.min(totalSpent, Number(batchData.paidAmount) || 0)) : totalSpent;
+            const remainingAmt = Math.max(0, totalSpent - paidAmt);
             const profit = selling - totalSpent;
             const margin = selling > 0 ? (profit / selling) * 100 : 0;
 
-            const isSplit = batchData.paymentMode === 'split' && Boolean(batchData.accountId2);
+            const isSplit = batchData.paymentMode === 'split' && Boolean(batchData.accountId2) && paidAmt > 0;
             const acc1 = accounts.find(a => a.id === batchData.accountId);
             const acc2 = isSplit && batchData.accountId2 ? accounts.find(a => a.id === batchData.accountId2) : undefined;
 
@@ -883,6 +1055,7 @@ export const PurchaseBatchesView: React.FC = () => {
 
             setCompletedBatchSummary({
               source: batchData.source,
+              supplierName: batchData.supplierName || null,
               ordersCount: batchData.orderIds.length,
               ordersSellingTotal: selling,
               purchaseCost: pCost,
@@ -891,10 +1064,12 @@ export const PurchaseBatchesView: React.FC = () => {
               exchangeRateDiff: fxDiff,
               fees: tFees + pFees + fxDiff,
               totalCost: totalSpent,
+              paidAmount: paidAmt,
+              remainingSupplierAmount: remainingAmt,
               netProfit: profit,
               margin,
               paymentMode: batchData.paymentMode,
-              accountName: acc1?.name,
+              accountName: paidAmt === 0 ? 'شراء بالآجل (0 YER مسحوب)' : acc1?.name,
               card1Amount: batchData.card1Amount,
               accountName2: acc2?.name,
               card2Amount: batchData.card2Amount
@@ -919,6 +1094,7 @@ export const PurchaseBatchesView: React.FC = () => {
               </h3>
               <p className="text-xs text-slate-500 mt-1">
                 ملخص أرباح العملية المجمعة من {completedBatchSummary.source}
+                {completedBatchSummary.supplierName ? ` • المورد: ${completedBatchSummary.supplierName}` : ''}
               </p>
             </div>
 
@@ -969,12 +1145,27 @@ export const PurchaseBatchesView: React.FC = () => {
                 <strong className="font-mono text-amber-800">{completedBatchSummary.exchangeRateDiff.toLocaleString()} YER</strong>
               </div>
               <div className="flex justify-between text-slate-900 font-bold pt-2 border-t border-slate-200">
-                <span>إجمالي المبلغ المسحوب الكلي:</span>
+                <span>إجمالي تكلفة الشراء الكلية:</span>
                 <strong className="font-mono text-slate-900">{completedBatchSummary.totalCost.toLocaleString()} YER</strong>
+              </div>
+              <div className="flex justify-between text-emerald-800 font-bold">
+                <span>المبلغ المدفوع للمورد الآن:</span>
+                <strong className="font-mono">{completedBatchSummary.paidAmount.toLocaleString()} YER</strong>
+              </div>
+              <div className={`flex justify-between font-bold ${
+                completedBatchSummary.remainingSupplierAmount > 0 ? 'text-rose-700' : 'text-slate-600'
+              }`}>
+                <span>المبلغ المتبقي للمورد:</span>
+                <strong className="font-mono">{completedBatchSummary.remainingSupplierAmount.toLocaleString()} YER</strong>
               </div>
 
               {/* Visa Withdrawal Details */}
-              {completedBatchSummary.paymentMode === 'split' && completedBatchSummary.accountName2 ? (
+              {completedBatchSummary.paidAmount === 0 ? (
+                <div className="bg-rose-50 border border-rose-200 rounded-xl p-2 text-right text-[11px] flex justify-between items-center">
+                  <span className="text-rose-800 font-bold">تم التسجيل كـ شراء بالآجل للمورد</span>
+                  <strong className="font-mono text-rose-900">0 YER مسحوب</strong>
+                </div>
+              ) : completedBatchSummary.paymentMode === 'split' && completedBatchSummary.accountName2 ? (
                 <div className="bg-indigo-50/70 border border-indigo-200 rounded-xl p-2.5 text-right text-xs space-y-1.5 mt-2">
                   <div className="font-bold text-indigo-950 flex items-center gap-1.5 text-[11px]">
                     <CreditCard className="w-3.5 h-3.5 text-indigo-600" />
@@ -991,7 +1182,7 @@ export const PurchaseBatchesView: React.FC = () => {
                 </div>
               ) : (
                 <div className="bg-white border border-slate-200 rounded-xl p-2 text-right text-[11px] flex justify-between items-center">
-                  <span className="text-slate-600">تم السحب بالكامل من:</span>
+                  <span className="text-slate-600">تم السحب من:</span>
                   <strong className="text-slate-900 font-bold">{completedBatchSummary.accountName || 'البطاقة / الحساب'}</strong>
                 </div>
               )}
@@ -1028,6 +1219,19 @@ export const PurchaseBatchesView: React.FC = () => {
         />
       )}
 
+      {/* Modal: Pay Supplier Remaining Balance */}
+      {payingBatch && (
+        <PaySupplierRemainingModal
+          batch={payingBatch}
+          accounts={accounts}
+          onClose={() => setPayingBatch(null)}
+          onSubmit={params => {
+            payPurchaseBatchRemaining(payingBatch.id, params);
+            setPayingBatch(null);
+          }}
+        />
+      )}
+
       {/* Modal: Cascading Delete Purchase Batch Confirmation */}
       {deletingBatch && (
         <DeletePurchaseBatchModal
@@ -1054,6 +1258,7 @@ interface NewPurchaseBatchModalProps {
   onClose: () => void;
   onSubmit: (batchData: {
     source: string;
+    supplierName?: string;
     supplierOrderNumber?: string;
     paymentMode?: 'single' | 'split';
     accountId: number;
@@ -1064,6 +1269,8 @@ interface NewPurchaseBatchModalProps {
     purchaseFees: number;
     transferFees: number;
     exchangeRateDiff?: number;
+    paidAmount?: number;
+    remainingSupplierAmount?: number;
     orderIds: number[];
     notes?: string;
   }) => void;
@@ -1077,6 +1284,7 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
 }) => {
   const { getAccountBalance } = useStore();
   const [source, setSource] = useState('SHEIN');
+  const [supplierName, setSupplierName] = useState('');
   const [supplierOrderNumber, setSupplierOrderNumber] = useState('');
   const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split('T')[0]);
 
@@ -1113,6 +1321,8 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
   const [transferFees, setTransferFees] = useState('0');
   const [purchaseFees, setPurchaseFees] = useState('0');
   const [exchangeRateDiff, setExchangeRateDiff] = useState('0');
+  const [supplierPaymentMode, setSupplierPaymentMode] = useState<'full' | 'partial'>('full');
+  const [paidAmountInput, setPaidAmountInput] = useState<string>('');
   const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
   const [orderFilterMode, setOrderFilterMode] = useState<'pending' | 'all'>('pending');
   const [orderModalSearch, setOrderModalSearch] = useState('');
@@ -1154,32 +1364,37 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
     (Number(purchaseFees) || 0) +
     (Number(exchangeRateDiff) || 0);
 
+  const effectivePaidAmount = supplierPaymentMode === 'full'
+    ? totalCalculated
+    : Math.max(0, Math.min(totalCalculated, Number(paidAmountInput) || 0));
+  const effectiveRemainingAmount = Math.max(0, totalCalculated - effectivePaidAmount);
+
   const netProfit = selectedOrdersTotal - totalCalculated;
   const margin = selectedOrdersTotal > 0 ? (netProfit / selectedOrdersTotal) * 100 : 0;
   const avgProfitPerOrder = selectedOrderIds.length > 0 ? Math.round(netProfit / selectedOrderIds.length) : 0;
 
   // دوال مساعدة لتوزيع المبالغ المسحوبة بين الفيزتين
   const handleSplit5050 = () => {
-    if (totalCalculated <= 0) return;
-    const half = Math.floor(totalCalculated / 2);
+    if (effectivePaidAmount <= 0) return;
+    const half = Math.floor(effectivePaidAmount / 2);
     setCard1Amount(String(half));
-    setCard2Amount(String(totalCalculated - half));
+    setCard2Amount(String(effectivePaidAmount - half));
     setFormError('');
   };
 
   const handleFullOnCard1 = () => {
-    if (totalCalculated <= 0) return;
+    if (effectivePaidAmount <= 0) return;
     if (tadamonCard?.id) setCard1Id(String(tadamonCard.id));
-    setCard1Amount(String(totalCalculated));
+    setCard1Amount(String(effectivePaidAmount));
     setCard2Amount('0');
     setFormError('');
   };
 
   const handleFullOnCard2 = () => {
-    if (totalCalculated <= 0) return;
+    if (effectivePaidAmount <= 0) return;
     if (commercialCard?.id) setCard2Id(String(commercialCard.id));
     setCard1Amount('0');
-    setCard2Amount(String(totalCalculated));
+    setCard2Amount(String(effectivePaidAmount));
     setFormError('');
   };
 
@@ -1187,8 +1402,8 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
     setCard1Amount(val);
     setFormError('');
     const n = Number(val);
-    if (!isNaN(n) && n >= 0 && n <= totalCalculated && totalCalculated > 0) {
-      setCard2Amount(String(totalCalculated - n));
+    if (!isNaN(n) && n >= 0 && n <= effectivePaidAmount && effectivePaidAmount > 0) {
+      setCard2Amount(String(effectivePaidAmount - n));
     }
   };
 
@@ -1196,14 +1411,14 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
     setCard2Amount(val);
     setFormError('');
     const n = Number(val);
-    if (!isNaN(n) && n >= 0 && n <= totalCalculated && totalCalculated > 0) {
-      setCard1Amount(String(totalCalculated - n));
+    if (!isNaN(n) && n >= 0 && n <= effectivePaidAmount && effectivePaidAmount > 0) {
+      setCard1Amount(String(effectivePaidAmount - n));
     }
   };
 
   const handleAutoBalance = () => {
     const c1 = Number(card1Amount) || 0;
-    setCard2Amount(String(Math.max(0, totalCalculated - c1)));
+    setCard2Amount(String(Math.max(0, effectivePaidAmount - c1)));
     setFormError('');
   };
 
@@ -1231,6 +1446,39 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
       setFormError('يرجى تحديد طلبية واحدة على الأقل لتضمينها في هذه الدفعة');
       return;
     }
+    if (supplierPaymentMode === 'partial') {
+      const rawPaid = Number(paidAmountInput);
+      if (isNaN(rawPaid) || rawPaid < 0) {
+        setFormError('يرجى إدخال قيمة صحيحة للمبلغ المدفوع للمورد');
+        return;
+      }
+      if (rawPaid > totalCalculated) {
+        setFormError(`المبلغ المدفوع للمورد (${rawPaid.toLocaleString()} YER) لا يمكن أن يتجاوز إجمالي التكلفة (${totalCalculated.toLocaleString()} YER)`);
+        return;
+      }
+    }
+
+    if (effectivePaidAmount === 0) {
+      onSubmit({
+        source,
+        supplierName: supplierName.trim() || undefined,
+        supplierOrderNumber: supplierOrderNumber.trim() || undefined,
+        paymentMode: 'single',
+        accountId: Number(accountId) || Number(tadamonCard?.id) || Number(accounts[0]?.id) || 1,
+        card1Amount: 0,
+        accountId2: null,
+        card2Amount: undefined,
+        purchaseCost: Number(purchaseCost) || 0,
+        transferFees: Number(transferFees) || 0,
+        purchaseFees: Number(purchaseFees) || 0,
+        exchangeRateDiff: Number(exchangeRateDiff) || 0,
+        paidAmount: 0,
+        remainingSupplierAmount: totalCalculated,
+        orderIds: selectedOrderIds,
+        notes: notes.trim() || undefined
+      });
+      return;
+    }
 
     if (paymentMode === 'split') {
       const c1 = Number(card1Amount) || 0;
@@ -1247,13 +1495,14 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
         setFormError('يرجى إدخال المبالغ المسحوبة من الفيزتين');
         return;
       }
-      if (c1 + c2 !== totalCalculated) {
-        setFormError(`مجموع المبالغ المسحوبة من الفيزتين (${(c1 + c2).toLocaleString()} YER) لا يتطابق مع إجمالي التكلفة المطلوبة (${totalCalculated.toLocaleString()} YER). اضغط على زر ضبط الفارق.`);
+      if (c1 + c2 !== effectivePaidAmount) {
+        setFormError(`مجموع المبالغ المسحوبة من الفيزتين (${(c1 + c2).toLocaleString()} YER) لا يتطابق مع المبلغ المدفوع للمورد الآن (${effectivePaidAmount.toLocaleString()} YER). اضغط على زر ضبط الفارق.`);
         return;
       }
 
       onSubmit({
         source,
+        supplierName: supplierName.trim() || undefined,
         supplierOrderNumber: supplierOrderNumber.trim() || undefined,
         paymentMode: 'split',
         accountId: Number(card1Id),
@@ -1264,6 +1513,8 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
         transferFees: Number(transferFees) || 0,
         purchaseFees: Number(purchaseFees) || 0,
         exchangeRateDiff: Number(exchangeRateDiff) || 0,
+        paidAmount: effectivePaidAmount,
+        remainingSupplierAmount: effectiveRemainingAmount,
         orderIds: selectedOrderIds,
         notes: notes.trim() || undefined
       });
@@ -1275,16 +1526,19 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
 
       onSubmit({
         source,
+        supplierName: supplierName.trim() || undefined,
         supplierOrderNumber: supplierOrderNumber.trim() || undefined,
         paymentMode: 'single',
         accountId: Number(accountId),
-        card1Amount: totalCalculated,
+        card1Amount: effectivePaidAmount,
         accountId2: null,
         card2Amount: undefined,
         purchaseCost: Number(purchaseCost) || 0,
         transferFees: Number(transferFees) || 0,
         purchaseFees: Number(purchaseFees) || 0,
         exchangeRateDiff: Number(exchangeRateDiff) || 0,
+        paidAmount: effectivePaidAmount,
+        remainingSupplierAmount: effectiveRemainingAmount,
         orderIds: selectedOrderIds,
         notes: notes.trim() || undefined
       });
@@ -1315,7 +1569,7 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div>
               <label className="font-bold text-slate-700 block mb-1">مصدر الشراء / المنصة *</label>
               <select
@@ -1330,6 +1584,17 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
                 <option value="Amazon">أمازون (Amazon)</option>
                 <option value="Other">موقع آخر</option>
               </select>
+            </div>
+
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">اسم المورد (اختياري)</label>
+              <input
+                type="text"
+                placeholder="مثال: مورد شي إن / مكتب الصين"
+                value={supplierName}
+                onChange={e => setSupplierName(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500"
+              />
             </div>
 
             <div>
@@ -1485,6 +1750,152 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
           </div>
 
           {/* ============================================================== */}
+          {/* SECTION: المبلغ المدفوع والمبلغ المتبقي للمورد                 */}
+          {/* ============================================================== */}
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/60 via-white to-rose-50/40 border-2 border-emerald-200 shadow-xs space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold">
+                  <Wallet className="w-4 h-4" />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-900 text-xs block">
+                    حالة السداد للمورد (المبلغ المدفوع والمتبقي للمورد) *
+                  </label>
+                  <span className="text-[10px] text-slate-500">
+                    حدد ما إذا تم دفع كامل التكلفة للمورد أم جزء منها مع بقاء رصيد مستحق للمورد
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-[11px] font-mono">
+                <span className="px-2 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold">
+                  المدفوع: {effectivePaidAmount.toLocaleString()}
+                </span>
+                <span className={`px-2 py-1 rounded-lg border font-bold ${
+                  effectiveRemainingAmount > 0
+                    ? 'bg-rose-50 border-rose-200 text-rose-800'
+                    : 'bg-slate-50 border-slate-200 text-slate-600'
+                }`}>
+                  المتبقي للمورد: {effectiveRemainingAmount.toLocaleString()}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-1 bg-white rounded-xl border border-slate-200">
+              <button
+                type="button"
+                onClick={() => {
+                  setSupplierPaymentMode('full');
+                  setFormError('');
+                }}
+                className={`py-2 px-3 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                  supplierPaymentMode === 'full'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>دفع كامل التكلفة للمورد</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSupplierPaymentMode('partial');
+                  if (!paidAmountInput && totalCalculated > 0) {
+                    setPaidAmountInput(String(Math.floor(totalCalculated / 2)));
+                  }
+                  setFormError('');
+                }}
+                className={`py-2 px-3 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                  supplierPaymentMode === 'partial'
+                    ? 'bg-rose-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <Clock className="w-4 h-4" />
+                <span>دفع جزئي / آجل (تحديد المدفوع والمتبقي للمورد)</span>
+              </button>
+            </div>
+
+            {supplierPaymentMode === 'partial' && (
+              <div className="space-y-3 pt-1">
+                <div className="flex flex-wrap items-center justify-between gap-1.5 p-2 bg-slate-50 rounded-xl border border-slate-200">
+                  <span className="text-[11px] font-bold text-slate-700">خيارات سريعة للسداد:</span>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => { setPaidAmountInput('0'); setFormError(''); }}
+                      className="px-2.5 py-1 rounded-lg bg-white hover:bg-rose-50 border border-rose-200 text-rose-800 font-bold text-[11px] cursor-pointer"
+                    >
+                      آجل بالكامل (0 مدفوع)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setPaidAmountInput(String(Math.floor(totalCalculated / 2))); setFormError(''); }}
+                      className="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-50 border border-amber-200 text-amber-800 font-bold text-[11px] cursor-pointer"
+                    >
+                      نصف المبلغ (50%)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setPaidAmountInput(String(totalCalculated)); setFormError(''); }}
+                      className="px-2.5 py-1 rounded-lg bg-white hover:bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold text-[11px] cursor-pointer"
+                    >
+                      كامل المبلغ (100%)
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-emerald-900 block mb-1 text-[11px]">
+                      المبلغ المدفوع للمورد الآن (YER) *
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max={totalCalculated || undefined}
+                      placeholder="0"
+                      value={paidAmountInput}
+                      onChange={e => {
+                        setPaidAmountInput(e.target.value);
+                        setFormError('');
+                      }}
+                      className="w-full p-2.5 rounded-xl border-2 border-emerald-300 bg-white focus:outline-emerald-500 font-mono font-black text-emerald-900"
+                    />
+                    <span className="text-[10px] text-emerald-700 mt-0.5 block">
+                      سيتم سحب هذا المبلغ فقط من الفيزا أو الحساب المحدد
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-rose-900 block mb-1 text-[11px]">
+                      المبلغ المتبقي للمورد (YER)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max={totalCalculated || undefined}
+                      value={totalCalculated > 0 ? String(effectiveRemainingAmount) : '0'}
+                      onChange={e => {
+                        const rem = Math.max(0, Math.min(totalCalculated, Number(e.target.value) || 0));
+                        setPaidAmountInput(String(Math.max(0, totalCalculated - rem)));
+                        setFormError('');
+                      }}
+                      className="w-full p-2.5 rounded-xl border-2 border-rose-300 bg-rose-50/40 focus:outline-rose-500 font-mono font-black text-rose-900"
+                    />
+                    <span className="text-[10px] text-rose-700 mt-0.5 block">
+                      يُقيد تلقائياً في حساب ذمم الموردين (201) ويمكن سداده لاحقاً
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ============================================================== */}
           {/* SECTION: خيارات الدفع من الفيزا (فيزا واحدة أو فيزتين)            */}
           {/* ============================================================== */}
           <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-50/70 via-slate-50 to-indigo-50/50 border-2 border-amber-300/80 shadow-xs space-y-3">
@@ -1498,17 +1909,26 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
                     طريقة وقناة الدفع والسحب من الفيزا *
                   </label>
                   <span className="text-[10px] text-slate-500">
-                    اختر ما إذا كان السحب تم من فيزا واحدة أو مجزأ بين فيزتين (تضامن وتجاري)
+                    اختر الحساب أو الفيزا التي تم سحب المبلغ المدفوع للمورد منها الآن
                   </span>
                 </div>
               </div>
 
               <div className="text-left font-mono">
-                <span className="text-[10px] text-slate-400 block">إجمالي المبلغ المطلوب تغطيته:</span>
-                <span className="text-xs font-black text-slate-900">{totalCalculated.toLocaleString()} YER</span>
+                <span className="text-[10px] text-slate-400 block">المبلغ المطلوب سحبه الآن (المدفوع):</span>
+                <span className="text-xs font-black text-slate-900">{effectivePaidAmount.toLocaleString()} YER</span>
               </div>
             </div>
 
+            {effectivePaidAmount === 0 ? (
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-900 flex items-center gap-2.5 font-bold">
+                <Clock className="w-5 h-5 text-rose-600 shrink-0" />
+                <span>
+                  تم تحديد الدفعة كـ شراء بالآجل بالكامل للمورد (المدفوع 0 YER) — لن يتم سحب أي مبلغ من الفيزا أو الحسابات الآن، وسيتم قيد كامل المبلغ كالتزام في ذمم الموردين.
+                </span>
+              </div>
+            ) : (
+              <>
             {/* Mode Switcher Buttons */}
             <div className="grid grid-cols-2 gap-2 p-1 bg-white rounded-xl border border-slate-200 shadow-2xs">
               <button
@@ -1528,10 +1948,10 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
                 type="button"
                 onClick={() => {
                   setPaymentMode('split');
-                  if (!card1Amount && !card2Amount && totalCalculated > 0) {
-                    const half = Math.floor(totalCalculated / 2);
+                  if (!card1Amount && !card2Amount && effectivePaidAmount > 0) {
+                    const half = Math.floor(effectivePaidAmount / 2);
                     setCard1Amount(String(half));
-                    setCard2Amount(String(totalCalculated - half));
+                    setCard2Amount(String(effectivePaidAmount - half));
                   }
                 }}
                 className={`py-2.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
@@ -1619,10 +2039,10 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
                 <div className="p-2.5 bg-amber-50/90 border border-amber-200 rounded-xl text-xs text-amber-950 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-amber-700" />
-                    <span>سيتم سحب كامل تكلفة الشراء من هذه الفيزا:</span>
+                    <span>سيتم سحب المبلغ المدفوع للمورد من هذا الحساب:</span>
                   </div>
                   <strong className="font-mono font-black text-amber-950 text-sm">
-                    {totalCalculated.toLocaleString()} YER
+                    {effectivePaidAmount.toLocaleString()} YER
                   </strong>
                 </div>
               </div>
@@ -1650,14 +2070,14 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
                       onClick={handleFullOnCard1}
                       className="px-2.5 py-1 bg-white hover:bg-indigo-100 text-indigo-900 font-bold rounded-lg border border-indigo-200 transition cursor-pointer text-[11px] shadow-2xs"
                     >
-                      كامل المبلغ على فيزا التضامن ({getAccountBalance(tadamonCard?.id || 1).toLocaleString()} YER)
+                      كامل المدفوع على فيزا التضامن ({getAccountBalance(tadamonCard?.id || 1).toLocaleString()} YER)
                     </button>
                     <button
                       type="button"
                       onClick={handleFullOnCard2}
                       className="px-2.5 py-1 bg-white hover:bg-teal-100 text-teal-900 font-bold rounded-lg border border-teal-200 transition cursor-pointer text-[11px] shadow-2xs"
                     >
-                      كامل المبلغ على فيزا التجاري ({getAccountBalance(commercialCard?.id || 120002).toLocaleString()} YER)
+                      كامل المدفوع على فيزا التجاري ({getAccountBalance(commercialCard?.id || 120002).toLocaleString()} YER)
                     </button>
                   </div>
                 </div>
@@ -1762,8 +2182,8 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
                 {/* Split Match Validation Banner */}
                 {(() => {
                   const sumCards = (Number(card1Amount) || 0) + (Number(card2Amount) || 0);
-                  const diff = totalCalculated - sumCards;
-                  const isMatch = Math.abs(diff) === 0 && totalCalculated > 0;
+                  const diff = effectivePaidAmount - sumCards;
+                  const isMatch = Math.abs(diff) === 0 && effectivePaidAmount > 0;
 
                   return (
                     <div className={`p-3 rounded-xl border text-xs transition ${
@@ -1783,27 +2203,27 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
                               <span>المجموع المسحوب من الفيزتين:</span>
                               <span className="font-mono text-sm font-black">{sumCards.toLocaleString()} YER</span>
                               <span className="text-slate-400 font-normal">|</span>
-                              <span className="text-slate-600 font-medium">المطلوب: {totalCalculated.toLocaleString()} YER</span>
+                              <span className="text-slate-600 font-medium">المطلوب سحبه الآن: {effectivePaidAmount.toLocaleString()} YER</span>
                             </div>
                             <span className="text-[11px] block mt-0.5">
                               {isMatch ? (
                                 <span className="text-emerald-700 font-bold">
-                                  ✓ المبالغ مطابقة تماماً لإجمالي تكلفة الشراء والرسوم (100%)
+                                  ✓ المبالغ مطابقة تماماً للمبلغ المدفوع للمورد الآن (100%)
                                 </span>
                               ) : diff > 0 ? (
                                 <span className="text-amber-800 font-bold">
-                                  متبقي لتغطية التكلفة بالكامل: {diff.toLocaleString()} YER
+                                  متبقي لتغطية المبلغ المدفوع: {diff.toLocaleString()} YER
                                 </span>
                               ) : (
                                 <span className="text-rose-700 font-bold">
-                                  المبالغ المدخلة تزيد عن التكلفة بمقدار: {Math.abs(diff).toLocaleString()} YER
+                                  المبالغ المدخلة تزيد عن المبلغ المدفوع بمقدار: {Math.abs(diff).toLocaleString()} YER
                                 </span>
                               )}
                             </span>
                           </div>
                         </div>
 
-                        {!isMatch && totalCalculated > 0 && (
+                        {!isMatch && effectivePaidAmount > 0 && (
                           <button
                             type="button"
                             onClick={handleAutoBalance}
@@ -1817,6 +2237,8 @@ const NewPurchaseBatchModal: React.FC<NewPurchaseBatchModalProps> = ({
                   );
                 })()}
               </div>
+            )}
+              </>
             )}
           </div>
 
@@ -1980,6 +2402,7 @@ interface EditPurchaseBatchModalProps {
   onClose: () => void;
   onSave: (updatedData: {
     source: string;
+    supplierName?: string | null;
     supplierOrderNumber?: string | null;
     purchaseDate: string;
     paymentMode?: 'single' | 'split';
@@ -1991,6 +2414,8 @@ interface EditPurchaseBatchModalProps {
     purchaseFees: number;
     transferFees: number;
     exchangeRateDiff?: number;
+    paidAmount?: number;
+    remainingSupplierAmount?: number;
     orderIds: number[];
     notes?: string | null;
   }) => void;
@@ -2005,6 +2430,7 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
 }) => {
   const { getAccountBalance } = useStore();
   const [source, setSource] = useState(batch.source || 'SHEIN');
+  const [supplierName, setSupplierName] = useState(batch.supplierName || '');
   const [supplierOrderNumber, setSupplierOrderNumber] = useState(batch.supplierOrderNumber || '');
   const [purchaseDate, setPurchaseDate] = useState(batch.purchaseDate || new Date().toISOString().split('T')[0]);
 
@@ -2045,6 +2471,14 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
   const [transferFees, setTransferFees] = useState<string>(String(batch.transferFees || '0'));
   const [purchaseFees, setPurchaseFees] = useState<string>(String(batch.purchaseFees || '0'));
   const [exchangeRateDiff, setExchangeRateDiff] = useState<string>(String(batch.exchangeRateDiff || '0'));
+
+  const initialBatchTotal = Number(batch.totalCost) || (Number(batch.purchaseCost || 0) + Number(batch.transferFees || 0) + Number(batch.purchaseFees || 0) + Number(batch.exchangeRateDiff || 0));
+  const initialBatchPaid = batch.paidAmount !== undefined && batch.paidAmount !== null ? Number(batch.paidAmount) : initialBatchTotal;
+  const subPaidTotal = useMemo(() => (batch.supplierPayments || []).reduce((s, p) => s + (Number(p.amount) || 0), 0), [batch.supplierPayments]);
+
+  const [supplierPaymentMode, setSupplierPaymentMode] = useState<'full' | 'partial'>(initialBatchPaid < initialBatchTotal ? 'partial' : 'full');
+  const [paidAmountInput, setPaidAmountInput] = useState<string>(String(initialBatchPaid));
+
   const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>(batch.orderIds || []);
   const [orderModalSearch, setOrderModalSearch] = useState('');
   const [orderFilterMode, setOrderFilterMode] = useState<'all' | 'pending'>('all');
@@ -2089,28 +2523,35 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
     (Number(purchaseFees) || 0) +
     (Number(exchangeRateDiff) || 0);
 
+  const effectivePaidAmount = supplierPaymentMode === 'full'
+    ? totalCalculated
+    : Math.max(0, Math.min(totalCalculated, Number(paidAmountInput) || 0));
+  const effectiveRemainingAmount = Math.max(0, totalCalculated - effectivePaidAmount);
+  const keepSubPayments = effectivePaidAmount >= subPaidTotal;
+  const effectiveInitialPaidAmount = keepSubPayments ? Math.max(0, effectivePaidAmount - subPaidTotal) : effectivePaidAmount;
+
   // دوال مساعدة لتوزيع المبالغ المسحوبة بين الفيزتين
   const handleSplit5050 = () => {
-    if (totalCalculated <= 0) return;
-    const half = Math.floor(totalCalculated / 2);
+    if (effectiveInitialPaidAmount <= 0) return;
+    const half = Math.floor(effectiveInitialPaidAmount / 2);
     setCard1Amount(String(half));
-    setCard2Amount(String(totalCalculated - half));
+    setCard2Amount(String(effectiveInitialPaidAmount - half));
     setFormError('');
   };
 
   const handleFullOnCard1 = () => {
-    if (totalCalculated <= 0) return;
+    if (effectiveInitialPaidAmount <= 0) return;
     if (tadamonCard?.id) setCard1Id(String(tadamonCard.id));
-    setCard1Amount(String(totalCalculated));
+    setCard1Amount(String(effectiveInitialPaidAmount));
     setCard2Amount('0');
     setFormError('');
   };
 
   const handleFullOnCard2 = () => {
-    if (totalCalculated <= 0) return;
+    if (effectiveInitialPaidAmount <= 0) return;
     if (commercialCard?.id) setCard2Id(String(commercialCard.id));
     setCard1Amount('0');
-    setCard2Amount(String(totalCalculated));
+    setCard2Amount(String(effectiveInitialPaidAmount));
     setFormError('');
   };
 
@@ -2118,8 +2559,8 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
     setCard1Amount(val);
     setFormError('');
     const n = Number(val);
-    if (!isNaN(n) && n >= 0 && n <= totalCalculated && totalCalculated > 0) {
-      setCard2Amount(String(totalCalculated - n));
+    if (!isNaN(n) && n >= 0 && n <= effectiveInitialPaidAmount && effectiveInitialPaidAmount > 0) {
+      setCard2Amount(String(effectiveInitialPaidAmount - n));
     }
   };
 
@@ -2127,14 +2568,14 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
     setCard2Amount(val);
     setFormError('');
     const n = Number(val);
-    if (!isNaN(n) && n >= 0 && n <= totalCalculated && totalCalculated > 0) {
-      setCard1Amount(String(totalCalculated - n));
+    if (!isNaN(n) && n >= 0 && n <= effectiveInitialPaidAmount && effectiveInitialPaidAmount > 0) {
+      setCard1Amount(String(effectiveInitialPaidAmount - n));
     }
   };
 
   const handleAutoBalance = () => {
     const c1 = Number(card1Amount) || 0;
-    setCard2Amount(String(Math.max(0, totalCalculated - c1)));
+    setCard2Amount(String(Math.max(0, effectiveInitialPaidAmount - c1)));
     setFormError('');
   };
 
@@ -2162,6 +2603,40 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
       setFormError('يرجى تحديد طلبية واحدة على الأقل لتضمينها في هذه الدفعة');
       return;
     }
+    if (supplierPaymentMode === 'partial') {
+      const rawPaid = Number(paidAmountInput);
+      if (isNaN(rawPaid) || rawPaid < 0) {
+        setFormError('يرجى إدخال قيمة صحيحة للمبلغ المدفوع للمورد');
+        return;
+      }
+      if (rawPaid > totalCalculated) {
+        setFormError(`المبلغ المدفوع للمورد (${rawPaid.toLocaleString()} YER) لا يمكن أن يتجاوز إجمالي التكلفة (${totalCalculated.toLocaleString()} YER)`);
+        return;
+      }
+    }
+
+    if (effectiveInitialPaidAmount === 0) {
+      onSave({
+        source,
+        supplierName: supplierName.trim() || null,
+        supplierOrderNumber: supplierOrderNumber.trim() || null,
+        purchaseDate,
+        paymentMode: 'single',
+        accountId: Number(accountId) || Number(tadamonCard?.id) || Number(accounts[0]?.id) || 1,
+        card1Amount: 0,
+        accountId2: null,
+        card2Amount: undefined,
+        purchaseCost: Number(purchaseCost) || 0,
+        transferFees: Number(transferFees) || 0,
+        purchaseFees: Number(purchaseFees) || 0,
+        exchangeRateDiff: Number(exchangeRateDiff) || 0,
+        paidAmount: effectivePaidAmount,
+        remainingSupplierAmount: effectiveRemainingAmount,
+        orderIds: selectedOrderIds,
+        notes: notes.trim() || null
+      });
+      return;
+    }
 
     if (paymentMode === 'split') {
       const c1 = Number(card1Amount) || 0;
@@ -2178,13 +2653,14 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
         setFormError('يرجى إدخال المبالغ المسحوبة من الفيزتين');
         return;
       }
-      if (c1 + c2 !== totalCalculated) {
-        setFormError(`مجموع المبالغ المسحوبة من الفيزتين (${(c1 + c2).toLocaleString()} YER) لا يتطابق مع إجمالي التكلفة المطلوبة (${totalCalculated.toLocaleString()} YER). اضغط على زر ضبط الفارق.`);
+      if (c1 + c2 !== effectiveInitialPaidAmount) {
+        setFormError(`مجموع المبالغ المسحوبة من الفيزتين (${(c1 + c2).toLocaleString()} YER) لا يتطابق مع المبلغ المطلوب سحبه (${effectiveInitialPaidAmount.toLocaleString()} YER). اضغط على زر ضبط الفارق.`);
         return;
       }
 
       onSave({
         source,
+        supplierName: supplierName.trim() || null,
         supplierOrderNumber: supplierOrderNumber.trim() || null,
         purchaseDate,
         paymentMode: 'split',
@@ -2196,6 +2672,8 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
         transferFees: Number(transferFees) || 0,
         purchaseFees: Number(purchaseFees) || 0,
         exchangeRateDiff: Number(exchangeRateDiff) || 0,
+        paidAmount: effectivePaidAmount,
+        remainingSupplierAmount: effectiveRemainingAmount,
         orderIds: selectedOrderIds,
         notes: notes.trim() || null
       });
@@ -2207,17 +2685,20 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
 
       onSave({
         source,
+        supplierName: supplierName.trim() || null,
         supplierOrderNumber: supplierOrderNumber.trim() || null,
         purchaseDate,
         paymentMode: 'single',
         accountId: Number(accountId),
-        card1Amount: totalCalculated,
+        card1Amount: effectiveInitialPaidAmount,
         accountId2: null,
         card2Amount: undefined,
         purchaseCost: Number(purchaseCost) || 0,
         transferFees: Number(transferFees) || 0,
         purchaseFees: Number(purchaseFees) || 0,
         exchangeRateDiff: Number(exchangeRateDiff) || 0,
+        paidAmount: effectivePaidAmount,
+        remainingSupplierAmount: effectiveRemainingAmount,
         orderIds: selectedOrderIds,
         notes: notes.trim() || null
       });
@@ -2226,7 +2707,7 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 overflow-y-auto backdrop-blur-xs" dir="rtl">
-      <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 my-8">
+      <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 my-8 max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
@@ -2237,7 +2718,7 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
                 تعديل دفعة الشراء {batch.batchNumber}
               </h3>
               <p className="text-xs text-slate-500">
-                تعديل التكلفة والمصدر والطلبيات وتحديث القيود المالية تلقائياً
+                تعديل التكلفة والمصدر والمبالغ المدفوعة والمتبقية للمورد وتحديث القيود تلقائياً
               </p>
             </div>
           </div>
@@ -2248,7 +2729,7 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div>
               <label className="font-bold text-slate-700 block mb-1">مصدر الشراء / المنصة *</label>
               <select
@@ -2263,6 +2744,17 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
                 <option value="Amazon">أمازون (Amazon)</option>
                 <option value="Other">موقع آخر</option>
               </select>
+            </div>
+
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">اسم المورد (اختياري)</label>
+              <input
+                type="text"
+                placeholder="مثال: مورد شي إن / مكتب الصين"
+                value={supplierName}
+                onChange={e => setSupplierName(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-amber-500"
+              />
             </div>
 
             <div>
@@ -2425,6 +2917,157 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
           })()}
 
           {/* ============================================================== */}
+          {/* SECTION: المبلغ المدفوع والمبلغ المتبقي للمورد - تعديل          */}
+          {/* ============================================================== */}
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/60 via-white to-rose-50/40 border-2 border-emerald-200 shadow-xs space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold">
+                  <Wallet className="w-4 h-4" />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-900 text-xs block">
+                    حالة السداد للمورد (المبلغ المدفوع والمتبقي للمورد) *
+                  </label>
+                  <span className="text-[10px] text-slate-500">
+                    حدد إجمالي ما تم دفعه للمورد من هذه الدفعة والمتبقي المستحق له
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-[11px] font-mono">
+                <span className="px-2 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold">
+                  المدفوع: {effectivePaidAmount.toLocaleString()}
+                </span>
+                <span className={`px-2 py-1 rounded-lg border font-bold ${
+                  effectiveRemainingAmount > 0
+                    ? 'bg-rose-50 border-rose-200 text-rose-800'
+                    : 'bg-slate-50 border-slate-200 text-slate-600'
+                }`}>
+                  المتبقي للمورد: {effectiveRemainingAmount.toLocaleString()}
+                </span>
+              </div>
+            </div>
+
+            {subPaidTotal > 0 && (
+              <div className="p-2.5 rounded-xl bg-indigo-50/80 border border-indigo-200 text-[11px] text-indigo-900 flex flex-wrap items-center justify-between gap-2">
+                <span>
+                  يوجد سدادات لاحقة مسجلة للمورد بقيمة <strong className="font-mono">{subPaidTotal.toLocaleString()} YER</strong>
+                </span>
+                <span className="font-mono font-bold">
+                  السحب الأساسي عند الشراء: {effectiveInitialPaidAmount.toLocaleString()} YER
+                </span>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-1 bg-white rounded-xl border border-slate-200">
+              <button
+                type="button"
+                onClick={() => {
+                  setSupplierPaymentMode('full');
+                  setFormError('');
+                }}
+                className={`py-2 px-3 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                  supplierPaymentMode === 'full'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>مدفوع بالكامل للمورد</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSupplierPaymentMode('partial');
+                  if (!paidAmountInput && totalCalculated > 0) {
+                    setPaidAmountInput(String(Math.floor(totalCalculated / 2)));
+                  }
+                  setFormError('');
+                }}
+                className={`py-2 px-3 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                  supplierPaymentMode === 'partial'
+                    ? 'bg-rose-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <Clock className="w-4 h-4" />
+                <span>دفع جزئي / آجل (تحديد المدفوع والمتبقي للمورد)</span>
+              </button>
+            </div>
+
+            {supplierPaymentMode === 'partial' && (
+              <div className="space-y-3 pt-1">
+                <div className="flex flex-wrap items-center justify-between gap-1.5 p-2 bg-slate-50 rounded-xl border border-slate-200">
+                  <span className="text-[11px] font-bold text-slate-700">خيارات سريعة للسداد:</span>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => { setPaidAmountInput('0'); setFormError(''); }}
+                      className="px-2.5 py-1 rounded-lg bg-white hover:bg-rose-50 border border-rose-200 text-rose-800 font-bold text-[11px] cursor-pointer"
+                    >
+                      آجل بالكامل (0 مدفوع)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setPaidAmountInput(String(Math.floor(totalCalculated / 2))); setFormError(''); }}
+                      className="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-50 border border-amber-200 text-amber-800 font-bold text-[11px] cursor-pointer"
+                    >
+                      نصف المبلغ (50%)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setPaidAmountInput(String(totalCalculated)); setFormError(''); }}
+                      className="px-2.5 py-1 rounded-lg bg-white hover:bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold text-[11px] cursor-pointer"
+                    >
+                      كامل المبلغ (100%)
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-emerald-900 block mb-1 text-[11px]">
+                      المبلغ المدفوع للمورد (YER) *
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max={totalCalculated || undefined}
+                      placeholder="0"
+                      value={paidAmountInput}
+                      onChange={e => {
+                        setPaidAmountInput(e.target.value);
+                        setFormError('');
+                      }}
+                      className="w-full p-2.5 rounded-xl border-2 border-emerald-300 bg-white focus:outline-emerald-500 font-mono font-black text-emerald-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-rose-900 block mb-1 text-[11px]">
+                      المبلغ المتبقي للمورد (YER)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max={totalCalculated || undefined}
+                      value={totalCalculated > 0 ? String(effectiveRemainingAmount) : '0'}
+                      onChange={e => {
+                        const rem = Math.max(0, Math.min(totalCalculated, Number(e.target.value) || 0));
+                        setPaidAmountInput(String(Math.max(0, totalCalculated - rem)));
+                        setFormError('');
+                      }}
+                      className="w-full p-2.5 rounded-xl border-2 border-rose-300 bg-rose-50/40 focus:outline-rose-500 font-mono font-black text-rose-900"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ============================================================== */}
           {/* SECTION: خيارات الدفع من الفيزا (فيزا واحدة أو فيزتين) - تعديل   */}
           {/* ============================================================== */}
           <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-50/70 via-slate-50 to-indigo-50/50 border-2 border-amber-300/80 shadow-xs space-y-3">
@@ -2438,17 +3081,26 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
                     طريقة وقناة الدفع والسحب من الفيزا *
                   </label>
                   <span className="text-[10px] text-slate-500">
-                    اختر ما إذا كان السحب تم من فيزا واحدة أو مجزأ بين فيزتين (تضامن وتجاري)
+                    اختر الحساب المسحوب منه مبلغ الشراء الأساسي
                   </span>
                 </div>
               </div>
 
               <div className="text-left font-mono">
-                <span className="text-[10px] text-slate-400 block">إجمالي المبلغ المطلوب تغطيته:</span>
-                <span className="text-xs font-black text-slate-900">{totalCalculated.toLocaleString()} YER</span>
+                <span className="text-[10px] text-slate-400 block">المبلغ المسحوب عند الشراء:</span>
+                <span className="text-xs font-black text-slate-900">{effectiveInitialPaidAmount.toLocaleString()} YER</span>
               </div>
             </div>
 
+            {effectiveInitialPaidAmount === 0 ? (
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-900 flex items-center gap-2.5 font-bold">
+                <Clock className="w-5 h-5 text-rose-600 shrink-0" />
+                <span>
+                  المبلغ المسحوب عند الشراء هو 0 YER — لن يتم خصم مبلغ أساسي من الفيزا، وسيُقيد الرصيد المتبقي في ذمم الموردين.
+                </span>
+              </div>
+            ) : (
+              <>
             {/* Mode Switcher Buttons */}
             <div className="grid grid-cols-2 gap-2 p-1 bg-white rounded-xl border border-slate-200 shadow-2xs">
               <button
@@ -2468,10 +3120,10 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
                 type="button"
                 onClick={() => {
                   setPaymentMode('split');
-                  if (!card1Amount && !card2Amount && totalCalculated > 0) {
-                    const half = Math.floor(totalCalculated / 2);
+                  if (!card1Amount && !card2Amount && effectiveInitialPaidAmount > 0) {
+                    const half = Math.floor(effectiveInitialPaidAmount / 2);
                     setCard1Amount(String(half));
-                    setCard2Amount(String(totalCalculated - half));
+                    setCard2Amount(String(effectiveInitialPaidAmount - half));
                   }
                 }}
                 className={`py-2.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
@@ -2559,10 +3211,10 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
                 <div className="p-2.5 bg-amber-50/90 border border-amber-200 rounded-xl text-xs text-amber-950 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-amber-700" />
-                    <span>سيتم سحب كامل تكلفة الشراء من هذه الفيزا:</span>
+                    <span>سيتم سحب المبلغ التالي من هذه الفيزا:</span>
                   </div>
                   <strong className="font-mono font-black text-amber-950 text-sm">
-                    {totalCalculated.toLocaleString()} YER
+                    {effectiveInitialPaidAmount.toLocaleString()} YER
                   </strong>
                 </div>
               </div>
@@ -2702,8 +3354,8 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
                 {/* Split Match Validation Banner */}
                 {(() => {
                   const sumCards = (Number(card1Amount) || 0) + (Number(card2Amount) || 0);
-                  const diff = totalCalculated - sumCards;
-                  const isMatch = Math.abs(diff) === 0 && totalCalculated > 0;
+                  const diff = effectiveInitialPaidAmount - sumCards;
+                  const isMatch = Math.abs(diff) === 0 && effectiveInitialPaidAmount > 0;
 
                   return (
                     <div className={`p-3 rounded-xl border text-xs transition ${
@@ -2723,27 +3375,27 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
                               <span>المجموع المسحوب من الفيزتين:</span>
                               <span className="font-mono text-sm font-black">{sumCards.toLocaleString()} YER</span>
                               <span className="text-slate-400 font-normal">|</span>
-                              <span className="text-slate-600 font-medium">المطلوب: {totalCalculated.toLocaleString()} YER</span>
+                              <span className="text-slate-600 font-medium">المطلوب: {effectiveInitialPaidAmount.toLocaleString()} YER</span>
                             </div>
                             <span className="text-[11px] block mt-0.5">
                               {isMatch ? (
                                 <span className="text-emerald-700 font-bold">
-                                  ✓ المبالغ مطابقة تماماً لإجمالي تكلفة الشراء والرسوم (100%)
+                                  ✓ المبالغ مطابقة تماماً للمبلغ المدفوع (100%)
                                 </span>
                               ) : diff > 0 ? (
                                 <span className="text-amber-800 font-bold">
-                                  متبقي لتغطية التكلفة بالكامل: {diff.toLocaleString()} YER
+                                  متبقي لتغطية المبلغ المدفوع: {diff.toLocaleString()} YER
                                 </span>
                               ) : (
                                 <span className="text-rose-700 font-bold">
-                                  المبالغ المدخلة تزيد عن التكلفة بمقدار: {Math.abs(diff).toLocaleString()} YER
+                                  المبالغ المدخلة تزيد عن المبلغ المدفوع بمقدار: {Math.abs(diff).toLocaleString()} YER
                                 </span>
                               )}
                             </span>
                           </div>
                         </div>
 
-                        {!isMatch && totalCalculated > 0 && (
+                        {!isMatch && effectiveInitialPaidAmount > 0 && (
                           <button
                             type="button"
                             onClick={handleAutoBalance}
@@ -2757,6 +3409,8 @@ const EditPurchaseBatchModal: React.FC<EditPurchaseBatchModalProps> = ({
                   );
                 })()}
               </div>
+            )}
+              </>
             )}
           </div>
 
@@ -2956,9 +3610,15 @@ const DeletePurchaseBatchModal: React.FC<DeletePurchaseBatchModalProps> = ({
             <span className="font-bold text-slate-900">{batch.accountName}</span>
           </div>
           <div className="flex justify-between font-bold text-slate-900 pt-1 border-t border-slate-200">
-            <span>إجمالي المبلغ المسحوب:</span>
-            <span className="font-mono text-rose-600 text-sm">
+            <span>إجمالي تكلفة الدفعة:</span>
+            <span className="font-mono text-slate-800 text-sm">
               {(Number(batch.totalCost) || 0).toLocaleString()} YER
+            </span>
+          </div>
+          <div className="flex justify-between font-bold text-rose-700">
+            <span>إجمالي المبلغ المدفوع المسترجع للحساب:</span>
+            <span className="font-mono text-rose-600 text-sm">
+              {(batch.paidAmount !== undefined ? Number(batch.paidAmount) : (Number(batch.totalCost) || 0)).toLocaleString()} YER
             </span>
           </div>
         </div>
@@ -2970,10 +3630,10 @@ const DeletePurchaseBatchModal: React.FC<DeletePurchaseBatchModalProps> = ({
               إعادة جميع الطلبيات المشمولة ({batchOrders.length} طلبات) إلى حالة <strong className="text-amber-800">قيد التنفيذ</strong> وفك ارتباطها بالدفعة.
             </li>
             <li>
-              إلغاء حركة السحب المالي لحساب <strong className="text-slate-900">{batch.accountName}</strong> واسترجاع رصيده.
+              إلغاء حركات السحب المالي لحساب <strong className="text-slate-900">{batch.accountName}</strong> (وما سدِد للمورد) واسترجاع رصيده.
             </li>
             <li>
-              إلغاء وحذف قيد اليومية المحاسبي المزدوج التابع للدفعة للحفاظ على سلامة وتوازن الدفاتر المحاسبية.
+              إلغاء وحذف قيود اليومية المحاسبية التابعة للدفعة للحفاظ على سلامة وتوازن الدفاتر المحاسبية.
             </li>
           </ul>
         </div>
@@ -2995,6 +3655,210 @@ const DeletePurchaseBatchModal: React.FC<DeletePurchaseBatchModalProps> = ({
             <span>تأكيد الحذف التام</span>
           </button>
         </div>
+      </div>
+    </div>
+  );
+};
+
+// =====================================================================
+// SUB-COMPONENT: PAY SUPPLIER REMAINING BALANCE MODAL (سداد متبقي المورد)
+// =====================================================================
+interface PaySupplierRemainingModalProps {
+  batch: PurchaseBatch;
+  accounts: Account[];
+  onClose: () => void;
+  onSubmit: (params: {
+    amount: number;
+    accountId: number;
+    paymentDate: string;
+    notes?: string;
+  }) => void;
+}
+
+const PaySupplierRemainingModal: React.FC<PaySupplierRemainingModalProps> = ({
+  batch,
+  accounts,
+  onClose,
+  onSubmit
+}) => {
+  const { getAccountBalance } = useStore();
+  const totalCost = Number(batch.totalCost) || 0;
+  const paidSoFar = batch.paidAmount !== undefined && batch.paidAmount !== null ? Number(batch.paidAmount) : totalCost;
+  const remainingAmount = batch.remainingSupplierAmount !== undefined && batch.remainingSupplierAmount !== null
+    ? Number(batch.remainingSupplierAmount)
+    : Math.max(0, totalCost - paidSoFar);
+
+  const activeAccounts = useMemo(() => accounts.filter(a => a.status === 'active'), [accounts]);
+  const defaultAccountId = useMemo(() => {
+    const preferred = activeAccounts.find(a => Number(a.id) === Number(batch.accountId)) || activeAccounts[0];
+    return preferred ? String(preferred.id) : '';
+  }, [activeAccounts, batch.accountId]);
+
+  const [amount, setAmount] = useState<string>(String(remainingAmount));
+  const [accountId, setAccountId] = useState<string>(defaultAccountId);
+  const [paymentDate, setPaymentDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [notes, setNotes] = useState<string>('');
+  const [errorMsg, setErrorMsg] = useState<string>('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+
+    const numAmount = Number(amount);
+    if (isNaN(numAmount) || numAmount <= 0) {
+      setErrorMsg('يرجى إدخال مبلغ سداد صحيح أكبر من الصفر.');
+      return;
+    }
+    if (numAmount > remainingAmount) {
+      setErrorMsg(`المبلغ المدخل (${numAmount.toLocaleString()} YER) يتجاوز المبلغ المتبقي للمورد (${remainingAmount.toLocaleString()} YER).`);
+      return;
+    }
+    if (!accountId) {
+      setErrorMsg('يرجى اختيار الحساب أو الصندوق أو الفيزا التي سيتم السداد منها.');
+      return;
+    }
+
+    try {
+      onSubmit({
+        amount: numAmount,
+        accountId: Number(accountId),
+        paymentDate,
+        notes: notes.trim() || undefined
+      });
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'حدث خطأ أثناء تسجيل سداد المورد.');
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4" dir="rtl">
+      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+              <Wallet className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-base text-slate-900">سداد المبلغ المتبقي للمورد</h3>
+              <p className="text-xs text-slate-500">
+                دفعة {batch.batchNumber} • {batch.supplierName || batch.source}
+              </p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 text-center text-xs bg-slate-50 p-3 rounded-xl border border-slate-200">
+          <div>
+            <span className="text-[10px] text-slate-500 block">إجمالي الدفعة</span>
+            <strong className="font-mono text-slate-900">{totalCost.toLocaleString()}</strong>
+          </div>
+          <div>
+            <span className="text-[10px] text-emerald-700 block">المدفوع للمورد</span>
+            <strong className="font-mono text-emerald-700">{paidSoFar.toLocaleString()}</strong>
+          </div>
+          <div>
+            <span className="text-[10px] text-rose-700 block">المتبقي للمورد</span>
+            <strong className="font-mono text-rose-700">{remainingAmount.toLocaleString()}</strong>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-3 text-xs">
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="font-bold text-slate-800">المبلغ المراد سداده للمورد (YER) *</label>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => { setAmount(String(remainingAmount)); setErrorMsg(''); }}
+                  className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 cursor-pointer"
+                >
+                  كامل المتبقي
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setAmount(String(Math.floor(remainingAmount / 2))); setErrorMsg(''); }}
+                  className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 cursor-pointer"
+                >
+                  50%
+                </button>
+              </div>
+            </div>
+            <input
+              type="number"
+              min="1"
+              max={remainingAmount}
+              required
+              value={amount}
+              onChange={e => { setAmount(e.target.value); setErrorMsg(''); }}
+              className="w-full p-2.5 rounded-xl border-2 border-emerald-300 focus:outline-emerald-500 font-mono font-black text-sm text-emerald-950"
+            />
+          </div>
+
+          <div>
+            <label className="font-bold text-slate-800 block mb-1">الصندوق / المحفظة / الفيزا المسددة *</label>
+            <select
+              required
+              value={accountId}
+              onChange={e => { setAccountId(e.target.value); setErrorMsg(''); }}
+              className="w-full p-2.5 rounded-xl border border-slate-300 bg-white focus:outline-emerald-500 font-medium"
+            >
+              <option value="">اختر حساب السداد</option>
+              {activeAccounts.map(a => (
+                <option key={a.id} value={a.id}>
+                  {a.name} ({a.type}) — الرصيد: {getAccountBalance(a.id).toLocaleString()} YER
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="font-bold text-slate-800 block mb-1">تاريخ السداد *</label>
+            <input
+              type="date"
+              required
+              value={paymentDate}
+              onChange={e => setPaymentDate(e.target.value)}
+              className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-emerald-500 font-mono"
+            />
+          </div>
+
+          <div>
+            <label className="font-bold text-slate-800 block mb-1">ملاحظات السداد (اختياري)</label>
+            <input
+              type="text"
+              placeholder="مثال: دفعة ثانية / تسوية نهائية مع المورد"
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              className="w-full p-2.5 rounded-xl border border-slate-300 focus:outline-emerald-500"
+            />
+          </div>
+
+          {errorMsg && (
+            <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-bold">
+              {errorMsg}
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold cursor-pointer"
+            >
+              إلغاء
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black cursor-pointer shadow-xs flex items-center gap-1.5"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              <span>تأكيد سداد المورد</span>
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

@@ -439,6 +439,7 @@ interface StoreContextType {
 
   addPurchaseBatch: (batch: {
     source: string;
+    supplierName?: string;
     supplierOrderNumber?: string;
     paymentMode?: 'single' | 'split';
     accountId: number;
@@ -449,11 +450,14 @@ interface StoreContextType {
     purchaseFees: number;
     transferFees: number;
     exchangeRateDiff?: number;
+    paidAmount?: number;
+    remainingSupplierAmount?: number;
     orderIds: number[];
     notes?: string;
   }) => void;
   updatePurchaseBatch: (id: number, batch: {
     source?: string;
+    supplierName?: string | null;
     supplierOrderNumber?: string | null;
     purchaseDate?: string;
     paymentMode?: 'single' | 'split';
@@ -465,8 +469,16 @@ interface StoreContextType {
     purchaseFees?: number;
     transferFees?: number;
     exchangeRateDiff?: number;
+    paidAmount?: number;
+    remainingSupplierAmount?: number;
     orderIds?: number[];
     notes?: string | null;
+  }) => void;
+  payPurchaseBatchRemaining: (batchId: number, params: {
+    amount: number;
+    accountId: number;
+    paymentDate?: string;
+    notes?: string;
   }) => void;
   cancelPurchaseBatch: (id: number) => void;
   deletePurchaseBatch: (id: number) => void;
@@ -1057,7 +1069,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const pCost = typeof b.purchaseCost === 'string' ? parseFloat(b.purchaseCost) || 0 : (Number(b.purchaseCost) || 0);
       const pFees = typeof b.purchaseFees === 'string' ? parseFloat(b.purchaseFees) || 0 : (Number(b.purchaseFees) || 0);
       const tFees = typeof b.transferFees === 'string' ? parseFloat(b.transferFees) || 0 : (Number(b.transferFees) || 0);
-      const totalCost = Number(b.totalCost) || (pCost + pFees + tFees);
+      const fxDiff = typeof b.exchangeRateDiff === 'string' ? parseFloat(b.exchangeRateDiff) || 0 : (Number(b.exchangeRateDiff) || 0);
+      const totalCost = Number(b.totalCost) || (pCost + pFees + tFees + fxDiff);
+      const paidAmount = b.paidAmount !== undefined && b.paidAmount !== null
+        ? Math.max(0, Math.min(totalCost, Number(b.paidAmount) || 0))
+        : totalCost;
+      const remainingSupplierAmount = b.remainingSupplierAmount !== undefined && b.remainingSupplierAmount !== null
+        ? Math.max(0, Number(b.remainingSupplierAmount) || 0)
+        : Math.max(0, totalCost - paidAmount);
       const ordIds = Array.isArray(b.orderIds) && b.orderIds.length > 0
         ? b.orderIds
         : (batchOrdersMap[b.id] || []);
@@ -1068,7 +1087,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         purchaseCost: pCost,
         purchaseFees: pFees,
         transferFees: tFees,
+        exchangeRateDiff: fxDiff,
         totalCost,
+        paidAmount,
+        remainingSupplierAmount,
+        supplierPayments: Array.isArray(b.supplierPayments) ? b.supplierPayments : [],
         orderIds: ordIds,
         accountName: b.accountName || acc?.name || 'البطاقة / الحساب',
         status: b.status || 'active',
@@ -7498,6 +7521,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Purchase Batch Actions (شراء الطلبات الجماعية من شي ان وعلي اكسبرس)
   const addPurchaseBatch = (batchData: {
     source: string;
+    supplierName?: string;
     supplierOrderNumber?: string;
     paymentMode?: 'single' | 'split';
     accountId: number;
@@ -7508,6 +7532,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     purchaseFees: number;
     transferFees: number;
     exchangeRateDiff?: number;
+    paidAmount?: number;
+    remainingSupplierAmount?: number;
     orderIds: number[];
     notes?: string;
   }) => {
@@ -7520,7 +7546,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // التكلفة الكلية = تكلفة الشراء الصافية + عمولات التحويل البنكي + رسوم الشراء + فروق الصرف
     const totalCost = purchaseCost + transferFees + purchaseFees + exchangeRateDiff;
 
-    const isSplit = batchData.paymentMode === 'split' && Boolean(batchData.accountId2);
+    const paidAmount = batchData.paidAmount !== undefined
+      ? Math.max(0, Math.min(totalCost, Number(batchData.paidAmount) || 0))
+      : totalCost;
+    const remainingSupplierAmount = Math.max(0, totalCost - paidAmount);
+    const supplierLabel = batchData.supplierName?.trim() || batchData.source;
+
+    const isSplit = batchData.paymentMode === 'split' && Boolean(batchData.accountId2) && paidAmount > 0;
     // Sanitize account IDs: Commercial Visa must always be 120002, not 120001
     let rawAccId1 = Number(batchData.accountId);
     if (rawAccId1 === 120001) rawAccId1 = 120002;
@@ -7530,22 +7562,25 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const acc1 = accounts.find(a => Number(a.id) === rawAccId1);
     const acc2 = rawAccId2 ? accounts.find(a => Number(a.id) === rawAccId2) : undefined;
 
-    let card1Amt = isSplit ? (Number(batchData.card1Amount) || 0) : totalCost;
+    let card1Amt = isSplit ? (Number(batchData.card1Amount) || 0) : paidAmount;
     let card2Amt = isSplit ? (Number(batchData.card2Amount) || 0) : 0;
-    if (isSplit && card1Amt + card2Amt !== totalCost) {
-      card2Amt = Math.max(0, totalCost - card1Amt);
+    if (isSplit && card1Amt + card2Amt !== paidAmount) {
+      card2Amt = Math.max(0, paidAmount - card1Amt);
     }
 
     const newBatch: PurchaseBatch = {
       id: batchId,
       batchNumber,
       source: batchData.source,
+      supplierName: batchData.supplierName?.trim() || null,
       supplierOrderNumber: batchData.supplierOrderNumber || null,
       purchaseDate: new Date().toISOString().split('T')[0],
       paymentMode: isSplit ? 'split' : 'single',
       accountId: rawAccId1,
-      accountName: acc1?.name || (rawAccId1 === 120002 ? 'فيزا كارد بنك التجاري اليمني' : (rawAccId1 === 1 ? 'فيزا كارد بنك التضامن' : 'البنك / البطاقة')),
-      card1Amount: isSplit ? card1Amt : totalCost,
+      accountName: paidAmount === 0
+        ? 'آجل (لم يُسدد نقداً بعد)'
+        : (acc1?.name || (rawAccId1 === 120002 ? 'فيزا كارد بنك التجاري اليمني' : (rawAccId1 === 1 ? 'فيزا كارد بنك التضامن' : 'البنك / البطاقة'))),
+      card1Amount: isSplit ? card1Amt : paidAmount,
       accountId2: isSplit && rawAccId2 ? rawAccId2 : null,
       accountName2: isSplit && acc2 ? acc2.name : (isSplit && rawAccId2 === 120002 ? 'فيزا كارد بنك التجاري اليمني' : null),
       card2Amount: isSplit ? card2Amt : undefined,
@@ -7554,53 +7589,58 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       transferFees,
       exchangeRateDiff,
       totalCost,
+      paidAmount,
+      remainingSupplierAmount,
+      supplierPayments: [],
       orderIds: batchData.orderIds,
       notes: batchData.notes || null,
       status: 'active',
       createdAt: new Date().toISOString()
     };
 
-    // Financial Transactions (Withdrawal from Card 1 and optionally Card 2)
+    // Financial Transactions (Withdrawal ONLY for the actually paidAmount from Card 1 and optionally Card 2)
     const transactionsToPush: FinancialTransaction[] = [];
-    if (isSplit) {
-      if (card1Amt > 0) {
+    if (paidAmount > 0) {
+      if (isSplit) {
+        if (card1Amt > 0) {
+          transactionsToPush.push({
+            id: batchId + 1,
+            transactionNumber: `TRX-PB-${Date.now().toString().slice(-6)}-1`,
+            transactionDate: new Date().toISOString(),
+            accountId: rawAccId1,
+            type: 'withdrawal',
+            amount: card1Amt,
+            description: `شراء جماعي لطلبات ${batchData.source} (دفعة ${batchNumber}) - سحب من ${acc1?.name || 'الفيزا الأولى'}`,
+            createdAt: new Date().toISOString()
+          });
+        }
+        if (card2Amt > 0 && rawAccId2) {
+          transactionsToPush.push({
+            id: batchId + 11,
+            transactionNumber: `TRX-PB-${Date.now().toString().slice(-6)}-2`,
+            transactionDate: new Date().toISOString(),
+            accountId: rawAccId2,
+            type: 'withdrawal',
+            amount: card2Amt,
+            description: `شراء جماعي لطلبات ${batchData.source} (دفعة ${batchNumber}) - سحب من ${acc2?.name || (rawAccId2 === 120002 ? 'فيزا كارد بنك التجاري اليمني' : 'الفيزا الثانية')}`,
+            createdAt: new Date().toISOString()
+          });
+        }
+      } else {
         transactionsToPush.push({
           id: batchId + 1,
-          transactionNumber: `TRX-PB-${Date.now().toString().slice(-6)}-1`,
+          transactionNumber: `TRX-PB-${Date.now().toString().slice(-6)}`,
           transactionDate: new Date().toISOString(),
           accountId: rawAccId1,
           type: 'withdrawal',
-          amount: card1Amt,
-          description: `شراء جماعي لطلبات ${batchData.source} (دفعة ${batchNumber}) - سحب من ${acc1?.name || 'الفيزا الأولى'}`,
+          amount: paidAmount,
+          description: `شراء جماعي لطلبات ${batchData.source} (دفعة ${batchNumber}) - سحب من ${acc1?.name || 'البطاقة'}`,
           createdAt: new Date().toISOString()
         });
       }
-      if (card2Amt > 0 && rawAccId2) {
-        transactionsToPush.push({
-          id: batchId + 11,
-          transactionNumber: `TRX-PB-${Date.now().toString().slice(-6)}-2`,
-          transactionDate: new Date().toISOString(),
-          accountId: rawAccId2,
-          type: 'withdrawal',
-          amount: card2Amt,
-          description: `شراء جماعي لطلبات ${batchData.source} (دفعة ${batchNumber}) - سحب من ${acc2?.name || (rawAccId2 === 120002 ? 'فيزا كارد بنك التجاري اليمني' : 'الفيزا الثانية')}`,
-          createdAt: new Date().toISOString()
-        });
-      }
-    } else {
-      transactionsToPush.push({
-        id: batchId + 1,
-        transactionNumber: `TRX-PB-${Date.now().toString().slice(-6)}`,
-        transactionDate: new Date().toISOString(),
-        accountId: rawAccId1,
-        type: 'withdrawal',
-        amount: totalCost,
-        description: `شراء جماعي لطلبات ${batchData.source} (دفعة ${batchNumber}) - سحب من ${acc1?.name || 'البطاقة'}`,
-        createdAt: new Date().toISOString()
-      });
     }
 
-    // Journal Entry (من حـ/ مشتريات بضاعة وعمولات ورسوم وفروق صرف إلى حـ/ البطاقة أو البنك)
+    // Journal Entry (من حـ/ مشتريات بضاعة وعمولات ورسوم وفروق صرف إلى حـ/ البطاقة أو البنك + ذمم الموردين للمتبقي)
     const jeId = batchId + 2;
     const jeLines: any[] = [
       {
@@ -7646,35 +7686,50 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       });
     }
 
-    if (isSplit) {
-      if (card1Amt > 0) {
+    if (paidAmount > 0) {
+      if (isSplit) {
+        if (card1Amt > 0) {
+          jeLines.push({
+            id: jeId + 5,
+            journalEntryId: jeId,
+            accountId: rawAccId1,
+            accountName: acc1?.name || 'الفيزا الأولى',
+            side: 'credit',
+            amount: card1Amt
+          });
+        }
+        if (card2Amt > 0 && rawAccId2) {
+          jeLines.push({
+            id: jeId + 6,
+            journalEntryId: jeId,
+            accountId: rawAccId2,
+            accountName: acc2?.name || (rawAccId2 === 120002 ? 'فيزا كارد بنك التجاري اليمني' : 'الفيزا الثانية'),
+            side: 'credit',
+            amount: card2Amt
+          });
+        }
+      } else {
         jeLines.push({
           id: jeId + 5,
           journalEntryId: jeId,
           accountId: rawAccId1,
-          accountName: acc1?.name || 'الفيزا الأولى',
+          accountName: acc1?.name || 'البطاقة / الحساب',
           side: 'credit',
-          amount: card1Amt
+          amount: paidAmount
         });
       }
-      if (card2Amt > 0 && rawAccId2) {
-        jeLines.push({
-          id: jeId + 6,
-          journalEntryId: jeId,
-          accountId: rawAccId2,
-          accountName: acc2?.name || (rawAccId2 === 120002 ? 'فيزا كارد بنك التجاري اليمني' : 'الفيزا الثانية'),
-          side: 'credit',
-          amount: card2Amt
-        });
-      }
-    } else {
+    }
+
+    if (remainingSupplierAmount > 0) {
       jeLines.push({
-        id: jeId + 5,
+        id: jeId + 7,
         journalEntryId: jeId,
-        accountId: rawAccId1,
-        accountName: acc1?.name || 'البطاقة / الحساب',
+        accountId: null,
+        accountName: `ذمم الموردين (دائنون) - ${supplierLabel}`,
+        chartAccountId: 201,
+        chartAccountCode: '201',
         side: 'credit',
-        amount: totalCost
+        amount: remainingSupplierAmount
       });
     }
 
@@ -7686,8 +7741,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       sourceNumber: batchNumber,
       status: 'posted',
       description: isSplit
-        ? `شراء بضاعة طلبات من ${batchData.source} - دفعة ${batchNumber} (سحب مجزأ من ${acc1?.name || 'فيزا 1'} و ${acc2?.name || 'فيزا 2'})`
-        : `شراء بضاعة طلبات من ${batchData.source} - دفعة ${batchNumber}`,
+        ? `شراء بضاعة طلبات من ${batchData.source} - دفعة ${batchNumber} (سحب مجزأ من ${acc1?.name || 'فيزا 1'} و ${acc2?.name || 'فيزا 2'}${remainingSupplierAmount > 0 ? ` - متبقي للمورد: ${remainingSupplierAmount.toLocaleString()}` : ''})`
+        : `شراء بضاعة طلبات من ${batchData.source} - دفعة ${batchNumber}${remainingSupplierAmount > 0 ? ` (مدفوع: ${paidAmount.toLocaleString()} - متبقي للمورد: ${remainingSupplierAmount.toLocaleString()})` : ''}`,
       createdAt: new Date().toISOString(),
       lines: jeLines
     };
@@ -7720,7 +7775,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         action: 'شراء جماعي',
         entityType: 'purchase_batch',
         entityId: batchId,
-        description: `تسجيل دفعة شراء جماعية ${batchNumber} من ${batchData.source} لعدد ${count} طلبات بمبلغ ${totalCost} ريال ${isSplit ? `(مجزأ: ${acc1?.name}: ${card1Amt}، ${acc2?.name}: ${card2Amt})` : ''}`,
+        description: `تسجيل دفعة شراء جماعية ${batchNumber} من ${batchData.source} لعدد ${count} طلبات بإجمالي ${totalCost} ريال (المدفوع: ${paidAmount} ريال، المتبقي للمورد: ${remainingSupplierAmount} ريال)${isSplit ? ` [مجزأ: ${acc1?.name}: ${card1Amt}، ${acc2?.name}: ${card2Amt}]` : ''}`,
         createdAt: new Date().toISOString()
       };
 
@@ -7737,13 +7792,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       };
     });
     showNotification(
-      `تم تسجيل دفعة الشراء #${batchNumber} بنجاح! ${isSplit ? '(تم توزيع السحب على الفيزتين بدقة)' : `صافي الربح: ${batchNetProfit >= 0 ? '+' : ''}${batchNetProfit.toLocaleString()} ريال (${batchMargin.toFixed(1)}%)`}`,
+      `تم تسجيل دفعة الشراء #${batchNumber} بنجاح! ${remainingSupplierAmount > 0 ? `المدفوع: ${paidAmount.toLocaleString()} ريال • المتبقي للمورد: ${remainingSupplierAmount.toLocaleString()} ريال` : (isSplit ? '(تم توزيع السحب على الفيزتين بدقة)' : `صافي الربح: ${batchNetProfit >= 0 ? '+' : ''}${batchNetProfit.toLocaleString()} ريال (${batchMargin.toFixed(1)}%)`)}`,
       'success'
     );
   };
 
   const updatePurchaseBatch = (id: number, batchData: {
     source?: string;
+    supplierName?: string | null;
     supplierOrderNumber?: string | null;
     purchaseDate?: string;
     paymentMode?: 'single' | 'split';
@@ -7755,6 +7811,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     purchaseFees?: number;
     transferFees?: number;
     exchangeRateDiff?: number;
+    paidAmount?: number;
+    remainingSupplierAmount?: number;
     orderIds?: number[];
     notes?: string | null;
   }) => {
@@ -7763,6 +7821,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (!existing) return prev;
 
       const newSource = batchData.source !== undefined ? batchData.source : existing.source;
+      const newSupplierName = batchData.supplierName !== undefined ? batchData.supplierName : (existing.supplierName || null);
       const newSupplierOrderNumber = batchData.supplierOrderNumber !== undefined ? batchData.supplierOrderNumber : existing.supplierOrderNumber;
       const newPurchaseDate = batchData.purchaseDate || existing.purchaseDate;
       let newAccountId = batchData.accountId !== undefined ? Number(batchData.accountId) : Number(existing.accountId);
@@ -7773,6 +7832,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const newTransferFees = batchData.transferFees !== undefined ? Number(batchData.transferFees) : Number(existing.transferFees || 0);
       const newExchangeRateDiff = batchData.exchangeRateDiff !== undefined ? Number(batchData.exchangeRateDiff) : Number(existing.exchangeRateDiff || 0);
       const newTotalCost = newPurchaseCost + newPurchaseFees + newTransferFees + newExchangeRateDiff;
+
+      const existingTotal = Number(existing.totalCost) || (Number(existing.purchaseCost || 0) + Number(existing.purchaseFees || 0) + Number(existing.transferFees || 0) + Number(existing.exchangeRateDiff || 0));
+      const defaultPaid = existing.paidAmount !== undefined && existing.paidAmount !== null ? Number(existing.paidAmount) : existingTotal;
+      const newPaidAmount = batchData.paidAmount !== undefined
+        ? Math.max(0, Math.min(newTotalCost, Number(batchData.paidAmount) || 0))
+        : Math.min(newTotalCost, defaultPaid);
+      const newRemaining = Math.max(0, newTotalCost - newPaidAmount);
+
+      const existingSubPayments = Array.isArray(existing.supplierPayments) ? existing.supplierPayments : [];
+      const subPaidTotal = existingSubPayments.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+      const keepSubPayments = newPaidAmount >= subPaidTotal;
+      const effectiveSubPayments = keepSubPayments ? existingSubPayments : [];
+      const initialPaidAmount = keepSubPayments ? Math.max(0, newPaidAmount - subPaidTotal) : newPaidAmount;
+      const supplierLabel = newSupplierName?.trim() || newSource;
+
       const newOrderIds = batchData.orderIds !== undefined ? batchData.orderIds : (existing.orderIds || []);
       const newNotes = batchData.notes !== undefined ? batchData.notes : existing.notes;
 
@@ -7780,22 +7854,25 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       let newAccountId2 = batchData.accountId2 !== undefined ? (batchData.accountId2 ? Number(batchData.accountId2) : null) : (existing.accountId2 ? Number(existing.accountId2) : null);
       if (newAccountId2 === 120001) newAccountId2 = 120002;
       const acc2 = newAccountId2 ? accounts.find(a => Number(a.id) === newAccountId2) : undefined;
-      const isSplit = newPaymentMode === 'split' && Boolean(newAccountId2);
-      let card1Amt = isSplit ? (batchData.card1Amount !== undefined ? Number(batchData.card1Amount) : Number(existing.card1Amount || 0)) : newTotalCost;
+      const isSplit = newPaymentMode === 'split' && Boolean(newAccountId2) && initialPaidAmount > 0;
+      let card1Amt = isSplit ? (batchData.card1Amount !== undefined ? Number(batchData.card1Amount) : Number(existing.card1Amount || 0)) : initialPaidAmount;
       let card2Amt = isSplit ? (batchData.card2Amount !== undefined ? Number(batchData.card2Amount) : Number(existing.card2Amount || 0)) : 0;
-      if (isSplit && card1Amt + card2Amt !== newTotalCost) {
-        card2Amt = Math.max(0, newTotalCost - card1Amt);
+      if (isSplit && card1Amt + card2Amt !== initialPaidAmount) {
+        card2Amt = Math.max(0, initialPaidAmount - card1Amt);
       }
 
       const updatedBatch: PurchaseBatch = {
         ...existing,
         source: newSource,
+        supplierName: newSupplierName || null,
         supplierOrderNumber: newSupplierOrderNumber || null,
         purchaseDate: newPurchaseDate,
         paymentMode: isSplit ? 'split' : 'single',
         accountId: newAccountId,
-        accountName: acc?.name || (newAccountId === 120002 ? 'فيزا كارد بنك التجاري اليمني' : (existing.accountName || 'البنك / البطاقة')),
-        card1Amount: isSplit ? card1Amt : newTotalCost,
+        accountName: initialPaidAmount === 0 && newPaidAmount === 0
+          ? 'آجل (لم يُسدد نقداً بعد)'
+          : (acc?.name || (newAccountId === 120002 ? 'فيزا كارد بنك التجاري اليمني' : (existing.accountName || 'البنك / البطاقة'))),
+        card1Amount: isSplit ? card1Amt : initialPaidAmount,
         accountId2: isSplit ? newAccountId2 : null,
         accountName2: isSplit && acc2 ? acc2.name : (isSplit && newAccountId2 === 120002 ? 'فيزا كارد بنك التجاري اليمني' : null),
         card2Amount: isSplit ? card2Amt : undefined,
@@ -7804,6 +7881,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         transferFees: newTransferFees,
         exchangeRateDiff: newExchangeRateDiff,
         totalCost: newTotalCost,
+        paidAmount: newPaidAmount,
+        remainingSupplierAmount: newRemaining,
+        supplierPayments: effectiveSubPayments,
         orderIds: newOrderIds,
         notes: newNotes || null
       };
@@ -7834,54 +7914,67 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return o;
       });
 
-      // 2. Update financial transactions (remove old linked and add fresh ones)
+      // 2. Update financial transactions (remove old initial linked and optionally invalidated sub-payments, then add fresh initial ones)
+      const subPaymentTrxIds = new Set(existingSubPayments.map(sp => sp.transactionId).filter(Boolean));
+      const subPaymentJeIds = new Set(existingSubPayments.map(sp => sp.journalEntryId).filter(Boolean));
+
       const nonLinkedTransactions = prev.tables.financialTransactions.filter(t => {
-        return !(t.id === id + 1 || t.id === id + 11 || (existing.batchNumber && t.description?.includes(existing.batchNumber)));
+        if (t.id === id + 1 || t.id === id + 11) return false;
+        if (subPaymentTrxIds.has(t.id)) return keepSubPayments;
+        if (existing.batchNumber && t.description?.includes(`(دفعة ${existing.batchNumber})`)) return false;
+        return true;
       });
 
       const updatedTransactionsToPush: FinancialTransaction[] = [];
-      if (isSplit) {
-        if (card1Amt > 0) {
+      if (initialPaidAmount > 0) {
+        if (isSplit) {
+          if (card1Amt > 0) {
+            updatedTransactionsToPush.push({
+              id: id + 1,
+              transactionNumber: `TRX-PB-${Date.now().toString().slice(-6)}-1`,
+              transactionDate: newPurchaseDate,
+              accountId: newAccountId,
+              type: 'withdrawal',
+              amount: card1Amt,
+              description: `شراء جماعي لطلبات ${newSource} (دفعة ${existing.batchNumber}) - سحب من ${acc?.name || 'فيزا 1'}`,
+              createdAt: new Date().toISOString()
+            });
+          }
+          if (card2Amt > 0 && newAccountId2) {
+            updatedTransactionsToPush.push({
+              id: id + 11,
+              transactionNumber: `TRX-PB-${Date.now().toString().slice(-6)}-2`,
+              transactionDate: newPurchaseDate,
+              accountId: newAccountId2,
+              type: 'withdrawal',
+              amount: card2Amt,
+              description: `شراء جماعي لطلبات ${newSource} (دفعة ${existing.batchNumber}) - سحب من ${acc2?.name || 'فيزا 2'}`,
+              createdAt: new Date().toISOString()
+            });
+          }
+        } else {
           updatedTransactionsToPush.push({
             id: id + 1,
-            transactionNumber: `TRX-PB-${Date.now().toString().slice(-6)}-1`,
+            transactionNumber: `TRX-PB-${Date.now().toString().slice(-6)}`,
             transactionDate: newPurchaseDate,
             accountId: newAccountId,
             type: 'withdrawal',
-            amount: card1Amt,
-            description: `شراء جماعي لطلبات ${newSource} (دفعة ${existing.batchNumber}) - سحب من ${acc?.name || 'فيزا 1'}`,
+            amount: initialPaidAmount,
+            description: `شراء جماعي لطلبات ${newSource} (دفعة ${existing.batchNumber})`,
             createdAt: new Date().toISOString()
           });
         }
-        if (card2Amt > 0 && newAccountId2) {
-          updatedTransactionsToPush.push({
-            id: id + 11,
-            transactionNumber: `TRX-PB-${Date.now().toString().slice(-6)}-2`,
-            transactionDate: newPurchaseDate,
-            accountId: newAccountId2,
-            type: 'withdrawal',
-            amount: card2Amt,
-            description: `شراء جماعي لطلبات ${newSource} (دفعة ${existing.batchNumber}) - سحب من ${acc2?.name || 'فيزا 2'}`,
-            createdAt: new Date().toISOString()
-          });
-        }
-      } else {
-        updatedTransactionsToPush.push({
-          id: id + 1,
-          transactionNumber: `TRX-PB-${Date.now().toString().slice(-6)}`,
-          transactionDate: newPurchaseDate,
-          accountId: newAccountId,
-          type: 'withdrawal',
-          amount: newTotalCost,
-          description: `شراء جماعي لطلبات ${newSource} (دفعة ${existing.batchNumber})`,
-          createdAt: new Date().toISOString()
-        });
       }
 
       // 3. Update journal entry
-      const updatedJournalEntries = prev.tables.journalEntries.map(je => {
+      const apCreditInInitialJE = newTotalCost - initialPaidAmount; // equals newRemaining + subPaidTotal when subPayments kept
+      const baseJournalEntries = keepSubPayments
+        ? prev.tables.journalEntries
+        : prev.tables.journalEntries.filter(je => !subPaymentJeIds.has(je.id));
+
+      const updatedJournalEntries = baseJournalEntries.map(je => {
         const isLinked = je.id === id + 2 ||
-                         (existing.batchNumber && je.description?.includes(existing.batchNumber));
+                         (existing.batchNumber && je.sourceType === 'purchase_batch' && je.sourceNumber === existing.batchNumber);
         if (isLinked) {
           const lines: any[] = [
             {
@@ -7927,43 +8020,58 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             });
           }
 
-          if (isSplit) {
-            if (card1Amt > 0) {
+          if (initialPaidAmount > 0) {
+            if (isSplit) {
+              if (card1Amt > 0) {
+                lines.push({
+                  id: je.id + 5,
+                  journalEntryId: je.id,
+                  accountId: newAccountId,
+                  accountName: acc?.name || 'الفيزا الأولى',
+                  side: 'credit' as const,
+                  amount: card1Amt
+                });
+              }
+              if (card2Amt > 0 && newAccountId2) {
+                lines.push({
+                  id: je.id + 6,
+                  journalEntryId: je.id,
+                  accountId: newAccountId2,
+                  accountName: acc2?.name || 'الفيزا الثانية',
+                  side: 'credit' as const,
+                  amount: card2Amt
+                });
+              }
+            } else {
               lines.push({
                 id: je.id + 5,
                 journalEntryId: je.id,
                 accountId: newAccountId,
-                accountName: acc?.name || 'الفيزا الأولى',
+                accountName: acc?.name || 'البطاقة / الحساب',
                 side: 'credit' as const,
-                amount: card1Amt
+                amount: initialPaidAmount
               });
             }
-            if (card2Amt > 0 && newAccountId2) {
-              lines.push({
-                id: je.id + 6,
-                journalEntryId: je.id,
-                accountId: newAccountId2,
-                accountName: acc2?.name || 'الفيزا الثانية',
-                side: 'credit' as const,
-                amount: card2Amt
-              });
-            }
-          } else {
+          }
+
+          if (apCreditInInitialJE > 0) {
             lines.push({
-              id: je.id + 5,
+              id: je.id + 7,
               journalEntryId: je.id,
-              accountId: newAccountId,
-              accountName: acc?.name || 'البطاقة / الحساب',
+              accountId: null,
+              accountName: `ذمم الموردين (دائنون) - ${supplierLabel}`,
+              chartAccountId: 201,
+              chartAccountCode: '201',
               side: 'credit' as const,
-              amount: newTotalCost
+              amount: apCreditInInitialJE
             });
           }
 
           return {
             ...je,
             description: isSplit
-              ? `شراء بضاعة طلبات من ${newSource} - دفعة ${existing.batchNumber} (سحب مجزأ من ${acc?.name || 'فيزا 1'} و ${acc2?.name || 'فيزا 2'})`
-              : `شراء بضاعة طلبات من ${newSource} - دفعة ${existing.batchNumber}`,
+              ? `شراء بضاعة طلبات من ${newSource} - دفعة ${existing.batchNumber} (سحب مجزأ من ${acc?.name || 'فيزا 1'} و ${acc2?.name || 'فيزا 2'}${newRemaining > 0 ? ` - متبقي للمورد: ${newRemaining.toLocaleString()}` : ''})`
+              : `شراء بضاعة طلبات من ${newSource} - دفعة ${existing.batchNumber}${newRemaining > 0 ? ` (مدفوع: ${newPaidAmount.toLocaleString()} - متبقي للمورد: ${newRemaining.toLocaleString()})` : ''}`,
             lines
           };
         }
@@ -7975,7 +8083,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         action: 'تعديل دفعة شراء',
         entityType: 'purchase_batch',
         entityId: id,
-        description: `تعديل بيانات دفعة الشراء ${existing.batchNumber} وتحديث القيود والحركات المالية المترتبة`,
+        description: `تعديل بيانات دفعة الشراء ${existing.batchNumber} (الإجمالي: ${newTotalCost}، المدفوع: ${newPaidAmount}، المتبقي للمورد: ${newRemaining}) وتحديث القيود والحركات المالية`,
         oldValue: `${existing.totalCost} ريال`,
         newValue: `${newTotalCost} ريال`,
         createdAt: new Date().toISOString()
@@ -7997,6 +8105,150 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     showNotification(`تم تعديل دفعة الشراء #${batchData.supplierOrderNumber || id} وتحديث قيودها وحركاتها المالية بنجاح`, 'success');
   };
 
+  const payPurchaseBatchRemaining = (batchId: number, params: {
+    amount: number;
+    accountId: number;
+    paymentDate?: string;
+    notes?: string;
+  }) => {
+    const batch = purchaseBatches.find(b => Number(b.id) === Number(batchId));
+    if (!batch) {
+      throw new Error('لم يتم العثور على دفعة الشراء المحددة.');
+    }
+    if (batch.status === 'cancelled') {
+      throw new Error('لا يمكن سداد متبقي لدفعة شراء ملغاة.');
+    }
+
+    const totalCost = Number(batch.totalCost) || 0;
+    const currentPaid = batch.paidAmount !== undefined ? Number(batch.paidAmount) : totalCost;
+    const currentRemaining = batch.remainingSupplierAmount !== undefined
+      ? Number(batch.remainingSupplierAmount)
+      : Math.max(0, totalCost - currentPaid);
+
+    const payAmount = Math.max(0, Number(params.amount) || 0);
+    if (payAmount <= 0) {
+      throw new Error('يرجى إدخال مبلغ سداد صحيح أكبر من الصفر.');
+    }
+    if (payAmount > currentRemaining) {
+      throw new Error(`المبلغ المدخل (${payAmount.toLocaleString()} YER) يتجاوز المتبقي للمورد (${currentRemaining.toLocaleString()} YER).`);
+    }
+
+    const accId = Number(params.accountId) === 120001 ? 120002 : Number(params.accountId);
+    const acc = accounts.find(a => Number(a.id) === accId);
+    if (!acc) {
+      throw new Error('يرجى اختيار الصندوق أو المحفظة أو الفيزا التي سيتم السداد منها.');
+    }
+
+    const payDate = params.paymentDate || new Date().toISOString().split('T')[0];
+    const periodCheck = assertFiscalPeriodOpen(payDate, fiscalPeriods);
+    if (!periodCheck.allowed) {
+      showNotification(periodCheck.reason || 'الفترة المالية مقفلة. لا يمكن تسجيل السداد.', 'error');
+      throw new Error(periodCheck.reason);
+    }
+
+    const nowId = Date.now();
+    const trxId = nowId + 1;
+    const jeId = nowId + 2;
+    const supplierLabel = batch.supplierName?.trim() || batch.source;
+
+    const newTrx: FinancialTransaction = {
+      id: trxId,
+      transactionNumber: `TRX-PBP-${String(nowId).slice(-6)}`,
+      transactionDate: payDate,
+      accountId: accId,
+      type: 'withdrawal',
+      amount: payAmount,
+      description: `سداد متبقي للمورد (${supplierLabel}) - دفعة ${batch.batchNumber}${params.notes ? ` (${params.notes})` : ''}`,
+      notes: params.notes || null,
+      createdAt: new Date().toISOString()
+    };
+
+    const newJE: JournalEntry = {
+      id: jeId,
+      entryNumber: `JE-PBP-${String(nowId).slice(-6)}`,
+      sourceType: 'purchase_batch_payment',
+      sourceId: batch.id,
+      sourceNumber: batch.batchNumber,
+      status: 'posted',
+      description: `سداد متبقي للمورد ${supplierLabel} عن دفعة الشراء ${batch.batchNumber} من ${acc.name}`,
+      createdAt: new Date().toISOString(),
+      lines: [
+        {
+          id: jeId + 1,
+          journalEntryId: jeId,
+          accountId: null,
+          accountName: `ذمم الموردين (دائنون) - ${supplierLabel}`,
+          chartAccountId: 201,
+          chartAccountCode: '201',
+          side: 'debit',
+          amount: payAmount
+        },
+        {
+          id: jeId + 2,
+          journalEntryId: jeId,
+          accountId: accId,
+          accountName: acc.name,
+          chartAccountId: acc.type === 'نقدي' ? 101 : 102,
+          chartAccountCode: acc.type === 'نقدي' ? '101' : '102',
+          side: 'credit',
+          amount: payAmount
+        }
+      ]
+    };
+
+    const paymentRecord = {
+      id: nowId,
+      amount: payAmount,
+      accountId: accId,
+      accountName: acc.name,
+      paymentDate: payDate,
+      notes: params.notes?.trim() || null,
+      transactionId: trxId,
+      journalEntryId: jeId
+    };
+
+    const nextPaid = currentPaid + payAmount;
+    const nextRemaining = Math.max(0, totalCost - nextPaid);
+
+    const newAuditLog: AuditLog = {
+      id: nowId + 5,
+      action: 'سداد متبقي للمورد',
+      entityType: 'purchase_batch',
+      entityId: batch.id,
+      description: `سداد مبلغ ${payAmount.toLocaleString()} ريال للمورد (${supplierLabel}) عن دفعة ${batch.batchNumber} من حساب ${acc.name}. المتبقي الآن: ${nextRemaining.toLocaleString()} ريال`,
+      createdAt: new Date().toISOString()
+    };
+
+    setData(prev => {
+      const nextBatches = (prev.tables.purchaseBatches || []).map(b => {
+        if (Number(b.id) !== Number(batchId)) return b;
+        return {
+          ...b,
+          paidAmount: nextPaid,
+          remainingSupplierAmount: nextRemaining,
+          supplierPayments: [...(b.supplierPayments || []), paymentRecord]
+        };
+      });
+      const nextJEs = [newJE, ...prev.tables.journalEntries];
+      return {
+        ...prev,
+        tables: {
+          ...prev.tables,
+          purchaseBatches: nextBatches,
+          financialTransactions: [newTrx, ...prev.tables.financialTransactions],
+          journalEntries: nextJEs,
+          journalLines: nextJEs.flatMap(j => j.lines || []),
+          auditLogs: [newAuditLog, ...(prev.tables.auditLogs || [])]
+        }
+      };
+    });
+
+    showNotification(
+      `تم سداد ${payAmount.toLocaleString()} ريال للمورد بنجاح${nextRemaining === 0 ? ' (تم إغلاق كامل المديونية ✓)' : ` • المتبقي للمورد: ${nextRemaining.toLocaleString()} ريال`}`,
+      'success'
+    );
+  };
+
   const cancelPurchaseBatch = (id: number) => {
     setData(prev => {
       const target = (prev.tables.purchaseBatches || []).find(b => b.id === id);
@@ -8015,54 +8267,77 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return o;
       });
 
-      // Reverse financial transaction into account(s)
+      // Reverse ONLY the actually paid financial transactions (initial + any subsequent supplier payments)
       const revTrxList: FinancialTransaction[] = [];
       const targetAcc1 = Number(target.accountId) === 120001 ? 120002 : Number(target.accountId);
       const targetAcc2 = target.accountId2 ? (Number(target.accountId2) === 120001 ? 120002 : Number(target.accountId2)) : null;
+      const targetSubPayments = Array.isArray(target.supplierPayments) ? target.supplierPayments : [];
+      const subPaymentsTotal = targetSubPayments.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+      const targetTotalCost = Number(target.totalCost) || 0;
+      const targetTotalPaid = target.paidAmount !== undefined ? Number(target.paidAmount) : targetTotalCost;
+      const initialPaidToRefund = Math.max(0, targetTotalPaid - subPaymentsTotal);
 
-      if (target.paymentMode === 'split' && targetAcc2 && (Number(target.card2Amount) || 0) > 0) {
-        const c1 = Number(target.card1Amount) || 0;
-        const c2 = Number(target.card2Amount) || 0;
-        if (c1 > 0) {
+      if (initialPaidToRefund > 0) {
+        if (target.paymentMode === 'split' && targetAcc2 && (Number(target.card2Amount) || 0) > 0) {
+          const c1 = Number(target.card1Amount) || 0;
+          const c2 = Number(target.card2Amount) || 0;
+          if (c1 > 0) {
+            revTrxList.push({
+              id: Date.now(),
+              transactionNumber: `TRX-REV-PB-${Date.now().toString().slice(-6)}-1`,
+              transactionDate: new Date().toISOString(),
+              accountId: targetAcc1,
+              type: 'deposit',
+              amount: c1,
+              description: `استرجاع مالي لإلغاء دفعة الشراء ${target.batchNumber} (سحب فيزا 1)`,
+              createdAt: new Date().toISOString()
+            });
+          }
+          if (c2 > 0) {
+            revTrxList.push({
+              id: Date.now() + 1,
+              transactionNumber: `TRX-REV-PB-${Date.now().toString().slice(-6)}-2`,
+              transactionDate: new Date().toISOString(),
+              accountId: targetAcc2,
+              type: 'deposit',
+              amount: c2,
+              description: `استرجاع مالي لإلغاء دفعة الشراء ${target.batchNumber} (سحب فيزا 2)`,
+              createdAt: new Date().toISOString()
+            });
+          }
+        } else {
           revTrxList.push({
             id: Date.now(),
-            transactionNumber: `TRX-REV-PB-${Date.now().toString().slice(-6)}-1`,
+            transactionNumber: `TRX-REV-PB-${Date.now().toString().slice(-6)}`,
             transactionDate: new Date().toISOString(),
             accountId: targetAcc1,
             type: 'deposit',
-            amount: c1,
-            description: `استرجاع مالي لإلغاء دفعة الشراء ${target.batchNumber} (سحب فيزا 1)`,
+            amount: initialPaidToRefund,
+            description: `استرجاع مالي لإلغاء دفعة الشراء ${target.batchNumber}`,
             createdAt: new Date().toISOString()
           });
         }
-        if (c2 > 0) {
-          revTrxList.push({
-            id: Date.now() + 1,
-            transactionNumber: `TRX-REV-PB-${Date.now().toString().slice(-6)}-2`,
-            transactionDate: new Date().toISOString(),
-            accountId: targetAcc2,
-            type: 'deposit',
-            amount: c2,
-            description: `استرجاع مالي لإلغاء دفعة الشراء ${target.batchNumber} (سحب فيزا 2)`,
-            createdAt: new Date().toISOString()
-          });
-        }
-      } else {
-        revTrxList.push({
-          id: Date.now(),
-          transactionNumber: `TRX-REV-PB-${Date.now().toString().slice(-6)}`,
-          transactionDate: new Date().toISOString(),
-          accountId: targetAcc1,
-          type: 'deposit',
-          amount: Number(target.totalCost) || 0,
-          description: `استرجاع مالي لإلغاء دفعة الشراء ${target.batchNumber}`,
-          createdAt: new Date().toISOString()
-        });
       }
 
+      targetSubPayments.forEach((sp, idx) => {
+        if ((Number(sp.amount) || 0) > 0) {
+          revTrxList.push({
+            id: Date.now() + 10 + idx,
+            transactionNumber: `TRX-REV-PBP-${Date.now().toString().slice(-6)}-${idx + 1}`,
+            transactionDate: new Date().toISOString(),
+            accountId: Number(sp.accountId) === 120001 ? 120002 : Number(sp.accountId),
+            type: 'deposit',
+            amount: Number(sp.amount),
+            description: `استرجاع سداد مورد لإلغاء دفعة الشراء ${target.batchNumber}`,
+            createdAt: new Date().toISOString()
+          });
+        }
+      });
+
+      const subJeIds = new Set(targetSubPayments.map(sp => sp.journalEntryId).filter(Boolean));
       // Void or reverse journal entry
       const updatedJournals = prev.tables.journalEntries.map(je => {
-        if (je.id === id + 2 || (target.batchNumber && je.description?.includes(target.batchNumber))) {
+        if (je.id === id + 2 || subJeIds.has(je.id) || (target.batchNumber && je.sourceNumber === target.batchNumber)) {
           return {
             ...je,
             status: 'reversed' as const,
@@ -8074,11 +8349,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       });
 
       const auditLog: AuditLog = {
-        id: Date.now(),
+        id: Date.now() + 50,
         action: 'إلغاء دفعة شراء',
         entityType: 'purchase_batch',
         entityId: id,
-        description: `إلغاء دفعة الشراء ${target.batchNumber} واسترجاع ${target.totalCost} ريال للحساب وإعادة الطلبات لقيد التنفيذ`,
+        description: `إلغاء دفعة الشراء ${target.batchNumber} واسترجاع المبلغ المدفوع (${targetTotalPaid.toLocaleString()} ريال) للحساب وإعادة الطلبات لقيد التنفيذ`,
         createdAt: new Date().toISOString()
       };
 
@@ -8102,6 +8377,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setData(prev => {
       const target = (prev.tables.purchaseBatches || []).find(b => b.id === id);
       const batchOrderIds = target?.orderIds || [];
+      const targetSubPayments = Array.isArray(target?.supplierPayments) ? target!.supplierPayments! : [];
+      const subTrxIds = new Set(targetSubPayments.map(sp => sp.transactionId).filter(Boolean));
+      const subJeIds = new Set(targetSubPayments.map(sp => sp.journalEntryId).filter(Boolean));
 
       const updatedOrders = prev.tables.orders.map(o => {
         if (batchOrderIds.includes(o.id) || o.purchaseBatchId === id) {
@@ -8115,17 +8393,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return o;
       });
 
-      // Remove financial transaction linked to this batch
+      // Remove financial transactions linked to this batch (initial + supplier payments)
       const updatedTransactions = prev.tables.financialTransactions.filter(t => {
-        if (t.id === id + 1 || t.id === id + 11) return false;
+        if (t.id === id + 1 || t.id === id + 11 || subTrxIds.has(t.id)) return false;
         if (target && t.description && t.description.includes(target.batchNumber)) return false;
         return true;
       });
 
-      // Remove or void journal entry linked to this batch
+      // Remove or void journal entries linked to this batch (initial + supplier payments)
       const updatedJournalEntries = prev.tables.journalEntries.filter(je => {
-        if (je.id === id + 2) return false;
-        if (target && (je.description?.includes(target.batchNumber) || je.entryNumber?.includes(String(id)))) return false;
+        if (je.id === id + 2 || subJeIds.has(je.id)) return false;
+        if (target && (je.sourceNumber === target.batchNumber || je.description?.includes(target.batchNumber) || je.entryNumber?.includes(String(id)))) return false;
         return true;
       });
 
@@ -8505,6 +8783,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         updateReferralStatus,
         addPurchaseBatch,
         updatePurchaseBatch,
+        payPurchaseBatchRemaining,
         cancelPurchaseBatch,
         deletePurchaseBatch,
         addAuditLog,

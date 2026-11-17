@@ -945,6 +945,8 @@ export function sanitizeAndReconcileJournalEntries(
       fixedSourceType = 'reversal';
     } else if (numStr.startsWith('JE-PB-')) {
       fixedSourceType = 'purchase_batch';
+    } else if (numStr.startsWith('JE-PBP-')) {
+      fixedSourceType = 'purchase_batch_payment';
     } else if (numStr.startsWith('JE-OPEN-')) {
       fixedSourceType = 'opening_balance';
     }

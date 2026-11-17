@@ -338,7 +338,7 @@ export interface JournalEntry {
   entryNumber: string;
   journalNumber?: string;
   transactionId?: number | null;
-  sourceType?: 'order' | 'payment' | 'expense' | 'purchase_batch' | 'receivable' | 'manual' | 'reversal' | 'opening_balance';
+  sourceType?: 'order' | 'payment' | 'expense' | 'purchase_batch' | 'purchase_batch_payment' | 'receivable' | 'manual' | 'reversal' | 'opening_balance';
   sourceId?: number | string | null;
   sourceNumber?: string | null;
   status?: JournalEntryStatus;
@@ -715,10 +715,22 @@ export interface Referral {
   createdAt: string;
 }
 
+export interface PurchaseBatchSupplierPayment {
+  id: number;
+  amount: number;
+  accountId: number;
+  accountName: string;
+  paymentDate: string;
+  notes?: string | null;
+  transactionId?: number;
+  journalEntryId?: number;
+}
+
 export interface PurchaseBatch {
   id: number;
   batchNumber: string;
   source: string; // SHEIN, AliExpress, etc.
+  supplierName?: string | null;
   supplierOrderNumber?: string | null;
   purchaseDate: string;
   accountId: number;
@@ -733,6 +745,9 @@ export interface PurchaseBatch {
   transferFees: string | number; // عمولات التحويل البنكي
   exchangeRateDiff?: string | number; // فروق الصرف
   totalCost?: string | number;
+  paidAmount?: number; // المبلغ المدفوع للمورد
+  remainingSupplierAmount?: number; // المبلغ المتبقي للمورد
+  supplierPayments?: PurchaseBatchSupplierPayment[];
   orderIds?: number[];
   notes?: string | null;
   status: 'active' | 'cancelled';
