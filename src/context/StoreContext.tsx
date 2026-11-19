@@ -42,7 +42,7 @@ import {
 import { exportToZip } from '../utils/dataExporter';
 import { getOrCreateCurrentDevice } from '../utils/deviceTracker';
 import { INITIAL_DATA } from '../data/initialData';
-import { subscribeToSupabaseRealtime, isSupabaseConfigured } from '../lib/supabase';
+import { useFirebase } from '../firebase/FirebaseContext';
 import { DEFAULT_CHART_OF_ACCOUNTS } from '../data/defaultChartOfAccounts';
 import {
   roundCurrency,
@@ -679,11 +679,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Cloud Synchronization state
+  const {
+    currentUser: firebaseUser,
+    saveStoreToCloud,
+    loadStoreFromCloud,
+    subscribeToCloudStore
+  } = useFirebase();
   const [isSyncing, setIsSyncing] = useState(false);
   const [hasInitializedFromServer, setHasInitializedFromServer] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
   const [realtimeStatus, setRealtimeStatus] = useState<'connected' | 'connecting' | 'disconnected' | 'offline'>('disconnected');
   const [lastRealtimeEvent, setLastRealtimeEvent] = useState<{ table: string; eventType: string; time: string } | null>(null);
+  const suppressCloudPushRef = React.useRef(false);
+  const lastAppliedCloudRevRef = React.useRef<number>(0);
+  const dataRef = React.useRef<TopStoreBackup>(data);
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
 
   // Sync pull from server
   const syncWithServer = async () => {
@@ -856,37 +868,183 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, []);
 
-  // Supabase Realtime subscription fallback (if configured)
+  // Firebase Firestore Real-time Sync & Initial Cloud Reconciliation
   useEffect(() => {
-    if (!isSupabaseConfigured()) {
+    if (!firebaseUser || !firebaseUser.emailVerified || !hasInitializedFromServer) {
       return;
     }
 
-    const coreTables = ['customers', 'orders', 'journal_entries', 'journal_lines', 'payments', 'expenses', 'shipments'];
+    const currentDev = getOrCreateCurrentDevice();
+    let isCancelled = false;
 
-    const sub = subscribeToSupabaseRealtime(
-      coreTables,
-      (payload) => {
+    const applyCloudSnapshot = async (forcePull: boolean = false) => {
+      try {
+        const cloudRes = await loadStoreFromCloud();
+        if (isCancelled) return;
+
+        if (!cloudRes || !cloudRes.dataJson) {
+          // Seed Firestore on first login with current verified local/server state
+          const currentSnapshot = dataRef.current;
+          if (currentSnapshot && currentSnapshot.tables) {
+            await saveStoreToCloud(
+              JSON.stringify(currentSnapshot),
+              'تهيئة ومزامنة بيانات المتجر إلى Firebase Firestore',
+              {
+                customersCount: currentSnapshot.tables.customers?.length || 0,
+                ordersCount: currentSnapshot.tables.orders?.length || 0,
+                expensesCount: currentSnapshot.tables.expenses?.length || 0,
+                journalEntriesCount: currentSnapshot.tables.journalEntries?.length || 0
+              },
+              currentDev.deviceId
+            );
+          }
+          return;
+        }
+
+        if (!forcePull && cloudRes.revision <= lastAppliedCloudRevRef.current) {
+          return;
+        }
+
+        const parsed = JSON.parse(cloudRes.dataJson);
+        if (!parsed || !parsed.tables) return;
+
+        const cloudCleaned = sanitizeAndReconcileJournalEntries(parsed);
+        lastAppliedCloudRevRef.current = cloudRes.revision;
+
+        // Merge any local-only records created offline before adopting cloud snapshot
+        suppressCloudPushRef.current = true;
+        setData(prev => {
+          if (!prev || !prev.tables) {
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudCleaned));
+            } catch {}
+            return cloudCleaned;
+          }
+
+          const cloudOrderIds = new Set((cloudCleaned.tables.orders || []).map(o => o.id));
+          const localOnlyOrders = (prev.tables.orders || []).filter(o => !cloudOrderIds.has(o.id));
+
+          const cloudPaymentIds = new Set((cloudCleaned.tables.payments || []).map(p => p.id));
+          const localOnlyPayments = (prev.tables.payments || []).filter(p => !cloudPaymentIds.has(p.id));
+
+          const cloudCustomerIds = new Set((cloudCleaned.tables.customers || []).map(c => c.id));
+          const localOnlyCustomers = (prev.tables.customers || []).filter(c => !cloudCustomerIds.has(c.id));
+
+          const cloudExpenseIds = new Set((cloudCleaned.tables.expenses || []).map(e => e.id));
+          const localOnlyExpenses = (prev.tables.expenses || []).filter(e => !cloudExpenseIds.has(e.id));
+
+          const hasLocalAdditions =
+            localOnlyOrders.length > 0 ||
+            localOnlyPayments.length > 0 ||
+            localOnlyCustomers.length > 0 ||
+            localOnlyExpenses.length > 0;
+
+          const nextState = hasLocalAdditions
+            ? sanitizeAndReconcileJournalEntries({
+                ...cloudCleaned,
+                tables: {
+                  ...cloudCleaned.tables,
+                  orders: [...localOnlyOrders, ...(cloudCleaned.tables.orders || [])],
+                  payments: [...localOnlyPayments, ...(cloudCleaned.tables.payments || [])],
+                  customers: [...localOnlyCustomers, ...(cloudCleaned.tables.customers || [])],
+                  expenses: [...localOnlyExpenses, ...(cloudCleaned.tables.expenses || [])]
+                }
+              })
+            : cloudCleaned;
+
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+          } catch {}
+
+          // Keep Express server store synchronized too
+          setTimeout(async () => {
+            try {
+              await fetch('/api/sync/push', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data: nextState, device: currentDev })
+              });
+            } catch {}
+          }, 120);
+
+          if (hasLocalAdditions) {
+            setTimeout(() => {
+              suppressCloudPushRef.current = false;
+            }, 300);
+          }
+
+          return nextState;
+        });
+
+        setLastSyncTime(new Date().toLocaleTimeString('ar-YE'));
         setLastRealtimeEvent({
-          table: payload.table,
-          eventType: payload.eventType,
+          table: 'Firebase Firestore',
+          eventType: 'SYNC_PULL',
           time: new Date().toLocaleTimeString('ar-YE')
         });
-        syncWithServer();
-      },
-      (status) => {
-        if (status === 'SUBSCRIBED') {
-          setRealtimeStatus('connected');
-        }
-      }
-    );
-
-    return () => {
-      if (sub) {
-        sub.unsubscribe();
+        setRealtimeStatus('connected');
+      } catch (err) {
+        console.warn('Firestore initial/remote sync notice:', err);
+      } finally {
+        setTimeout(() => {
+          suppressCloudPushRef.current = false;
+        }, 600);
       }
     };
-  }, []);
+
+    void applyCloudSnapshot(true);
+
+    const unsubscribe = subscribeToCloudStore((manifest) => {
+      if (isCancelled) return;
+      setRealtimeStatus('connected');
+      if (
+        manifest.revision > lastAppliedCloudRevRef.current &&
+        manifest.originDeviceId &&
+        manifest.originDeviceId !== currentDev.deviceId
+      ) {
+        void applyCloudSnapshot(true);
+      }
+    });
+
+    return () => {
+      isCancelled = true;
+      unsubscribe();
+    };
+  }, [firebaseUser, hasInitializedFromServer, loadStoreFromCloud, saveStoreToCloud, subscribeToCloudStore]);
+
+  // Auto-push local mutations to Firebase Firestore (debounced) when authenticated
+  useEffect(() => {
+    if (!firebaseUser || !firebaseUser.emailVerified || !hasInitializedFromServer) {
+      return;
+    }
+    if (suppressCloudPushRef.current) {
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      if (suppressCloudPushRef.current) return;
+      try {
+        const currentDev = getOrCreateCurrentDevice();
+        const safeDevId = currentDev.deviceId.replace(/[^a-zA-Z0-9_\-]/g, '_').slice(0, 128);
+        lastAppliedCloudRevRef.current = Date.now();
+        await saveStoreToCloud(
+          JSON.stringify(data),
+          'مزامنة تلقائية فورية للنظام',
+          {
+            customersCount: data.tables.customers?.length || 0,
+            ordersCount: data.tables.orders?.length || 0,
+            expensesCount: data.tables.expenses?.length || 0,
+            journalEntriesCount: data.tables.journalEntries?.length || 0
+          },
+          safeDevId
+        );
+      } catch (err) {
+        console.warn('Firestore auto-push notice:', err);
+      }
+    }, 1800);
+
+    return () => clearTimeout(timer);
+  }, [data, firebaseUser, hasInitializedFromServer, saveStoreToCloud]);
 
   // Initial pull and periodic 4-second heartbeat sync for instant cross-device mobile/laptop lockstep
   useEffect(() => {

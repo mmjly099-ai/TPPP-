@@ -215,9 +215,9 @@ export const MobileAllSectionsSheet: React.FC<MobileAllSectionsSheetProps> = ({
           color: 'bg-indigo-50 text-indigo-700 border-indigo-200'
         },
         {
-          id: 'supabase-monitor',
-          label: 'مراقبة ومزامنة Supabase',
-          description: 'حالة اتصال السحابة وتوقيت آخر مزامنة بين اللابتوب والجوال',
+          id: 'firebase-monitor',
+          label: 'مراقبة ومزامنة Firebase',
+          description: 'حالة اتصال Cloud Firestore ومصادقة Google وتوقيت آخر مزامنة بين اللابتوب والجوال',
           icon: Activity,
           color: 'bg-emerald-50 text-emerald-700 border-emerald-200'
         },

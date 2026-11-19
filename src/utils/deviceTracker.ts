@@ -20,7 +20,7 @@ export interface DeviceSyncRecord {
   os: string;
   ip?: string;
   lastSyncAt: string; // ISO string
-  syncType: 'pull' | 'push' | 'supabase_push' | 'supabase_pull';
+  syncType: 'pull' | 'push' | 'firebase_push' | 'firebase_pull';
   syncStatus: 'success' | 'failed' | 'pending';
   recordsCount?: {
     customers: number;

@@ -44,7 +44,7 @@ export type NavTab =
   | 'receivables'
   | 'assistant'
   | 'data-import'
-  | 'supabase-monitor'
+  | 'firebase-monitor'
   | 'settings';
 
 interface NavigationProps {
@@ -232,9 +232,9 @@ export const Navigation: React.FC<NavigationProps> = ({
       color: 'indigo'
     },
     {
-      id: 'supabase-monitor',
-      label: 'مراقبة ومزامنة Supabase',
-      description: 'حالة اتصال قاعدة بيانات Supabase، تتبع آخر مزامنة بين اللابتوب والهاتف ومنع تأخير البيانات',
+      id: 'firebase-monitor',
+      label: 'مراقبة ومزامنة Firebase',
+      description: 'حالة اتصال قاعدة بيانات Firebase Firestore ومصادقة Google وتتبع المزامنة بين اللابتوب والهاتف',
       icon: Activity,
       color: 'emerald'
     },

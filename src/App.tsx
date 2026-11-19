@@ -21,7 +21,7 @@ import { CouriersView } from './components/CouriersView';
 import { DataImportView } from './components/import/DataImportView';
 import { InvoicesView } from './components/InvoicesView';
 import { WorkersView } from './components/WorkersView';
-import { SupabaseMonitorView } from './components/SupabaseMonitorView';
+import { FirebaseMonitorView } from './components/FirebaseMonitorView';
 import { SystemLockScreen } from './components/auth/SystemLockScreen';
 import { OfflineIndicator } from './components/common/OfflineIndicator';
 
@@ -321,7 +321,7 @@ const MainApp: React.FC = () => {
 
           {activeTab === 'data-import' && <DataImportView />}
 
-          {activeTab === 'supabase-monitor' && <SupabaseMonitorView />}
+          {activeTab === 'firebase-monitor' && <FirebaseMonitorView />}
 
           {activeTab === 'settings' && <SettingsView />}
         </div>

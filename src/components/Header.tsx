@@ -149,9 +149,9 @@ export const Header: React.FC<HeaderProps> = ({
 
             {onNavigate && (
               <button
-                onClick={() => onNavigate('supabase-monitor')}
+                onClick={() => onNavigate('firebase-monitor')}
                 className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center hover:bg-emerald-100 transition-colors cursor-pointer"
-                title="مراقبة مزامنة الأجهزة و Supabase"
+                title="مراقبة ومزامنة Firebase Firestore"
               >
                 <Activity className="w-3.5 h-3.5 text-emerald-600" />
               </button>
@@ -298,7 +298,7 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             )}
 
-            {/* Cloud Sync & Supabase Monitor Status Button */}
+            {/* Cloud Sync & Firebase Monitor Status Button */}
             <div className="inline-flex items-center rounded-lg border border-emerald-200 bg-emerald-50 p-0.5 shadow-2xs">
               <button
                 onClick={() => syncWithServer()}
@@ -314,12 +314,12 @@ export const Header: React.FC<HeaderProps> = ({
 
               {onNavigate && (
                 <button
-                  onClick={() => onNavigate('supabase-monitor')}
+                  onClick={() => onNavigate('firebase-monitor')}
                   className="inline-flex items-center gap-1 px-2 py-1 text-xs font-bold text-emerald-700 hover:bg-emerald-200/60 rounded-md transition-colors cursor-pointer border-r border-emerald-200/80"
-                  title="فتح وحدة مراقبة المزامنة وسيرفر Supabase وفحص أجهزة اللابتوب والهاتف"
+                  title="فتح وحدة مراقبة المزامنة و Firebase Firestore وفحص أجهزة اللابتوب والهاتف"
                 >
                   <Activity className="w-3.5 h-3.5 text-emerald-600" />
-                  <span className="hidden 2xl:inline">مراقبة الأجهزة</span>
+                  <span className="hidden 2xl:inline">مراقبة Firebase</span>
                 </button>
               )}
             </div>

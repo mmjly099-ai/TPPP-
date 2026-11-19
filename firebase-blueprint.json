@@ -35,19 +35,19 @@
         "createdAt": {
           "type": "string",
           "format": "date-time",
-          "description": "Account creation timestamp"
+          "description": "Account creation server timestamp"
         },
         "updatedAt": {
           "type": "string",
           "format": "date-time",
-          "description": "Profile last update timestamp"
+          "description": "Profile last update server timestamp"
         }
       },
-      "required": ["uid", "email", "role"]
+      "required": ["uid", "email", "role", "createdAt", "updatedAt"]
     },
     "StoreState": {
       "title": "StoreState",
-      "description": "Synced store database snapshot and tables",
+      "description": "Synced store database manifest and metadata for cloud persistence",
       "type": "object",
       "properties": {
         "id": {
@@ -57,7 +57,7 @@
         },
         "userId": {
           "type": "string",
-          "description": "ID of user who updated the state",
+          "description": "UID of user who updated the state",
           "maxLength": 128
         },
         "version": {
@@ -65,23 +65,174 @@
           "description": "Schema version",
           "maxLength": 32
         },
+        "storageMode": {
+          "type": "string",
+          "description": "Storage layout mode",
+          "enum": ["chunked_v2", "inline_v1"],
+          "maxLength": 32
+        },
+        "chunkCount": {
+          "type": "integer",
+          "description": "Number of shards in store_shards"
+        },
+        "totalChars": {
+          "type": "integer",
+          "description": "Total serialized character count"
+        },
+        "revision": {
+          "type": "integer",
+          "description": "Monotonic sync revision timestamp"
+        },
+        "originDeviceId": {
+          "type": "string",
+          "description": "Device ID that pushed this revision",
+          "maxLength": 128
+        },
         "dataJson": {
           "type": "string",
-          "description": "Serialized store state snapshot",
-          "maxLength": 1048576
+          "description": "Optional inline snapshot when small",
+          "maxLength": 650000
         },
         "summary": {
           "type": "string",
           "description": "State change summary",
           "maxLength": 512
         },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Initial creation server timestamp"
+        },
         "updatedAt": {
           "type": "string",
           "format": "date-time",
-          "description": "Last synced timestamp"
+          "description": "Last synced server timestamp"
         }
       },
-      "required": ["id", "userId", "dataJson", "updatedAt"]
+      "required": ["id", "userId", "storageMode", "chunkCount", "totalChars", "revision", "createdAt", "updatedAt"]
+    },
+    "StoreShard": {
+      "title": "StoreShard",
+      "description": "Chunked payload slice of the store snapshot to stay safely under 1 MiB per document",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Shard document ID",
+          "maxLength": 128
+        },
+        "stateId": {
+          "type": "string",
+          "description": "Parent store_state document ID",
+          "maxLength": 128
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of user who wrote the shard",
+          "maxLength": 128
+        },
+        "shardIndex": {
+          "type": "integer",
+          "description": "Zero-based shard sequence index"
+        },
+        "chunkCount": {
+          "type": "integer",
+          "description": "Total shards for this revision"
+        },
+        "revision": {
+          "type": "integer",
+          "description": "Parent manifest revision"
+        },
+        "payload": {
+          "type": "string",
+          "description": "Serialized slice payload",
+          "maxLength": 650000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Update server timestamp"
+        }
+      },
+      "required": ["id", "stateId", "userId", "shardIndex", "chunkCount", "revision", "payload", "createdAt", "updatedAt"]
+    },
+    "ConnectedDevice": {
+      "title": "ConnectedDevice",
+      "description": "Connected laptop/phone/tablet device telemetry for Firestore sync",
+      "type": "object",
+      "properties": {
+        "deviceId": {
+          "type": "string",
+          "description": "Unique device identifier",
+          "maxLength": 128
+        },
+        "userId": {
+          "type": "string",
+          "description": "Authenticated user UID",
+          "maxLength": 128
+        },
+        "deviceName": {
+          "type": "string",
+          "description": "Friendly device name",
+          "maxLength": 128
+        },
+        "deviceType": {
+          "type": "string",
+          "enum": ["desktop", "mobile", "tablet"],
+          "maxLength": 32
+        },
+        "browser": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "os": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "syncType": {
+          "type": "string",
+          "enum": ["firebase_push", "firebase_pull", "pull", "push"],
+          "maxLength": 32
+        },
+        "syncStatus": {
+          "type": "string",
+          "enum": ["success", "failed", "pending"],
+          "maxLength": 32
+        },
+        "customersCount": {
+          "type": "integer"
+        },
+        "ordersCount": {
+          "type": "integer"
+        },
+        "expensesCount": {
+          "type": "integer"
+        },
+        "journalEntriesCount": {
+          "type": "integer"
+        },
+        "latencyMs": {
+          "type": "integer"
+        },
+        "lastSyncIso": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["deviceId", "userId", "deviceName", "deviceType", "browser", "os", "syncType", "syncStatus", "createdAt", "updatedAt"]
     },
     "CloudAuditLog": {
       "title": "CloudAuditLog",
@@ -116,10 +267,10 @@
         "createdAt": {
           "type": "string",
           "format": "date-time",
-          "description": "Timestamp of action"
+          "description": "Server timestamp of action"
         }
       },
-      "required": ["id", "userId", "action", "details"]
+      "required": ["id", "userId", "action", "details", "createdAt"]
     }
   },
   "firestore": {
@@ -129,11 +280,19 @@
     },
     "/store_state/{stateId}": {
       "schema": { "$ref": "#/entities/StoreState" },
-      "description": "Synced store data and snapshots for cloud persistence"
+      "description": "Synced store manifest and metadata for cloud persistence"
+    },
+    "/store_shards/{shardId}": {
+      "schema": { "$ref": "#/entities/StoreShard" },
+      "description": "Chunked store payload shards (< 1 MiB each)"
+    },
+    "/connected_devices/{deviceId}": {
+      "schema": { "$ref": "#/entities/ConnectedDevice" },
+      "description": "Synced client devices and health telemetry"
     },
     "/cloud_audit_logs/{logId}": {
       "schema": { "$ref": "#/entities/CloudAuditLog" },
-      "description": "System activity logs recorded from operations"
+      "description": "Immutable system activity logs recorded from cloud operations"
     }
   }
 }

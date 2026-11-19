@@ -3,19 +3,34 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
+    // Global Safety Net: Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core Security & Validation Primitives
     function isSignedIn() {
       return request.auth != null;
     }
 
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
     function isUser(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+      return isVerifiedUser() && request.auth.uid == userId;
     }
 
     function isBootstrapAdmin() {
-      return isSignedIn() &&
-        request.auth.token.email == "m1193883q@gmail.com" &&
-        request.auth.token.email_verified == true;
+      return isVerifiedUser() && request.auth.token.email == "m1193883q@gmail.com";
+    }
+
+    function isStoreStaff() {
+      return isBootstrapAdmin() || (
+        isVerifiedUser() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'accountant', 'cashier']
+      );
     }
 
     function isValidId(id) {
@@ -30,19 +45,17 @@ service cloud.firestore {
       return resource.data;
     }
 
-    // Default deny catch-all
-    match /{document=**} {
-      allow read, write: if false;
-    }
-
-    // User Profiles
+    // 1. User Profiles
     match /users/{userId} {
       function isValidUser(data) {
-        return data.keys().hasAll(['uid', 'email', 'role']) &&
+        return data.keys().hasAll(['uid', 'email', 'role', 'createdAt', 'updatedAt']) &&
                data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'role', 'createdAt', 'updatedAt']) &&
+               data.uid is string && data.uid.size() > 0 && data.uid.size() <= 128 &&
                data.uid == request.auth.uid &&
-               data.email is string && data.email.size() <= 256 &&
+               data.email is string && data.email.size() > 0 && data.email.size() <= 256 &&
                data.role in ['admin', 'accountant', 'cashier', 'viewer'] &&
+               data.createdAt is timestamp &&
+               data.updatedAt is timestamp &&
                (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 128)) &&
                (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 1024));
       }
@@ -52,57 +65,173 @@ service cloud.firestore {
       allow create: if isUser(userId) &&
                        isValidId(userId) &&
                        isValidUser(incoming()) &&
-                       (incoming().role != 'admin' || isBootstrapAdmin());
+                       incoming().createdAt == request.time &&
+                       incoming().updatedAt == request.time &&
+                       (incoming().role == 'viewer' || isBootstrapAdmin());
       allow update: if isUser(userId) &&
                        isValidId(userId) &&
                        isValidUser(incoming()) &&
                        incoming().uid == existing().uid &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().updatedAt == request.time &&
                        (incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'updatedAt']) ||
                         isBootstrapAdmin());
-      allow delete: if isBootstrapAdmin();
+      allow delete: if isBootstrapAdmin() && isValidId(userId);
     }
 
-    // Store State Backups / Sync
+    // 2. Store State Manifest & Metadata
     match /store_state/{stateId} {
       function isValidState(data) {
-        return data.keys().hasAll(['id', 'userId', 'dataJson', 'updatedAt']) &&
-               data.keys().hasOnly(['id', 'userId', 'version', 'dataJson', 'summary', 'updatedAt']) &&
-               data.id is string && data.id.size() <= 128 &&
+        return data.keys().hasAll(['id', 'userId', 'storageMode', 'chunkCount', 'totalChars', 'revision', 'createdAt', 'updatedAt']) &&
+               data.keys().hasOnly(['id', 'userId', 'version', 'storageMode', 'chunkCount', 'totalChars', 'revision', 'originDeviceId', 'dataJson', 'summary', 'createdAt', 'updatedAt']) &&
+               data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+               data.userId is string && data.userId.size() > 0 && data.userId.size() <= 128 &&
                data.userId == request.auth.uid &&
-               data.dataJson is string && data.dataJson.size() <= 1048576 &&
+               data.storageMode in ['chunked_v2', 'inline_v1'] &&
+               data.chunkCount is int && data.chunkCount >= 0 && data.chunkCount <= 100 &&
+               data.totalChars is int && data.totalChars >= 0 && data.totalChars <= 50000000 &&
+               data.revision is int && data.revision >= 0 &&
+               data.createdAt is timestamp &&
+               data.updatedAt is timestamp &&
                (!('version' in data) || (data.version is string && data.version.size() <= 32)) &&
+               (!('originDeviceId' in data) || (data.originDeviceId is string && data.originDeviceId.size() <= 128)) &&
+               (!('dataJson' in data) || (data.dataJson is string && data.dataJson.size() <= 650000)) &&
                (!('summary' in data) || (data.summary is string && data.summary.size() <= 512));
       }
 
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isSignedIn() &&
-                       isValidId(stateId) &&
-                       isValidState(incoming());
-      allow update: if isSignedIn() &&
+      allow get: if isVerifiedUser() && isValidId(stateId) && (existing().userId == request.auth.uid || isStoreStaff());
+      allow list: if isBootstrapAdmin() || (isVerifiedUser() && existing().userId == request.auth.uid);
+      allow create: if isVerifiedUser() &&
                        isValidId(stateId) &&
                        isValidState(incoming()) &&
+                       incoming().createdAt == request.time &&
+                       incoming().updatedAt == request.time &&
+                       (isStoreStaff() || incoming().userId == request.auth.uid);
+      allow update: if isVerifiedUser() &&
+                       isValidId(stateId) &&
+                       isValidState(incoming()) &&
+                       (existing().userId == request.auth.uid || isStoreStaff()) &&
                        incoming().id == existing().id &&
-                       incoming().diff(existing()).affectedKeys().hasOnly(['dataJson', 'summary', 'version', 'updatedAt', 'userId']);
-      allow delete: if isBootstrapAdmin();
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().updatedAt == request.time &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'userId', 'version', 'storageMode', 'chunkCount', 'totalChars',
+                         'revision', 'originDeviceId', 'dataJson', 'summary', 'updatedAt'
+                       ]);
+      allow delete: if isBootstrapAdmin() && isValidId(stateId);
     }
 
-    // Cloud Audit Logs
+    // 3. Store Payload Shards (< 1 MiB each)
+    match /store_shards/{shardId} {
+      function isValidStoreShard(data) {
+        return data.keys().hasAll(['id', 'stateId', 'userId', 'shardIndex', 'chunkCount', 'revision', 'payload', 'createdAt', 'updatedAt']) &&
+               data.keys().hasOnly(['id', 'stateId', 'userId', 'shardIndex', 'chunkCount', 'revision', 'payload', 'createdAt', 'updatedAt']) &&
+               data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+               data.stateId is string && isValidId(data.stateId) &&
+               data.userId is string && data.userId.size() > 0 && data.userId.size() <= 128 &&
+               data.userId == request.auth.uid &&
+               data.shardIndex is int && data.shardIndex >= 0 && data.shardIndex <= 100 &&
+               data.chunkCount is int && data.chunkCount >= 1 && data.chunkCount <= 100 &&
+               data.revision is int && data.revision >= 0 &&
+               data.payload is string && data.payload.size() > 0 && data.payload.size() <= 650000 &&
+               data.createdAt is timestamp &&
+               data.updatedAt is timestamp;
+      }
+
+      allow get: if isVerifiedUser() && isValidId(shardId) && (existing().userId == request.auth.uid || isStoreStaff());
+      allow list: if isBootstrapAdmin() || (isVerifiedUser() && existing().userId == request.auth.uid);
+      allow create: if isVerifiedUser() &&
+                       isValidId(shardId) &&
+                       isValidStoreShard(incoming()) &&
+                       incoming().createdAt == request.time &&
+                       incoming().updatedAt == request.time &&
+                       existsAfter(/databases/$(database)/documents/store_state/$(incoming().stateId)) &&
+                       (isStoreStaff() || incoming().userId == request.auth.uid);
+      allow update: if isVerifiedUser() &&
+                       isValidId(shardId) &&
+                       isValidStoreShard(incoming()) &&
+                       (existing().userId == request.auth.uid || isStoreStaff()) &&
+                       incoming().id == existing().id &&
+                       incoming().stateId == existing().stateId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().updatedAt == request.time &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'userId', 'shardIndex', 'chunkCount', 'revision', 'payload', 'updatedAt'
+                       ]);
+      allow delete: if isVerifiedUser() && isValidId(shardId) && (existing().userId == request.auth.uid || isBootstrapAdmin());
+    }
+
+    // 4. Connected Devices Telemetry
+    match /connected_devices/{deviceId} {
+      function isValidConnectedDevice(data) {
+        return data.keys().hasAll(['deviceId', 'userId', 'deviceName', 'deviceType', 'browser', 'os', 'syncType', 'syncStatus', 'createdAt', 'updatedAt']) &&
+               data.keys().hasOnly([
+                 'deviceId', 'userId', 'deviceName', 'deviceType', 'browser', 'os',
+                 'syncType', 'syncStatus', 'customersCount', 'ordersCount',
+                 'expensesCount', 'journalEntriesCount', 'latencyMs', 'lastSyncIso',
+                 'createdAt', 'updatedAt'
+               ]) &&
+               data.deviceId is string && isValidId(data.deviceId) &&
+               data.userId is string && data.userId.size() > 0 && data.userId.size() <= 128 &&
+               data.userId == request.auth.uid &&
+               data.deviceName is string && data.deviceName.size() > 0 && data.deviceName.size() <= 128 &&
+               data.deviceType in ['desktop', 'mobile', 'tablet'] &&
+               data.browser is string && data.browser.size() <= 128 &&
+               data.os is string && data.os.size() <= 128 &&
+               data.syncType in ['firebase_push', 'firebase_pull', 'pull', 'push'] &&
+               data.syncStatus in ['success', 'failed', 'pending'] &&
+               data.createdAt is timestamp &&
+               data.updatedAt is timestamp &&
+               (!('customersCount' in data) || (data.customersCount is int && data.customersCount >= 0)) &&
+               (!('ordersCount' in data) || (data.ordersCount is int && data.ordersCount >= 0)) &&
+               (!('expensesCount' in data) || (data.expensesCount is int && data.expensesCount >= 0)) &&
+               (!('journalEntriesCount' in data) || (data.journalEntriesCount is int && data.journalEntriesCount >= 0)) &&
+               (!('latencyMs' in data) || (data.latencyMs is int && data.latencyMs >= 0)) &&
+               (!('lastSyncIso' in data) || (data.lastSyncIso is string && data.lastSyncIso.size() <= 64));
+      }
+
+      allow get: if isVerifiedUser() && isValidId(deviceId) && (existing().userId == request.auth.uid || isStoreStaff());
+      allow list: if isBootstrapAdmin() || (isVerifiedUser() && existing().userId == request.auth.uid);
+      allow create: if isVerifiedUser() &&
+                       isValidId(deviceId) &&
+                       isValidConnectedDevice(incoming()) &&
+                       incoming().createdAt == request.time &&
+                       incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser() &&
+                       isValidId(deviceId) &&
+                       isValidConnectedDevice(incoming()) &&
+                       (existing().userId == request.auth.uid || isBootstrapAdmin()) &&
+                       incoming().deviceId == existing().deviceId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().updatedAt == request.time &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'userId', 'deviceName', 'deviceType', 'browser', 'os',
+                         'syncType', 'syncStatus', 'customersCount', 'ordersCount',
+                         'expensesCount', 'journalEntriesCount', 'latencyMs', 'lastSyncIso', 'updatedAt'
+                       ]);
+      allow delete: if isVerifiedUser() && isValidId(deviceId) && (existing().userId == request.auth.uid || isBootstrapAdmin());
+    }
+
+    // 5. Immutable Cloud Audit Logs
     match /cloud_audit_logs/{logId} {
       function isValidAuditLog(data) {
-        return data.keys().hasAll(['id', 'userId', 'action', 'details']) &&
+        return data.keys().hasAll(['id', 'userId', 'action', 'details', 'createdAt']) &&
                data.keys().hasOnly(['id', 'userId', 'action', 'entityType', 'details', 'createdAt']) &&
-               data.id is string && data.id.size() <= 128 &&
+               data.id is string && isValidId(data.id) &&
+               data.userId is string && data.userId.size() > 0 && data.userId.size() <= 128 &&
                data.userId == request.auth.uid &&
-               data.action is string && data.action.size() <= 64 &&
-               data.details is string && data.details.size() <= 1024 &&
+               data.action is string && data.action.size() > 0 && data.action.size() <= 64 &&
+               data.details is string && data.details.size() > 0 && data.details.size() <= 1024 &&
+               data.createdAt is timestamp &&
                (!('entityType' in data) || (data.entityType is string && data.entityType.size() <= 64));
       }
 
-      allow get, list: if isSignedIn();
-      allow create: if isSignedIn() &&
+      allow get: if isVerifiedUser() && isValidId(logId) && (existing().userId == request.auth.uid || isBootstrapAdmin());
+      allow list: if isBootstrapAdmin() || (isVerifiedUser() && existing().userId == request.auth.uid);
+      allow create: if isVerifiedUser() &&
                        isValidId(logId) &&
-                       isValidAuditLog(incoming());
+                       isValidAuditLog(incoming()) &&
+                       incoming().createdAt == request.time;
       allow update, delete: if false; // Immutable audit trail
     }
   }
