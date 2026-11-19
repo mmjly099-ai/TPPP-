@@ -234,7 +234,7 @@ export const Navigation: React.FC<NavigationProps> = ({
     {
       id: 'firebase-monitor',
       label: 'مراقبة ومزامنة Firebase',
-      description: 'حالة اتصال قاعدة بيانات Firebase Firestore ومصادقة Google وتتبع المزامنة بين اللابتوب والهاتف',
+      description: 'حالة اتصال قاعدة بيانات Firebase Firestore وتتبع المزامنة التلقائية بين اللابتوب والهاتف بكلمة مرور النظام',
       icon: Activity,
       color: 'emerald'
     },

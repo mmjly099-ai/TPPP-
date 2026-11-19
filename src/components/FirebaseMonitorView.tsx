@@ -13,15 +13,14 @@ import {
   Layers,
   ShieldCheck,
   Zap,
-  LogIn,
-  LogOut,
   CloudUpload,
   CloudDownload,
   Copy,
   Check,
   ExternalLink,
   History,
-  HardDrive
+  HardDrive,
+  Lock
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { useFirebase, CloudAuditEntry } from '../firebase/FirebaseContext';
@@ -46,15 +45,14 @@ export const FirebaseMonitorView: React.FC = () => {
 
   const {
     currentUser,
-    isAdmin,
     isSyncing: isCloudSyncing,
     lastCloudSyncAt,
     cloudRevision,
     chunkInfo,
     firebaseRealtimeStatus,
     authError,
-    loginWithGoogle,
-    logout,
+    anonymousProviderDisabled,
+    connectCloudWithPasswordSession,
     testConnectionNow,
     saveStoreToCloud,
     loadStoreFromCloud,
@@ -81,11 +79,7 @@ export const FirebaseMonitorView: React.FC = () => {
   const [uiNotice, setUiNotice] = useState<{ type: 'error' | 'success' | 'info'; text: string } | null>(null);
   const [confirmAction, setConfirmAction] = useState<'push' | 'pull' | null>(null);
   const [isRunningCloudOp, setIsRunningCloudOp] = useState(false);
-  const [showDomainHelper, setShowDomainHelper] = useState(false);
-  const [copiedHostname, setCopiedHostname] = useState(false);
   const [copiedProjectId, setCopiedProjectId] = useState(false);
-
-  const currentHostname = typeof window !== 'undefined' ? window.location.hostname : '';
 
   const checkHealth = useCallback(async () => {
     setHealth(prev => ({ ...prev, checking: true }));
@@ -100,11 +94,11 @@ export const FirebaseMonitorView: React.FC = () => {
         .then(r => (r.ok ? r.json() : null))
         .catch(() => null);
 
-      const cloudDevicesPromise = currentUser?.emailVerified
+      const cloudDevicesPromise = currentUser
         ? getConnectedCloudDevices().catch(() => [])
         : Promise.resolve([]);
 
-      const logsPromise = currentUser?.emailVerified
+      const logsPromise = currentUser
         ? getRecentCloudAuditLogs().catch(() => [])
         : Promise.resolve([]);
 
@@ -147,33 +141,32 @@ export const FirebaseMonitorView: React.FC = () => {
     );
   }, [serverDevices, cloudDevices]);
 
-  const handleGoogleSignIn = async () => {
+  const handleReconnectSession = async () => {
     setUiNotice(null);
-    try {
-      await loginWithGoogle();
+    const ok = await connectCloudWithPasswordSession();
+    if (ok) {
       setUiNotice({
         type: 'success',
-        text: 'تم تسجيل الدخول بحساب Google وتفعيل المزامنة التلقائية مع Cloud Firestore بنجاح.'
+        text: 'تم تفعيل جلسة المزامنة السحابية عبر كلمة المرور والاتصال بـ Cloud Firestore بنجاح.'
       });
       void fetchAllTelemetry();
-    } catch (err: any) {
-      if (err?.code === 'auth/unauthorized-domain' || String(err?.message || '').includes('unauthorized-domain')) {
-        setShowDomainHelper(true);
-      } else if (err?.message) {
-        setUiNotice({ type: 'error', text: err.message });
-      }
     }
   };
 
   const executePushToFirestore = async () => {
     setConfirmAction(null);
-    if (!currentUser || !currentUser.emailVerified) {
+    let active = !!currentUser;
+    if (!active) {
+      active = await connectCloudWithPasswordSession();
+    }
+    if (!active) {
       setUiNotice({
         type: 'error',
-        text: 'يرجى تسجيل الدخول أولاً بحساب Google الموثّق للكتابة في Cloud Firestore.'
+        text: 'يرجى تفعيل خيار Anonymous في إعدادات Firebase أولاً لتمكين الكتابة إلى Cloud Firestore بدون بريد إلكتروني.'
       });
       return;
     }
+
     setIsRunningCloudOp(true);
     try {
       const payload = JSON.stringify(storeData);
@@ -208,20 +201,25 @@ export const FirebaseMonitorView: React.FC = () => {
 
   const executePullFromFirestore = async () => {
     setConfirmAction(null);
-    if (!currentUser || !currentUser.emailVerified) {
+    let active = !!currentUser;
+    if (!active) {
+      active = await connectCloudWithPasswordSession();
+    }
+    if (!active) {
       setUiNotice({
         type: 'error',
-        text: 'يرجى تسجيل الدخول أولاً بحساب Google الموثّق للقراءة من Cloud Firestore.'
+        text: 'يرجى تفعيل خيار Anonymous في إعدادات Firebase أولاً لتمكين القراءة من Cloud Firestore بدون بريد إلكتروني.'
       });
       return;
     }
+
     setIsRunningCloudOp(true);
     try {
       const cloudRes = await loadStoreFromCloud();
       if (!cloudRes || !cloudRes.dataJson) {
         setUiNotice({
           type: 'info',
-          text: 'لا توجد نسخة محفوظة بعد في Cloud Firestore. يمكنك الضغط على "رفع البيانات إلى Firestore الآن" لإنشاء النسخة الأولى.'
+          text: 'لا توجد نسخة محفوظة بعد في Cloud Firestore. يمكنك الضغط على "رفع ومزامنة كافة البيانات إلى Firestore الآن" لإنشاء النسخة الأولى.'
         });
         return;
       }
@@ -282,10 +280,10 @@ export const FirebaseMonitorView: React.FC = () => {
           </div>
           <div>
             <h2 className="text-lg font-black text-slate-900">
-              مراقبة ومزامنة Firebase Firestore & Auth
+              مراقبة ومزامنة Firebase Firestore
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              مزامنة سحابية مشفرة ومجزأة تلقائياً بين جميع الأجهزة مع مصادقة Google الآمنة
+              مزامنة سحابية تلقائية بين أي جوال أو لابتوب يدخل بكلمة مرور النظام فقط (دون الحاجة لإيميل)
             </p>
           </div>
         </div>
@@ -306,23 +304,64 @@ export const FirebaseMonitorView: React.FC = () => {
         </div>
       </div>
 
+      {/* One-time Anonymous Auth enablement guide if not enabled in Firebase Console yet */}
+      {anonymousProviderDisabled && (
+        <div className="p-5 rounded-2xl border-2 border-amber-300 bg-amber-50 space-y-3">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div className="space-y-1.5 text-xs text-amber-950">
+              <h3 className="text-sm font-black text-amber-900">
+                خطوة واحدة في Firebase لتشغيل المزامنة بدون إيميل
+              </h3>
+              <p className="leading-relaxed">
+                بما أننا ألغينا تسجيل الدخول بالإيميل واكتفينا بكلمة مرور النظام، يجب تفعيل خيار <strong>Anonymous (مجهول الهوية)</strong> لمرة واحدة فقط من لوحة تحكم Firebase حتى يتصل أي هاتف أو لابتوب يدخل بكلمة المرور تلقائياً:
+              </p>
+              <ol className="list-decimal list-inside space-y-1 pr-1 font-medium">
+                <li>افتح صفحة مزودي تسجيل الدخول في Firebase Console من الزر أدناه.</li>
+                <li>اضغط على <strong>Add new provider</strong> واختر <strong>Anonymous</strong>.</li>
+                <li>فعّل زر <strong>Enable</strong> واضغط <strong>Save</strong>، ثم عد واضغط "إعادة الاتصال السحابي".</li>
+              </ol>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <a
+              href={`https://console.firebase.google.com/project/${firebaseProjectMeta.projectId}/authentication/providers`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold shadow-xs"
+            >
+              <span>فتح Firebase Authentication Providers</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+            <button
+              onClick={() => void handleReconnectSession()}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold cursor-pointer"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>إعادة الاتصال السحابي الآن</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Inline Notice Banner */}
-      {(uiNotice || authError) && (
+      {uiNotice && (
         <div
           className={`p-4 rounded-2xl border flex items-start gap-3 text-xs font-bold ${
-            uiNotice?.type === 'success'
+            uiNotice.type === 'success'
               ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-              : uiNotice?.type === 'info'
+              : uiNotice.type === 'info'
               ? 'bg-blue-50 border-blue-200 text-blue-900'
               : 'bg-rose-50 border-rose-200 text-rose-900'
           }`}
         >
-          {uiNotice?.type === 'success' ? (
+          {uiNotice.type === 'success' ? (
             <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
           ) : (
             <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
           )}
-          <div className="flex-1 leading-relaxed">{uiNotice?.text || authError}</div>
+          <div className="flex-1 leading-relaxed">{uiNotice.text}</div>
           <button
             onClick={() => setUiNotice(null)}
             className="text-slate-400 hover:text-slate-700 cursor-pointer"
@@ -332,77 +371,56 @@ export const FirebaseMonitorView: React.FC = () => {
         </div>
       )}
 
-      {/* Firebase Auth Status & Project Card */}
+      {/* Password Cloud Session & Project Card */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between gap-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              {currentUser?.photoURL ? (
-                <img
-                  src={currentUser.photoURL}
-                  alt={currentUser.displayName || ''}
-                  className="w-12 h-12 rounded-2xl object-cover border-2 border-orange-300"
-                />
-              ) : (
-                <div className="w-12 h-12 rounded-2xl bg-orange-100 text-orange-700 flex items-center justify-center font-black text-lg">
-                  {currentUser ? (currentUser.displayName || currentUser.email || 'U')[0].toUpperCase() : 'G'}
-                </div>
-              )}
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
+                currentUser ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+              }`}>
+                <Lock className="w-6 h-6" />
+              </div>
 
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="text-sm font-black text-slate-900">
-                    {currentUser ? currentUser.displayName || currentUser.email : 'حساب Google للمزامنة السحابية'}
+                    جلسة المزامنة بكلمة مرور النظام
                   </h3>
                   {currentUser ? (
                     <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      {currentUser.emailVerified ? 'حساب موثّق ✓' : 'بانتظار التحقق'}
+                      متصل سحابياً تلقائياً ✓
                     </span>
                   ) : (
                     <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200">
-                      غير مسجل الدخول في السحابة
-                    </span>
-                  )}
-                  {isAdmin && (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-900 text-amber-300">
-                      مدير النظام (Admin)
+                      بانتظار تفعيل الجلسة السحابية
                     </span>
                   )}
                 </div>
                 <p className="text-xs text-slate-500 mt-1">
                   {currentUser
-                    ? `البريد: ${currentUser.email} — المزامنة التلقائية مع Cloud Firestore نشطة.`
-                    : 'سجّل الدخول بحساب Google المعتمد لتفعيل النسخ الاحتياطي والمزامنة السحابية الفورية عبر Cloud Firestore.'}
+                    ? `أي جهاز يدخل بكلمة مرور النظام يتصل تلقائياً بقاعدة Firestore (معرف الجلسة: ${currentUser.uid.slice(0, 10)}...).`
+                    : authError || 'انقر على "تفعيل الاتصال السحابي" لبدء جلسة المزامنة التلقائية مع Cloud Firestore.'}
                 </p>
               </div>
             </div>
 
-            <div className="shrink-0">
-              {currentUser ? (
-                <button
-                  onClick={() => logout()}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold cursor-pointer transition-colors"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>تسجيل الخروج</span>
-                </button>
-              ) : (
-                <button
-                  onClick={handleGoogleSignIn}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold shadow-xs cursor-pointer transition-colors"
-                >
-                  <LogIn className="w-4 h-4" />
-                  <span>تسجيل الدخول عبر Google</span>
-                </button>
-              )}
-            </div>
+            {!currentUser && (
+              <button
+                onClick={() => void handleReconnectSession()}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold shadow-xs cursor-pointer shrink-0"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span>تفعيل الاتصال السحابي</span>
+              </button>
+            )}
           </div>
 
           {/* Cloud Push / Pull Action Buttons */}
           <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center gap-3">
             <button
               onClick={() => setConfirmAction('push')}
-              disabled={!currentUser || isRunningCloudOp || isCloudSyncing}
+              disabled={isRunningCloudOp || isCloudSyncing}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50"
             >
               <CloudUpload className="w-4 h-4" />
@@ -411,19 +429,11 @@ export const FirebaseMonitorView: React.FC = () => {
 
             <button
               onClick={() => setConfirmAction('pull')}
-              disabled={!currentUser || isRunningCloudOp || isCloudSyncing}
+              disabled={isRunningCloudOp || isCloudSyncing}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50"
             >
               <CloudDownload className="w-4 h-4" />
               <span>سحب واستعادة أحدث نسخة من Firestore</span>
-            </button>
-
-            <button
-              onClick={() => setShowDomainHelper(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer transition-colors mr-auto"
-            >
-              <ShieldCheck className="w-4 h-4 text-slate-600" />
-              <span>إعداد النطاق المصرح</span>
             </button>
           </div>
         </div>
@@ -433,7 +443,7 @@ export const FirebaseMonitorView: React.FC = () => {
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-orange-300">معرفات مشروع Firebase المرتبط</span>
             <span className="text-[11px] font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded">
-              Active Config
+              Password Sync
             </span>
           </div>
 
@@ -462,20 +472,12 @@ export const FirebaseMonitorView: React.FC = () => {
                 {firebaseProjectMeta.firestoreDatabaseId}
               </span>
             </div>
-
-            <div className="bg-slate-800/80 p-2.5 rounded-xl">
-              <span className="text-[10px] text-slate-400 block">Auth Domain</span>
-              <span className="font-mono text-[11px] text-slate-200 break-all block mt-0.5">
-                {firebaseProjectMeta.authDomain}
-              </span>
-            </div>
           </div>
         </div>
       </div>
 
       {/* 4 Telemetry Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Connection Health */}
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500">حالة اتصال Firestore</span>
@@ -496,7 +498,6 @@ export const FirebaseMonitorView: React.FC = () => {
           </div>
         </div>
 
-        {/* Card 2: Real-time Listener */}
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500">المزامنة الفورية (Realtime)</span>
@@ -513,7 +514,7 @@ export const FirebaseMonitorView: React.FC = () => {
               ? 'Firestore Snapshot نشط'
               : localRealtimeStatus === 'connected'
               ? 'مزامنة السيرفر نشطة'
-              : 'بانتظار تسجيل الدخول'}
+              : 'بانتظار التفعيل'}
           </div>
           <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -523,7 +524,6 @@ export const FirebaseMonitorView: React.FC = () => {
           </div>
         </div>
 
-        {/* Card 3: Sharded Storage Status */}
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500">نظام التقسيم السحابي (Sharding)</span>
@@ -542,7 +542,6 @@ export const FirebaseMonitorView: React.FC = () => {
           </div>
         </div>
 
-        {/* Card 4: Data Volume */}
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500">السجلات المتزامنة</span>
@@ -566,7 +565,7 @@ export const FirebaseMonitorView: React.FC = () => {
               الأجهزة المتصلة والمتزامنة ({mergedDevices.length})
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              يعرض هذا الجهاز وكافة أجهزة اللابتوب والهواتف المسجلة في Firestore والسيرفر
+              يعرض هذا الجهاز وكافة أجهزة اللابتوب والهواتف المسجلة
             </p>
           </div>
           <button
@@ -593,7 +592,7 @@ export const FirebaseMonitorView: React.FC = () => {
               {mergedDevices.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="py-8 text-center text-slate-400">
-                    لا توجد أجهزة مسجلة حتى الآن — قم بتسجيل الدخول عبر Google أو إجراء مزامنة.
+                    لا توجد أجهزة مسجلة حتى الآن.
                   </td>
                 </tr>
               ) : (
@@ -671,14 +670,12 @@ export const FirebaseMonitorView: React.FC = () => {
       <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
         <div className="p-4 border-b border-slate-100 flex items-center gap-2">
           <History className="w-4 h-4 text-slate-600" />
-          <h3 className="text-sm font-black text-slate-900">سجل عمليات المزامنة السحابية في Firestore</h3>
+          <h3 className="text-sm font-black text-slate-900">سجل عمليات المزامنة السحابية لهذا الجهاز</h3>
         </div>
         <div className="divide-y divide-slate-100">
           {auditLogs.length === 0 ? (
             <div className="p-6 text-center text-xs text-slate-400">
-              {currentUser
-                ? 'لا توجد سجلات مزامنة سحابية بعد. اضغط "رفع ومزامنة كافة البيانات" لبدء التوثيق.'
-                : 'سجّل الدخول بحساب Google لعرض سجل المزامنة السحابية.'}
+              لا توجد سجلات مزامنة سحابية مسجلة في هذه الجلسة بعد.
             </div>
           ) : (
             auditLogs.map((log) => (
@@ -728,65 +725,6 @@ export const FirebaseMonitorView: React.FC = () => {
                 }`}
               >
                 {confirmAction === 'push' ? 'نعم، رفع البيانات الآن' : 'نعم، سحب النسخة الآن'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Authorized Domain Helper Modal */}
-      {showDomainHelper && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" dir="rtl">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 border border-amber-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h4 className="text-base font-black text-slate-900">إضافة النطاق في Firebase Authorized Domains</h4>
-              <button
-                onClick={() => setShowDomainHelper(false)}
-                className="text-slate-400 hover:text-slate-600 cursor-pointer"
-              >
-                <XCircle className="w-5 h-5" />
-              </button>
-            </div>
-
-            <p className="text-xs text-slate-600 leading-relaxed">
-              إذا ظهرت رسالة <code className="bg-slate-100 px-1 rounded font-mono">auth/unauthorized-domain</code> عند تسجيل الدخول عبر Google، انسخ النطاق التالي وأضفه في Firebase Console تحت Authentication → Settings → Authorized domains:
-            </p>
-
-            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 p-2.5 rounded-xl">
-              <input
-                type="text"
-                readOnly
-                value={currentHostname}
-                className="flex-1 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-800 select-all"
-              />
-              <button
-                onClick={() => {
-                  navigator.clipboard?.writeText(currentHostname);
-                  setCopiedHostname(true);
-                  setTimeout(() => setCopiedHostname(false), 2000);
-                }}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold cursor-pointer"
-              >
-                {copiedHostname ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copiedHostname ? 'تم النسخ' : 'نسخ'}</span>
-              </button>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-              <a
-                href={`https://console.firebase.google.com/project/${firebaseProjectMeta.projectId}/authentication/settings`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold"
-              >
-                <span>فتح Firebase Console</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-              <button
-                onClick={() => setShowDomainHelper(false)}
-                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer"
-              >
-                إغلاق
               </button>
             </div>
           </div>

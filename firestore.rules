@@ -25,16 +25,12 @@ service cloud.firestore {
       return isVerifiedUser() && request.auth.token.email == "m1193883q@gmail.com";
     }
 
-    function isStoreStaff() {
-      return isBootstrapAdmin() || (
-        isVerifiedUser() &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'accountant', 'cashier']
-      );
-    }
-
     function isValidId(id) {
       return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidShardId(id) {
+      return isValidId(id) && id.matches('^main_backup_c_[0-9]+$');
     }
 
     function incoming() {
@@ -45,7 +41,7 @@ service cloud.firestore {
       return resource.data;
     }
 
-    // 1. User Profiles
+    // 1. User Profiles (strictly isolated PII)
     match /users/{userId} {
       function isValidUser(data) {
         return data.keys().hasAll(['uid', 'email', 'role', 'createdAt', 'updatedAt']) &&
@@ -79,12 +75,12 @@ service cloud.firestore {
       allow delete: if isBootstrapAdmin() && isValidId(userId);
     }
 
-    // 2. Store State Manifest & Metadata
+    // 2. Shared Store State Manifest (accessible to authenticated password-unlocked app sessions)
     match /store_state/{stateId} {
       function isValidState(data) {
         return data.keys().hasAll(['id', 'userId', 'storageMode', 'chunkCount', 'totalChars', 'revision', 'createdAt', 'updatedAt']) &&
                data.keys().hasOnly(['id', 'userId', 'version', 'storageMode', 'chunkCount', 'totalChars', 'revision', 'originDeviceId', 'dataJson', 'summary', 'createdAt', 'updatedAt']) &&
-               data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+               data.id is string && data.id == 'main_backup' &&
                data.userId is string && data.userId.size() > 0 && data.userId.size() <= 128 &&
                data.userId == request.auth.uid &&
                data.storageMode in ['chunked_v2', 'inline_v1'] &&
@@ -99,18 +95,16 @@ service cloud.firestore {
                (!('summary' in data) || (data.summary is string && data.summary.size() <= 512));
       }
 
-      allow get: if isVerifiedUser() && isValidId(stateId) && (existing().userId == request.auth.uid || isStoreStaff());
-      allow list: if isBootstrapAdmin() || (isVerifiedUser() && existing().userId == request.auth.uid);
-      allow create: if isVerifiedUser() &&
-                       isValidId(stateId) &&
+      allow get: if isSignedIn() && stateId == 'main_backup';
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isSignedIn() &&
+                       stateId == 'main_backup' &&
                        isValidState(incoming()) &&
                        incoming().createdAt == request.time &&
-                       incoming().updatedAt == request.time &&
-                       (isStoreStaff() || incoming().userId == request.auth.uid);
-      allow update: if isVerifiedUser() &&
-                       isValidId(stateId) &&
+                       incoming().updatedAt == request.time;
+      allow update: if isSignedIn() &&
+                       stateId == 'main_backup' &&
                        isValidState(incoming()) &&
-                       (existing().userId == request.auth.uid || isStoreStaff()) &&
                        incoming().id == existing().id &&
                        incoming().createdAt == existing().createdAt &&
                        incoming().updatedAt == request.time &&
@@ -118,7 +112,7 @@ service cloud.firestore {
                          'userId', 'version', 'storageMode', 'chunkCount', 'totalChars',
                          'revision', 'originDeviceId', 'dataJson', 'summary', 'updatedAt'
                        ]);
-      allow delete: if isBootstrapAdmin() && isValidId(stateId);
+      allow delete: if false;
     }
 
     // 3. Store Payload Shards (< 1 MiB each)
@@ -126,8 +120,8 @@ service cloud.firestore {
       function isValidStoreShard(data) {
         return data.keys().hasAll(['id', 'stateId', 'userId', 'shardIndex', 'chunkCount', 'revision', 'payload', 'createdAt', 'updatedAt']) &&
                data.keys().hasOnly(['id', 'stateId', 'userId', 'shardIndex', 'chunkCount', 'revision', 'payload', 'createdAt', 'updatedAt']) &&
-               data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
-               data.stateId is string && isValidId(data.stateId) &&
+               data.id is string && isValidShardId(data.id) &&
+               data.stateId is string && data.stateId == 'main_backup' &&
                data.userId is string && data.userId.size() > 0 && data.userId.size() <= 128 &&
                data.userId == request.auth.uid &&
                data.shardIndex is int && data.shardIndex >= 0 && data.shardIndex <= 100 &&
@@ -138,19 +132,17 @@ service cloud.firestore {
                data.updatedAt is timestamp;
       }
 
-      allow get: if isVerifiedUser() && isValidId(shardId) && (existing().userId == request.auth.uid || isStoreStaff());
-      allow list: if isBootstrapAdmin() || (isVerifiedUser() && existing().userId == request.auth.uid);
-      allow create: if isVerifiedUser() &&
-                       isValidId(shardId) &&
+      allow get: if isSignedIn() && isValidShardId(shardId);
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isSignedIn() &&
+                       isValidShardId(shardId) &&
                        isValidStoreShard(incoming()) &&
                        incoming().createdAt == request.time &&
                        incoming().updatedAt == request.time &&
-                       existsAfter(/databases/$(database)/documents/store_state/$(incoming().stateId)) &&
-                       (isStoreStaff() || incoming().userId == request.auth.uid);
-      allow update: if isVerifiedUser() &&
-                       isValidId(shardId) &&
+                       existsAfter(/databases/$(database)/documents/store_state/main_backup);
+      allow update: if isSignedIn() &&
+                       isValidShardId(shardId) &&
                        isValidStoreShard(incoming()) &&
-                       (existing().userId == request.auth.uid || isStoreStaff()) &&
                        incoming().id == existing().id &&
                        incoming().stateId == existing().stateId &&
                        incoming().createdAt == existing().createdAt &&
@@ -158,7 +150,7 @@ service cloud.firestore {
                        incoming().diff(existing()).affectedKeys().hasOnly([
                          'userId', 'shardIndex', 'chunkCount', 'revision', 'payload', 'updatedAt'
                        ]);
-      allow delete: if isVerifiedUser() && isValidId(shardId) && (existing().userId == request.auth.uid || isBootstrapAdmin());
+      allow delete: if isSignedIn() && isValidShardId(shardId);
     }
 
     // 4. Connected Devices Telemetry
@@ -190,17 +182,16 @@ service cloud.firestore {
                (!('lastSyncIso' in data) || (data.lastSyncIso is string && data.lastSyncIso.size() <= 64));
       }
 
-      allow get: if isVerifiedUser() && isValidId(deviceId) && (existing().userId == request.auth.uid || isStoreStaff());
-      allow list: if isBootstrapAdmin() || (isVerifiedUser() && existing().userId == request.auth.uid);
-      allow create: if isVerifiedUser() &&
+      allow get: if isSignedIn() && isValidId(deviceId);
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isSignedIn() &&
                        isValidId(deviceId) &&
                        isValidConnectedDevice(incoming()) &&
                        incoming().createdAt == request.time &&
                        incoming().updatedAt == request.time;
-      allow update: if isVerifiedUser() &&
+      allow update: if isSignedIn() &&
                        isValidId(deviceId) &&
                        isValidConnectedDevice(incoming()) &&
-                       (existing().userId == request.auth.uid || isBootstrapAdmin()) &&
                        incoming().deviceId == existing().deviceId &&
                        incoming().createdAt == existing().createdAt &&
                        incoming().updatedAt == request.time &&
@@ -209,7 +200,7 @@ service cloud.firestore {
                          'syncType', 'syncStatus', 'customersCount', 'ordersCount',
                          'expensesCount', 'journalEntriesCount', 'latencyMs', 'lastSyncIso', 'updatedAt'
                        ]);
-      allow delete: if isVerifiedUser() && isValidId(deviceId) && (existing().userId == request.auth.uid || isBootstrapAdmin());
+      allow delete: if isSignedIn() && isValidId(deviceId) && existing().userId == request.auth.uid;
     }
 
     // 5. Immutable Cloud Audit Logs
@@ -226,9 +217,9 @@ service cloud.firestore {
                (!('entityType' in data) || (data.entityType is string && data.entityType.size() <= 64));
       }
 
-      allow get: if isVerifiedUser() && isValidId(logId) && (existing().userId == request.auth.uid || isBootstrapAdmin());
-      allow list: if isBootstrapAdmin() || (isVerifiedUser() && existing().userId == request.auth.uid);
-      allow create: if isVerifiedUser() &&
+      allow get: if isSignedIn() && isValidId(logId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isSignedIn() &&
                        isValidId(logId) &&
                        isValidAuditLog(incoming()) &&
                        incoming().createdAt == request.time;

@@ -870,11 +870,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Firebase Firestore Real-time Sync & Initial Cloud Reconciliation
   useEffect(() => {
-    if (!firebaseUser || !firebaseUser.emailVerified || !hasInitializedFromServer) {
+    if (!firebaseUser || !hasInitializedFromServer) {
       return;
     }
 
     const currentDev = getOrCreateCurrentDevice();
+    const safeDevId = currentDev.deviceId.replace(/[^a-zA-Z0-9_\-]/g, '_').slice(0, 128);
     let isCancelled = false;
 
     const applyCloudSnapshot = async (forcePull: boolean = false) => {
@@ -1000,7 +1001,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (
         manifest.revision > lastAppliedCloudRevRef.current &&
         manifest.originDeviceId &&
-        manifest.originDeviceId !== currentDev.deviceId
+        manifest.originDeviceId !== safeDevId
       ) {
         void applyCloudSnapshot(true);
       }
@@ -1012,9 +1013,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, [firebaseUser, hasInitializedFromServer, loadStoreFromCloud, saveStoreToCloud, subscribeToCloudStore]);
 
-  // Auto-push local mutations to Firebase Firestore (debounced) when authenticated
+  // Auto-push local mutations to Firebase Firestore (debounced) when unlocked
   useEffect(() => {
-    if (!firebaseUser || !firebaseUser.emailVerified || !hasInitializedFromServer) {
+    if (!firebaseUser || !hasInitializedFromServer) {
       return;
     }
     if (suppressCloudPushRef.current) {

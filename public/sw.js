@@ -1,5 +1,5 @@
-// Top Store PWA Service Worker - v5.0
-const CACHE_NAME = 'topstore-cache-v5';
+// Top Store PWA Service Worker - v6.0
+const CACHE_NAME = 'topstore-cache-v6';
 
 const PRECACHE_ASSETS = [
   '/',
@@ -52,6 +52,11 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
 
+  // CRITICAL: Never intercept cross-origin requests (Firebase Firestore Listen/Write channels, Firebase Auth, Google APIs, etc.)
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
   // Bypass API requests and Vite HMR/internal endpoints
   if (
     url.pathname.startsWith('/api/') ||
@@ -94,7 +99,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-First for JS/TS/CSS modules so mobile devices never get stuck on stale code
+  // Network-First for JS/TS/CSS modules so devices never get stuck on stale code
   const isCodeOrStyle =
     request.destination === 'script' ||
     request.destination === 'style' ||
@@ -126,7 +131,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Images, Fonts, Icons: Stale-While-Revalidate with safe fallback
+  // Same-origin Images & Icons: Stale-While-Revalidate with safe fallback
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
       const fetchPromise = fetch(request)

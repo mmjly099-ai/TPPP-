@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import {
   User,
   onAuthStateChanged,
-  signInWithPopup,
+  signInAnonymously,
   signOut
 } from 'firebase/auth';
 import {
@@ -13,19 +13,16 @@ import {
   onSnapshot,
   query,
   serverTimestamp,
-  setDoc,
-  updateDoc,
   where,
   writeBatch,
   orderBy,
   limit
 } from 'firebase/firestore';
-import { auth, db, googleAuthProvider, testFirestoreConnection, FirestoreConnectionCheckResult } from './config';
+import { auth, db, testFirestoreConnection, FirestoreConnectionCheckResult } from './config';
 import { handleFirestoreError, OperationType } from './errors';
 import { getOrCreateCurrentDevice, DeviceSyncRecord } from '../utils/deviceTracker';
 
 const CHUNK_CHAR_SIZE = 250_000; // ~250k chars (~500KB UTF-8 worst-case) safely below 1 MiB Firestore doc limit
-const BOOTSTRAP_ADMIN_EMAIL = 'm1193883q@gmail.com';
 
 export interface CloudChunkInfo {
   storageMode: 'chunked_v2' | 'inline_v1';
@@ -63,14 +60,14 @@ export interface CloudSaveCounts {
 interface FirebaseContextType {
   currentUser: User | null;
   loading: boolean;
-  isAdmin: boolean;
   isSyncing: boolean;
   lastCloudSyncAt: string | null;
   cloudRevision: number | null;
   chunkInfo: CloudChunkInfo | null;
   firebaseRealtimeStatus: 'connected' | 'disconnected' | 'idle';
   authError: string | null;
-  loginWithGoogle: () => Promise<void>;
+  anonymousProviderDisabled: boolean;
+  connectCloudWithPasswordSession: () => Promise<boolean>;
   logout: () => Promise<void>;
   testConnectionNow: () => Promise<FirestoreConnectionCheckResult>;
   saveStoreToCloud: (
@@ -90,14 +87,14 @@ interface FirebaseContextType {
 const FirebaseContext = createContext<FirebaseContextType>({
   currentUser: null,
   loading: true,
-  isAdmin: false,
   isSyncing: false,
   lastCloudSyncAt: null,
   cloudRevision: null,
   chunkInfo: null,
   firebaseRealtimeStatus: 'idle',
   authError: null,
-  loginWithGoogle: async () => {},
+  anonymousProviderDisabled: false,
+  connectCloudWithPasswordSession: async () => false,
   logout: async () => {},
   testConnectionNow: async () => ({ ok: false, online: false, latencyMs: 0, message: '' }),
   saveStoreToCloud: async () => false,
@@ -131,74 +128,45 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [chunkInfo, setChunkInfo] = useState<CloudChunkInfo | null>(null);
   const [firebaseRealtimeStatus, setFirebaseRealtimeStatus] = useState<'connected' | 'disconnected' | 'idle'>('idle');
   const [authError, setAuthError] = useState<string | null>(null);
-
-  const isAdmin = currentUser?.email === BOOTSTRAP_ADMIN_EMAIL && !!currentUser?.emailVerified;
+  const [anonymousProviderDisabled, setAnonymousProviderDisabled] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
       setLoading(false);
-      setAuthError(null);
-
-      if (user && user.emailVerified) {
-        const userPath = `users/${user.uid}`;
-        const userRef = doc(db, 'users', user.uid);
-        try {
-          const userSnap = await getDoc(userRef);
-          if (!userSnap.exists()) {
-            await setDoc(userRef, {
-              uid: user.uid,
-              email: user.email || '',
-              displayName: (user.displayName || '').slice(0, 128),
-              photoURL: (user.photoURL || '').slice(0, 1024),
-              role: user.email === BOOTSTRAP_ADMIN_EMAIL ? 'admin' : 'viewer',
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp()
-            });
-          } else {
-            await updateDoc(userRef, {
-              displayName: (user.displayName || '').slice(0, 128),
-              photoURL: (user.photoURL || '').slice(0, 1024),
-              updatedAt: serverTimestamp()
-            });
-          }
-        } catch (err) {
-          try {
-            handleFirestoreError(err, OperationType.WRITE, userPath);
-          } catch (formattedErr) {
-            console.warn('User profile sync notice:', formattedErr);
-          }
-        }
+      if (user) {
+        setAuthError(null);
+        setAnonymousProviderDisabled(false);
       }
     });
 
     return () => unsubscribe();
   }, []);
 
-  const loginWithGoogle = useCallback(async () => {
+  const connectCloudWithPasswordSession = useCallback(async (): Promise<boolean> => {
     setAuthError(null);
+    if (auth.currentUser) {
+      setAnonymousProviderDisabled(false);
+      return true;
+    }
     try {
-      await signInWithPopup(auth, googleAuthProvider);
+      await signInAnonymously(auth);
+      setAnonymousProviderDisabled(false);
+      return true;
     } catch (error: any) {
+      const code = String(error?.code || '');
       if (
-        error?.code === 'auth/popup-closed-by-user' ||
-        error?.code === 'auth/cancelled-popup-request'
+        code === 'auth/operation-not-allowed' ||
+        code === 'auth/admin-restricted-operation'
       ) {
-        return;
+        setAnonymousProviderDisabled(true);
+        setAuthError(
+          'يرجى تفعيل خيار "Anonymous" (المصادقة السحابية بدون بريد) مرة واحدة فقط من إعدادات Firebase Authentication لتشغيل المزامنة التلقائية لكافة الأجهزة.'
+        );
+        return false;
       }
-      if (error?.code === 'auth/popup-blocked') {
-        const msg = 'تم حظر النافذة المنبثقة بواسطة المتصفح. يرجى السماح بالنوافذ المنبثقة والمحاولة مجدداً.';
-        setAuthError(msg);
-        throw new Error(msg);
-      }
-      if (error?.code === 'auth/unauthorized-domain') {
-        const domain = typeof window !== 'undefined' ? window.location.hostname : 'run.app';
-        const msg = `auth/unauthorized-domain: النطاق (${domain}) يحتاج للإضافة في قائمة Authorized Domains في Firebase Console.`;
-        setAuthError(msg);
-        throw error;
-      }
-      setAuthError(error?.message || 'فشل تسجيل الدخول عبر Google');
-      throw error;
+      setAuthError(error?.message || 'تعذر بدء جلسة المزامنة السحابية');
+      return false;
     }
   }, []);
 
@@ -208,7 +176,6 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setFirebaseRealtimeStatus('idle');
     } catch (error) {
       console.error('Sign-Out failed:', error);
-      throw error;
     }
   }, []);
 
@@ -222,7 +189,8 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     counts?: CloudSaveCounts,
     originDeviceId?: string
   ): Promise<boolean> => {
-    if (!currentUser || !currentUser.emailVerified) return false;
+    const activeUser = auth.currentUser || currentUser;
+    if (!activeUser) return false;
     setIsSyncing(true);
     const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now();
     const statePath = 'store_state/main_backup';
@@ -253,14 +221,12 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           existingChunkCount = Number(existingStateSnap.data()?.chunkCount || 0);
         }
       } catch (readErr) {
-        // Ignore missing doc read errors when initializing for the first time, handle real permission failures
         const msg = readErr instanceof Error ? readErr.message : String(readErr);
         if (msg.includes('Missing or insufficient permissions') || msg.includes('permission-denied')) {
           handleFirestoreError(readErr, OperationType.GET, statePath);
         }
       }
 
-      // Check which shard docs already exist so we strictly honor createdAt immutability on update vs create
       const shardExistsFlags = await Promise.all(
         chunks.map(async (_, idx) => {
           const shardId = `main_backup_c_${idx}`;
@@ -273,7 +239,6 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         })
       );
 
-      // Check connected device existence
       const deviceRef = doc(db, 'connected_devices', deviceId);
       let deviceExists = false;
       try {
@@ -283,12 +248,10 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         deviceExists = false;
       }
 
-      // Commit manifest + shards + device telemetry + audit log atomically
-      // Use chunked batches if there are many shards to stay well under Firestore 10 MiB batch limit
       const firstBatch = writeBatch(db);
 
       const manifestMutable = {
-        userId: currentUser.uid,
+        userId: activeUser.uid,
         version: '2.0.0',
         storageMode: 'chunked_v2',
         chunkCount: chunks.length,
@@ -310,13 +273,12 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         });
       }
 
-      // Put up to 8 shards in the first atomic batch (max ~4MB)
       const firstBatchShardCount = Math.min(chunks.length, 8);
       for (let i = 0; i < firstBatchShardCount; i++) {
         const shardId = `main_backup_c_${i}`;
         const shardRef = doc(db, 'store_shards', shardId);
         const shardMutable = {
-          userId: currentUser.uid,
+          userId: activeUser.uid,
           shardIndex: i,
           chunkCount: chunks.length,
           revision,
@@ -340,7 +302,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const nowIso = new Date().toISOString();
 
       const deviceMutable = {
-        userId: currentUser.uid,
+        userId: activeUser.uid,
         deviceName: currentDev.deviceName.slice(0, 128),
         deviceType: currentDev.deviceType,
         browser: currentDev.browser.slice(0, 128),
@@ -369,7 +331,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const logId = `log_${revision}`;
       firstBatch.set(doc(db, 'cloud_audit_logs', logId), {
         id: logId,
-        userId: currentUser.uid,
+        userId: activeUser.uid,
         action: 'cloud_backup',
         entityType: 'store_state',
         details: `${summary.slice(0, 200)} (${chunks.length} أجزاء / ${(totalChars / 1024).toFixed(0)} KB)`.slice(0, 1000),
@@ -378,7 +340,6 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       await firstBatch.commit();
 
-      // Commit remaining shards (if store ever exceeds 2 MB) & delete stale tail shards
       for (let start = 8; start < chunks.length; start += 8) {
         const extraBatch = writeBatch(db);
         const end = Math.min(start + 8, chunks.length);
@@ -386,7 +347,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           const shardId = `main_backup_c_${i}`;
           const shardRef = doc(db, 'store_shards', shardId);
           const shardMutable = {
-            userId: currentUser.uid,
+            userId: activeUser.uid,
             shardIndex: i,
             chunkCount: chunks.length,
             revision,
@@ -434,7 +395,8 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [currentUser]);
 
   const loadStoreFromCloud = useCallback(async (): Promise<CloudStoreLoadResult | null> => {
-    if (!currentUser || !currentUser.emailVerified) return null;
+    const activeUser = auth.currentUser || currentUser;
+    if (!activeUser) return null;
     setIsSyncing(true);
     const statePath = 'store_state/main_backup';
     try {
@@ -519,7 +481,8 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const subscribeToCloudStore = useCallback((
     onRemoteManifest: (manifest: { revision: number; originDeviceId?: string; updatedAtIso?: string }) => void
   ): (() => void) => {
-    if (!currentUser || !currentUser.emailVerified) {
+    const activeUser = auth.currentUser || currentUser;
+    if (!activeUser) {
       setFirebaseRealtimeStatus('idle');
       return () => {};
     }
@@ -566,13 +529,12 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [currentUser]);
 
   const getConnectedCloudDevices = useCallback(async (): Promise<DeviceSyncRecord[]> => {
-    if (!currentUser || !currentUser.emailVerified) return [];
+    const activeUser = auth.currentUser || currentUser;
+    if (!activeUser) return [];
     const colPath = 'connected_devices';
     try {
       const colRef = collection(db, colPath);
-      const q = isAdmin
-        ? query(colRef)
-        : query(colRef, where('userId', '==', currentUser.uid));
+      const q = query(colRef, where('userId', '==', activeUser.uid));
       const snap = await getDocs(q);
       const list: DeviceSyncRecord[] = [];
       snap.forEach((d) => {
@@ -599,16 +561,15 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch (err) {
       handleFirestoreError(err, OperationType.LIST, colPath);
     }
-  }, [currentUser, isAdmin]);
+  }, [currentUser]);
 
   const getRecentCloudAuditLogs = useCallback(async (): Promise<CloudAuditEntry[]> => {
-    if (!currentUser || !currentUser.emailVerified) return [];
+    const activeUser = auth.currentUser || currentUser;
+    if (!activeUser) return [];
     const colPath = 'cloud_audit_logs';
     try {
       const colRef = collection(db, colPath);
-      const q = isAdmin
-        ? query(colRef, orderBy('createdAt', 'desc'), limit(20))
-        : query(colRef, where('userId', '==', currentUser.uid), orderBy('createdAt', 'desc'), limit(20));
+      const q = query(colRef, where('userId', '==', activeUser.uid), orderBy('createdAt', 'desc'), limit(20));
       const snap = await getDocs(q);
       const logs: CloudAuditEntry[] = [];
       snap.forEach((d) => {
@@ -626,21 +587,21 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch (err) {
       handleFirestoreError(err, OperationType.LIST, colPath);
     }
-  }, [currentUser, isAdmin]);
+  }, [currentUser]);
 
   return (
     <FirebaseContext.Provider
       value={{
         currentUser,
         loading,
-        isAdmin,
         isSyncing,
         lastCloudSyncAt,
         cloudRevision,
         chunkInfo,
         firebaseRealtimeStatus,
         authError,
-        loginWithGoogle,
+        anonymousProviderDisabled,
+        connectCloudWithPasswordSession,
         logout,
         testConnectionNow,
         saveStoreToCloud,

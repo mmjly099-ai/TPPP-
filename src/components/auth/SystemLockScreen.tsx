@@ -3,6 +3,7 @@ import { Lock, KeyRound, Eye, EyeOff, ShieldCheck, ArrowLeft, Store, Smartphone,
 import { PWAInstallButton } from '../common/PWAInstallButton';
 
 import { useStore } from '../../context/StoreContext';
+import { useFirebase } from '../../firebase/FirebaseContext';
 import topStoreLogo from '../../assets/logo';
 
 interface SystemLockScreenProps {
@@ -12,6 +13,7 @@ interface SystemLockScreenProps {
 
 export const SystemLockScreen: React.FC<SystemLockScreenProps> = ({ onUnlock, syncTime }) => {
   const { syncWithServer } = useStore();
+  const { connectCloudWithPasswordSession } = useFirebase();
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -47,9 +49,12 @@ export const SystemLockScreen: React.FC<SystemLockScreenProps> = ({ onUnlock, sy
         console.warn('Session auth note:', err);
       }
 
-      // Immediately pull freshest data from server/cloud on unlock
+      // Activate Firebase cloud session via password unlock and pull freshest data
       try {
-        await syncWithServer();
+        await Promise.allSettled([
+          connectCloudWithPasswordSession(),
+          syncWithServer()
+        ]);
       } catch {}
 
       setTimeout(() => {

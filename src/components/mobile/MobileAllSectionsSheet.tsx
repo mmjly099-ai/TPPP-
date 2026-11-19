@@ -217,7 +217,7 @@ export const MobileAllSectionsSheet: React.FC<MobileAllSectionsSheetProps> = ({
         {
           id: 'firebase-monitor',
           label: 'مراقبة ومزامنة Firebase',
-          description: 'حالة اتصال Cloud Firestore ومصادقة Google وتوقيت آخر مزامنة بين اللابتوب والجوال',
+          description: 'حالة اتصال Cloud Firestore والمزامنة التلقائية بين اللابتوب والجوال بكلمة المرور',
           icon: Activity,
           color: 'bg-emerald-50 text-emerald-700 border-emerald-200'
         },

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FirebaseProvider } from './firebase/FirebaseContext';
+import { FirebaseProvider, useFirebase } from './firebase/FirebaseContext';
 import { StoreProvider, useStore } from './context/StoreContext';
 import { Header } from './components/Header';
 import { Navigation, NavTab } from './components/Navigation';
@@ -50,10 +50,17 @@ import { Customer, Order, Payment } from './types';
 
 const MainApp: React.FC = () => {
   const { notification, lastSyncTime } = useStore();
+  const { currentUser, connectCloudWithPasswordSession, logout: logoutFirebase } = useFirebase();
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
 
   // System password lock state (masnaamasnaa) - Requires password on every login/visit
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isAuthenticated && !currentUser) {
+      void connectCloudWithPasswordSession();
+    }
+  }, [isAuthenticated, currentUser, connectCloudWithPasswordSession]);
 
   const handleLogout = () => {
     try {
@@ -62,6 +69,7 @@ const MainApp: React.FC = () => {
     } catch (e) {
       console.warn('Error clearing auth session', e);
     }
+    void logoutFirebase();
     setIsAuthenticated(false);
   };
 
