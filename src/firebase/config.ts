@@ -5,11 +5,12 @@ import firebaseConfig from '../../firebase-applet-config.json';
 
 export const app = initializeApp(firebaseConfig);
 
-// Use initializeFirestore with auto-detect long polling for reliable connectivity in web iframes/proxies
+// Force HTTP long-polling to avoid WebChannel streaming stalls behind proxies, VPNs, or iframes
 export const db = initializeFirestore(
   app,
   {
-    experimentalAutoDetectLongPolling: true,
+    experimentalForceLongPolling: true,
+    ignoreUndefinedProperties: true,
   },
   firebaseConfig.firestoreDatabaseId
 );
@@ -32,13 +33,18 @@ export interface FirestoreConnectionCheckResult {
 }
 
 export async function testFirestoreConnection(): Promise<FirestoreConnectionCheckResult> {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    return {
+      ok: false,
+      online: false,
+      latencyMs: 0,
+      message: 'المتصفح في وضع عدم الاتصال بالإنترنت حالياً'
+    };
+  }
+
   const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now();
   try {
-    const pingPromise = getDocFromServer(doc(db, 'test', 'connection'));
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('connection_timeout')), 5000)
-    );
-    await Promise.race([pingPromise, timeoutPromise]);
+    await getDocFromServer(doc(db, 'test', 'connection'));
     const latencyMs = Math.round((typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0);
     return {
       ok: true,
@@ -49,33 +55,29 @@ export async function testFirestoreConnection(): Promise<FirestoreConnectionChec
   } catch (error: any) {
     const latencyMs = Math.round((typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0);
     const msg = error instanceof Error ? error.message : String(error);
+    const code = error?.code ? String(error.code) : '';
 
-    if (msg.includes('the client is offline')) {
-      console.error('Please check your Firebase configuration.');
-      return {
-        ok: false,
-        online: false,
-        latencyMs,
-        message: 'العميل غير متصل بالإنترنت أو تعذر الوصول إلى خادم Firebase Firestore'
-      };
-    }
-
-    if (msg.includes('connection_timeout')) {
-      return {
-        ok: false,
-        online: false,
-        latencyMs,
-        message: 'انتهت مهلة الاتصال بخادم Firestore'
-      };
-    }
-
-    // Server responded (e.g., permission-denied on test/connection probe means Firestore endpoint is live & reachable)
-    if (msg.includes('Missing or insufficient permissions') || msg.includes('permission-denied')) {
+    // Server responded with permission-denied -> Firestore backend is online and reachable
+    if (
+      code === 'permission-denied' ||
+      msg.includes('Missing or insufficient permissions') ||
+      msg.includes('permission-denied')
+    ) {
       return {
         ok: true,
         online: true,
         latencyMs,
         message: 'خادم Cloud Firestore متاح ونشط (تم التحقق من الاتصال)'
+      };
+    }
+
+    if (msg.includes('the client is offline')) {
+      console.warn('Firestore startup check: client is currently offline.');
+      return {
+        ok: false,
+        online: false,
+        latencyMs,
+        message: 'العميل غير متصل بالإنترنت أو تعذر الوصول إلى خادم Firebase Firestore'
       };
     }
 
